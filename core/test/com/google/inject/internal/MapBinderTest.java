@@ -16,6 +16,7 @@
 
 package com.google.inject.internal;
 
+import static com.google.common.collect.MoreCollectors.onlyElement;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.inject.Asserts.assertContains;
 import static com.google.inject.internal.SpiUtils.VisitType.BOTH;
@@ -29,7 +30,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.AbstractModule;
@@ -1255,7 +1255,7 @@ public class MapBinderTest {
     Map<String, String> map =
         Maps.transformValues(
             injectedMultimap.get(),
-            stringProvidersSet -> Iterables.getOnlyElement(stringProvidersSet).get());
+            stringProvidersSet -> stringProvidersSet.stream().collect(onlyElement()).get());
     assertEquals(mapOf("a", "A", "b", "B", "c", "C"), map);
   }
 

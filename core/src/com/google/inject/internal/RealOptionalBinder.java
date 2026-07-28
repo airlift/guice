@@ -16,16 +16,16 @@
 
 package com.google.inject.internal;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.collect.MoreCollectors.onlyElement;
 import static com.google.inject.internal.Errors.checkConfiguration;
 import static com.google.inject.internal.InternalMethodHandles.castReturnToObject;
 import static com.google.inject.util.Types.newParameterizedType;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static java.lang.invoke.MethodType.methodType;
+import static java.util.Objects.requireNonNull;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.inject.Binder;
 import com.google.inject.Binding;
 import com.google.inject.Injector;
@@ -761,7 +761,7 @@ public final class RealOptionalBinder<T> implements Module {
      * returns {@code null}.
      */
     Dependency<?> getDependency() {
-      return Iterables.getOnlyElement(dependencies);
+      return dependencies.stream().collect(onlyElement());
     }
 
     /** Implementation of {@link OptionalBinderBinding#containsElement}. */
@@ -887,8 +887,8 @@ public final class RealOptionalBinder<T> implements Module {
     private final Class<? extends Annotation> clazz;
 
     BaseAnnotation(Class<? extends Annotation> clazz, String value) {
-      this.clazz = checkNotNull(clazz, "clazz");
-      this.value = checkNotNull(value, "value");
+      this.clazz = requireNonNull(clazz, "clazz");
+      this.value = requireNonNull(value, "value");
     }
 
     public String value() {

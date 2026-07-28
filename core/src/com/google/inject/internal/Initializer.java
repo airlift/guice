@@ -16,7 +16,8 @@
 
 package com.google.inject.internal;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+
+import static java.util.Objects.requireNonNull;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Multimap;
@@ -85,7 +86,7 @@ final class Initializer {
       Object source,
       Set<InjectionPoint> injectionPoints,
       Errors errors) {
-    checkNotNull(source);
+    requireNonNull(source);
     Preconditions.checkState(
         !validationStarted, "Member injection could not be requested after validation is started");
     ProvisionListenerStackCallback<T> provisionCallback =
@@ -200,16 +201,17 @@ final class Initializer {
       this.injector = injector;
       this.key = key; // possibly null!
       this.provisionCallback = provisionCallback; // possibly null!
-      this.instance = checkNotNull(instance, "instance");
-      this.type = checkNotNull(type, "type");
-      this.source = checkNotNull(source, "source");
-      this.lock = checkNotNull(lock, "lock");
+      this.instance = requireNonNull(instance, "instance");
+      this.type = requireNonNull(type, "type");
+      this.source = requireNonNull(source, "source");
+      this.lock = requireNonNull(lock, "lock");
     }
 
     public void validate(Errors errors) throws ErrorsException {
       membersInjector = injector.membersInjectorStore.get(type, errors.withSource(source));
-      Preconditions.checkNotNull(
-          membersInjector, "No membersInjector available for type: %s, from key: %s", type, key);
+      requireNonNull(
+          membersInjector,
+          () -> "No membersInjector available for type: " + type + ", from key: " + key);
       state = InjectableReferenceState.VALIDATED;
     }
 

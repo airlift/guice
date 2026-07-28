@@ -16,7 +16,8 @@
 
 package com.google.inject.internal;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+
+import static java.util.Objects.requireNonNull;
 
 import com.google.inject.spi.Dependency;
 import com.google.inject.spi.ProviderInstanceBinding;
@@ -40,7 +41,7 @@ final class InternalFactoryToInitializableAdapter<T> extends ProviderInternalFac
       int circularFactoryId) {
     super(rawType, source, circularFactoryId);
     this.provisionCallback = provisionCallback;
-    this.initializable = checkNotNull(initializable, "provider");
+    this.initializable = requireNonNull(initializable, "provider");
   }
 
   @Override

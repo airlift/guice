@@ -16,7 +16,8 @@
 
 package com.google.inject.internal;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+
+import static java.util.Objects.requireNonNull;
 
 import com.google.inject.Binder;
 import com.google.inject.Key;
@@ -83,26 +84,26 @@ public abstract class AbstractBindingBuilder<T> {
 
   /** Sets the binding to a copy with the specified annotation on the bound key */
   protected BindingImpl<T> annotatedWithInternal(Class<? extends Annotation> annotationType) {
-    checkNotNull(annotationType, "annotationType");
+    requireNonNull(annotationType, "annotationType");
     checkNotAnnotated();
     return setBinding(binding.withKey(this.binding.getKey().withAnnotation(annotationType)));
   }
 
   /** Sets the binding to a copy with the specified annotation on the bound key */
   protected BindingImpl<T> annotatedWithInternal(Annotation annotation) {
-    checkNotNull(annotation, "annotation");
+    requireNonNull(annotation, "annotation");
     checkNotAnnotated();
     return setBinding(binding.withKey(this.binding.getKey().withAnnotation(annotation)));
   }
 
   public void in(final Class<? extends Annotation> scopeAnnotation) {
-    checkNotNull(scopeAnnotation, "scopeAnnotation");
+    requireNonNull(scopeAnnotation, "scopeAnnotation");
     checkNotScoped();
     setBinding(getBinding().withScoping(Scoping.forAnnotation(scopeAnnotation)));
   }
 
   public void in(final Scope scope) {
-    checkNotNull(scope, "scope");
+    requireNonNull(scope, "scope");
     checkNotScoped();
     setBinding(getBinding().withScoping(Scoping.forInstance(scope)));
   }

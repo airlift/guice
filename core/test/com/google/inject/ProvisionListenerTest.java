@@ -17,13 +17,13 @@
 package com.google.inject;
 
 import static com.google.common.collect.ImmutableList.of;
+import static com.google.common.collect.MoreCollectors.onlyElement;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.inject.Asserts.assertContains;
 import static com.google.inject.name.Names.named;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
@@ -177,7 +177,7 @@ public class ProvisionListenerTest {
       fail();
     } catch (ProvisionException expected) {
       assertEquals(1, expected.getErrorMessages().size());
-      expectedMsg = Iterables.getOnlyElement(expected.getErrorMessages()).getMessage();
+      expectedMsg = expected.getErrorMessages().stream().collect(onlyElement()).getMessage();
       assertContains(
           expected.getMessage(),
           "1) [Guice/ErrorInjectingConstructor]: RuntimeException: Retry, Abort, Fail",
@@ -195,7 +195,7 @@ public class ProvisionListenerTest {
     assertEquals(1, listener.beforeProvision);
     assertEquals(
         expectedMsg,
-        Iterables.getOnlyElement(((ProvisionException) listener.capture.get()).getErrorMessages())
+        ((ProvisionException) listener.capture.get()).getErrorMessages().stream().collect(onlyElement())
             .getMessage());
     assertEquals(0, listener.afterProvision);
   }
@@ -225,7 +225,7 @@ public class ProvisionListenerTest {
       fail();
     } catch (ProvisionException expected) {
       assertEquals(1, expected.getErrorMessages().size());
-      expectedMsg = Iterables.getOnlyElement(expected.getErrorMessages()).getMessage();
+      expectedMsg = expected.getErrorMessages().stream().collect(onlyElement()).getMessage();
       assertContains(
           expected.getMessage(),
           "1) [Guice/ErrorInjectingConstructor]: RuntimeException: Retry, Abort, Fail",
@@ -244,7 +244,7 @@ public class ProvisionListenerTest {
     assertEquals(1, listener.beforeProvision);
     assertEquals(
         expectedMsg,
-        Iterables.getOnlyElement(((ProvisionException) listener.capture.get()).getErrorMessages())
+        ((ProvisionException) listener.capture.get()).getErrorMessages().stream().collect(onlyElement())
             .getMessage());
     assertEquals(0, listener.afterProvision);
   }

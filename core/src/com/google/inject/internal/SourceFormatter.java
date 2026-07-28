@@ -131,11 +131,11 @@ final class SourceFormatter {
     if (parameter != null && parameter.isNamePresent()) {
       parameterName = parameter.getName();
     }
-    return String.format(
-        "%s%s parameter%s",
-        ordinal,
-        getOrdinalSuffix(ordinal),
-        parameterName.isEmpty() ? "" : " " + Messages.redBold(parameterName));
+    return "%s%s parameter%s"
+        .formatted(
+            ordinal,
+            getOrdinalSuffix(ordinal),
+            parameterName.isEmpty() ? "" : " " + Messages.redBold(parameterName));
   }
 
   /**

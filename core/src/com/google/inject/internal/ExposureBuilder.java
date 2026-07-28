@@ -16,7 +16,8 @@
 
 package com.google.inject.internal;
 
-import com.google.common.base.Preconditions;
+import static java.util.Objects.requireNonNull;
+
 import com.google.inject.Binder;
 import com.google.inject.Key;
 import com.google.inject.binder.AnnotatedElementBuilder;
@@ -42,14 +43,14 @@ public class ExposureBuilder<T> implements AnnotatedElementBuilder {
 
   @Override
   public void annotatedWith(Class<? extends Annotation> annotationType) {
-    Preconditions.checkNotNull(annotationType, "annotationType");
+    requireNonNull(annotationType, "annotationType");
     checkNotAnnotated();
     key = key.withAnnotation(annotationType);
   }
 
   @Override
   public void annotatedWith(Annotation annotation) {
-    Preconditions.checkNotNull(annotation, "annotation");
+    requireNonNull(annotation, "annotation");
     checkNotAnnotated();
     key = key.withAnnotation(annotation);
   }

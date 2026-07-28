@@ -140,10 +140,10 @@ public class DuplicateBindingsTest {
       String template =
           "DuplicateBindingsTest$Foo annotated with @Named(%s)" + " was bound multiple times.";
       String segment1 =
-          String.format(template, Annotations.memberValueString("value", "pInstance"));
-      String segment2 = String.format(template, Annotations.memberValueString("value", "pKey"));
+          template.formatted(Annotations.memberValueString("value", "pInstance"));
+      String segment2 = template.formatted(Annotations.memberValueString("value", "pKey"));
       String segment3 =
-          String.format(template, Annotations.memberValueString("value", "constructor"));
+          template.formatted(Annotations.memberValueString("value", "constructor"));
       String segment4 = "DuplicateBindingsTest$FooImpl was bound multiple times";
       String atSegment = "DuplicateBindingsTest$ScopedModule.configure";
       if (isIncludeStackTraceOff()) {
@@ -188,14 +188,14 @@ public class DuplicateBindingsTest {
     } catch (CreationException ce) {
       String template =
           "DuplicateBindingsTest$Foo annotated with @Named(%s) was bound multiple times.";
-      String segment1 = String.format(template, Annotations.memberValueString("value", "instance"));
+      String segment1 = template.formatted(Annotations.memberValueString("value", "instance"));
       String segment2 =
-          String.format(template, Annotations.memberValueString("value", "pInstance"));
-      String segment3 = String.format(template, Annotations.memberValueString("value", "pKey"));
+          template.formatted(Annotations.memberValueString("value", "pInstance"));
+      String segment3 = template.formatted(Annotations.memberValueString("value", "pKey"));
       String segment4 =
-          String.format(template, Annotations.memberValueString("value", "linkedKey"));
+          template.formatted(Annotations.memberValueString("value", "linkedKey"));
       String segment5 =
-          String.format(template, Annotations.memberValueString("value", "constructor"));
+          template.formatted(Annotations.memberValueString("value", "constructor"));
       assertContains(
           ce.getMessage(),
           segment1,
@@ -245,15 +245,15 @@ public class DuplicateBindingsTest {
       String atSegment = "DuplicateBindingsTest$SimpleModule.configure";
       assertContains(
           ce.getMessage(),
-          String.format(template, Annotations.memberValueString("value", "instance")),
+          template.formatted(Annotations.memberValueString("value", "instance")),
           atSegment,
-          String.format(template, Annotations.memberValueString("value", "pKey")),
+          template.formatted(Annotations.memberValueString("value", "pKey")),
           atSegment,
-          String.format(template, Annotations.memberValueString("value", "linkedKey")),
+          template.formatted(Annotations.memberValueString("value", "linkedKey")),
           atSegment,
-          String.format(template, Annotations.memberValueString("value", "constructor")),
+          template.formatted(Annotations.memberValueString("value", "constructor")),
           atSegment,
-          String.format(template, Annotations.memberValueString("value", "providerMethod")),
+          template.formatted(Annotations.memberValueString("value", "providerMethod")),
           "1  : DuplicateBindingsTest$SimpleProviderModule.foo",
           "2  : DuplicateBindingsTest$SimpleProviderModule.foo");
     }

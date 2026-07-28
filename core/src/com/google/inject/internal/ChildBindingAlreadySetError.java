@@ -20,10 +20,9 @@ final class ChildBindingAlreadySetError extends InternalErrorDetail<ChildBinding
   ChildBindingAlreadySetError(Key<?> key, Iterable<Object> existingSoruces, List<Object> sources) {
     super(
         ErrorId.CHILD_BINDING_ALREADY_SET,
-        String.format(
-            "Unable to create binding for %s because it was already configured on one or more"
-                + " child injectors or private modules.",
-            Messages.convert(key)),
+        ("Unable to create binding for %s because it was already configured on one or more"
+             + " child injectors or private modules.")
+            .formatted(Messages.convert(key)),
         sources,
         null);
     this.key = key;

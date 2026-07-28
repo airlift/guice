@@ -16,7 +16,8 @@
 
 package com.google.inject.internal;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+
+import static java.util.Objects.requireNonNull;
 
 import com.google.inject.spi.Dependency;
 import javax.annotation.Nullable;
@@ -34,7 +35,7 @@ final class ConstantProviderInternalFactory<T> extends ProviderInternalFactory<T
       @Nullable ProvisionListenerStackCallback<T> provisionCallback,
       int circularFactoryId) {
     super(rawType, source, circularFactoryId);
-    this.provider = checkNotNull(provider);
+    this.provider = requireNonNull(provider);
     this.provisionCallback = provisionCallback;
   }
 

@@ -16,7 +16,8 @@
 
 package com.google.inject.internal.util;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+
+import static java.util.Objects.requireNonNull;
 
 import com.google.common.base.Preconditions;
 import java.io.IOException;
@@ -129,7 +130,7 @@ final class LineNumbers {
   }
 
   private String memberKey(Member member) {
-    checkNotNull(member, "member");
+    requireNonNull(member, "member");
     if (member instanceof Field) {
       return member.getName();
     } else if (member instanceof Method) {

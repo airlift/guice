@@ -110,14 +110,18 @@ public class Asserts {
     int startingFrom = 0;
     for (String substring : substrings) {
       int index = text.indexOf(substring, startingFrom);
-      assertTrue(index >= startingFrom, String.format("Expected \"%s\" to contain substring \"%s\"", text, substring));
+      assertTrue(
+          index >= startingFrom,
+          "Expected \"%s\" to contain substring \"%s\"".formatted(text, substring));
       startingFrom = index + substring.length();
     }
 
     if (!allowDuplicates) {
       String lastSubstring = substrings[substrings.length - 1];
-      assertTrue(text.indexOf(lastSubstring, startingFrom) == -1, String.format(
-              "Expected \"%s\" to contain substring \"%s\" only once),", text, lastSubstring));
+      assertTrue(
+          text.indexOf(lastSubstring, startingFrom) == -1,
+          "Expected \"%s\" to contain substring \"%s\" only once),"
+              .formatted(text, lastSubstring));
     }
   }
 

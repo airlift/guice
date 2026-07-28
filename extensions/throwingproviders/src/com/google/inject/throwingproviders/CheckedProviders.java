@@ -35,9 +35,8 @@ public final class CheckedProviders {
         return invokeGet(proxy, method);
       }
       throw new UnsupportedOperationException(
-          String.format(
-              "Unsupported method <%s> with args <%s> invoked on <%s>",
-              method, Arrays.toString(args), proxy));
+          "Unsupported method <%s> with args <%s> invoked on <%s>"
+              .formatted(method, Arrays.toString(args), proxy));
     }
 
     protected abstract T invokeGet(Object proxy, Method method) throws Throwable;
@@ -60,7 +59,7 @@ public final class CheckedProviders {
 
     @Override
     public String toString() {
-      return String.format("generated CheckedProvider returning <%s>", returned);
+      return "generated CheckedProvider returning <%s>".formatted(returned);
     }
   }
 
@@ -81,8 +80,8 @@ public final class CheckedProviders {
       } catch (NoSuchMethodException e) {
         // This should have been caught by checkThrowable
         throw new AssertionError(
-            String.format(
-                "Throwable <%s> does not have a no-argument constructor", throwable.getName()));
+            "Throwable <%s> does not have a no-argument constructor"
+                .formatted(throwable.getName()));
       }
     }
 
@@ -93,7 +92,7 @@ public final class CheckedProviders {
 
     @Override
     public String toString() {
-      return String.format("generated CheckedProvider throwing <%s>", this.typeName);
+      return "generated CheckedProvider throwing <%s>".formatted(this.typeName);
     }
   }
 
@@ -198,8 +197,8 @@ public final class CheckedProviders {
       thrownType.getDeclaredConstructor();
     } catch (NoSuchMethodException e) {
       throw new IllegalArgumentException(
-          String.format(
-              "Thrown exception <%s> must have a no-argument constructor", thrownType.getName()),
+          "Thrown exception <%s> must have a no-argument constructor"
+              .formatted(thrownType.getName()),
           e);
     }
 
@@ -212,7 +211,7 @@ public final class CheckedProviders {
       getMethod = providerType.getMethod("get");
     } catch (NoSuchMethodException e) {
       throw new IllegalArgumentException(
-          String.format("Provider class <%s> must have a get() method", providerType.getName()), e);
+          "Provider class <%s> must have a get() method".formatted(providerType.getName()), e);
     }
 
     @SuppressWarnings("unchecked") // guaranteed by getExceptionTypes
@@ -231,8 +230,7 @@ public final class CheckedProviders {
     }
 
     throw new IllegalArgumentException(
-        String.format(
-            "Thrown exception <%s> is not declared to be thrown by <%s>",
-            thrownType.getName(), getMethod));
+        "Thrown exception <%s> is not declared to be thrown by <%s>"
+            .formatted(thrownType.getName(), getMethod));
   }
 }

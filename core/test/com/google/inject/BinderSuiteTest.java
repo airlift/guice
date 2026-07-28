@@ -401,12 +401,12 @@ public class BinderSuiteTest {
     }
 
     private Builder creationException(String message, Object... args) {
-      this.creationException = String.format(message, args);
+      this.creationException = message.formatted(args);
       return this;
     }
 
     private Builder configurationException(String message, Object... args) {
-      configurationException = String.format(message, args);
+      configurationException = message.formatted(args);
       return this;
     }
 

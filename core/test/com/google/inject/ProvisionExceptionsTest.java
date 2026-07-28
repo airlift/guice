@@ -16,12 +16,12 @@
 
 package com.google.inject;
 
+import static com.google.common.collect.MoreCollectors.onlyElement;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.inject.name.Names.named;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.google.common.collect.Iterables;
 import com.google.inject.internal.Messages;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
@@ -295,10 +295,9 @@ public class ProvisionExceptionsTest {
     var provideFailingValue = injector.getBinding(String.class).getSource();
     var providesDependsOnFailingProvider = injector.getBinding(Object.class).getSource();
     var providesDependensOnFailingProvider_failing =
-        Iterables.getOnlyElement(
-            ((HasDependencies) injector.getBinding(Object.class)).getDependencies());
+        ((HasDependencies) injector.getBinding(Object.class)).getDependencies().stream().collect(onlyElement());
     var pe = assertThrows(ProvisionException.class, () -> injector.getInstance(Object.class));
-    var message = Iterables.getOnlyElement(pe.getErrorMessages()).getErrorDetail();
+    var message = pe.getErrorMessages().stream().collect(onlyElement()).getErrorDetail();
     assertThat(message.getCause()).hasMessageThat().isEqualTo("boom");
     assertThat(message.getSources())
         .containsExactly(
@@ -308,13 +307,12 @@ public class ProvisionExceptionsTest {
             provideFailingValue); // the thing that failed
 
     var dependsOnFailingProvider_failing =
-        Iterables.getOnlyElement(
-            ((HasDependencies) injector.getBinding(DependsOnFailingProvider.class))
-                .getDependencies());
+        ((HasDependencies) injector.getBinding(DependsOnFailingProvider.class))
+                .getDependencies().stream().collect(onlyElement());
     pe =
         assertThrows(
             ProvisionException.class, () -> injector.getInstance(DependsOnFailingProvider.class));
-    message = Iterables.getOnlyElement(pe.getErrorMessages()).getErrorDetail();
+    message = pe.getErrorMessages().stream().collect(onlyElement()).getErrorDetail();
     assertThat(message.getCause()).hasMessageThat().isEqualTo("boom");
     assertThat(message.getSources())
         .containsExactly(
