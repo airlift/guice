@@ -5,7 +5,7 @@ import java.util.function.Predicate;
 /** A CallerFinder directly compiled against StackWalker. Requires compiling against jdk11+. */
 final class DirectStackWalkerFinder implements CallerFinder {
   private static final StackWalker WALKER =
-      StackWalker.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE);
+      StackWalker.getInstance();
 
   @Override
   public StackTraceElement findCaller(Predicate<String> shouldBeSkipped) {
