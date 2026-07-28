@@ -160,7 +160,7 @@ final class FactoryProvider2<F>
     /** true if {@link #isValidForOptimizedAssistedInject} returned true. */
     final boolean optimized;
     /** the list of optimized providers, empty if not optimized. */
-    final List<ThreadLocalProvider> providers;
+    final List<ScopedValueProvider> providers;
     /** used to perform optimized factory creations. */
     volatile Binding<?> cachedBinding; // TODO: volatile necessary?
 
@@ -172,7 +172,7 @@ final class FactoryProvider2<F>
         Method factoryMethod,
         Set<Dependency<?>> dependencies,
         boolean optimized,
-        List<ThreadLocalProvider> providers) {
+        List<ScopedValueProvider> providers) {
       this.constructor = constructor;
       this.returnType = returnType;
       this.paramTypes = paramTypes;
@@ -337,18 +337,18 @@ final class FactoryProvider2<F>
         }
 
         Constructor<?> constructor = (Constructor<?>) ctorInjectionPoint.getMember();
-        List<ThreadLocalProvider> providers = List.of();
+        List<ScopedValueProvider> providers = List.of();
         Set<Dependency<?>> deps = getDependencies(ctorInjectionPoint, implementation);
         boolean optimized = false;
         // Now go through all dependencies of the implementation and see if it is OK to
         // use an optimized form of assistedinject2.  The optimized form requires that
         // all injections directly inject the object itself (and not a Provider of the object,
         // or an Injector), because it caches a single child injector and mutates the Provider
-        // of the arguments in a ThreadLocal.
+        // of the arguments in a ScopedValue.
         if (isValidForOptimizedAssistedInject(deps, implementation.getRawType(), factoryType)) {
-          ImmutableList.Builder<ThreadLocalProvider> providerListBuilder = ImmutableList.builder();
+          ImmutableList.Builder<ScopedValueProvider> providerListBuilder = ImmutableList.builder();
           for (int i = 0; i < params.size(); i++) {
-            providerListBuilder.add(new ThreadLocalProvider());
+            providerListBuilder.add(new ScopedValueProvider());
           }
           providers = providerListBuilder.build();
           optimized = true;
@@ -699,7 +699,7 @@ final class FactoryProvider2<F>
 
   /**
    * Returns true if all dependencies are suitable for the optimized version of AssistedInject. The
-   * optimized version caches the binding and uses a ThreadLocal Provider, so can only be applied if
+   * optimized version caches the binding and uses a ScopedValue-backed Provider, so can only be applied if
    * the assisted bindings are immediately provided. This looks for hints that the values may be
    * lazily retrieved, by looking for injections of Injector or a Provider for the assisted values.
    */
@@ -837,7 +837,7 @@ final class FactoryProvider2<F>
               }
             } else {
               for (Key<?> paramKey : data.paramTypes) {
-                // Bind to our ThreadLocalProviders.
+                // Bind to our ScopedValueProviders.
                 binder.bind((Key) paramKey).toProvider(data.providers.get(p++));
               }
             }
@@ -896,11 +896,13 @@ final class FactoryProvider2<F>
       provider = getBindingFromNewInjector(method, args, data).getProvider();
     }
     try {
+      ScopedValue.Carrier carrier = null;
       int p = 0;
-      for (ThreadLocalProvider tlp : data.providers) {
-        tlp.set(args[p++]);
+      for (ScopedValueProvider svp : data.providers) {
+        Object arg = args[p++];
+        carrier = carrier == null ? ScopedValue.where(svp.value, arg) : carrier.where(svp.value, arg);
       }
-      return provider.get();
+      return carrier == null ? provider.get() : carrier.call(() -> provider.get());
     } catch (ProvisionException e) {
       // if this is an exception declared by the factory method, throw it as-is
       if (e.getErrorMessages().size() == 1) {
@@ -911,10 +913,6 @@ final class FactoryProvider2<F>
         }
       }
       throw e;
-    } finally {
-      for (ThreadLocalProvider tlp : data.providers) {
-        tlp.remove();
-      }
     }
   }
 
@@ -952,13 +950,25 @@ final class FactoryProvider2<F>
     return false;
   }
 
+  /**
+   * Carries one assisted argument of the optimized path, bound for exactly the extent of the
+   * construction instead of set on a ThreadLocal and cleared in a finally block. Behaviour is
+   * unchanged: nested use of the same factory method, the one case where the two mechanisms would
+   * differ, is structurally impossible either way, because the optimized path reuses a single
+   * binding per method and circular-dependency detection rejects the re-entry first.
+   */
   // not <T> because we'll never know and this is easier than suppressing warnings.
-  private static class ThreadLocalProvider extends ThreadLocal<Object> implements Provider<Object> {
+  private static final class ScopedValueProvider implements Provider<Object> {
+    final ScopedValue<Object> value = ScopedValue.newInstance();
+
     @Override
-    protected Object initialValue() {
-      throw new IllegalStateException(
-          "Cannot use optimized @Assisted provider outside the scope of the constructor."
-              + " (This should never happen.  If it does, please report it.)");
+    public Object get() {
+      if (!value.isBound()) {
+        throw new IllegalStateException(
+            "Cannot use optimized @Assisted provider outside the scope of the constructor."
+                + " (This should never happen.  If it does, please report it.)");
+      }
+      return value.get();
     }
   }
 
