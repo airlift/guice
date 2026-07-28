@@ -54,7 +54,7 @@ public class MultipleServletInjectorsTest
             protected Injector getInjector()
             {
                 // Cache this injector in the test for later testing...
-                return injectorOne =
+                injectorOne =
                         Guice.createInjector(
                                 new ServletModule()
                                 {
@@ -65,6 +65,7 @@ public class MultipleServletInjectorsTest
                                         serve("/*").with(DummyServlet.class);
                                     }
                                 });
+                return injectorOne;
             }
         }.contextInitialized(new ServletContextEvent(fakeContextOne));
 
@@ -77,7 +78,7 @@ public class MultipleServletInjectorsTest
             @Override
             protected Injector getInjector()
             {
-                return injectorTwo =
+                injectorTwo =
                         Guice.createInjector(
                                 new ServletModule()
                                 {
@@ -90,6 +91,7 @@ public class MultipleServletInjectorsTest
                                         serve("/*").with(HttpServlet.class);
                                     }
                                 });
+                return injectorTwo;
             }
         }.contextInitialized(new ServletContextEvent(fakeContextTwo));
 

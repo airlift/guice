@@ -342,10 +342,13 @@ public class ServletTest
                                             assertEquals(resp, previousResp[0]);
                                         }
 
-                                        chain.doFilter(
-                                                previousReq[0] = new HttpServletRequestWrapper((HttpServletRequest) req),
-                                                previousResp[0] =
-                                                        new HttpServletResponseWrapper((HttpServletResponse) resp));
+                                        HttpServletRequestWrapper wrappedReq =
+                                                new HttpServletRequestWrapper((HttpServletRequest) req);
+                                        HttpServletResponseWrapper wrappedResp =
+                                                new HttpServletResponseWrapper((HttpServletResponse) resp);
+                                        previousReq[0] = wrappedReq;
+                                        previousResp[0] = wrappedResp;
+                                        chain.doFilter(wrappedReq, wrappedResp);
 
                                         assertSame(req, reqProvider.get());
                                         assertSame(resp, respProvider.get());

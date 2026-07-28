@@ -31,6 +31,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 public class JmxTest
 {
+    private JmxTest() {}
+
     interface Foo {}
 
     static class FooImpl

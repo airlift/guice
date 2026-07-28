@@ -18,16 +18,9 @@ package com.google.inject.tools.jmx;
 
 import com.google.inject.Binding;
 
-class ManagedBinding
+record ManagedBinding(Binding<?> binding)
         implements ManagedBindingMBean
 {
-    final Binding<?> binding;
-
-    ManagedBinding(Binding<?> binding)
-    {
-        this.binding = binding;
-    }
-
     @Override
     public String getSource()
     {

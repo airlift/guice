@@ -271,7 +271,8 @@ public class ContinuingRequestIntegrationTest
             // Inside this request, we should always get the same instance.
             assertSame(someObject.get(), someObject.get());
 
-            return value = request.get().getParameter(PARAM_NAME);
+            value = request.get().getParameter(PARAM_NAME);
+            return value;
         }
     }
 }

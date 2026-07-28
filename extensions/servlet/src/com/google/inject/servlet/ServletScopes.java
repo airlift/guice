@@ -77,7 +77,7 @@ public final class ServletScopes
                 /**
                  * Keys bound in request-scope which are handled directly by GuiceFilter.
                  */
-                private final ImmutableSet<Key<?>> REQUEST_CONTEXT_KEYS =
+                private final ImmutableSet<Key<?>> requestContextKeys =
                         ImmutableSet.of(
                                 Key.get(HttpServletRequest.class),
                                 Key.get(HttpServletResponse.class),
@@ -121,7 +121,7 @@ public final class ServletScopes
                     //
                     // This _correctly_ throws up if the thread is out of scope.
                     HttpServletRequest request = GuiceFilter.getOriginalRequest(key);
-                    if (REQUEST_CONTEXT_KEYS.contains(key)) {
+                    if (requestContextKeys.contains(key)) {
                         // Don't store these keys as attributes, since they are handled by
                         // GuiceFilter itself.
                         return creator.get();

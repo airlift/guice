@@ -36,6 +36,8 @@ import java.lang.management.ManagementFactory;
  */
 public class Manager
 {
+    private Manager() {}
+
     /**
      * Registers all the bindings of an Injector with the platform MBean server. Consider using the
      * name of your root {@link Module} class as the domain.
