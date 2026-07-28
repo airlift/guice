@@ -20,7 +20,7 @@ import static java.util.Arrays.stream;
 import static java.util.Collections.sort;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Binder;
@@ -32,20 +32,22 @@ import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.ToIntFunction;
-import junit.framework.TestCase;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for {@link ImmutableStringTrie}.
  *
  * @author mcculls@gmail.com (Stuart McCulloch)
  */
-public class ImmutableStringTrieTest extends TestCase {
+public class ImmutableStringTrieTest {
 
+  @Test
   public void testSingletonTrie() {
     ToIntFunction<String> trie = ImmutableStringTrie.buildTrie(ImmutableSet.of("testKey"));
     assertThat(trie.applyAsInt("testKey"), is(0));
   }
 
+  @Test
   public void testMethodStrings() {
     List<String> table =
         stream(Binder.class.getDeclaredMethods()).map(Method::toString).collect(toList());
@@ -63,6 +65,7 @@ public class ImmutableStringTrieTest extends TestCase {
 
   private static final int MAX_STRING_LENGTH = 100;
 
+  @Test
   public void testRandomStrings() {
 
     Random random = new SecureRandom();

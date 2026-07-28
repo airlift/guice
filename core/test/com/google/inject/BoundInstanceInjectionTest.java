@@ -24,11 +24,14 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import com.google.inject.name.Named;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
+import org.junit.jupiter.api.Test;
 
 /** @author crazybob@google.com (Bob Lee) */
-public class BoundInstanceInjectionTest extends TestCase {
+public class BoundInstanceInjectionTest {
 
+  @Test
   public void testInstancesAreInjected() throws CreationException {
     final O o = new O();
 
@@ -54,6 +57,7 @@ public class BoundInstanceInjectionTest extends TestCase {
     }
   }
 
+  @Test
   public void testProvidersAreInjected() throws CreationException {
     Injector injector =
         Guice.createInjector(
@@ -79,6 +83,7 @@ public class BoundInstanceInjectionTest extends TestCase {
     assertEquals(5, injector.getInstance(O.class).fromMethod);
   }
 
+  @Test
   public void testMalformedInstance() {
     try {
       Guice.createInjector(
@@ -98,6 +103,7 @@ public class BoundInstanceInjectionTest extends TestCase {
     }
   }
 
+  @Test
   public void testMalformedProvider() {
     try {
       Guice.createInjector(

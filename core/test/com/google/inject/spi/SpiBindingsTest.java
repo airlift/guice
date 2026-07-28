@@ -42,12 +42,17 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
-import junit.framework.AssertionFailedError;
-import junit.framework.TestCase;
+import org.opentest4j.AssertionFailedError;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import org.junit.jupiter.api.Test;
 
 /** @author jessewilson@google.com (Jesse Wilson) */
-public class SpiBindingsTest extends TestCase {
+public class SpiBindingsTest {
 
+  @Test
   public void testBindConstant() {
     checkInjector(
         new AbstractModule() {
@@ -66,6 +71,7 @@ public class SpiBindingsTest extends TestCase {
         });
   }
 
+  @Test
   public void testToInstanceBinding() {
     checkInjector(
         new AbstractModule() {
@@ -100,6 +106,7 @@ public class SpiBindingsTest extends TestCase {
         });
   }
 
+  @Test
   public void testToProviderBinding() {
     final Provider<String> stringProvider = new StringProvider();
 
@@ -129,6 +136,7 @@ public class SpiBindingsTest extends TestCase {
         });
   }
 
+  @Test
   public void testToProviderKeyBinding() {
     checkInjector(
         new AbstractModule() {
@@ -156,6 +164,7 @@ public class SpiBindingsTest extends TestCase {
         });
   }
 
+  @Test
   public void testToKeyBinding() {
     final Key<String> aKey = Key.get(String.class, Names.named("a"));
     final Key<String> bKey = Key.get(String.class, Names.named("b"));
@@ -194,6 +203,7 @@ public class SpiBindingsTest extends TestCase {
         });
   }
 
+  @Test
   public void testToConstructorBinding() {
     checkInjector(
         new AbstractModule() {
@@ -223,6 +233,7 @@ public class SpiBindingsTest extends TestCase {
         });
   }
 
+  @Test
   public void testConstantBinding() {
     checkInjector(
         new AbstractModule() {
@@ -250,6 +261,7 @@ public class SpiBindingsTest extends TestCase {
         });
   }
 
+  @Test
   public void testConvertedConstantBinding() {
     Injector injector =
         Guice.createInjector(
@@ -275,6 +287,7 @@ public class SpiBindingsTest extends TestCase {
         });
   }
 
+  @Test
   public void testProviderBinding() {
     Injector injector =
         Guice.createInjector(
@@ -300,6 +313,7 @@ public class SpiBindingsTest extends TestCase {
         });
   }
 
+  @Test
   public void testScopes() {
     checkInjector(
         new AbstractModule() {
@@ -381,6 +395,7 @@ public class SpiBindingsTest extends TestCase {
         });
   }
 
+  @Test
   public void testExtensionSpi() {
     final AtomicBoolean visiting = new AtomicBoolean(false);
 
@@ -402,9 +417,7 @@ public class SpiBindingsTest extends TestCase {
                             // because constructing the injector visits here, and we need
                             // to process the binding as normal
                             if (visiting.get()) {
-                              assertTrue(
-                                  "visitor: " + visitor,
-                                  visitor instanceof FailingSpiTargetVisitor);
+                              assertTrue(visitor instanceof FailingSpiTargetVisitor, "visitor: " + visitor);
                               return (V) "visited";
                             } else {
                               return visitor.visit(binding);
@@ -426,7 +439,7 @@ public class SpiBindingsTest extends TestCase {
     Binding<Provider<String>> providerBinding = injector.getBinding(providerOfStringKey);
     assertEquals(providerOfStringKey, providerBinding.getKey());
     checkBindingSource(providerBinding);
-    assertTrue("binding: " + providerBinding, providerBinding instanceof ProviderBinding);
+    assertTrue(providerBinding instanceof ProviderBinding, "binding: " + providerBinding);
     providerBinding.acceptTargetVisitor(
         new FailingTargetVisitor<Provider<String>>() {
           @Override

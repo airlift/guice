@@ -19,8 +19,11 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
-import junit.framework.TestCase;
 import org.mockito.Mockito;
+import static org.junit.jupiter.api.Assertions.fail;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Exactly the same as {@linkplain com.google.inject.servlet.FilterPipelineTest} except that we test
@@ -28,11 +31,11 @@ import org.mockito.Mockito;
  *
  * @author dhanji@gmail.com (Dhanji R. Prasanna)
  */
-public class InjectedFilterPipelineTest extends TestCase {
+public class InjectedFilterPipelineTest {
   private Injector injector1;
   private Injector injector2;
 
-  @Override
+  @BeforeEach
   public final void setUp() {
     injector1 =
         Guice.createInjector(
@@ -69,9 +72,10 @@ public class InjectedFilterPipelineTest extends TestCase {
             });
   }
 
-  @Override
+  @AfterEach
   public final void tearDown() {}
 
+  @Test
   public final void testDispatchThruInjectedGuiceFilter() throws ServletException, IOException {
 
     // create mocks

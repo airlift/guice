@@ -61,10 +61,17 @@ import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletResponseWrapper;
 import jakarta.servlet.http.HttpSession;
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.fail;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 
 /** @author crazybob@google.com (Bob Lee) */
-public class ServletTest extends TestCase {
+public class ServletTest {
   private static final Key<HttpServletRequest> HTTP_REQ_KEY = Key.get(HttpServletRequest.class);
   private static final Key<HttpServletResponse> HTTP_RESP_KEY = Key.get(HttpServletResponse.class);
   private static final Key<Map<String, String[]>> REQ_PARAMS_KEY =
@@ -74,12 +81,13 @@ public class ServletTest extends TestCase {
   private static final Key<InSession> IN_SESSION_KEY = Key.get(InSession.class);
   private static final Key<InSession> IN_SESSION_NULL_KEY = Key.get(InSession.class, Null.class);
 
-  @Override
+  @BeforeEach
   public void setUp() {
     //we need to clear the reference to the pipeline every test =(
     GuiceFilter.reset();
   }
 
+  @Test
   public void testScopeExceptions() throws Exception {
     Injector injector =
         Guice.createInjector(
@@ -136,6 +144,7 @@ public class ServletTest extends TestCase {
     }
   }
 
+  @Test
   public void testRequestAndResponseBindings() throws Exception {
     final Injector injector = createInjector();
     final HttpServletRequest request = newFakeHttpServletRequest();
@@ -164,6 +173,7 @@ public class ServletTest extends TestCase {
     assertTrue(invoked[0]);
   }
 
+  @Test
   public void testRequestAndResponseBindings_wrappingFilter() throws Exception {
     final HttpServletRequest request = newFakeHttpServletRequest();
     final ImmutableMap<String, String[]> wrappedParamMap =
@@ -251,6 +261,7 @@ public class ServletTest extends TestCase {
     assertTrue(filterInvoked[0]);
   }
 
+  @Test
   public void testRequestAndResponseBindings_matchesPassedParameters() throws Exception {
     final int[] filterInvoked = new int[1];
     final boolean[] servletInvoked = new boolean[1];
@@ -335,6 +346,7 @@ public class ServletTest extends TestCase {
     assertTrue(servletInvoked[0]);
   }
 
+  @Test
   public void testNewRequestObject() throws CreationException, IOException, ServletException {
     final Injector injector = createInjector();
     final HttpServletRequest request = newFakeHttpServletRequest();
@@ -356,6 +368,7 @@ public class ServletTest extends TestCase {
     assertTrue(invoked[0]);
   }
 
+  @Test
   public void testExistingRequestObject() throws CreationException, IOException, ServletException {
     final Injector injector = createInjector();
     final HttpServletRequest request = newFakeHttpServletRequest();
@@ -381,6 +394,7 @@ public class ServletTest extends TestCase {
     assertTrue(invoked[0]);
   }
 
+  @Test
   public void testNewSessionObject() throws CreationException, IOException, ServletException {
     final Injector injector = createInjector();
     final HttpServletRequest request = newFakeHttpServletRequest();
@@ -402,6 +416,7 @@ public class ServletTest extends TestCase {
     assertTrue(invoked[0]);
   }
 
+  @Test
   public void testExistingSessionObject() throws CreationException, IOException, ServletException {
     final Injector injector = createInjector();
     final HttpServletRequest request = newFakeHttpServletRequest();
@@ -427,6 +442,7 @@ public class ServletTest extends TestCase {
     assertTrue(invoked[0]);
   }
 
+  @Test
   public void testHttpSessionIsSerializable() throws Exception {
     final Injector injector = createInjector();
     final HttpServletRequest request = newFakeHttpServletRequest();
@@ -456,6 +472,7 @@ public class ServletTest extends TestCase {
     assertEquals(NullObject.INSTANCE, deserializedSession.getAttribute(inSessionNullKey));
   }
 
+  @Test
   public void testGuiceFilterConstructors() throws Exception {
     final RuntimeException servletException = new RuntimeException();
     final RuntimeException chainException = new RuntimeException();

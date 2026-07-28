@@ -30,7 +30,10 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Member;
 import java.util.Set;
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 
 /**
  * Test cases for {@link AbstractInjectorGrapher}. This indirectly tests most classes in this
@@ -39,7 +42,7 @@ import junit.framework.TestCase;
  * @author bojand@google.com (Bojan Djordjevic)
  */
 
-public class AbstractInjectorGrapherTest extends TestCase {
+public class AbstractInjectorGrapherTest {
   private static final String TEST_STRING = "test";
 
   private static class FakeGrapher extends AbstractInjectorGrapher {
@@ -115,9 +118,8 @@ public class AbstractInjectorGrapherTest extends TestCase {
 
   private FakeGrapher grapher;
 
-  @Override
-  protected void setUp() throws Exception {
-    super.setUp();
+  @BeforeEach
+  public void setUp() throws Exception {
     grapher = new FakeGrapher();
     Node.ignoreSourceInComparisons = true;
     aNode =
@@ -141,6 +143,7 @@ public class AbstractInjectorGrapherTest extends TestCase {
             ImmutableList.<Member>of());
   }
 
+  @Test
   public void testLinkedAndInstanceBindings() throws Exception {
     grapher.graph(
         Guice.createInjector(
@@ -169,6 +172,7 @@ public class AbstractInjectorGrapherTest extends TestCase {
     assertEquals(expectedEdges, grapher.edges);
   }
 
+  @Test
   public void testProviderBindings() throws Exception {
     final Wrapper<Provider<A2>> wrapper = new Wrapper<>();
     grapher.graph(
@@ -201,10 +205,11 @@ public class AbstractInjectorGrapherTest extends TestCase {
                 stringNode.getId(),
                 InjectionPoint.forConstructor(A2.class.getConstructor(Provider.class))),
             new DependencyEdge(a2ProviderNode.getId(), a2Node.getId(), null));
-    assertEquals("wrong nodes", expectedNodes, grapher.nodes);
-    assertEquals("wrong edges", expectedEdges, grapher.edges);
+    assertEquals(expectedNodes, grapher.nodes, "wrong nodes");
+    assertEquals(expectedEdges, grapher.edges, "wrong edges");
   }
 
+  @Test
   public void testGraphWithGivenRoot() throws Exception {
     grapher.graph(
         Guice.createInjector(

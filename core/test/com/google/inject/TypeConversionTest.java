@@ -26,11 +26,15 @@ import com.google.inject.spi.TypeConverter;
 import com.google.inject.spi.TypeConverterBinding;
 import java.lang.annotation.Retention;
 import java.util.Date;
-import junit.framework.AssertionFailedError;
-import junit.framework.TestCase;
+import org.opentest4j.AssertionFailedError;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.fail;
+import org.junit.jupiter.api.Test;
 
 /** @author crazybob@google.com (Bob Lee) */
-public class TypeConversionTest extends TestCase {
+public class TypeConversionTest {
 
   @Retention(RUNTIME)
   @BindingAnnotation
@@ -73,6 +77,7 @@ public class TypeConversionTest extends TestCase {
     BOB
   }
 
+  @Test
   public void testOneConstantInjection() throws CreationException {
     Injector injector =
         Guice.createInjector(
@@ -92,6 +97,7 @@ public class TypeConversionTest extends TestCase {
     @Inject @NumericValue int i;
   }
 
+  @Test
   public void testConstantInjection() throws CreationException {
     Injector injector =
         Guice.createInjector(
@@ -125,6 +131,7 @@ public class TypeConversionTest extends TestCase {
     assertEquals(Foo.class, foo.classField);
   }
 
+  @Test
   public void testConstantInjectionWithExplicitBindingsRequired() throws CreationException {
     Injector injector =
         Guice.createInjector(
@@ -180,6 +187,7 @@ public class TypeConversionTest extends TestCase {
     }
   }
 
+  @Test
   public void testInvalidInteger() throws CreationException {
     Injector injector = Guice.createInjector(new OuterErrorModule());
     try {
@@ -201,6 +209,7 @@ public class TypeConversionTest extends TestCase {
     @Inject @NumericValue Integer integerField;
   }
 
+  @Test
   public void testInvalidCharacter() throws CreationException {
     Injector injector =
         Guice.createInjector(
@@ -225,6 +234,7 @@ public class TypeConversionTest extends TestCase {
     @Inject @NumericValue char foo;
   }
 
+  @Test
   public void testInvalidEnum() throws CreationException {
     Injector injector =
         Guice.createInjector(
@@ -249,6 +259,7 @@ public class TypeConversionTest extends TestCase {
     @Inject @NumericValue Bar foo;
   }
 
+  @Test
   public void testToInstanceIsTreatedLikeConstant() throws CreationException {
     Injector injector =
         Guice.createInjector(
@@ -267,6 +278,7 @@ public class TypeConversionTest extends TestCase {
     @Inject Long foo;
   }
 
+  @Test
   public void testCustomTypeConversion() throws CreationException {
     final Date result = new Date();
 
@@ -303,6 +315,7 @@ public class TypeConversionTest extends TestCase {
     }
   }
 
+  @Test
   public void testInvalidCustomValue() throws CreationException {
     Module module = new InvalidCustomValueModule();
     try {
@@ -358,6 +371,7 @@ public class TypeConversionTest extends TestCase {
     }
   }
 
+  @Test
   public void testNullCustomValue() {
     try {
       Guice.createInjector(new OuterModule(new ConverterNullModule()));
@@ -383,6 +397,7 @@ public class TypeConversionTest extends TestCase {
     }
   }
 
+  @Test
   public void testCustomValueTypeMismatch() {
     try {
       Guice.createInjector(new OuterModule(new ConverterCustomModule()));
@@ -399,6 +414,7 @@ public class TypeConversionTest extends TestCase {
     }
   }
 
+  @Test
   public void testStringIsConvertedOnlyOnce() {
     final TypeConverter converter =
         new TypeConverter() {
@@ -460,6 +476,7 @@ public class TypeConversionTest extends TestCase {
     }
   }
 
+  @Test
   public void testAmbiguousTypeConversion() {
     try {
       Guice.createInjector(new OuterAmbiguousModule());

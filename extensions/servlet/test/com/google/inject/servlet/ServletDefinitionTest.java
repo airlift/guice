@@ -35,16 +35,20 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import org.junit.jupiter.api.Test;
 
 /**
  * Basic unit test for lifecycle of a ServletDefinition (wrapper).
  *
  * @author Dhanji R. Prasanna (dhanji@gmail com)
  */
-public class ServletDefinitionTest extends TestCase {
+public class ServletDefinitionTest {
 
   @SuppressWarnings("unchecked") // Safe because mock will only ever return HttpServlet
+  @Test
   public final void testServletInitAndConfig() throws ServletException {
     Injector injector = mock(Injector.class);
     Binding<HttpServlet> binding = mock(Binding.class);
@@ -90,6 +94,7 @@ public class ServletDefinitionTest extends TestCase {
     }
   }
 
+  @Test
   public void testServiceWithContextPath() throws IOException, ServletException {
     String pattern = "/*";
     // some init params

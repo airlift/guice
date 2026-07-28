@@ -15,7 +15,9 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * This tests that filter stage of the pipeline dispatches correctly to guice-managed filters with
@@ -25,10 +27,10 @@ import junit.framework.TestCase;
  *
  * @author dhanji@gmail.com (Dhanji R. Prasanna)
  */
-public class MultiModuleDispatchIntegrationTest extends TestCase {
+public class MultiModuleDispatchIntegrationTest {
   private static int inits, doFilters, destroys;
 
-  @Override
+  @BeforeEach
   public final void setUp() {
     inits = 0;
     doFilters = 0;
@@ -37,6 +39,7 @@ public class MultiModuleDispatchIntegrationTest extends TestCase {
     GuiceFilter.reset();
   }
 
+  @Test
   public final void testDispatchRequestToManagedPipeline() throws ServletException, IOException {
     final Injector injector =
         Guice.createInjector(
@@ -76,15 +79,13 @@ public class MultiModuleDispatchIntegrationTest extends TestCase {
     pipeline.dispatch(requestMock, null, mock(FilterChain.class));
     pipeline.destroyPipeline();
 
-    assertTrue(
-        "lifecycle states did not"
+    assertTrue(inits == 1 && doFilters == 3 && destroys == 1, "lifecycle states did not"
             + " fire correct number of times-- inits: "
             + inits
             + "; dos: "
             + doFilters
             + "; destroys: "
-            + destroys,
-        inits == 1 && doFilters == 3 && destroys == 1);
+            + destroys);
   }
 
   @Singleton

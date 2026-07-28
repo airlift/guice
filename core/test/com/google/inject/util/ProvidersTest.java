@@ -20,15 +20,18 @@ import com.google.common.base.Objects;
 import com.google.common.testing.EqualsTester;
 import com.google.inject.Provider;
 import jakarta.inject.Inject;
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link Providers}.
  *
  * @author Kevin Bourrillion (kevinb9n@gmail.com)
  */
-public class ProvidersTest extends TestCase {
+public class ProvidersTest {
 
+  @Test
   public void testOfInstance() {
     String foo = "foo";
     Provider<String> p = Providers.of(foo);
@@ -36,11 +39,13 @@ public class ProvidersTest extends TestCase {
     assertSame(foo, p.get());
   }
 
+  @Test
   public void testOfNull() {
     Provider<String> p = Providers.of(null);
     assertNull(p.get());
   }
 
+  @Test
   public void testOfEquality() {
     new EqualsTester()
         .addEqualityGroup(Providers.of(null), Providers.of(null))
@@ -48,6 +53,7 @@ public class ProvidersTest extends TestCase {
         .testEquals();
   }
 
+  @Test
   public void testGuicifyEquality() {
     new EqualsTester()
         .addEqualityGroup(

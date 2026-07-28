@@ -2,11 +2,13 @@ package com.google.inject.spi;
 
 import com.google.common.collect.Lists;
 import java.util.List;
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import org.junit.jupiter.api.Test;
 
 /** Tests for {@link Message}. */
-public class MessageTest extends TestCase {
+public class MessageTest {
 
+  @Test
   public void testMessageHashCodeVariesWithSource() {
     String innerMessage = "This is the message.";
     Message firstMessage = new Message(1, innerMessage);
@@ -14,6 +16,7 @@ public class MessageTest extends TestCase {
     assertFalse(firstMessage.hashCode() == secondMessage.hashCode());
   }
 
+  @Test
   public void testMessageHashCodeVariesWithCause() {
     String innerMessage = "This is the message.";
     List<Object> sourceList = Lists.newArrayList(new Object());

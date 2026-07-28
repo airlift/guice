@@ -26,18 +26,22 @@ import com.google.inject.Injector;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.http.HttpServlet;
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import org.junit.jupiter.api.Test;
 
 /**
  * This gorgeous test asserts that multiple servlet pipelines can run in the SAME JVM. booya.
  *
  * @author dhanji@gmail.com (Dhanji R. Prasanna)
  */
-public class MultipleServletInjectorsTest extends TestCase {
+public class MultipleServletInjectorsTest {
 
   private Injector injectorOne;
   private Injector injectorTwo;
 
+  @Test
   public final void testTwoInjectors() {
     ServletContext fakeContextOne = mock(ServletContext.class);
     ServletContext fakeContextTwo = mock(ServletContext.class);

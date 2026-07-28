@@ -32,7 +32,11 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import org.junit.jupiter.api.Test;
 
 /**
  * Ensures servlet spec compliance for CGI-style variables and general path/pattern matching.
@@ -40,9 +44,10 @@ import junit.framework.TestCase;
  * @author Dhanji R. Prasanna (dhanji@gmail com)
  */
 @SuppressWarnings("unchecked") // Safe because mock will only ever return HttpServlet
-public class ServletDefinitionPathsTest extends TestCase {
+public class ServletDefinitionPathsTest {
 
   // Data-driven test.
+  @Test
   public final void testServletPathMatching() throws IOException, ServletException {
     servletPath("/index.html", "*.html", "/index.html");
     servletPath("/somewhere/index.html", "*.html", "/somewhere/index.html");
@@ -80,10 +85,7 @@ public class ServletDefinitionPathsTest extends TestCase {
                   throws ServletException, IOException {
 
                 final String path = servletRequest.getServletPath();
-                assertEquals(
-                    String.format("expected [%s] but was [%s]", expectedServletPath, path),
-                    expectedServletPath,
-                    path);
+                assertEquals(expectedServletPath, path, String.format("expected [%s] but was [%s]", expectedServletPath, path));
                 run[0] = true;
               }
             });
@@ -100,10 +102,11 @@ public class ServletDefinitionPathsTest extends TestCase {
     servletDefinition.init(null, injector, Sets.<HttpServlet>newIdentityHashSet());
     servletDefinition.doService(request, response);
 
-    assertTrue("Servlet did not run!", run[0]);
+    assertTrue(run[0], "Servlet did not run!");
   }
 
   // Data-driven test.
+  @Test
   public final void testPathInfoWithServletStyleMatching() throws IOException, ServletException {
     pathInfoWithServletStyleMatching("/path/index.html", "/path", "/*", "/index.html", "");
     pathInfoWithServletStyleMatching(
@@ -171,18 +174,14 @@ public class ServletDefinitionPathsTest extends TestCase {
                 final String path = servletRequest.getPathInfo();
 
                 if (null == expectedPathInfo) {
-                  assertNull(
-                      String.format("expected [%s] but was [%s]", expectedPathInfo, path), path);
+                  assertNull(path, String.format("expected [%s] but was [%s]", expectedPathInfo, path));
                 } else {
-                  assertEquals(
-                      String.format("expected [%s] but was [%s]", expectedPathInfo, path),
-                      expectedPathInfo,
-                      path);
+                  assertEquals(expectedPathInfo, path, String.format("expected [%s] but was [%s]", expectedPathInfo, path));
                 }
 
                 // assert memoizer
                 //noinspection StringEquality
-                assertSame("memo field did not work", path, servletRequest.getPathInfo());
+                assertSame(path, servletRequest.getPathInfo(), "memo field did not work");
 
                 run[0] = true;
               }
@@ -206,10 +205,11 @@ public class ServletDefinitionPathsTest extends TestCase {
     servletDefinition.init(null, injector, Sets.<HttpServlet>newIdentityHashSet());
     servletDefinition.doService(request, response);
 
-    assertTrue("Servlet did not run!", run[0]);
+    assertTrue(run[0], "Servlet did not run!");
   }
 
   // Data-driven test.
+  @Test
   public final void testPathInfoWithRegexMatching() throws IOException, ServletException {
     // first a mapping of /*
     pathInfoWithRegexMatching("/path/index.html", "/path", "/(.)*", "/index.html", "");
@@ -278,18 +278,14 @@ public class ServletDefinitionPathsTest extends TestCase {
                 final String path = servletRequest.getPathInfo();
 
                 if (null == expectedPathInfo) {
-                  assertNull(
-                      String.format("expected [%s] but was [%s]", expectedPathInfo, path), path);
+                  assertNull(path, String.format("expected [%s] but was [%s]", expectedPathInfo, path));
                 } else {
-                  assertEquals(
-                      String.format("expected [%s] but was [%s]", expectedPathInfo, path),
-                      expectedPathInfo,
-                      path);
+                  assertEquals(expectedPathInfo, path, String.format("expected [%s] but was [%s]", expectedPathInfo, path));
                 }
 
                 // assert memoizer
                 //noinspection StringEquality
-                assertSame("memo field did not work", path, servletRequest.getPathInfo());
+                assertSame(path, servletRequest.getPathInfo(), "memo field did not work");
 
                 run[0] = true;
               }
@@ -313,6 +309,6 @@ public class ServletDefinitionPathsTest extends TestCase {
     servletDefinition.init(null, injector, Sets.<HttpServlet>newIdentityHashSet());
     servletDefinition.doService(request, response);
 
-    assertTrue("Servlet did not run!", run[0]);
+    assertTrue(run[0], "Servlet did not run!");
   }
 }

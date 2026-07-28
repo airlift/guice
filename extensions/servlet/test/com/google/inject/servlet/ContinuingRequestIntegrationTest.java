@@ -44,11 +44,18 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.fail;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 /** Tests continuation of requests */
 
-public class ContinuingRequestIntegrationTest extends TestCase {
+public class ContinuingRequestIntegrationTest {
   private static final String PARAM_VALUE = "there";
   private static final String PARAM_NAME = "hi";
 
@@ -101,11 +108,12 @@ public class ContinuingRequestIntegrationTest extends TestCase {
   private ExecutorService executor;
   private Injector injector;
 
-  @Override
-  protected void tearDown() throws Exception {
+  @AfterEach
+  public void tearDown() throws Exception {
     injector.getInstance(GuiceFilter.class).destroy();
   }
 
+  @Test
   public final void testRequestContinuesInOtherThread()
       throws ServletException, IOException, InterruptedException {
     executor = Executors.newSingleThreadExecutor();
@@ -147,6 +155,7 @@ public class ContinuingRequestIntegrationTest extends TestCase {
     assertEquals(PARAM_VALUE, injector.getInstance(OffRequestCallable.class).value);
   }
 
+  @Test
   public final void testRequestContinuationDiesInHttpRequestThread()
       throws ServletException, IOException, InterruptedException {
     executor = sameThreadExecutor;

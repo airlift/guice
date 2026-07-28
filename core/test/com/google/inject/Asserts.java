@@ -20,10 +20,10 @@ import static com.google.common.base.StandardSystemProperty.JAVA_CLASS_PATH;
 import static com.google.common.base.StandardSystemProperty.PATH_SEPARATOR;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.inject.internal.InternalFlags.getIncludeStackTraceOption;
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertNotNull;
-import static junit.framework.Assert.assertSame;
-import static junit.framework.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
@@ -88,9 +88,9 @@ public class Asserts {
   public static void assertEqualsBothWays(Object expected, Object actual) {
     assertNotNull(expected);
     assertNotNull(actual);
-    assertEquals("expected.equals(actual)", actual, expected);
-    assertEquals("actual.equals(expected)", expected, actual);
-    assertEquals("hashCode", expected.hashCode(), actual.hashCode());
+    assertEquals(actual, expected, "expected.equals(actual)");
+    assertEquals(expected, actual, "actual.equals(expected)");
+    assertEquals(expected.hashCode(), actual.hashCode(), "hashCode");
   }
 
   /** Fails unless {@code text} includes all {@code substrings}, in order, no duplicates */
@@ -113,18 +113,14 @@ public class Asserts {
     int startingFrom = 0;
     for (String substring : substrings) {
       int index = text.indexOf(substring, startingFrom);
-      assertTrue(
-          String.format("Expected \"%s\" to contain substring \"%s\"", text, substring),
-          index >= startingFrom);
+      assertTrue(index >= startingFrom, String.format("Expected \"%s\" to contain substring \"%s\"", text, substring));
       startingFrom = index + substring.length();
     }
 
     if (!allowDuplicates) {
       String lastSubstring = substrings[substrings.length - 1];
-      assertTrue(
-          String.format(
-              "Expected \"%s\" to contain substring \"%s\" only once),", text, lastSubstring),
-          text.indexOf(lastSubstring, startingFrom) == -1);
+      assertTrue(text.indexOf(lastSubstring, startingFrom) == -1, String.format(
+              "Expected \"%s\" to contain substring \"%s\" only once),", text, lastSubstring));
     }
   }
 
@@ -169,7 +165,7 @@ public class Asserts {
     WeakReference<Object> ref = new WeakReference<>(new Object(), queue);
     GcFinalization.awaitFullGc();
     try {
-      assertSame("queue didn't return ref in time", ref, queue.remove(5000));
+      assertSame(ref, queue.remove(5000), "queue didn't return ref in time");
     } catch (IllegalArgumentException e) {
       throw new RuntimeException(e);
     } catch (InterruptedException e) {
@@ -191,7 +187,7 @@ public class Asserts {
     GcFinalization.awaitClear(ref);
     if (queue != null) {
       try {
-        assertSame("queue didn't return ref in time", extraRef, queue.remove(5000));
+        assertSame(extraRef, queue.remove(5000), "queue didn't return ref in time");
       } catch (IllegalArgumentException e) {
         throw new RuntimeException(e);
       } catch (InterruptedException e) {

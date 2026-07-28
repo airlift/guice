@@ -61,14 +61,20 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.TooManyListenersException;
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.fail;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 
 /**
  * @author jmourits@google.com (Jerome Mourits)
  * @author jessewilson@google.com (Jesse Wilson)
  * @author sameb@google.com (Sam Berlin)
  */
-public class CheckedProviderTest extends TestCase {
+public class CheckedProviderTest {
   @Target(METHOD)
   @Retention(RUNTIME)
   @BindingAnnotation
@@ -83,8 +89,8 @@ public class CheckedProviderTest extends TestCase {
   private Injector providesInjector;
   private Injector cxtorInjector;
 
-  @Override
-  protected void setUp() throws Exception {
+  @BeforeEach
+  public void setUp() throws Exception {
     MockFoo.nextToThrow = null;
     MockFoo.nextToReturn = null;
     AnotherMockFoo.nextToThrow = null;
@@ -154,14 +160,17 @@ public class CheckedProviderTest extends TestCase {
             });
   }
 
+  @Test
   public void testExceptionsThrown_Bind() throws Exception {
     tExceptionsThrown(bindInjector);
   }
 
+  @Test
   public void testExceptionsThrown_Provides() throws Exception {
     tExceptionsThrown(providesInjector);
   }
 
+  @Test
   public void testExceptionsThrown_Cxtor() throws Exception {
     tExceptionsThrown(cxtorInjector);
   }
@@ -179,18 +188,22 @@ public class CheckedProviderTest extends TestCase {
     }
   }
 
+  @Test
   public void testValuesScoped_Bind() throws Exception {
     tValuesScoped(bindInjector, null);
   }
 
+  @Test
   public void testValuesScoped_Provides() throws Exception {
     tValuesScoped(providesInjector, null);
   }
 
+  @Test
   public void testValuesScopedWhenNotExceptionScoping_Bind() throws Exception {
     tValuesScoped(bindInjector, NotExceptionScoping.class);
   }
 
+  @Test
   public void testValuesScopedWhenNotExceptionScoping_Provides() throws Exception {
     tValuesScoped(providesInjector, NotExceptionScoping.class);
   }
@@ -213,6 +226,7 @@ public class CheckedProviderTest extends TestCase {
     assertEquals("B", remoteProvider.get().s());
   }
 
+  @Test
   public void testValuesScoped_Cxtor() throws Exception {
     RemoteProvider<Foo> remoteProvider = cxtorInjector.getInstance(Key.get(remoteProviderOfFoo));
 
@@ -223,14 +237,17 @@ public class CheckedProviderTest extends TestCase {
     assertNotSame(retrieved, remoteProvider.get()); // different, new scope.
   }
 
+  @Test
   public void testExceptionsScoped_Bind() throws Exception {
     tExceptionsScoped(bindInjector);
   }
 
+  @Test
   public void testExceptionsScoped_Provides() throws Exception {
     tExceptionsScoped(providesInjector);
   }
 
+  @Test
   public void testExceptionScopes_Cxtor() throws Exception {
     tExceptionsScoped(cxtorInjector);
   }
@@ -257,14 +274,17 @@ public class CheckedProviderTest extends TestCase {
     }
   }
 
+  @Test
   public void testExceptionsNotScopedWhenNotExceptionScoping_Bind() throws Exception {
     tExceptionsNotScopedWhenNotExceptionScoping(bindInjector);
   }
 
+  @Test
   public void testExceptionsNotScopedWhenNotExceptionScoping_Provides() throws Exception {
     tExceptionsNotScopedWhenNotExceptionScoping(providesInjector);
   }
 
+  @Test
   public void testExceptionNotScopedWhenNotExceptionScoping_Cxtor() throws Exception {
     tExceptionsNotScopedWhenNotExceptionScoping(cxtorInjector);
   }
@@ -292,6 +312,7 @@ public class CheckedProviderTest extends TestCase {
     }
   }
 
+  @Test
   public void testAnnotations_Bind() throws Exception {
     final MockRemoteProvider<Foo> mockRemoteProviderA = new MockRemoteProvider<>();
     final MockRemoteProvider<Foo> mockRemoteProviderB = new MockRemoteProvider<>();
@@ -313,6 +334,7 @@ public class CheckedProviderTest extends TestCase {
     tAnnotations(bindInjector, mockRemoteProviderA, mockRemoteProviderB);
   }
 
+  @Test
   public void testAnnotations_Provides() throws Exception {
     final MockRemoteProvider<Foo> mockRemoteProviderA = new MockRemoteProvider<>();
     final MockRemoteProvider<Foo> mockRemoteProviderB = new MockRemoteProvider<>();
@@ -351,6 +373,7 @@ public class CheckedProviderTest extends TestCase {
     assertEquals("B", injector.getInstance(Key.get(remoteProviderOfFoo)).get().s());
   }
 
+  @Test
   public void testAnnotations_Cxtor() throws Exception {
     cxtorInjector =
         Guice.createInjector(
@@ -375,14 +398,17 @@ public class CheckedProviderTest extends TestCase {
     assertEquals("B", cxtorInjector.getInstance(Key.get(remoteProviderOfFoo)).get().s());
   }
 
+  @Test
   public void testUndeclaredExceptions_Bind() throws Exception {
     tUndeclaredExceptions(bindInjector);
   }
 
+  @Test
   public void testUndeclaredExceptions_Provides() throws Exception {
     tUndeclaredExceptions(providesInjector);
   }
 
+  @Test
   public void testUndeclaredExceptions_Cxtor() throws Exception {
     tUndeclaredExceptions(cxtorInjector);
   }
@@ -409,6 +435,7 @@ public class CheckedProviderTest extends TestCase {
     }
   }
 
+  @Test
   public void testThrowingProviderSubclassing() throws Exception {
     final SubMockRemoteProvider aProvider = new SubMockRemoteProvider();
     aProvider.setNextToReturn(new SimpleFoo("A"));
@@ -429,6 +456,7 @@ public class CheckedProviderTest extends TestCase {
 
   static class SubMockRemoteProvider extends MockRemoteProvider<Foo> {}
 
+  @Test
   public void testBindingToNonInterfaceType_Bind() throws Exception {
     try {
       Guice.createInjector(
@@ -448,6 +476,7 @@ public class CheckedProviderTest extends TestCase {
     }
   }
 
+  @Test
   public void testBindingToNonInterfaceType_Provides() throws Exception {
     try {
       Guice.createInjector(
@@ -471,6 +500,7 @@ public class CheckedProviderTest extends TestCase {
     }
   }
 
+  @Test
   public void testBindingToSubSubInterface_Bind() throws Exception {
     try {
       bindInjector =
@@ -490,6 +520,7 @@ public class CheckedProviderTest extends TestCase {
     }
   }
 
+  @Test
   public void testBindingToSubSubInterface_Provides() throws Exception {
     try {
       Guice.createInjector(
@@ -516,6 +547,7 @@ public class CheckedProviderTest extends TestCase {
 
   interface SubRemoteProvider extends RemoteProvider<String> {}
 
+  @Test
   public void testBindingToInterfaceWithExtraMethod_Bind() throws Exception {
     try {
       bindInjector =
@@ -537,6 +569,7 @@ public class CheckedProviderTest extends TestCase {
     }
   }
 
+  @Test
   public void testBindingToInterfaceWithExtraMethod_Provides() throws Exception {
     try {
       Guice.createInjector(
@@ -562,6 +595,7 @@ public class CheckedProviderTest extends TestCase {
     }
   }
 
+  @Test
   public void testDependencies_Bind() {
     bindInjector =
         Guice.createInjector(
@@ -603,6 +637,7 @@ public class CheckedProviderTest extends TestCase {
         dependencyKeys);
   }
 
+  @Test
   public void testDependencies_Provides() {
     providesInjector =
         Guice.createInjector(
@@ -648,6 +683,7 @@ public class CheckedProviderTest extends TestCase {
         dependencyKeys);
   }
 
+  @Test
   public void testDependencies_Cxtor() {
     cxtorInjector =
         Guice.createInjector(
@@ -845,6 +881,7 @@ public class CheckedProviderTest extends TestCase {
     }
   }
 
+  @Test
   public void testBindingToInterfaceWithBoundValueType_Bind() throws RemoteException {
     bindInjector =
         Guice.createInjector(
@@ -866,6 +903,7 @@ public class CheckedProviderTest extends TestCase {
     assertEquals("A", bindInjector.getInstance(StringRemoteProvider.class).get());
   }
 
+  @Test
   public void testBindingToInterfaceWithBoundValueType_Provides() throws RemoteException {
     providesInjector =
         Guice.createInjector(
@@ -891,6 +929,7 @@ public class CheckedProviderTest extends TestCase {
   }
 
   @SuppressWarnings("deprecation")
+  @Test
   public void testBindingToInterfaceWithGeneric_Bind() throws Exception {
     bindInjector =
         Guice.createInjector(
@@ -914,6 +953,7 @@ public class CheckedProviderTest extends TestCase {
     assertEquals(Arrays.asList("A", "B"), bindInjector.getInstance(key).get());
   }
 
+  @Test
   public void testBindingToInterfaceWithGeneric_BindUsingTypeLiteral() throws Exception {
     bindInjector =
         Guice.createInjector(
@@ -937,6 +977,7 @@ public class CheckedProviderTest extends TestCase {
     assertEquals(Arrays.asList("A", "B"), bindInjector.getInstance(key).get());
   }
 
+  @Test
   public void testBindingToInterfaceWithGeneric_Provides() throws Exception {
     providesInjector =
         Guice.createInjector(
@@ -958,6 +999,7 @@ public class CheckedProviderTest extends TestCase {
     assertEquals(Arrays.asList("A", "B"), providesInjector.getInstance(key).get());
   }
 
+  @Test
   public void testBindingToInterfaceWithGeneric_Cxtor() throws Exception {
     cxtorInjector =
         Guice.createInjector(
@@ -981,6 +1023,7 @@ public class CheckedProviderTest extends TestCase {
     ThrowingArrayList() {}
   }
 
+  @Test
   public void testProviderMethodWithWrongException() {
     try {
       Guice.createInjector(
@@ -1011,6 +1054,7 @@ public class CheckedProviderTest extends TestCase {
     }
   }
 
+  @Test
   public void testCxtorWithWrongException() {
     try {
       Guice.createInjector(
@@ -1048,6 +1092,7 @@ public class CheckedProviderTest extends TestCase {
     }
   }
 
+  @Test
   public void testProviderMethodWithSubclassOfExceptionIsOk() throws Exception {
     providesInjector =
         Guice.createInjector(
@@ -1075,6 +1120,7 @@ public class CheckedProviderTest extends TestCase {
     }
   }
 
+  @Test
   public void testCxtorWithSubclassOfExceptionIsOk() throws Exception {
     cxtorInjector =
         Guice.createInjector(
@@ -1110,6 +1156,7 @@ public class CheckedProviderTest extends TestCase {
     }
   }
 
+  @Test
   public void testProviderMethodWithSuperclassExceptionFails() {
     try {
       Guice.createInjector(
@@ -1140,6 +1187,7 @@ public class CheckedProviderTest extends TestCase {
     }
   }
 
+  @Test
   public void testCxtorWithSuperclassExceptionFails() {
     try {
       Guice.createInjector(
@@ -1177,6 +1225,7 @@ public class CheckedProviderTest extends TestCase {
     }
   }
 
+  @Test
   public void testProviderMethodWithRuntimeExceptionsIsOk() throws Exception {
     providesInjector =
         Guice.createInjector(
@@ -1203,6 +1252,7 @@ public class CheckedProviderTest extends TestCase {
     }
   }
 
+  @Test
   public void testCxtorWithRuntimeExceptionsIsOk() throws Exception {
     cxtorInjector =
         Guice.createInjector(
@@ -1239,6 +1289,7 @@ public class CheckedProviderTest extends TestCase {
 
   private static class SubBindException extends BindException {}
 
+  @Test
   public void testProviderMethodWithManyExceptions() {
     try {
       Guice.createInjector(
@@ -1284,6 +1335,7 @@ public class CheckedProviderTest extends TestCase {
     }
   }
 
+  @Test
   public void testCxtorWithManyExceptions() {
     try {
       Guice.createInjector(
@@ -1336,6 +1388,7 @@ public class CheckedProviderTest extends TestCase {
     }
   }
 
+  @Test
   public void testMoreTypeParameters() {
     try {
       Guice.createInjector(
@@ -1360,6 +1413,7 @@ public class CheckedProviderTest extends TestCase {
     }
   }
 
+  @Test
   public void testWrongThrowingProviderType() {
     try {
       Guice.createInjector(
@@ -1385,6 +1439,7 @@ public class CheckedProviderTest extends TestCase {
     }
   }
 
+  @Test
   public void testOneMethodThatIsntGet() {
     try {
       Guice.createInjector(
@@ -1410,6 +1465,7 @@ public class CheckedProviderTest extends TestCase {
     }
   }
 
+  @Test
   public void testManyMethods() {
     try {
       Guice.createInjector(
@@ -1435,6 +1491,7 @@ public class CheckedProviderTest extends TestCase {
     }
   }
 
+  @Test
   public void testIncorrectPredefinedType_Bind() {
     try {
       Guice.createInjector(
@@ -1461,6 +1518,7 @@ public class CheckedProviderTest extends TestCase {
     }
   }
 
+  @Test
   public void testIncorrectPredefinedType_Provides() {
     try {
       Guice.createInjector(
@@ -1499,12 +1557,14 @@ public class CheckedProviderTest extends TestCase {
     String baz();
   }
 
+  @Test
   public void testResultSerializes() throws Exception {
     Result result = Result.forValue("foo");
     result = Asserts.reserialize(result);
     assertEquals("foo", result.getOrThrow());
   }
 
+  @Test
   public void testResultExceptionSerializes() throws Exception {
     Result result = Result.forException(new Exception("boo"));
     result = Asserts.reserialize(result);
@@ -1516,6 +1576,7 @@ public class CheckedProviderTest extends TestCase {
     }
   }
 
+  @Test
   public void testEarlyBindingError() {
     try {
       Guice.createInjector(
@@ -1546,6 +1607,7 @@ public class CheckedProviderTest extends TestCase {
     }
   }
 
+  @Test
   public void testNoInjectionPointForUsing() {
     try {
       Guice.createInjector(
@@ -1577,6 +1639,7 @@ public class CheckedProviderTest extends TestCase {
     }
   }
 
+  @Test
   public void testNoThrowingInject() {
     try {
       Guice.createInjector(
@@ -1609,6 +1672,7 @@ public class CheckedProviderTest extends TestCase {
     }
   }
 
+  @Test
   public void testProvisionExceptionOnDependenciesOfCxtor() throws Exception {
     Injector injector =
         Guice.createInjector(
@@ -1666,6 +1730,7 @@ public class CheckedProviderTest extends TestCase {
     }
   }
 
+  @Test
   public void testUsingDoesntClashWithBindingsOfSameType() throws Exception {
     cxtorInjector =
         Guice.createInjector(

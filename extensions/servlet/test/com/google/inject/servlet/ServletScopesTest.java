@@ -41,14 +41,17 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.util.List;
 import java.util.Map;
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for {@link ServletScopes}.
  *
  * @author forster@google.com (Mike Forster)
  */
-public class ServletScopesTest extends TestCase {
+public class ServletScopesTest {
+  @Test
   public void testIsRequestScopedPositive() {
     final Key<String> a = Key.get(String.class, named("A"));
     final Key<String> b = Key.get(String.class, named("B"));
@@ -108,6 +111,7 @@ public class ServletScopesTest extends TestCase {
     assertTrue(ServletScopes.isRequestScoped(injector.getBinding(g)));
   }
 
+  @Test
   public void testIsRequestScopedNegative() {
     final Key<String> a = Key.get(String.class, named("A"));
     final Key<String> b = Key.get(String.class, named("B"));

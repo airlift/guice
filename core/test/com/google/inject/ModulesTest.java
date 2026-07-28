@@ -20,11 +20,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.spi.ElementSource;
 import com.google.inject.util.Modules;
 import java.util.Arrays;
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
 
 /** @author jessewilson@google.com (Jesse Wilson) */
-public class ModulesTest extends TestCase {
+public class ModulesTest {
 
+  @Test
   public void testCombineVarargs() {
     Module combined = Modules.combine(newModule(1), newModule(2L), newModule((short) 3));
     Injector injector = Guice.createInjector(combined);
@@ -33,6 +35,7 @@ public class ModulesTest extends TestCase {
     assertEquals(3, injector.getInstance(Short.class).shortValue());
   }
 
+  @Test
   public void testCombineIterable() {
     Iterable<Module> modules = Arrays.asList(newModule(1), newModule(2L), newModule((short) 3));
     Injector injector = Guice.createInjector(Modules.combine(modules));
@@ -42,6 +45,7 @@ public class ModulesTest extends TestCase {
   }
 
   /** The module returned by Modules.combine shouldn't show up in binder sources. */
+  @Test
   public void testCombineSources() {
     final Module m1 = newModule(1);
     final Module m2 = newModule(2L);

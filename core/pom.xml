@@ -99,8 +99,6 @@
           -->
                     <excludes>
                         <exclude>**/*$*</exclude>
-                        <exclude>**/ScopesTest*</exclude>
-                        <exclude>**/TypeConversionTest*</exclude>
                     </excludes>
                 </configuration>
                 <executions>

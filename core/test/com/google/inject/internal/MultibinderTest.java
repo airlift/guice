@@ -85,12 +85,18 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.IntStream;
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.fail;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author jessewilson@google.com (Jesse Wilson)
  */
-public class MultibinderTest extends TestCase {
+public class MultibinderTest {
 
   final TypeLiteral<Optional<String>> optionalOfString = new TypeLiteral<Optional<String>>() {};
   final TypeLiteral<Map<String, String>> mapOfStringString =
@@ -104,6 +110,7 @@ public class MultibinderTest extends TestCase {
   final TypeLiteral<Collection<Provider<String>>> collectionOfProvidersOfStrings =
       new TypeLiteral<Collection<Provider<String>>>() {};
 
+  @Test
   public void testMultibinderAggregatesMultipleModules() {
     Module abc =
         new AbstractModule() {
@@ -145,6 +152,7 @@ public class MultibinderTest extends TestCase {
         instance("E"));
   }
 
+  @Test
   public void testMultibinderAggregationForAnnotationInstance() {
     Module module =
         new AbstractModule() {
@@ -177,6 +185,7 @@ public class MultibinderTest extends TestCase {
         instance("C"));
   }
 
+  @Test
   public void testMultibinderAggregationForAnnotationType() {
     Module module =
         new AbstractModule() {
@@ -209,6 +218,7 @@ public class MultibinderTest extends TestCase {
         instance("C"));
   }
 
+  @Test
   public void testMultibinderWithMultipleAnnotationValueSets() {
     Module module =
         new AbstractModule() {
@@ -250,6 +260,7 @@ public class MultibinderTest extends TestCase {
         deSetKey, stringType, setOf(module), BOTH, false, 1, instance("D"), instance("E"));
   }
 
+  @Test
   public void testMultibinderWithMultipleAnnotationTypeSets() {
     Module module =
         new AbstractModule() {
@@ -291,6 +302,7 @@ public class MultibinderTest extends TestCase {
         deSetKey, stringType, setOf(module), BOTH, false, 1, instance("D"), instance("E"));
   }
 
+  @Test
   public void testMultibinderWithMultipleSetTypes() {
     Module module =
         new AbstractModule() {
@@ -309,6 +321,7 @@ public class MultibinderTest extends TestCase {
     assertSetVisitor(Key.get(setOfInteger), intType, setOf(module), BOTH, false, 1, instance(1));
   }
 
+  @Test
   public void testMultibinderWithEmptySet() {
     Module module =
         new AbstractModule() {
@@ -324,6 +337,7 @@ public class MultibinderTest extends TestCase {
     assertSetVisitor(Key.get(setOfString), stringType, setOf(module), BOTH, false, 0);
   }
 
+  @Test
   public void testMultibinderSetIsUnmodifiable() {
     Injector injector =
         Guice.createInjector(
@@ -342,6 +356,7 @@ public class MultibinderTest extends TestCase {
     }
   }
 
+  @Test
   public void testMultibinderSetIsSerializable() throws IOException, ClassNotFoundException {
     Injector injector =
         Guice.createInjector(
@@ -370,6 +385,7 @@ public class MultibinderTest extends TestCase {
     }
   }
 
+  @Test
   public void testMultibinderSetIsLazy() {
     Module module =
         new AbstractModule() {
@@ -397,6 +413,7 @@ public class MultibinderTest extends TestCase {
         Key.get(setOfInteger), intType, setOf(module), BOTH, false, 0, providerInstance(1));
   }
 
+  @Test
   public void testMultibinderSetForbidsDuplicateElements() {
     Module module1 =
         new AbstractModule() {
@@ -443,6 +460,7 @@ public class MultibinderTest extends TestCase {
         instance("A"));
   }
 
+  @Test
   public void testMultibinderSetShowsBothElementsIfToStringDifferent() {
     // A simple example of a type whose toString returns more information than its equals method
     // considers.
@@ -518,6 +536,7 @@ public class MultibinderTest extends TestCase {
         instance(new ValueType(1, 3)));
   }
 
+  @Test
   public void testMultibinderSetPermitDuplicateElements() {
     Module ab =
         new AbstractModule() {
@@ -553,6 +572,7 @@ public class MultibinderTest extends TestCase {
         instance("C"));
   }
 
+  @Test
   public void testMultibinderSetPermitDuplicateElementsFromOtherModule() {
     // This module duplicates a binding for "B", which would normally be an error.
     // Because module cd is also installed and the Multibinder<String>
@@ -594,6 +614,7 @@ public class MultibinderTest extends TestCase {
         instance("D"));
   }
 
+  @Test
   public void testMultibinderSetPermitDuplicateCallsToPermitDuplicates() {
     Module ab =
         new AbstractModule() {
@@ -630,6 +651,7 @@ public class MultibinderTest extends TestCase {
         instance("C"));
   }
 
+  @Test
   public void testMultibinderSetForbidsNullElements() {
     Module m =
         new AbstractModule() {
@@ -652,6 +674,7 @@ public class MultibinderTest extends TestCase {
     }
   }
 
+  @Test
   public void testSourceLinesInMultibindings() {
     try {
       Guice.createInjector(
@@ -675,6 +698,7 @@ public class MultibinderTest extends TestCase {
    * We just want to make sure that multibinder's binding depends on each of its values. We don't
    * really care about the underlying structure of those bindings, which are implementation details.
    */
+  @Test
   public void testMultibinderDependencies() {
     Injector injector =
         Guice.createInjector(
@@ -702,6 +726,7 @@ public class MultibinderTest extends TestCase {
    * We just want to make sure that multibinder's binding depends on each of its values. We don't
    * really care about the underlying structure of those bindings, which are implementation details.
    */
+  @Test
   public void testMultibinderDependenciesInToolStage() {
     Injector injector =
         Guice.createInjector(
@@ -763,6 +788,7 @@ public class MultibinderTest extends TestCase {
    * Our implementation maintains order, but doesn't guarantee it in the API spec. TODO: specify the
    * iteration order?
    */
+  @Test
   public void testBindOrderEqualsIterationOrder() {
     Injector injector =
         Guice.createInjector(
@@ -809,6 +835,7 @@ public class MultibinderTest extends TestCase {
   }
 
   /** With overrides, we should get the union of all multibindings. */
+  @Test
   public void testModuleOverrideAndMultibindings() {
     Module ab =
         new AbstractModule() {
@@ -859,6 +886,7 @@ public class MultibinderTest extends TestCase {
   }
 
   /** With overrides, we should get the union of all multibindings. */
+  @Test
   public void testModuleOverrideAndMultibindingsWithPermitDuplicates() {
     Module abc =
         new AbstractModule() {
@@ -913,6 +941,7 @@ public class MultibinderTest extends TestCase {
   }
 
   /** Doubly-installed modules should not conflict, even when one is overridden. */
+  @Test
   public void testModuleOverrideRepeatedInstallsAndMultibindings_toInstance() {
     Module ab =
         new AbstractModule() {
@@ -933,6 +962,7 @@ public class MultibinderTest extends TestCase {
     assertEquals(ImmutableSet.of("A", "B"), injector.getInstance(Key.get(setOfString)));
   }
 
+  @Test
   public void testModuleOverrideRepeatedInstallsAndMultibindings_toKey() {
     Module ab =
         new AbstractModule() {
@@ -958,6 +988,7 @@ public class MultibinderTest extends TestCase {
     assertEquals(ImmutableSet.of("A", "B"), injector.getInstance(Key.get(setOfString)));
   }
 
+  @Test
   public void testModuleOverrideRepeatedInstallsAndMultibindings_toProviderInstance() {
     Module ab =
         new AbstractModule() {
@@ -992,6 +1023,7 @@ public class MultibinderTest extends TestCase {
     }
   }
 
+  @Test
   public void testModuleOverrideRepeatedInstallsAndMultibindings_toProviderKey() {
     Module ab =
         new AbstractModule() {
@@ -1049,6 +1081,7 @@ public class MultibinderTest extends TestCase {
     }
   }
 
+  @Test
   public void testModuleOverrideRepeatedInstallsAndMultibindings_toConstructor() {
     TypeLiteral<Set<StringGrabber>> setOfStringGrabber = new TypeLiteral<Set<StringGrabber>>() {};
     Module ab =
@@ -1093,6 +1126,7 @@ public class MultibinderTest extends TestCase {
    * Unscoped bindings should not conflict, whether they were bound with no explicit scope, or
    * explicitly bound in {@link Scopes#NO_SCOPE}.
    */
+  @Test
   public void testDuplicateUnscopedBindings() {
     Module singleBinding =
         new AbstractModule() {
@@ -1125,6 +1159,7 @@ public class MultibinderTest extends TestCase {
   }
 
   /** Ensure key hash codes are fixed at injection time, not binding time. */
+  @Test
   public void testKeyHashCodesFixedAtInjectionTime() {
     Module ab =
         new AbstractModule() {
@@ -1151,14 +1186,12 @@ public class MultibinderTest extends TestCase {
         clonedKey = Key.get(bindingKey.getTypeLiteral());
       }
       assertEquals(bindingKey, clonedKey);
-      assertEquals(
-          "Incorrect hashcode for " + bindingKey + " -> " + entry.getValue(),
-          bindingKey.hashCode(),
-          clonedKey.hashCode());
+      assertEquals(bindingKey.hashCode(), clonedKey.hashCode(), "Incorrect hashcode for " + bindingKey + " -> " + entry.getValue());
     }
   }
 
   /** Ensure bindings do not rehash their keys once returned from {@link Elements#getElements}. */
+  @Test
   public void testBindingKeysFixedOnReturnFromGetElements() {
     final List<String> list = Lists.newArrayList();
     Module ab =
@@ -1191,6 +1224,7 @@ public class MultibinderTest extends TestCase {
    * times, by binding two lists that are different at injector creation, but compare equal when the
    * module is configured *and* when the set is instantiated.
    */
+  @Test
   public void testConcurrentMutation_bindingsDiffentAtInjectorCreation() {
     // We initially bind two equal lists
     final List<String> list1 = Lists.newArrayList();
@@ -1236,6 +1270,7 @@ public class MultibinderTest extends TestCase {
    * times, by binding two lists that compare equal at injector creation, but are different when the
    * module is configured *and* when the set is instantiated.
    */
+  @Test
   public void testConcurrentMutation_bindingsSameAtInjectorCreation() {
     // We initially bind two distinct lists
     final List<String> list1 = Lists.newArrayList("A");
@@ -1275,6 +1310,7 @@ public class MultibinderTest extends TestCase {
   private static @interface Marker {}
 
   @Marker
+  @Test
   public void testMultibinderMatching() throws Exception {
     Method m = MultibinderTest.class.getDeclaredMethod("testMultibinderMatching");
     assertNotNull(m);
@@ -1315,6 +1351,7 @@ public class MultibinderTest extends TestCase {
   }
 
   // See issue 670
+  @Test
   public void testSetAndMapValueAreDistinct() {
     Injector injector =
         Guice.createInjector(
@@ -1342,6 +1379,7 @@ public class MultibinderTest extends TestCase {
   }
 
   // See issue 670
+  @Test
   public void testSetAndMapValueAreDistinctInSpi() {
     Injector injector =
         Guice.createInjector(
@@ -1380,7 +1418,7 @@ public class MultibinderTest extends TestCase {
         injector.findBindingsByType(stringType).stream()
             .filter(Predicates.instanceOf(InstanceBinding.class))
             .collect(toImmutableList());
-    assertEquals(bindings.toString(), 3, bindings.size());
+    assertEquals(3, bindings.size(), bindings.toString());
     Binding<String> a = bindings.get(0);
     Binding<String> b = bindings.get(1);
     Binding<String> c = bindings.get(2);
@@ -1402,6 +1440,7 @@ public class MultibinderTest extends TestCase {
     assertTrue(collector.optionalbinding.containsElement(c));
   }
 
+  @Test
   public void testMultibinderCanInjectCollectionOfProviders() {
     Module module =
         new AbstractModule() {
@@ -1427,6 +1466,7 @@ public class MultibinderTest extends TestCase {
     assertEquals(expectedValues, collectValuesJakarta(jakartaProviders));
   }
 
+  @Test
   public void testMultibinderCanInjectCollectionOfProvidersWithAnnotation() {
     final Annotation ann = Names.named("foo");
     Module module =
@@ -1454,6 +1494,7 @@ public class MultibinderTest extends TestCase {
     assertEquals(expectedValues, collectValuesJakarta(jakartaProviders));
   }
 
+  @Test
   public void testMultibindingProviderDependencies() {
     final Annotation setAnn = Names.named("foo");
     Injector injector =
@@ -1472,7 +1513,7 @@ public class MultibinderTest extends TestCase {
     HasDependencies setBinding =
         (HasDependencies) injector.getBinding(new Key<Set<String>>(setAnn) {});
     // sanity check the size
-    assertEquals(setBinding.getDependencies().toString(), 2, setBinding.getDependencies().size());
+    assertEquals(2, setBinding.getDependencies().size(), setBinding.getDependencies().toString());
     Set<Dependency<?>> expected = Sets.newHashSet();
     for (Dependency<?> dep : setBinding.getDependencies()) {
       Key<?> key = dep.getKey();
@@ -1483,6 +1524,7 @@ public class MultibinderTest extends TestCase {
     assertEquals(expected, providerBinding.getDependencies());
   }
 
+  @Test
   public void testEmptyMultibinder() {
     Injector injector =
         Guice.createInjector(
@@ -1508,6 +1550,7 @@ public class MultibinderTest extends TestCase {
 
   // This tests for a behavior where InstanceBindingImpl.getProvider() would return uninitialized
   // instances if called during injector creation (depending on the order of injection requests).
+  @Test
   public void testMultibinderDependsOnInstanceBindingWithInjectionPoints() {
     Guice.createInjector(
         new AbstractModule() {
@@ -1532,6 +1575,7 @@ public class MultibinderTest extends TestCase {
         });
   }
 
+  @Test
   public void testMultibinderWithWildcard() {
     Module module =
         new AbstractModule() {
@@ -1557,6 +1601,7 @@ public class MultibinderTest extends TestCase {
    * applications already have a binding to that type. If they do, confirm that Guice fails fast
    * with a duplicate binding error.
    */
+  @Test
   public void testMultibinderConflictsWithExistingWildcard() {
     Module module =
         new AbstractModule() {
@@ -1587,6 +1632,7 @@ public class MultibinderTest extends TestCase {
    * rather than through a regular binding. It's unlikely that application developers would do this
    * in practice, but if they do we want to make sure it is detected and fails fast.
    */
+  @Test
   public void testMultibinderConflictsWithExistingMultibinder() {
     Module module =
         new AbstractModule() {
@@ -1618,6 +1664,7 @@ public class MultibinderTest extends TestCase {
   // In the methodhandle implementation we need to ensure we don't create methods with too many
   // parameters.
 
+  @Test
   public void testLargeMultibinder() {
     for (boolean permmitDuplicates : new boolean[] {true, false}) {
       // Test a size larger than the number of method parameters.

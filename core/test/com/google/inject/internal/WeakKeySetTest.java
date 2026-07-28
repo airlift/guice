@@ -50,7 +50,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 
 /**
  * Tests for {@link WeakKeySet}.
@@ -59,15 +61,16 @@ import junit.framework.TestCase;
  *
  * @author dweis@google.com (Daniel Weis)
  */
-public class WeakKeySetTest extends TestCase {
+public class WeakKeySetTest {
 
   private WeakKeySet set;
 
-  @Override
-  protected void setUp() throws Exception {
+  @BeforeEach
+  public void setUp() throws Exception {
     set = new WeakKeySet(new Object());
   }
 
+  @Test
   public void testEviction() {
     TestInjectorBindingData bindingData = new TestInjectorBindingData();
     Key<Integer> key = Key.get(Integer.class);
@@ -89,6 +92,7 @@ public class WeakKeySetTest extends TestCase {
     awaitClear(weakKeyRef);
   }
 
+  @Test
   public void testEviction_nullSource() {
     TestInjectorBindingData bindingData = new TestInjectorBindingData();
     Key<Integer> key = Key.get(Integer.class);
@@ -110,6 +114,7 @@ public class WeakKeySetTest extends TestCase {
     awaitClear(weakKeyRef);
   }
 
+  @Test
   public void testEviction_keyOverlap_2x() {
     TestInjectorBindingData bindingData1 = new TestInjectorBindingData();
     TestInjectorBindingData bindingData2 = new TestInjectorBindingData();
@@ -159,6 +164,7 @@ public class WeakKeySetTest extends TestCase {
     awaitClear(weakKey1Ref);
   }
 
+  @Test
   public void testNoEviction_keyOverlap_2x() {
     TestInjectorBindingData bindingData1 = new TestInjectorBindingData();
     TestInjectorBindingData bindingData2 = new TestInjectorBindingData();
@@ -188,6 +194,7 @@ public class WeakKeySetTest extends TestCase {
     assertNotNull(weakKey2Ref.get());
   }
 
+  @Test
   public void testEviction_keyAndSourceOverlap_null() {
     TestInjectorBindingData bindingData1 = new TestInjectorBindingData();
     TestInjectorBindingData bindingData2 = new TestInjectorBindingData();
@@ -231,6 +238,7 @@ public class WeakKeySetTest extends TestCase {
     awaitClear(weakKey1Ref);
   }
 
+  @Test
   public void testEviction_keyAndSourceOverlap_nonNull() {
     TestInjectorBindingData bindingData1 = new TestInjectorBindingData();
     TestInjectorBindingData bindingData2 = new TestInjectorBindingData();
@@ -277,6 +285,7 @@ public class WeakKeySetTest extends TestCase {
     awaitClear(weakKey1Ref);
   }
 
+  @Test
   public void testEviction_keyOverlap_3x() {
     TestInjectorBindingData bindingData1 = new TestInjectorBindingData();
     TestInjectorBindingData bindingData2 = new TestInjectorBindingData();
@@ -339,6 +348,7 @@ public class WeakKeySetTest extends TestCase {
     awaitClear(weakKey1Ref);
   }
 
+  @Test
   public void testWeakKeySet_integration() {
     Injector parentInjector =
         Guice.createInjector(
@@ -367,6 +377,7 @@ public class WeakKeySetTest extends TestCase {
     assertNotBanned(parentInjector, Key.get(String.class));
   }
 
+  @Test
   public void testWeakKeySet_integration_multipleChildren() {
     Injector parentInjector =
         Guice.createInjector(
@@ -416,6 +427,7 @@ public class WeakKeySetTest extends TestCase {
     assertNotBanned(parentInjector, Key.get(Long.class));
   }
 
+  @Test
   public void testWeakKeySet_integration_multipleChildren_overlappingKeys() {
     Injector parentInjector =
         Guice.createInjector(

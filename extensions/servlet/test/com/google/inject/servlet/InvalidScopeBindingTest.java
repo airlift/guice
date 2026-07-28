@@ -8,7 +8,10 @@ import com.google.inject.Singleton;
 import jakarta.servlet.FilterConfig;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Ensures that an error is thrown if a Servlet or Filter is bound under any scope other than
@@ -16,13 +19,14 @@ import junit.framework.TestCase;
  *
  * @author dhanji@gmail.com
  */
-public class InvalidScopeBindingTest extends TestCase {
+public class InvalidScopeBindingTest {
 
-  @Override
-  protected void tearDown() throws Exception {
+  @AfterEach
+  public void tearDown() throws Exception {
     GuiceFilter.reset();
   }
 
+  @Test
   public final void testServletInNonSingletonScopeThrowsServletException() {
     GuiceFilter guiceFilter = new GuiceFilter();
 
@@ -40,10 +44,11 @@ public class InvalidScopeBindingTest extends TestCase {
     } catch (ServletException e) {
       se = e;
     } finally {
-      assertNotNull("Servlet exception was not thrown with wrong scope binding", se);
+      assertNotNull(se, "Servlet exception was not thrown with wrong scope binding");
     }
   }
 
+  @Test
   public final void testFilterInNonSingletonScopeThrowsServletException() {
     GuiceFilter guiceFilter = new GuiceFilter();
 
@@ -61,10 +66,11 @@ public class InvalidScopeBindingTest extends TestCase {
     } catch (ServletException e) {
       se = e;
     } finally {
-      assertNotNull("Servlet exception was not thrown with wrong scope binding", se);
+      assertNotNull(se, "Servlet exception was not thrown with wrong scope binding");
     }
   }
 
+  @Test
   public final void testHappyCaseFilter() {
     GuiceFilter guiceFilter = new GuiceFilter();
 
@@ -87,7 +93,7 @@ public class InvalidScopeBindingTest extends TestCase {
     } catch (ServletException e) {
       se = e;
     } finally {
-      assertNull("Servlet exception was thrown with correct scope binding", se);
+      assertNull(se, "Servlet exception was thrown with correct scope binding");
     }
   }
 
