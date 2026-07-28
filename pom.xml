@@ -99,6 +99,15 @@ See the Apache License Version 2.0 for the specific language governing permissio
      | so the airbase style and static analysis checks are not applicable.
     -->
         <air.check.skip-extended>true</air.check.skip-extended>
+        <!--
+     | Modernizer is the exception: it flags legacy APIs, which we do want to know about.
+     | Reporting only for now, while the existing violations are worked through. Note that
+     | two of its rules do not apply here and must not be "fixed": com.google.inject.Provider
+     | is Guice's own public API, and RealOptionalBinder supports Guava's Optional alongside
+     | java.util.Optional on purpose.
+    -->
+        <air.check.skip-modernizer>false</air.check.skip-modernizer>
+        <air.check.fail-modernizer>false</air.check.fail-modernizer>
     </properties>
 
     <dependencyManagement>
