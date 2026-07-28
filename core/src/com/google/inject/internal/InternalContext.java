@@ -28,7 +28,7 @@ import java.lang.invoke.VarHandle;
 /**
  * Internal context. Used to coordinate injections and support circular dependencies.
  *
- * <p>This is only used within thie package, but needs to be public so it can be used in generated
+ * <p>This is only used within this package, but needs to be public so it can be used in generated
  * method signatures for classes that might be loaded in child classloaders.
  *
  * @author crazybob@google.com (Bob Lee)

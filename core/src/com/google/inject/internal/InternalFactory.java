@@ -34,8 +34,8 @@ import static java.util.Objects.requireNonNull;
 abstract class InternalFactory<T>
 {
     /**
-     * Accessed in a double checked manner and updated under the `this` lock. See {@link
-     * HandleCache#getHandleAndMaybeUpdateCache(boolean, MethodHandleResult)}
+     * Accessed in a double-checked manner and updated under the `this` lock. See {@link
+     * HandleCache#getHandleAndMaybeUpdateCache(InternalFactory, boolean, MethodHandleResult)}
      */
     private volatile HandleCache handleCache = HandleCache.EMPTY;
 
