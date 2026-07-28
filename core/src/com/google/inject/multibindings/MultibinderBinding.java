@@ -21,6 +21,7 @@ import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
 import com.google.inject.spi.Element;
 import com.google.inject.spi.Elements;
+
 import java.util.List;
 import java.util.Set;
 
@@ -35,61 +36,63 @@ import java.util.Set;
  * be derived from this MultibinderBinding using {@link #containsElement(Element)}.
  *
  * @param <T> The fully qualified type of the set, including Set. For example: {@code
- *     MultibinderBinding<Set<Boolean>>}
+ *         MultibinderBinding<Set<Boolean>>}
  * @since 3.0
  * @author sameb@google.com (Sam Berlin)
  */
-public interface MultibinderBinding<T> {
+public interface MultibinderBinding<T>
+{
+    /**
+     * Returns the key for the set.
+     */
+    Key<T> getSetKey();
 
-  /** Returns the key for the set. */
-  Key<T> getSetKey();
+    /**
+     * Returns the keys of other bindings that represent this set. This will return an entry for
+     * {@code Collection<com.google.inject.Provider<V>>}, {@code
+     * Collection<jakarta.inject.Provider<V>>}, and {@code Set<? extends V>}.
+     *
+     * @since 4.2.3
+     */
+    Set<Key<?>> getAlternateSetKeys();
 
-  /**
-   * Returns the keys of other bindings that represent this set. This will return an entry for
-   * {@code Collection<com.google.inject.Provider<V>>}, {@code
-   * Collection<jakarta.inject.Provider<V>>}, and {@code Set<? extends V>}.
-   *
-   * @since 4.2.3
-   */
-  Set<Key<?>> getAlternateSetKeys();
+    /**
+     * Returns the TypeLiteral that describes the type of elements in the set.
+     *
+     * <p>The elements will always match the type Set's generic type. For example, if getSetKey
+     * returns a key of {@code Set<String>}, then this will always return a {@code
+     * TypeLiteral<String>}.
+     */
+    TypeLiteral<?> getElementTypeLiteral();
 
-  /**
-   * Returns the TypeLiteral that describes the type of elements in the set.
-   *
-   * <p>The elements will always match the type Set's generic type. For example, if getSetKey
-   * returns a key of {@code Set<String>}, then this will always return a {@code
-   * TypeLiteral<String>}.
-   */
-  TypeLiteral<?> getElementTypeLiteral();
+    /**
+     * Returns all bindings that make up the set. This is only supported on bindings returned from an
+     * injector. This will throw {@link UnsupportedOperationException} if it is called on an element
+     * retrieved from {@link Elements#getElements}.
+     *
+     * <p>The elements will always match the type Set's generic type. For example, if getSetKey
+     * returns a key of {@code Set<String>}, then this will always return a list of type {@code
+     * List<Binding<String>>}.
+     */
+    List<Binding<?>> getElements();
 
-  /**
-   * Returns all bindings that make up the set. This is only supported on bindings returned from an
-   * injector. This will throw {@link UnsupportedOperationException} if it is called on an element
-   * retrieved from {@link Elements#getElements}.
-   *
-   * <p>The elements will always match the type Set's generic type. For example, if getSetKey
-   * returns a key of {@code Set<String>}, then this will always return a list of type {@code
-   * List<Binding<String>>}.
-   */
-  List<Binding<?>> getElements();
+    /**
+     * Returns true if the multibinder permits duplicates. This is only supported on bindings returned
+     * from an injector. This will throw {@link UnsupportedOperationException} if it is called on a
+     * MultibinderBinding retrieved from {@link Elements#getElements}.
+     */
+    boolean permitsDuplicates();
 
-  /**
-   * Returns true if the multibinder permits duplicates. This is only supported on bindings returned
-   * from an injector. This will throw {@link UnsupportedOperationException} if it is called on a
-   * MultibinderBinding retrieved from {@link Elements#getElements}.
-   */
-  boolean permitsDuplicates();
-
-  /**
-   * Returns true if this Multibinder uses the given Element. This will be true for bindings that
-   * derive the elements of the set and other bindings that Multibinder uses internally. This will
-   * work for MultibinderBindings retrieved from an injector and {@link Elements#getElements}.
-   * Usually this is only necessary if you are working with elements retrieved from modules (without
-   * an Injector), otherwise {@link #getElements} and {@link #permitsDuplicates} are better options.
-   *
-   * <p>If you need to introspect the details of the set, such as the values or if it permits
-   * duplicates, it is necessary to pass the elements through an Injector and use {@link
-   * #getElements()} and {@link #permitsDuplicates()}.
-   */
-  boolean containsElement(Element element);
+    /**
+     * Returns true if this Multibinder uses the given Element. This will be true for bindings that
+     * derive the elements of the set and other bindings that Multibinder uses internally. This will
+     * work for MultibinderBindings retrieved from an injector and {@link Elements#getElements}.
+     * Usually this is only necessary if you are working with elements retrieved from modules (without
+     * an Injector), otherwise {@link #getElements} and {@link #permitsDuplicates} are better options.
+     *
+     * <p>If you need to introspect the details of the set, such as the values or if it permits
+     * duplicates, it is necessary to pass the elements through an Injector and use {@link
+     * #getElements()} and {@link #permitsDuplicates()}.
+     */
+    boolean containsElement(Element element);
 }

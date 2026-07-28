@@ -17,6 +17,7 @@
 package com.google.inject.grapher;
 
 import com.google.inject.spi.InjectionPoint;
+
 import java.util.Objects;
 
 /**
@@ -26,48 +27,56 @@ import java.util.Objects;
  * @author phopkins@gmail.com (Pete Hopkins)
  * @since 4.0 (since 2.0 as an interface)
  */
-public class DependencyEdge extends Edge {
-  /**
-   * Injection point to which this dependency belongs, or null if the dependency isn't attached to a
-   * particular injection point.
-   */
-  private final InjectionPoint injectionPoint;
+public class DependencyEdge
+        extends Edge
+{
+    /**
+     * Injection point to which this dependency belongs, or null if the dependency isn't attached to a
+     * particular injection point.
+     */
+    private final InjectionPoint injectionPoint;
 
-  public DependencyEdge(NodeId fromId, NodeId toId, InjectionPoint injectionPoint) {
-    super(fromId, toId);
-    this.injectionPoint = injectionPoint;
-  }
-
-  public InjectionPoint getInjectionPoint() {
-    return injectionPoint;
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (!(obj instanceof DependencyEdge other)) {
-      return false;
+    public DependencyEdge(NodeId fromId, NodeId toId, InjectionPoint injectionPoint)
+    {
+        super(fromId, toId);
+        this.injectionPoint = injectionPoint;
     }
-    return super.equals(other) && Objects.equals(injectionPoint, other.injectionPoint);
-  }
 
-  @Override
-  public int hashCode() {
-    return 31 * super.hashCode() + Objects.hash(injectionPoint);
-  }
+    public InjectionPoint getInjectionPoint()
+    {
+        return injectionPoint;
+    }
 
-  @Override
-  public String toString() {
-    return "DependencyEdge{fromId="
-        + getFromId()
-        + " toId="
-        + getToId()
-        + " injectionPoint="
-        + injectionPoint
-        + "}";
-  }
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (!(obj instanceof DependencyEdge other)) {
+            return false;
+        }
+        return super.equals(other) && Objects.equals(injectionPoint, other.injectionPoint);
+    }
 
-  @Override
-  public Edge copy(NodeId fromId, NodeId toId) {
-    return new DependencyEdge(fromId, toId, injectionPoint);
-  }
+    @Override
+    public int hashCode()
+    {
+        return 31 * super.hashCode() + Objects.hash(injectionPoint);
+    }
+
+    @Override
+    public String toString()
+    {
+        return "DependencyEdge{fromId="
+                + getFromId()
+                + " toId="
+                + getToId()
+                + " injectionPoint="
+                + injectionPoint
+                + "}";
+    }
+
+    @Override
+    public Edge copy(NodeId fromId, NodeId toId)
+    {
+        return new DependencyEdge(fromId, toId, injectionPoint);
+    }
 }

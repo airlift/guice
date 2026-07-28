@@ -1,6 +1,7 @@
 package com.google.inject.assistedinject.internal;
 
 import com.google.errorprone.annotations.Keep;
+
 import java.lang.invoke.MethodHandles;
 
 /**
@@ -8,15 +9,19 @@ import java.lang.invoke.MethodHandles;
  * runtime to determine which kind of Lookup method we'll support.
  */
 @Keep
-class LookupTester {
-  @Keep static final MethodHandles.Lookup LOOKUP = MethodHandles.lookup();
+class LookupTester
+{
+    @Keep
+    static final MethodHandles.Lookup LOOKUP = MethodHandles.lookup();
 
-  @Keep
-  interface Hidden {
-    default Hidden method() {
-      return null;
+    @Keep
+    interface Hidden
+    {
+        default Hidden method()
+        {
+            return null;
+        }
     }
-  }
 
-  private LookupTester() {}
+    private LookupTester() {}
 }

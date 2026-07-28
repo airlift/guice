@@ -23,27 +23,32 @@ package com.google.inject.grapher.graphviz;
  *
  * @author phopkins@gmail.com (Pete Hopkins)
  */
-public enum CompassPoint {
-  NORTH("n"),
-  NORTH_EAST("ne"),
-  EAST("e"),
-  SOUTH_EAST("se"),
-  SOUTH("s"),
-  SOUTH_WEST("sw"),
-  WEST("w"),
-  NORTH_WEST("nw"),
-  CENTER("c"),
-  EXTERIOR_SIDE("_");
+public enum CompassPoint
+{
+    NORTH("n"),
+    NORTH_EAST("ne"),
+    EAST("e"),
+    SOUTH_EAST("se"),
+    SOUTH("s"),
+    SOUTH_WEST("sw"),
+    WEST("w"),
+    NORTH_WEST("nw"),
+    CENTER("c"),
+    EXTERIOR_SIDE("_");
 
-  /** Graphviz "compass_pt" value. */
-  private final String compassPt;
+    /**
+     * Graphviz "compass_pt" value.
+     */
+    private final String compassPt;
 
-  CompassPoint(String compassPt) {
-    this.compassPt = compassPt;
-  }
+    CompassPoint(String compassPt)
+    {
+        this.compassPt = compassPt;
+    }
 
-  @Override
-  public String toString() {
-    return compassPt;
-  }
+    @Override
+    public String toString()
+    {
+        return compassPt;
+    }
 }

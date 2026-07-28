@@ -18,6 +18,7 @@ package com.google.inject.spi;
 
 import com.google.inject.Injector;
 import com.google.inject.Key;
+
 import java.util.List;
 import java.util.Set;
 
@@ -28,29 +29,34 @@ import java.util.Set;
  * @author jessewilson@google.com (Jesse Wilson)
  * @since 2.0
  */
-public interface PrivateElements extends Element {
+public interface PrivateElements
+        extends Element
+{
+    /**
+     * Returns the configuration information in this private environment.
+     */
+    List<Element> getElements();
 
-  /** Returns the configuration information in this private environment. */
-  List<Element> getElements();
+    /**
+     * Returns the child injector that hosts these private elements, or null if the elements haven't
+     * been used to create an injector.
+     */
+    Injector getInjector();
 
-  /**
-   * Returns the child injector that hosts these private elements, or null if the elements haven't
-   * been used to create an injector.
-   */
-  Injector getInjector();
+    /**
+     * Returns the unique exposed keys for these private elements.
+     */
+    Set<Key<?>> getExposedKeys();
 
-  /** Returns the unique exposed keys for these private elements. */
-  Set<Key<?>> getExposedKeys();
-
-  /**
-   * Returns an arbitrary object containing information about the "place" where this key was
-   * exposed. Used by Guice in the production of descriptive error messages.
-   *
-   * <p>Tools might specially handle types they know about; {@code StackTraceElement} is a good
-   * example. Tools should simply call {@code toString()} on the source object if the type is
-   * unfamiliar.
-   *
-   * @param key one of the keys exposed by this module.
-   */
-  Object getExposedSource(Key<?> key);
+    /**
+     * Returns an arbitrary object containing information about the "place" where this key was
+     * exposed. Used by Guice in the production of descriptive error messages.
+     *
+     * <p>Tools might specially handle types they know about; {@code StackTraceElement} is a good
+     * example. Tools should simply call {@code toString()} on the source object if the type is
+     * unfamiliar.
+     *
+     * @param key one of the keys exposed by this module.
+     */
+    Object getExposedSource(Key<?> key);
 }

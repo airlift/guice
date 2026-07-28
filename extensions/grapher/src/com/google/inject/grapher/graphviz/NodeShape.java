@@ -23,19 +23,22 @@ package com.google.inject.grapher.graphviz;
  *
  * @author phopkins@gmail.com (Pete Hopkins)
  */
-public enum NodeShape {
-  BOX("box"),
-  ELLIPSE("ellipse"),
-  NONE("none");
+public enum NodeShape
+{
+    BOX("box"),
+    ELLIPSE("ellipse"),
+    NONE("none");
 
-  private final String shape;
+    private final String shape;
 
-  NodeShape(String shape) {
-    this.shape = shape;
-  }
+    NodeShape(String shape)
+    {
+        this.shape = shape;
+    }
 
-  @Override
-  public String toString() {
-    return shape;
-  }
+    @Override
+    public String toString()
+    {
+        return shape;
+    }
 }

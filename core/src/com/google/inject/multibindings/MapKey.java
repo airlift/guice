@@ -16,12 +16,12 @@
 
 package com.google.inject.multibindings;
 
-import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+
+import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Allows users define customized key type annotations for map bindings by annotating an annotation
@@ -50,11 +50,12 @@ import java.lang.annotation.Target;
 @Documented
 @Target(ANNOTATION_TYPE)
 @Retention(RUNTIME)
-public @interface MapKey {
-  /**
-   * if {@code unwrapValue} is false, then the whole annotation will be the type and annotation
-   * instances will be the keys. If {@code unwrapValue} is true, the value() type of key type
-   * annotation will be the key type for injected map and the value instances will be the keys.
-   */
-  boolean unwrapValue() default true;
+public @interface MapKey
+{
+    /**
+     * if {@code unwrapValue} is false, then the whole annotation will be the type and annotation
+     * instances will be the keys. If {@code unwrapValue} is true, the value() type of key type
+     * annotation will be the key type for injected map and the value instances will be the keys.
+     */
+    boolean unwrapValue() default true;
 }

@@ -17,6 +17,7 @@
 package com.google.inject.spi;
 
 import com.google.inject.Binding;
+
 import java.util.Set;
 
 /**
@@ -25,16 +26,19 @@ import java.util.Set;
  * @author jessewilson@google.com (Jesse Wilson)
  * @since 2.0
  */
-public interface InstanceBinding<T> extends Binding<T>, HasDependencies {
+public interface InstanceBinding<T>
+        extends Binding<T>, HasDependencies
+{
+    /**
+     * Returns the user-supplied instance.
+     */
+    T getInstance();
 
-  /** Returns the user-supplied instance. */
-  T getInstance();
-
-  /**
-   * Returns the field and method injection points of the instance, injected at injector-creation
-   * time only.
-   *
-   * @return a possibly empty set
-   */
-  Set<InjectionPoint> getInjectionPoints();
+    /**
+     * Returns the field and method injection points of the instance, injected at injector-creation
+     * time only.
+     *
+     * @return a possibly empty set
+     */
+    Set<InjectionPoint> getInjectionPoints();
 }

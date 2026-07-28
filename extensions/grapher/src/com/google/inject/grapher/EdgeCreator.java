@@ -25,8 +25,10 @@ import com.google.inject.Binding;
  * @author bojand@google.com (Bojan Djordjevic)
  * @since 4.0
  */
-public interface EdgeCreator {
-
-  /** Returns edges for the given dependency graph. */
-  Iterable<Edge> getEdges(Iterable<Binding<?>> bindings);
+public interface EdgeCreator
+{
+    /**
+     * Returns edges for the given dependency graph.
+     */
+    Iterable<Edge> getEdges(Iterable<Binding<?>> bindings);
 }

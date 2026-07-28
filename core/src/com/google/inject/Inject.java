@@ -16,15 +16,16 @@
 
 package com.google.inject;
 
+import com.google.errorprone.annotations.Keep;
+
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
 import static java.lang.annotation.ElementType.CONSTRUCTOR;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
-import com.google.errorprone.annotations.Keep;
-import java.lang.annotation.Documented;
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
 
 /**
  * Annotates members of your implementation class (constructors, methods and fields) into which the
@@ -51,14 +52,14 @@ import java.lang.annotation.Target;
 @Retention(RUNTIME)
 @Documented
 @Keep
-public @interface Inject {
-
-  /**
-   * If true, and the appropriate binding is not found, the Injector will skip injection of this
-   * method or field rather than produce an error. When applied to a field, any default value
-   * already assigned to the field will remain (guice will not actively null out the field). When
-   * applied to a method, the method will only be invoked if bindings for <i>all</i> parameters are
-   * found. When applied to a constructor, an error will result upon Injector creation.
-   */
-  boolean optional() default false;
+public @interface Inject
+{
+    /**
+     * If true, and the appropriate binding is not found, the Injector will skip injection of this
+     * method or field rather than produce an error. When applied to a field, any default value
+     * already assigned to the field will remain (guice will not actively null out the field). When
+     * applied to a method, the method will only be invoked if bindings for <i>all</i> parameters are
+     * found. When applied to a constructor, an error will result upon Injector creation.
+     */
+    boolean optional() default false;
 }

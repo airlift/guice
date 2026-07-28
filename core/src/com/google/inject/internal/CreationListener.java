@@ -16,9 +16,13 @@
 
 package com.google.inject.internal;
 
-/** Something that is notified upon creation. */
-interface CreationListener {
-
-  /** Notifies that creation should happen. */
-  void notify(Errors errors);
+/**
+ * Something that is notified upon creation.
+ */
+interface CreationListener
+{
+    /**
+     * Notifies that creation should happen.
+     */
+    void notify(Errors errors);
 }

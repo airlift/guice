@@ -15,32 +15,33 @@
  */
 package com.google.inject.internal;
 
-import static com.google.common.truth.Truth.assertThat;
-
 import com.google.inject.internal.util.SourceProvider;
 import org.junit.jupiter.api.Test;
 
-public final class InternalProvisionExceptionTest {
+import static com.google.common.truth.Truth.assertThat;
 
-  @Test
-  public void testSourceFormatting() {
-    // Note that the duplicate source gets dropped as well as the unknown source
-    assertThat(
-            InternalProvisionException.create(ErrorId.OTHER, "An error")
-                .addSource("Source1")
-                .addSource(SourceProvider.UNKNOWN_SOURCE)
-                .addSource("Source2")
-                .addSource("Source2")
-                .toProvisionException()
-                .getMessage())
-        .isEqualTo(
-            ""
-                + "Unable to provision, see the following errors:\n"
-                + "\n"
-                + "1) An error\n"
-                + "  at Source1\n"
-                + "  at Source2\n"
-                + "\n"
-                + "1 error");
-  }
+public final class InternalProvisionExceptionTest
+{
+    @Test
+    public void testSourceFormatting()
+    {
+        // Note that the duplicate source gets dropped as well as the unknown source
+        assertThat(
+                InternalProvisionException.create(ErrorId.OTHER, "An error")
+                        .addSource("Source1")
+                        .addSource(SourceProvider.UNKNOWN_SOURCE)
+                        .addSource("Source2")
+                        .addSource("Source2")
+                        .toProvisionException()
+                        .getMessage())
+                .isEqualTo(
+                        ""
+                                + "Unable to provision, see the following errors:\n"
+                                + "\n"
+                                + "1) An error\n"
+                                + "  at Source1\n"
+                                + "  at Source2\n"
+                                + "\n"
+                                + "1 error");
+    }
 }

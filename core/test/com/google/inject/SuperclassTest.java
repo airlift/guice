@@ -15,46 +15,56 @@
  */
 
 package com.google.inject;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-/** @author crazybob@google.com (Bob Lee) */
-public class SuperclassTest {
+/**
+ * @author crazybob@google.com (Bob Lee)
+ */
+public class SuperclassTest
+{
+    @Test
+    public void testSuperclassInjection()
+            throws CreationException
+    {
+        Injector injector =
+                Guice.createInjector(
+                        new AbstractModule()
+                        {
+                            @Override
+                            protected void configure()
+                            {
+                                bind(Foo.class);
+                            }
+                        });
 
-  @Test
-  public void testSuperclassInjection() throws CreationException {
-    Injector injector =
-        Guice.createInjector(
-            new AbstractModule() {
-              @Override
-              protected void configure() {
-                bind(Foo.class);
-              }
-            });
-
-    Provider<Sub> creator = injector.getProvider(Sub.class);
-    Sub sub = creator.get();
-    sub = creator.get();
-    sub = creator.get();
-    sub = creator.get();
-    sub = creator.get();
-    assertNotNull(sub.field);
-    assertNotNull(sub.fromMethod);
-  }
-
-  abstract static class Super {
-    @Inject Foo field;
-
-    Foo fromMethod;
-
-    @Inject
-    void setC(Foo foo) {
-      fromMethod = foo;
+        Provider<Sub> creator = injector.getProvider(Sub.class);
+        Sub sub = creator.get();
+        sub = creator.get();
+        sub = creator.get();
+        sub = creator.get();
+        sub = creator.get();
+        assertNotNull(sub.field);
+        assertNotNull(sub.fromMethod);
     }
-  }
 
-  static class Sub extends Super {}
+    abstract static class Super
+    {
+        @Inject
+        Foo field;
 
-  static class Foo {}
+        Foo fromMethod;
+
+        @Inject
+        void setC(Foo foo)
+        {
+            fromMethod = foo;
+        }
+    }
+
+    static class Sub
+            extends Super {}
+
+    static class Foo {}
 }

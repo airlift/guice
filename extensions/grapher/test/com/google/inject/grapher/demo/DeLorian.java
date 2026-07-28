@@ -19,13 +19,18 @@ package com.google.inject.grapher.demo;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
-class DeLorian {
-  // We @Inject a Provider to demonstrate that the graph doesn't differentiate
-  // between a Provider<T> and just @Injecting T.
-  @Inject @Driver Provider<Person> driver;
-  @Inject FluxCapacitor fluxCapacitor;
-  @Inject PrivateTestModule.Exposed exposed;
+class DeLorian
+{
+    // We @Inject a Provider to demonstrate that the graph doesn't differentiate
+    // between a Provider<T> and just @Injecting T.
+    @Inject
+    @Driver
+    Provider<Person> driver;
+    @Inject
+    FluxCapacitor fluxCapacitor;
+    @Inject
+    PrivateTestModule.Exposed exposed;
 
-  @Inject
-  public void setEnergySource(EnergySource energySource) {}
+    @Inject
+    public void setEnergySource(EnergySource energySource) {}
 }

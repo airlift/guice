@@ -24,48 +24,54 @@ import java.util.Objects;
  * @author bojand@google.com (Bojan Djordjevic)
  * @since 4.0
  */
-public abstract class Node {
-  /**
-   * When set to true, the source object is ignored in {@link #equals} and {@link #hashCode}. Only
-   * used in tests.
-   */
-  static boolean ignoreSourceInComparisons = false;
+public abstract class Node
+{
+    /**
+     * When set to true, the source object is ignored in {@link #equals} and {@link #hashCode}. Only
+     * used in tests.
+     */
+    static boolean ignoreSourceInComparisons;
 
-  private final NodeId id;
-  private final Object source;
+    private final NodeId id;
+    private final Object source;
 
-  protected Node(NodeId id, Object source) {
-    this.id = id;
-    this.source = source;
-  }
-
-  public NodeId getId() {
-    return id;
-  }
-
-  public Object getSource() {
-    return source;
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (!(obj instanceof Node other)) {
-      return false;
+    protected Node(NodeId id, Object source)
+    {
+        this.id = id;
+        this.source = source;
     }
-    return Objects.equals(id, other.id)
-        && (ignoreSourceInComparisons || Objects.equals(source, other.source));
-  }
 
-  @Override
-  public int hashCode() {
-    return ignoreSourceInComparisons ? id.hashCode() : Objects.hash(id, source);
-  }
+    public NodeId getId()
+    {
+        return id;
+    }
 
-  /**
-   * Returns a copy of the node with a new ID.
-   *
-   * @param id new ID of the node
-   * @return copy of the node with a new ID
-   */
-  public abstract Node copy(NodeId id);
+    public Object getSource()
+    {
+        return source;
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (!(obj instanceof Node other)) {
+            return false;
+        }
+        return Objects.equals(id, other.id)
+                && (ignoreSourceInComparisons || Objects.equals(source, other.source));
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return ignoreSourceInComparisons ? id.hashCode() : Objects.hash(id, source);
+    }
+
+    /**
+     * Returns a copy of the node with a new ID.
+     *
+     * @param id new ID of the node
+     * @return copy of the node with a new ID
+     */
+    public abstract Node copy(NodeId id);
 }

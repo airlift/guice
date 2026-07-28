@@ -1,10 +1,5 @@
 package com.google.inject.errors;
 
-import static com.google.inject.errors.ErrorMessageTestUtils.assertGuiceErrorEqualsIgnoreLineNumber;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
-
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -14,124 +9,150 @@ import com.google.inject.internal.InternalFlags;
 import com.google.inject.internal.InternalFlags.IncludeStackTraceOption;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.ProvidesIntoSet;
-import java.lang.annotation.Retention;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import jakarta.inject.Qualifier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public final class DuplicateElementErrorTest {
+import java.lang.annotation.Retention;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
-  @BeforeEach
-  public void checkStackTraceIsIncluded() {
-    // Only run the tests when the stack traces are included in the errors.
-    assumeTrue(InternalFlags.getIncludeStackTraceOption() != IncludeStackTraceOption.OFF);
-  }
+import static com.google.inject.errors.ErrorMessageTestUtils.assertGuiceErrorEqualsIgnoreLineNumber;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-  static class DuplicateElementModule extends AbstractModule {
-    @ProvidesIntoSet
-    String provideFirst() {
-      return "element";
+public final class DuplicateElementErrorTest
+{
+    @BeforeEach
+    public void checkStackTraceIsIncluded()
+    {
+        // Only run the tests when the stack traces are included in the errors.
+        assumeTrue(InternalFlags.getIncludeStackTraceOption() != IncludeStackTraceOption.OFF);
     }
 
-    @ProvidesIntoSet
-    String provideSecond() {
-      return "element";
+    static class DuplicateElementModule
+            extends AbstractModule
+    {
+        @ProvidesIntoSet
+        String provideFirst()
+        {
+            return "element";
+        }
+
+        @ProvidesIntoSet
+        String provideSecond()
+        {
+            return "element";
+        }
+
+        @Override
+        protected void configure()
+        {
+            Multibinder.newSetBinder(binder(), String.class).addBinding().toInstance("element");
+        }
     }
 
-    @Override
-    protected void configure() {
-      Multibinder.newSetBinder(binder(), String.class).addBinding().toInstance("element");
-    }
-  }
-
-  @Test
-  public void duplicateElementError() {
-    Injector injector = Guice.createInjector(new DuplicateElementModule());
-    ProvisionException exception =
-        assertThrows(
-            ProvisionException.class, () -> injector.getInstance(new Key<Set<String>>() {}));
-    assertGuiceErrorEqualsIgnoreLineNumber(exception.getMessage(), "duplicate_element_error.txt");
-  }
-
-  @Qualifier
-  @Retention(RUNTIME)
-  @interface Foo {}
-
-  static class IntWrapper {
-    private static final AtomicInteger counter = new AtomicInteger(100);
-
-    int value;
-    int id;
-
-    IntWrapper(int value) {
-      this.value = value;
-      this.id = counter.getAndIncrement();
+    @Test
+    public void duplicateElementError()
+    {
+        Injector injector = Guice.createInjector(new DuplicateElementModule());
+        ProvisionException exception =
+                assertThrows(
+                        ProvisionException.class, () -> injector.getInstance(new Key<Set<String>>() {}));
+        assertGuiceErrorEqualsIgnoreLineNumber(exception.getMessage(), "duplicate_element_error.txt");
     }
 
-    @Override
-    public int hashCode() {
-      return value;
+    @Qualifier
+    @Retention(RUNTIME)
+    @interface Foo {}
+
+    static class IntWrapper
+    {
+        private static final AtomicInteger counter = new AtomicInteger(100);
+
+        int value;
+        int id;
+
+        IntWrapper(int value)
+        {
+            this.value = value;
+            this.id = counter.getAndIncrement();
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return value;
+        }
+
+        @Override
+        public boolean equals(Object other)
+        {
+            if (other instanceof IntWrapper) {
+                return ((IntWrapper) other).value == value;
+            }
+            return false;
+        }
+
+        @Override
+        public String toString()
+        {
+            // Return different value for different instance even when they equal to one and other.
+            // This is used to test when duplicate elements have different string representation.
+            return "IntWrapper(%s)".formatted(id);
+        }
     }
 
-    @Override
-    public boolean equals(Object other) {
-      if (other instanceof IntWrapper) {
-        return ((IntWrapper) other).value == value;
-      }
-      return false;
+    static class MultipleDuplicateElementsModule
+            extends AbstractModule
+    {
+        @ProvidesIntoSet
+        @Foo
+        IntWrapper provideFirstIntWrapper0()
+        {
+            return new IntWrapper(0);
+        }
+
+        @ProvidesIntoSet
+        @Foo
+        IntWrapper provideSecondIntWrapper0()
+        {
+            return new IntWrapper(0);
+        }
+
+        @ProvidesIntoSet
+        @Foo
+        IntWrapper provideFirstIntWrapper1()
+        {
+            return new IntWrapper(1);
+        }
+
+        @ProvidesIntoSet
+        @Foo
+        IntWrapper provideSecondIntWrapper1()
+        {
+            return new IntWrapper(1);
+        }
+
+        @Override
+        protected void configure()
+        {
+            Multibinder.newSetBinder(binder(), Key.get(IntWrapper.class, Foo.class))
+                    .addBinding()
+                    .toProvider(() -> new IntWrapper(1));
+        }
     }
 
-    @Override
-    public String toString() {
-      // Return different value for different instance even when they equal to one and other.
-      // This is used to test when duplicate elements have different string representation.
-      return "IntWrapper(%s)".formatted(id);
+    @Test
+    public void multipleDuplicatesElementError()
+    {
+        Injector injector = Guice.createInjector(new MultipleDuplicateElementsModule());
+        ProvisionException exception =
+                assertThrows(
+                        ProvisionException.class,
+                        () -> injector.getInstance(new Key<Set<IntWrapper>>(Foo.class) {}));
+        assertGuiceErrorEqualsIgnoreLineNumber(
+                exception.getMessage(), "multiple_duplicate_elements_error.txt");
     }
-  }
-
-  static class MultipleDuplicateElementsModule extends AbstractModule {
-    @ProvidesIntoSet
-    @Foo
-    IntWrapper provideFirstIntWrapper0() {
-      return new IntWrapper(0);
-    }
-
-    @ProvidesIntoSet
-    @Foo
-    IntWrapper provideSecondIntWrapper0() {
-      return new IntWrapper(0);
-    }
-
-    @ProvidesIntoSet
-    @Foo
-    IntWrapper provideFirstIntWrapper1() {
-      return new IntWrapper(1);
-    }
-
-    @ProvidesIntoSet
-    @Foo
-    IntWrapper provideSecondIntWrapper1() {
-      return new IntWrapper(1);
-    }
-
-    @Override
-    protected void configure() {
-      Multibinder.newSetBinder(binder(), Key.get(IntWrapper.class, Foo.class))
-          .addBinding()
-          .toProvider(() -> new IntWrapper(1));
-    }
-  }
-
-  @Test
-  public void multipleDuplicatesElementError() {
-    Injector injector = Guice.createInjector(new MultipleDuplicateElementsModule());
-    ProvisionException exception =
-        assertThrows(
-            ProvisionException.class,
-            () -> injector.getInstance(new Key<Set<IntWrapper>>(Foo.class) {}));
-    assertGuiceErrorEqualsIgnoreLineNumber(
-        exception.getMessage(), "multiple_duplicate_elements_error.txt");
-  }
 }

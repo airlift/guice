@@ -16,77 +16,93 @@
 
 package com.google.inject.example;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
-/** @author crazybob@google.com (Bob Lee) */
-public class ClientServiceWithFactories {
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-  // 58 lines
+/**
+ * @author crazybob@google.com (Bob Lee)
+ */
+public class ClientServiceWithFactories
+{
+    // 58 lines
 
-  public interface Service {
-    void go();
-  }
-
-  public static class ServiceImpl implements Service {
-    @Override
-    public void go() {
-      // ...
-    }
-  }
-
-  public static class ServiceFactory {
-
-    private ServiceFactory() {}
-
-    private static Service instance = new ServiceImpl();
-
-    public static Service getInstance() {
-      return instance;
+    public interface Service
+    {
+        void go();
     }
 
-    public static void setInstance(Service service) {
-      instance = service;
-    }
-  }
-
-  public static class Client {
-
-    public void go() {
-      Service service = ServiceFactory.getInstance();
-      service.go();
-    }
-  }
-
-  @Test
-  public void testClient() {
-    Service previous = ServiceFactory.getInstance();
-    try {
-      final MockService mock = new MockService();
-      ServiceFactory.setInstance(mock);
-      Client client = new Client();
-      client.go();
-      assertTrue(mock.isGone());
-    } finally {
-      ServiceFactory.setInstance(previous);
-    }
-  }
-
-  public static class MockService implements Service {
-
-    private boolean gone = false;
-
-    @Override
-    public void go() {
-      gone = true;
+    public static class ServiceImpl
+            implements Service
+    {
+        @Override
+        public void go()
+        {
+            // ...
+        }
     }
 
-    public boolean isGone() {
-      return gone;
-    }
-  }
+    public static class ServiceFactory
+    {
+        private ServiceFactory() {}
 
-  public static void main(String[] args) {
-    new ClientServiceWithFactories().testClient();
-  }
+        private static Service instance = new ServiceImpl();
+
+        public static Service getInstance()
+        {
+            return instance;
+        }
+
+        public static void setInstance(Service service)
+        {
+            instance = service;
+        }
+    }
+
+    public static class Client
+    {
+        public void go()
+        {
+            Service service = ServiceFactory.getInstance();
+            service.go();
+        }
+    }
+
+    @Test
+    public void testClient()
+    {
+        Service previous = ServiceFactory.getInstance();
+        try {
+            final MockService mock = new MockService();
+            ServiceFactory.setInstance(mock);
+            Client client = new Client();
+            client.go();
+            assertTrue(mock.isGone());
+        }
+        finally {
+            ServiceFactory.setInstance(previous);
+        }
+    }
+
+    public static class MockService
+            implements Service
+    {
+        private boolean gone;
+
+        @Override
+        public void go()
+        {
+            gone = true;
+        }
+
+        public boolean isGone()
+        {
+            return gone;
+        }
+    }
+
+    public static void main(String[] args)
+    {
+        new ClientServiceWithFactories().testClient();
+    }
 }

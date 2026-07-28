@@ -16,6 +16,43 @@
 
 package com.google.inject.internal;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.MultimapBuilder;
+import com.google.inject.Binding;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.Module;
+import com.google.inject.Provider;
+import com.google.inject.TypeLiteral;
+import com.google.inject.internal.Indexer.IndexedBinding;
+import com.google.inject.internal.RealMapBinder.ProviderMapEntry;
+import com.google.inject.multibindings.MapBinderBinding;
+import com.google.inject.multibindings.MultibinderBinding;
+import com.google.inject.multibindings.MultibindingsTargetVisitor;
+import com.google.inject.multibindings.OptionalBinderBinding;
+import com.google.inject.spi.DefaultBindingTargetVisitor;
+import com.google.inject.spi.Element;
+import com.google.inject.spi.Elements;
+import com.google.inject.spi.InstanceBinding;
+import com.google.inject.spi.LinkedKeyBinding;
+import com.google.inject.spi.ProviderInstanceBinding;
+import com.google.inject.spi.ProviderKeyBinding;
+import com.google.inject.spi.ProviderLookup;
+import com.google.inject.util.Types;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.inject.internal.RealMapBinder.entryOfJakartaProviderOf;
 import static com.google.inject.internal.RealMapBinder.entryOfProviderOf;
@@ -45,1198 +82,1264 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.MultimapBuilder;
-import com.google.inject.Binding;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.Module;
-import com.google.inject.Provider;
-import com.google.inject.TypeLiteral;
-import com.google.inject.internal.Indexer.IndexedBinding;
-import com.google.inject.internal.RealMapBinder.ProviderMapEntry;
-import com.google.inject.multibindings.MapBinderBinding;
-import com.google.inject.multibindings.MultibinderBinding;
-import com.google.inject.multibindings.MultibindingsTargetVisitor;
-import com.google.inject.multibindings.OptionalBinderBinding;
-import com.google.inject.spi.DefaultBindingTargetVisitor;
-import com.google.inject.spi.Element;
-import com.google.inject.spi.Elements;
-import com.google.inject.spi.InstanceBinding;
-import com.google.inject.spi.LinkedKeyBinding;
-import com.google.inject.spi.ProviderInstanceBinding;
-import com.google.inject.spi.ProviderKeyBinding;
-import com.google.inject.spi.ProviderLookup;
-import com.google.inject.util.Types;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-
 /**
  * Utilities for testing the Multibinder and MapBinder extension SPI.
  *
  * @author sameb@google.com (Sam Berlin)
  */
-public class SpiUtils {
-
-  /** The kind of test we should perform. A live Injector, a raw Elements (Module) test, or both. */
-  enum VisitType {
-    INJECTOR,
-    MODULE,
-    BOTH
-  }
-
-  /**
-   * Asserts that MapBinderBinding visitors for work correctly.
-   *
-   * @param <T> The type of the binding
-   * @param mapKey The key the map belongs to.
-   * @param keyType the TypeLiteral of the key of the map
-   * @param valueType the TypeLiteral of the value of the map
-   * @param modules The modules that define the mapbindings
-   * @param visitType The kind of test we should perform. A live Injector, a raw Elements (Module)
-   *     test, or both.
-   * @param allowDuplicates If duplicates are allowed.
-   * @param expectedMapBindings The number of other mapbinders we expect to see.
-   * @param results The kind of bindings contained in the mapbinder.
-   */
-  static <T> void assertMapVisitor(
-      Key<T> mapKey,
-      TypeLiteral<?> keyType,
-      TypeLiteral<?> valueType,
-      Iterable<? extends Module> modules,
-      VisitType visitType,
-      boolean allowDuplicates,
-      int expectedMapBindings,
-      MapResult<?, ?>... results) {
-    if (visitType == null) {
-      fail("must test something");
+public class SpiUtils
+{
+    /**
+     * The kind of test we should perform. A live Injector, a raw Elements (Module) test, or both.
+     */
+    enum VisitType
+    {
+        INJECTOR,
+        MODULE,
+        BOTH,
     }
 
-    if (visitType == BOTH || visitType == INJECTOR) {
-      mapInjectorTest(
-          mapKey, keyType, valueType, modules, allowDuplicates, expectedMapBindings, results);
-    }
-
-    if (visitType == BOTH || visitType == MODULE) {
-      mapModuleTest(
-          mapKey, keyType, valueType, modules, allowDuplicates, expectedMapBindings, results);
-    }
-  }
-
-  @SuppressWarnings("unchecked")
-  private static <T> void mapInjectorTest(
-      Key<T> mapKey,
-      TypeLiteral<?> keyType,
-      TypeLiteral<?> valueType,
-      Iterable<? extends Module> modules,
-      boolean allowDuplicates,
-      int expectedMapBindings,
-      MapResult<?, ?>... results) {
-    Injector injector = Guice.createInjector(modules);
-    Visitor<T> visitor = new Visitor<>();
-    Binding<T> mapBinding = injector.getBinding(mapKey);
-    MapBinderBinding<T> mapbinder = (MapBinderBinding<T>) mapBinding.acceptTargetVisitor(visitor);
-    assertNotNull(mapbinder);
-    assertEquals(mapKey, mapbinder.getMapKey());
-    assertEquals(keyType, mapbinder.getKeyTypeLiteral());
-    assertEquals(valueType, mapbinder.getValueTypeLiteral());
-    assertEquals(allowDuplicates, mapbinder.permitsDuplicates());
-    List<Map.Entry<?, Binding<?>>> entries = new ArrayList<>(mapbinder.getEntries());
-    List<MapResult<?, ?>> mapResults = new ArrayList<>(Arrays.asList(results));
-    assertEquals(mapResults.size(), entries.size(), "wrong entries, expected: " + mapResults + ", but was: " + entries);
-
-    for (MapResult<?, ?> result : mapResults) {
-      Map.Entry<?, Binding<?>> found = null;
-      for (Map.Entry<?, Binding<?>> entry : entries) {
-        Object key = entry.getKey();
-        Binding<?> value = entry.getValue();
-        if (key.equals(result.k) && matches(value, result.v)) {
-          found = entry;
-          break;
+    /**
+     * Asserts that MapBinderBinding visitors for work correctly.
+     *
+     * @param <T> The type of the binding
+     * @param mapKey The key the map belongs to.
+     * @param keyType the TypeLiteral of the key of the map
+     * @param valueType the TypeLiteral of the value of the map
+     * @param modules The modules that define the mapbindings
+     * @param visitType The kind of test we should perform. A live Injector, a raw Elements (Module)
+     *         test, or both.
+     * @param allowDuplicates If duplicates are allowed.
+     * @param expectedMapBindings The number of other mapbinders we expect to see.
+     * @param results The kind of bindings contained in the mapbinder.
+     */
+    static <T> void assertMapVisitor(
+            Key<T> mapKey,
+            TypeLiteral<?> keyType,
+            TypeLiteral<?> valueType,
+            Iterable<? extends Module> modules,
+            VisitType visitType,
+            boolean allowDuplicates,
+            int expectedMapBindings,
+            MapResult<?, ?>... results)
+    {
+        if (visitType == null) {
+            fail("must test something");
         }
-      }
-      if (found == null) {
-        fail("Could not find entry: " + result + " in remaining entries: " + entries);
-      } else {
-        assertTrue(mapbinder.containsElement(found.getValue()), "mapBinder doesn't contain: " + found.getValue());
-        entries.remove(found);
-      }
-    }
 
-    if (!entries.isEmpty()) {
-      fail("Found all entries of: " + mapResults + ", but more were left over: " + entries);
-    }
-
-    Key<?> mapOfProvider = mapKey.ofType(mapOfProviderOf(keyType, valueType));
-    Key<?> mapOfSetOfProvider = mapKey.ofType(mapOfSetOfProviderOf(keyType, valueType));
-    Key<?> mapOfCollectionOfProvider =
-        mapKey.ofType(mapOfCollectionOfProviderOf(keyType, valueType));
-    Key<?> mapOfSet = mapKey.ofType(mapOf(keyType, setOf(valueType)));
-    Key<?> setOfEntry = mapKey.ofType(setOf(entryOfProviderOf(keyType, valueType)));
-    Key<?> collectionOfProvidersOfEntryOfProvider =
-        mapKey.ofType(collectionOfProvidersOf(entryOfProviderOf(keyType, valueType)));
-    Key<?> setOfExtendsOfEntryOfProvider =
-        mapKey.ofType(setOfExtendsOf(entryOfProviderOf(keyType, valueType)));
-    Key<?> mapOfKeyExtendsValueKey =
-        mapKey.ofType(mapOf(keyType, TypeLiteral.get(Types.subtypeOf(valueType.getType()))));
-
-    Key<?> mapOfJakartaProvider = mapKey.ofType(mapOfJakartaProviderOf(keyType, valueType));
-    Key<?> mapOfSetOfJakartaProvider =
-        mapKey.ofType(mapOfSetOfJakartaProviderOf(keyType, valueType));
-    Key<?> mapOfCollectionOfJakartaProvider =
-        mapKey.ofType(mapOfCollectionOfJakartaProviderOf(keyType, valueType));
-    Key<?> setOfJakartaEntry = mapKey.ofType(setOf(entryOfJakartaProviderOf(keyType, valueType)));
-    Key<?> collectionOfJakartaProvidersOfEntryOfProvider =
-        mapKey.ofType(collectionOfJakartaProvidersOf(entryOfProviderOf(keyType, valueType)));
-
-    assertEquals(
-        ImmutableSet.of(
-            mapOfJakartaProvider,
-            mapOfProvider,
-            mapOfSetOfProvider,
-            mapOfSetOfJakartaProvider,
-            mapOfCollectionOfProvider,
-            mapOfCollectionOfJakartaProvider,
-            mapOfSet,
-            mapOfKeyExtendsValueKey),
-        mapbinder.getAlternateMapKeys());
-
-    boolean entrySetMatch = false;
-    boolean mapProviderMatch = false;
-    boolean mapSetMatch = false;
-    boolean mapSetProviderMatch = false;
-    boolean mapCollectionProviderMatch = false;
-    boolean collectionOfProvidersOfEntryOfProviderMatch = false;
-    boolean setOfExtendsOfEntryOfProviderMatch = false;
-    boolean mapOfKeyExtendsValueKeyMatch = false;
-
-    boolean jakartaEntrySetMatch = false;
-    boolean mapJakartaProviderMatch = false;
-    boolean mapSetJakartaProviderMatch = false;
-    boolean mapCollectionJakartaProviderMatch = false;
-    boolean collectionOfJakartaProvidersOfEntryOfProviderMatch = false;
-
-    List<Object> otherMapBindings = new ArrayList<>();
-    List<Binding<?>> otherMatches = new ArrayList<>();
-    Multimap<Object, IndexedBinding> indexedEntries =
-        MultimapBuilder.hashKeys().hashSetValues().build();
-    Indexer indexer = new Indexer(injector);
-    int duplicates = 0;
-    for (Binding<?> b : injector.getAllBindings().values()) {
-      boolean contains = mapbinder.containsElement(b);
-      Object visited = ((Binding<T>) b).acceptTargetVisitor(visitor);
-      if (visited instanceof MapBinderBinding) {
-        if (visited.equals(mapbinder)) {
-          assertTrue(contains);
-        } else {
-          otherMapBindings.add(visited);
+        if (visitType == BOTH || visitType == INJECTOR) {
+            mapInjectorTest(
+                    mapKey, keyType, valueType, modules, allowDuplicates, expectedMapBindings, results);
         }
-      } else if (b.getKey().equals(mapOfProvider)) {
-        assertTrue(contains);
-        mapProviderMatch = true;
-      } else if (b.getKey().equals(mapOfSet)) {
-        assertTrue(contains);
-        mapSetMatch = true;
-      } else if (b.getKey().equals(mapOfSetOfProvider)) {
-        assertTrue(contains);
-        mapSetProviderMatch = true;
-      } else if (b.getKey().equals(mapOfCollectionOfProvider)) {
-        assertTrue(contains);
-        mapCollectionProviderMatch = true;
-      } else if (b.getKey().equals(setOfEntry)) {
-        assertTrue(contains);
-        entrySetMatch = true;
-        // Validate that this binding is also a MultibinderBinding.
-        assertThat(((Binding<T>) b).acceptTargetVisitor(visitor))
-            .isInstanceOf(MultibinderBinding.class);
-      } else if (b.getKey().equals(collectionOfProvidersOfEntryOfProvider)) {
-        assertTrue(contains);
-        collectionOfProvidersOfEntryOfProviderMatch = true;
-      } else if (b.getKey().equals(setOfExtendsOfEntryOfProvider)) {
-        assertTrue(contains);
-        setOfExtendsOfEntryOfProviderMatch = true;
-      } else if (b.getKey().equals(mapOfKeyExtendsValueKey)) {
-        assertTrue(contains);
-        mapOfKeyExtendsValueKeyMatch = true;
-      } else if (b.getKey().equals(mapOfJakartaProvider)) {
-        assertTrue(contains);
-        mapJakartaProviderMatch = true;
-      } else if (b.getKey().equals(mapOfSetOfJakartaProvider)) {
-        assertTrue(contains);
-        mapSetJakartaProviderMatch = true;
-      } else if (b.getKey().equals(mapOfCollectionOfJakartaProvider)) {
-        assertTrue(contains);
-        mapCollectionJakartaProviderMatch = true;
-      } else if (b.getKey().equals(setOfJakartaEntry)) {
-        assertTrue(contains);
-        jakartaEntrySetMatch = true;
-      } else if (b.getKey().equals(collectionOfJakartaProvidersOfEntryOfProvider)) {
-        assertTrue(contains);
-        collectionOfJakartaProvidersOfEntryOfProviderMatch = true;
-      } else if (contains) {
-        if (b instanceof ProviderInstanceBinding) {
-          ProviderInstanceBinding<?> pib = (ProviderInstanceBinding<?>) b;
-          if (pib.getUserSuppliedProvider() instanceof ProviderMapEntry) {
-            // weird casting required to workaround compilation issues with jdk6
-            ProviderMapEntry<?, ?> pme =
-                (ProviderMapEntry<?, ?>) (Provider) pib.getUserSuppliedProvider();
-            Binding<?> valueBinding = injector.getBinding(pme.getValueKey());
-            if (indexer.isIndexable(valueBinding)
-                && !indexedEntries.put(pme.getKey(), valueBinding.acceptTargetVisitor(indexer))) {
-              duplicates++;
+
+        if (visitType == BOTH || visitType == MODULE) {
+            mapModuleTest(
+                    mapKey, keyType, valueType, modules, allowDuplicates, expectedMapBindings, results);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> void mapInjectorTest(
+            Key<T> mapKey,
+            TypeLiteral<?> keyType,
+            TypeLiteral<?> valueType,
+            Iterable<? extends Module> modules,
+            boolean allowDuplicates,
+            int expectedMapBindings,
+            MapResult<?, ?>... results)
+    {
+        Injector injector = Guice.createInjector(modules);
+        Visitor<T> visitor = new Visitor<>();
+        Binding<T> mapBinding = injector.getBinding(mapKey);
+        MapBinderBinding<T> mapbinder = (MapBinderBinding<T>) mapBinding.acceptTargetVisitor(visitor);
+        assertNotNull(mapbinder);
+        assertEquals(mapKey, mapbinder.getMapKey());
+        assertEquals(keyType, mapbinder.getKeyTypeLiteral());
+        assertEquals(valueType, mapbinder.getValueTypeLiteral());
+        assertEquals(allowDuplicates, mapbinder.permitsDuplicates());
+        List<Map.Entry<?, Binding<?>>> entries = new ArrayList<>(mapbinder.getEntries());
+        List<MapResult<?, ?>> mapResults = new ArrayList<>(Arrays.asList(results));
+        assertEquals(mapResults.size(), entries.size(), "wrong entries, expected: " + mapResults + ", but was: " + entries);
+
+        for (MapResult<?, ?> result : mapResults) {
+            Map.Entry<?, Binding<?>> found = null;
+            for (Map.Entry<?, Binding<?>> entry : entries) {
+                Object key = entry.getKey();
+                Binding<?> value = entry.getValue();
+                if (key.equals(result.k) && matches(value, result.v)) {
+                    found = entry;
+                    break;
+                }
             }
-          }
-        }
-        otherMatches.add(b);
-      }
-    }
-
-    int sizeOfOther = otherMatches.size();
-    if (allowDuplicates) {
-      sizeOfOther--; // account for 1 duplicate binding
-    }
-    // Multiply by two because each has a value and Map.Entry.
-    int expectedSize = 2 * (mapResults.size() + duplicates);
-    assertEquals(expectedSize, sizeOfOther, "Incorrect other matches:\n\t" + otherMatches.stream().map(Object::toString).collect(joining("\n\t")));
-    assertTrue(entrySetMatch);
-    assertTrue(mapProviderMatch);
-    assertTrue(collectionOfProvidersOfEntryOfProviderMatch);
-    assertTrue(setOfExtendsOfEntryOfProviderMatch);
-    assertTrue(mapOfKeyExtendsValueKeyMatch);
-    assertTrue(jakartaEntrySetMatch);
-    assertTrue(mapJakartaProviderMatch);
-    assertTrue(collectionOfJakartaProvidersOfEntryOfProviderMatch);
-    assertEquals(allowDuplicates, mapSetMatch);
-    assertEquals(allowDuplicates, mapSetProviderMatch);
-    assertEquals(allowDuplicates, mapCollectionProviderMatch);
-    assertEquals(allowDuplicates, mapSetJakartaProviderMatch);
-    assertEquals(allowDuplicates, mapCollectionJakartaProviderMatch);
-    assertEquals(expectedMapBindings, otherMapBindings.size(), "other MapBindings found: " + otherMapBindings);
-  }
-
-  @SuppressWarnings("unchecked")
-  private static <T> void mapModuleTest(
-      Key<T> mapKey,
-      TypeLiteral<?> keyType,
-      TypeLiteral<?> valueType,
-      Iterable<? extends Module> modules,
-      boolean allowDuplicates,
-      int expectedMapBindings,
-      MapResult<?, ?>... results) {
-    Set<Element> elements = ImmutableSet.copyOf(Elements.getElements(modules));
-    Visitor<T> visitor = new Visitor<>();
-    MapBinderBinding<T> mapbinder = null;
-    Map<Key<?>, Binding<?>> keyMap = new HashMap<>();
-    for (Element element : elements) {
-      if (element instanceof Binding) {
-        Binding<?> binding = (Binding<?>) element;
-        keyMap.put(binding.getKey(), binding);
-        if (binding.getKey().equals(mapKey)) {
-          mapbinder = (MapBinderBinding<T>) ((Binding<T>) binding).acceptTargetVisitor(visitor);
-        }
-      }
-    }
-    assertNotNull(mapbinder);
-
-    List<MapResult<?, ?>> mapResults = new ArrayList<>(Arrays.asList(results));
-
-    // Make sure the entries returned from getEntries(elements) are correct.
-    // Because getEntries() can return duplicates, make sure to continue searching, even
-    // after we find one match.
-    List<Map.Entry<?, Binding<?>>> entries = new ArrayList<>(mapbinder.getEntries(elements));
-    for (MapResult<?, ?> result : mapResults) {
-      List<Map.Entry<?, Binding<?>>> foundEntries = new ArrayList<>();
-      for (Map.Entry<?, Binding<?>> entry : entries) {
-        Object key = entry.getKey();
-        Binding<?> value = entry.getValue();
-        if (key.equals(result.k) && matches(value, result.v)) {
-          assertTrue(mapbinder.containsElement(entry.getValue()), "mapBinder doesn't contain: " + entry.getValue());
-          foundEntries.add(entry);
-        }
-      }
-      assertTrue(!foundEntries.isEmpty(), "Could not find entry: " + result + " in remaining entries: " + entries);
-
-      entries.removeAll(foundEntries);
-    }
-
-    assertTrue(entries.isEmpty(), "Found all entries of: " + mapResults + ", but more were left over: " + entries);
-
-    assertEquals(mapKey, mapbinder.getMapKey());
-    assertEquals(keyType, mapbinder.getKeyTypeLiteral());
-    assertEquals(valueType, mapbinder.getValueTypeLiteral());
-
-    Key<?> mapOfProvider = mapKey.ofType(mapOfProviderOf(keyType, valueType));
-    Key<?> mapOfSetOfProvider = mapKey.ofType(mapOfSetOfProviderOf(keyType, valueType));
-    Key<?> mapOfCollectionOfProvider =
-        mapKey.ofType(mapOfCollectionOfProviderOf(keyType, valueType));
-    Key<?> mapOfSet = mapKey.ofType(mapOf(keyType, setOf(valueType)));
-    Key<?> setOfEntry = mapKey.ofType(setOf(entryOfProviderOf(keyType, valueType)));
-    Key<?> collectionOfProvidersOfEntryOfProvider =
-        mapKey.ofType(collectionOfProvidersOf(entryOfProviderOf(keyType, valueType)));
-    Key<?> setOfExtendsOfEntryOfProvider =
-        mapKey.ofType(setOfExtendsOf(entryOfProviderOf(keyType, valueType)));
-    Key<?> mapOfKeyExtendsValueKey =
-        mapKey.ofType(mapOf(keyType, TypeLiteral.get(Types.subtypeOf(valueType.getType()))));
-
-    Key<?> mapOfJakartaProvider = mapKey.ofType(mapOfJakartaProviderOf(keyType, valueType));
-    Key<?> mapOfSetOfJakartaProvider =
-        mapKey.ofType(mapOfSetOfJakartaProviderOf(keyType, valueType));
-    Key<?> mapOfCollectionOfJakartaProvider =
-        mapKey.ofType(mapOfCollectionOfJakartaProviderOf(keyType, valueType));
-    Key<?> setOfJakartaEntry = mapKey.ofType(setOf(entryOfJakartaProviderOf(keyType, valueType)));
-    Key<?> collectionOfJakartaProvidersOfEntryOfProvider =
-        mapKey.ofType(collectionOfJakartaProvidersOf(entryOfProviderOf(keyType, valueType)));
-
-    assertEquals(
-        ImmutableSet.of(
-            mapOfProvider,
-            mapOfJakartaProvider,
-            mapOfSetOfProvider,
-            mapOfSetOfJakartaProvider,
-            mapOfCollectionOfProvider,
-            mapOfCollectionOfJakartaProvider,
-            mapOfSet,
-            mapOfKeyExtendsValueKey),
-        mapbinder.getAlternateMapKeys());
-
-    boolean entrySetMatch = false;
-    boolean mapProviderMatch = false;
-    boolean mapSetMatch = false;
-    boolean mapSetProviderMatch = false;
-    boolean mapCollectionProviderMatch = false;
-    boolean collectionOfProvidersOfEntryOfProviderMatch = false;
-    boolean setOfExtendsOfEntryOfProviderMatch = false;
-    boolean mapOfKeyExtendsValueKeyMatch = false;
-
-    boolean entrySetJakartaMatch = false;
-    boolean mapJakartaProviderMatch = false;
-    boolean mapSetJakartaProviderMatch = false;
-    boolean mapCollectionJakartaProviderMatch = false;
-    boolean collectionOfJakartaProvidersOfEntryOfProviderMatch = false;
-
-    List<Object> otherMapBindings = new ArrayList<>();
-    List<Element> otherMatches = new ArrayList<>();
-    List<Element> otherElements = new ArrayList<>();
-    Indexer indexer = new Indexer(null);
-    Multimap<Object, IndexedBinding> indexedEntries =
-        MultimapBuilder.hashKeys().hashSetValues().build();
-    int duplicates = 0;
-    for (Element element : elements) {
-      boolean contains = mapbinder.containsElement(element);
-      if (!contains) {
-        otherElements.add(element);
-      }
-      boolean matched = false;
-      Key<T> key = null;
-      Binding<T> b = null;
-      if (element instanceof Binding) {
-        b = (Binding) element;
-        if (b instanceof ProviderInstanceBinding) {
-          ProviderInstanceBinding<?> pb = (ProviderInstanceBinding<?>) b;
-          if (pb.getUserSuppliedProvider() instanceof ProviderMapEntry) {
-            // weird casting required to workaround jdk6 compilation problems
-            ProviderMapEntry<?, ?> pme =
-                (ProviderMapEntry<?, ?>) (Provider) pb.getUserSuppliedProvider();
-            Binding<?> valueBinding = keyMap.get(pme.getValueKey());
-            if (indexer.isIndexable(valueBinding)
-                && !indexedEntries.put(pme.getKey(), valueBinding.acceptTargetVisitor(indexer))) {
-              duplicates++;
+            if (found == null) {
+                fail("Could not find entry: " + result + " in remaining entries: " + entries);
             }
-          }
+            else {
+                assertTrue(mapbinder.containsElement(found.getValue()), "mapBinder doesn't contain: " + found.getValue());
+                entries.remove(found);
+            }
         }
 
-        key = b.getKey();
-        Object visited = b.acceptTargetVisitor(visitor);
-        if (visited instanceof MapBinderBinding) {
-          matched = true;
-          if (visited.equals(mapbinder)) {
-            assertTrue(contains);
-          } else {
-            otherMapBindings.add(visited);
-          }
+        if (!entries.isEmpty()) {
+            fail("Found all entries of: " + mapResults + ", but more were left over: " + entries);
         }
-      } else if (element instanceof ProviderLookup) {
-        key = ((ProviderLookup) element).getKey();
-      }
 
-      if (!matched && key != null) {
-        if (key.equals(mapOfProvider)) {
-          matched = true;
-          assertTrue(contains);
-          mapProviderMatch = true;
-        } else if (key.equals(mapOfSet)) {
-          matched = true;
-          assertTrue(contains);
-          mapSetMatch = true;
-        } else if (key.equals(mapOfSetOfProvider)) {
-          matched = true;
-          assertTrue(contains);
-          mapSetProviderMatch = true;
-        } else if (key.equals(mapOfCollectionOfProvider)) {
-          matched = true;
-          assertTrue(contains);
-          mapCollectionProviderMatch = true;
-        } else if (key.equals(setOfEntry)) {
-          matched = true;
-          assertTrue(contains);
-          entrySetMatch = true;
-          // Validate that this binding is also a MultibinderBinding.
-          if (b != null) {
-            assertTrue(b.acceptTargetVisitor(visitor) instanceof MultibinderBinding);
-          }
-        } else if (key.equals(collectionOfProvidersOfEntryOfProvider)) {
-          matched = true;
-          assertTrue(contains);
-          collectionOfProvidersOfEntryOfProviderMatch = true;
-        } else if (key.equals(setOfExtendsOfEntryOfProvider)) {
-          matched = true;
-          assertTrue(contains);
-          setOfExtendsOfEntryOfProviderMatch = true;
-        } else if (key.equals(mapOfKeyExtendsValueKey)) {
-          matched = true;
-          assertTrue(contains);
-          mapOfKeyExtendsValueKeyMatch = true;
-        } else if (key.equals(mapOfJakartaProvider)) {
-          matched = true;
-          assertTrue(contains);
-          mapJakartaProviderMatch = true;
-        } else if (key.equals(mapOfSetOfJakartaProvider)) {
-          matched = true;
-          assertTrue(contains);
-          mapSetJakartaProviderMatch = true;
-        } else if (key.equals(mapOfCollectionOfJakartaProvider)) {
-          matched = true;
-          assertTrue(contains);
-          mapCollectionJakartaProviderMatch = true;
-        } else if (key.equals(setOfJakartaEntry)) {
-          matched = true;
-          assertTrue(contains);
-          entrySetJakartaMatch = true;
-        } else if (key.equals(collectionOfJakartaProvidersOfEntryOfProvider)) {
-          matched = true;
-          assertTrue(contains);
-          collectionOfJakartaProvidersOfEntryOfProviderMatch = true;
+        Key<?> mapOfProvider = mapKey.ofType(mapOfProviderOf(keyType, valueType));
+        Key<?> mapOfSetOfProvider = mapKey.ofType(mapOfSetOfProviderOf(keyType, valueType));
+        Key<?> mapOfCollectionOfProvider =
+                mapKey.ofType(mapOfCollectionOfProviderOf(keyType, valueType));
+        Key<?> mapOfSet = mapKey.ofType(mapOf(keyType, setOf(valueType)));
+        Key<?> setOfEntry = mapKey.ofType(setOf(entryOfProviderOf(keyType, valueType)));
+        Key<?> collectionOfProvidersOfEntryOfProvider =
+                mapKey.ofType(collectionOfProvidersOf(entryOfProviderOf(keyType, valueType)));
+        Key<?> setOfExtendsOfEntryOfProvider =
+                mapKey.ofType(setOfExtendsOf(entryOfProviderOf(keyType, valueType)));
+        Key<?> mapOfKeyExtendsValueKey =
+                mapKey.ofType(mapOf(keyType, TypeLiteral.get(Types.subtypeOf(valueType.getType()))));
+
+        Key<?> mapOfJakartaProvider = mapKey.ofType(mapOfJakartaProviderOf(keyType, valueType));
+        Key<?> mapOfSetOfJakartaProvider =
+                mapKey.ofType(mapOfSetOfJakartaProviderOf(keyType, valueType));
+        Key<?> mapOfCollectionOfJakartaProvider =
+                mapKey.ofType(mapOfCollectionOfJakartaProviderOf(keyType, valueType));
+        Key<?> setOfJakartaEntry = mapKey.ofType(setOf(entryOfJakartaProviderOf(keyType, valueType)));
+        Key<?> collectionOfJakartaProvidersOfEntryOfProvider =
+                mapKey.ofType(collectionOfJakartaProvidersOf(entryOfProviderOf(keyType, valueType)));
+
+        assertEquals(
+                ImmutableSet.of(
+                        mapOfJakartaProvider,
+                        mapOfProvider,
+                        mapOfSetOfProvider,
+                        mapOfSetOfJakartaProvider,
+                        mapOfCollectionOfProvider,
+                        mapOfCollectionOfJakartaProvider,
+                        mapOfSet,
+                        mapOfKeyExtendsValueKey),
+                mapbinder.getAlternateMapKeys());
+
+        boolean entrySetMatch = false;
+        boolean mapProviderMatch = false;
+        boolean mapSetMatch = false;
+        boolean mapSetProviderMatch = false;
+        boolean mapCollectionProviderMatch = false;
+        boolean collectionOfProvidersOfEntryOfProviderMatch = false;
+        boolean setOfExtendsOfEntryOfProviderMatch = false;
+        boolean mapOfKeyExtendsValueKeyMatch = false;
+
+        boolean jakartaEntrySetMatch = false;
+        boolean mapJakartaProviderMatch = false;
+        boolean mapSetJakartaProviderMatch = false;
+        boolean mapCollectionJakartaProviderMatch = false;
+        boolean collectionOfJakartaProvidersOfEntryOfProviderMatch = false;
+
+        List<Object> otherMapBindings = new ArrayList<>();
+        List<Binding<?>> otherMatches = new ArrayList<>();
+        Multimap<Object, IndexedBinding> indexedEntries =
+                MultimapBuilder.hashKeys().hashSetValues().build();
+        Indexer indexer = new Indexer(injector);
+        int duplicates = 0;
+        for (Binding<?> b : injector.getAllBindings().values()) {
+            boolean contains = mapbinder.containsElement(b);
+            Object visited = ((Binding<T>) b).acceptTargetVisitor(visitor);
+            if (visited instanceof MapBinderBinding) {
+                if (visited.equals(mapbinder)) {
+                    assertTrue(contains);
+                }
+                else {
+                    otherMapBindings.add(visited);
+                }
+            }
+            else if (b.getKey().equals(mapOfProvider)) {
+                assertTrue(contains);
+                mapProviderMatch = true;
+            }
+            else if (b.getKey().equals(mapOfSet)) {
+                assertTrue(contains);
+                mapSetMatch = true;
+            }
+            else if (b.getKey().equals(mapOfSetOfProvider)) {
+                assertTrue(contains);
+                mapSetProviderMatch = true;
+            }
+            else if (b.getKey().equals(mapOfCollectionOfProvider)) {
+                assertTrue(contains);
+                mapCollectionProviderMatch = true;
+            }
+            else if (b.getKey().equals(setOfEntry)) {
+                assertTrue(contains);
+                entrySetMatch = true;
+                // Validate that this binding is also a MultibinderBinding.
+                assertThat(((Binding<T>) b).acceptTargetVisitor(visitor))
+                        .isInstanceOf(MultibinderBinding.class);
+            }
+            else if (b.getKey().equals(collectionOfProvidersOfEntryOfProvider)) {
+                assertTrue(contains);
+                collectionOfProvidersOfEntryOfProviderMatch = true;
+            }
+            else if (b.getKey().equals(setOfExtendsOfEntryOfProvider)) {
+                assertTrue(contains);
+                setOfExtendsOfEntryOfProviderMatch = true;
+            }
+            else if (b.getKey().equals(mapOfKeyExtendsValueKey)) {
+                assertTrue(contains);
+                mapOfKeyExtendsValueKeyMatch = true;
+            }
+            else if (b.getKey().equals(mapOfJakartaProvider)) {
+                assertTrue(contains);
+                mapJakartaProviderMatch = true;
+            }
+            else if (b.getKey().equals(mapOfSetOfJakartaProvider)) {
+                assertTrue(contains);
+                mapSetJakartaProviderMatch = true;
+            }
+            else if (b.getKey().equals(mapOfCollectionOfJakartaProvider)) {
+                assertTrue(contains);
+                mapCollectionJakartaProviderMatch = true;
+            }
+            else if (b.getKey().equals(setOfJakartaEntry)) {
+                assertTrue(contains);
+                jakartaEntrySetMatch = true;
+            }
+            else if (b.getKey().equals(collectionOfJakartaProvidersOfEntryOfProvider)) {
+                assertTrue(contains);
+                collectionOfJakartaProvidersOfEntryOfProviderMatch = true;
+            }
+            else if (contains) {
+                if (b instanceof ProviderInstanceBinding) {
+                    ProviderInstanceBinding<?> pib = (ProviderInstanceBinding<?>) b;
+                    if (pib.getUserSuppliedProvider() instanceof ProviderMapEntry) {
+                        // weird casting required to workaround compilation issues with jdk6
+                        ProviderMapEntry<?, ?> pme =
+                                (ProviderMapEntry<?, ?>) (Provider) pib.getUserSuppliedProvider();
+                        Binding<?> valueBinding = injector.getBinding(pme.getValueKey());
+                        if (indexer.isIndexable(valueBinding)
+                                && !indexedEntries.put(pme.getKey(), valueBinding.acceptTargetVisitor(indexer))) {
+                            duplicates++;
+                        }
+                    }
+                }
+                otherMatches.add(b);
+            }
         }
-      }
 
-      if (!matched && contains) {
-        otherMatches.add(element);
-      }
-    }
-
-    int otherMatchesSize = otherMatches.size();
-    if (allowDuplicates) {
-      otherMatchesSize--; // allow for 1 duplicate binding
-    }
-    // Multiply by 2 because each has a value, and Map.Entry
-    int expectedSize = (mapResults.size() + duplicates) * 2;
-    assertEquals(expectedSize, otherMatchesSize, "incorrect number of contains, leftover matches:\n" + otherMatches.stream().map(Object::toString).collect(joining("\n\t")));
-
-    assertTrue(entrySetMatch);
-    assertTrue(mapProviderMatch);
-    assertTrue(collectionOfProvidersOfEntryOfProviderMatch);
-    assertTrue(setOfExtendsOfEntryOfProviderMatch);
-    assertTrue(mapOfKeyExtendsValueKeyMatch);
-    assertTrue(entrySetJakartaMatch);
-    assertTrue(mapJakartaProviderMatch);
-    assertTrue(collectionOfJakartaProvidersOfEntryOfProviderMatch);
-    assertEquals(allowDuplicates, mapSetMatch);
-    assertEquals(allowDuplicates, mapSetProviderMatch);
-    assertEquals(allowDuplicates, mapCollectionProviderMatch);
-    assertEquals(allowDuplicates, mapSetJakartaProviderMatch);
-    assertEquals(allowDuplicates, mapCollectionJakartaProviderMatch);
-    assertEquals(expectedMapBindings, otherMapBindings.size(), "other MapBindings found: " + otherMapBindings);
-
-    // Validate that we can construct an injector out of the remaining bindings.
-    Guice.createInjector(Elements.getModule(otherElements));
-  }
-
-  /**
-   * Asserts that MultibinderBinding visitors work correctly.
-   *
-   * @param <T> The type of the binding
-   * @param setKey The key the set belongs to.
-   * @param elementType the TypeLiteral of the element
-   * @param modules The modules that define the multibindings
-   * @param visitType The kind of test we should perform. A live Injector, a raw Elements (Module)
-   *     test, or both.
-   * @param allowDuplicates If duplicates are allowed.
-   * @param expectedMultibindings The number of other multibinders we expect to see.
-   * @param results The kind of bindings contained in the multibinder.
-   */
-  static <T> void assertSetVisitor(
-      Key<Set<T>> setKey,
-      TypeLiteral<?> elementType,
-      Iterable<? extends Module> modules,
-      VisitType visitType,
-      boolean allowDuplicates,
-      int expectedMultibindings,
-      BindResult<T>... results) {
-    if (visitType == null) {
-      fail("must test something");
-    }
-
-    if (visitType == BOTH || visitType == INJECTOR) {
-      setInjectorTest(
-          setKey, elementType, modules, allowDuplicates, expectedMultibindings, results);
-    }
-
-    if (visitType == BOTH || visitType == MODULE) {
-      setModuleTest(setKey, elementType, modules, allowDuplicates, expectedMultibindings, results);
-    }
-  }
-
-  @SuppressWarnings("unchecked")
-  private static <T> void setInjectorTest(
-      Key<Set<T>> setKey,
-      TypeLiteral<?> elementType,
-      Iterable<? extends Module> modules,
-      boolean allowDuplicates,
-      int otherMultibindings,
-      BindResult<T>... results) {
-    Key<?> collectionOfProvidersKey = setKey.ofType(collectionOfProvidersOf(elementType));
-    Key<?> collectionOfJakartaProvidersKey =
-        setKey.ofType(collectionOfJakartaProvidersOf(elementType));
-    Key<?> setOfExtendsKey = setKey.ofType(setOfExtendsOf(elementType));
-    Injector injector = Guice.createInjector(modules);
-    Visitor<Set<T>> visitor = new Visitor<>();
-    Binding<Set<T>> binding = injector.getBinding(setKey);
-    MultibinderBinding<Set<T>> multibinder =
-        (MultibinderBinding<Set<T>>) binding.acceptTargetVisitor(visitor);
-    assertNotNull(multibinder);
-    assertEquals(setKey, multibinder.getSetKey());
-    assertEquals(elementType, multibinder.getElementTypeLiteral());
-    assertEquals(allowDuplicates, multibinder.permitsDuplicates());
-    assertEquals(
-        ImmutableSet.of(
-            collectionOfProvidersKey,
-            collectionOfJakartaProvidersKey,
-            setOfExtendsKey),
-        multibinder.getAlternateSetKeys());
-    List<Binding<?>> elements = new ArrayList<>(multibinder.getElements());
-    List<BindResult<?>> bindResults = new ArrayList<>(Arrays.asList(results));
-    assertEquals(bindResults.size(), elements.size(), "wrong bind elements, expected: " + bindResults + ", but was: " + multibinder.getElements());
-
-    for (BindResult<?> result : bindResults) {
-      Binding<?> found = null;
-      for (Binding<?> item : elements) {
-        if (matches(item, result)) {
-          found = item;
-          break;
+        int sizeOfOther = otherMatches.size();
+        if (allowDuplicates) {
+            sizeOfOther--; // account for 1 duplicate binding
         }
-      }
-      if (found == null) {
-        fail("Could not find element: " + result + " in remaining elements: " + elements);
-      } else {
-        elements.remove(found);
-      }
+        // Multiply by two because each has a value and Map.Entry.
+        int expectedSize = 2 * (mapResults.size() + duplicates);
+        assertEquals(expectedSize, sizeOfOther, "Incorrect other matches:\n\t" + otherMatches.stream().map(Object::toString).collect(joining("\n\t")));
+        assertTrue(entrySetMatch);
+        assertTrue(mapProviderMatch);
+        assertTrue(collectionOfProvidersOfEntryOfProviderMatch);
+        assertTrue(setOfExtendsOfEntryOfProviderMatch);
+        assertTrue(mapOfKeyExtendsValueKeyMatch);
+        assertTrue(jakartaEntrySetMatch);
+        assertTrue(mapJakartaProviderMatch);
+        assertTrue(collectionOfJakartaProvidersOfEntryOfProviderMatch);
+        assertEquals(allowDuplicates, mapSetMatch);
+        assertEquals(allowDuplicates, mapSetProviderMatch);
+        assertEquals(allowDuplicates, mapCollectionProviderMatch);
+        assertEquals(allowDuplicates, mapSetJakartaProviderMatch);
+        assertEquals(allowDuplicates, mapCollectionJakartaProviderMatch);
+        assertEquals(expectedMapBindings, otherMapBindings.size(), "other MapBindings found: " + otherMapBindings);
     }
 
-    if (!elements.isEmpty()) {
-      fail("Found all elements of: " + bindResults + ", but more were left over: " + elements);
-    }
-
-    Set<Binding<?>> setOfElements = new HashSet<>(multibinder.getElements());
-    Set<IndexedBinding> setOfIndexed = new HashSet<>();
-    Indexer indexer = new Indexer(injector);
-    for (Binding<?> oneBinding : setOfElements) {
-      setOfIndexed.add(oneBinding.acceptTargetVisitor(indexer));
-    }
-
-    List<Object> otherMultibinders = new ArrayList<>();
-    List<Binding<?>> otherContains = new ArrayList<>();
-    boolean collectionOfProvidersMatch = false;
-    boolean collectionOfJakartaProvidersMatch = false;
-    boolean setOfExtendsKeyMatch = false;
-    for (Binding<?> b : injector.getAllBindings().values()) {
-      boolean contains = multibinder.containsElement(b);
-      Key<?> key = b.getKey();
-      Object visited = ((Binding<Set<T>>) b).acceptTargetVisitor(visitor);
-      if (visited != null) {
-        if (visited.equals(multibinder)) {
-          assertTrue(contains);
-        } else {
-          otherMultibinders.add(visited);
+    @SuppressWarnings("unchecked")
+    private static <T> void mapModuleTest(
+            Key<T> mapKey,
+            TypeLiteral<?> keyType,
+            TypeLiteral<?> valueType,
+            Iterable<? extends Module> modules,
+            boolean allowDuplicates,
+            int expectedMapBindings,
+            MapResult<?, ?>... results)
+    {
+        Set<Element> elements = ImmutableSet.copyOf(Elements.getElements(modules));
+        Visitor<T> visitor = new Visitor<>();
+        MapBinderBinding<T> mapbinder = null;
+        Map<Key<?>, Binding<?>> keyMap = new HashMap<>();
+        for (Element element : elements) {
+            if (element instanceof Binding) {
+                Binding<?> binding = (Binding<?>) element;
+                keyMap.put(binding.getKey(), binding);
+                if (binding.getKey().equals(mapKey)) {
+                    mapbinder = (MapBinderBinding<T>) ((Binding<T>) binding).acceptTargetVisitor(visitor);
+                }
+            }
         }
-      } else if (setOfElements.contains(b)) {
-        assertTrue(contains);
-      } else if (key.equals(collectionOfProvidersKey)) {
-        assertTrue(contains);
-        collectionOfProvidersMatch = true;
-      } else if (key.equals(collectionOfJakartaProvidersKey)) {
-        assertTrue(contains);
-        collectionOfJakartaProvidersMatch = true;
-      } else if (key.equals(setOfExtendsKey)) {
-        assertTrue(contains);
-        setOfExtendsKeyMatch = true;
-      } else if (contains) {
-        if (!indexer.isIndexable(b) || !setOfIndexed.contains(b.acceptTargetVisitor(indexer))) {
-          otherContains.add(b);
+        assertNotNull(mapbinder);
+
+        List<MapResult<?, ?>> mapResults = new ArrayList<>(Arrays.asList(results));
+
+        // Make sure the entries returned from getEntries(elements) are correct.
+        // Because getEntries() can return duplicates, make sure to continue searching, even
+        // after we find one match.
+        List<Map.Entry<?, Binding<?>>> entries = new ArrayList<>(mapbinder.getEntries(elements));
+        for (MapResult<?, ?> result : mapResults) {
+            List<Map.Entry<?, Binding<?>>> foundEntries = new ArrayList<>();
+            for (Map.Entry<?, Binding<?>> entry : entries) {
+                Object key = entry.getKey();
+                Binding<?> value = entry.getValue();
+                if (key.equals(result.k) && matches(value, result.v)) {
+                    assertTrue(mapbinder.containsElement(entry.getValue()), "mapBinder doesn't contain: " + entry.getValue());
+                    foundEntries.add(entry);
+                }
+            }
+            assertTrue(!foundEntries.isEmpty(), "Could not find entry: " + result + " in remaining entries: " + entries);
+
+            entries.removeAll(foundEntries);
         }
-      }
-    }
 
-    assertTrue(collectionOfProvidersMatch);
-    assertTrue(collectionOfJakartaProvidersMatch);
-    assertTrue(setOfExtendsKeyMatch);
+        assertTrue(entries.isEmpty(), "Found all entries of: " + mapResults + ", but more were left over: " + entries);
 
-    if (allowDuplicates) {
-      assertEquals(1, otherContains.size(), "contained more than it should: " + otherContains);
-    } else {
-      assertTrue(otherContains.isEmpty(), "contained more than it should: " + otherContains);
-    }
-    assertEquals(otherMultibindings, otherMultibinders.size(), "other multibindings found: " + otherMultibinders);
-  }
+        assertEquals(mapKey, mapbinder.getMapKey());
+        assertEquals(keyType, mapbinder.getKeyTypeLiteral());
+        assertEquals(valueType, mapbinder.getValueTypeLiteral());
 
-  @SuppressWarnings("unchecked")
-  private static <T> void setModuleTest(
-      Key<Set<T>> setKey,
-      TypeLiteral<?> elementType,
-      Iterable<? extends Module> modules,
-      boolean allowDuplicates,
-      int otherMultibindings,
-      BindResult<?>... results) {
-    Key<?> collectionOfProvidersKey = setKey.ofType(collectionOfProvidersOf(elementType));
-    Key<?> collectionOfJakartaProvidersKey =
-        setKey.ofType(collectionOfJakartaProvidersOf(elementType));
-    Key<?> setOfExtendsKey = setKey.ofType(setOfExtendsOf(elementType));
-    List<BindResult<?>> bindResults = new ArrayList<>(Arrays.asList(results));
-    List<Element> elements = Elements.getElements(modules);
-    Visitor<T> visitor = new Visitor<>();
-    MultibinderBinding<Set<T>> multibinder = null;
-    for (Element element : elements) {
-      if (element instanceof Binding && ((Binding) element).getKey().equals(setKey)) {
-        multibinder = (MultibinderBinding<Set<T>>) ((Binding) element).acceptTargetVisitor(visitor);
-        break;
-      }
-    }
-    assertNotNull(multibinder);
+        Key<?> mapOfProvider = mapKey.ofType(mapOfProviderOf(keyType, valueType));
+        Key<?> mapOfSetOfProvider = mapKey.ofType(mapOfSetOfProviderOf(keyType, valueType));
+        Key<?> mapOfCollectionOfProvider =
+                mapKey.ofType(mapOfCollectionOfProviderOf(keyType, valueType));
+        Key<?> mapOfSet = mapKey.ofType(mapOf(keyType, setOf(valueType)));
+        Key<?> setOfEntry = mapKey.ofType(setOf(entryOfProviderOf(keyType, valueType)));
+        Key<?> collectionOfProvidersOfEntryOfProvider =
+                mapKey.ofType(collectionOfProvidersOf(entryOfProviderOf(keyType, valueType)));
+        Key<?> setOfExtendsOfEntryOfProvider =
+                mapKey.ofType(setOfExtendsOf(entryOfProviderOf(keyType, valueType)));
+        Key<?> mapOfKeyExtendsValueKey =
+                mapKey.ofType(mapOf(keyType, TypeLiteral.get(Types.subtypeOf(valueType.getType()))));
 
-    assertEquals(setKey, multibinder.getSetKey());
-    assertEquals(elementType, multibinder.getElementTypeLiteral());
-    assertEquals(
-        ImmutableSet.of(
-            collectionOfProvidersKey,
-            collectionOfJakartaProvidersKey,
-            setOfExtendsKey),
-        multibinder.getAlternateSetKeys());
-    List<Object> otherMultibinders = new ArrayList<>();
-    Set<Element> otherContains = new HashSet<>();
-    List<Element> otherElements = new ArrayList<>();
-    int duplicates = 0;
-    Set<IndexedBinding> setOfIndexed = new HashSet<>();
-    Indexer indexer = new Indexer(null);
-    boolean collectionOfProvidersMatch = false;
-    boolean collectionOfJakartaProvidersMatch = false;
-    boolean setOfExtendsMatch = false;
-    for (Element element : elements) {
-      boolean contains = multibinder.containsElement(element);
-      if (!contains) {
-        otherElements.add(element);
-      }
-      boolean matched = false;
-      Key<T> key = null;
-      if (element instanceof Binding) {
-        Binding<T> binding = (Binding) element;
-        if (indexer.isIndexable(binding)
-            && !setOfIndexed.add((IndexedBinding) binding.acceptTargetVisitor(indexer))) {
-          duplicates++;
+        Key<?> mapOfJakartaProvider = mapKey.ofType(mapOfJakartaProviderOf(keyType, valueType));
+        Key<?> mapOfSetOfJakartaProvider =
+                mapKey.ofType(mapOfSetOfJakartaProviderOf(keyType, valueType));
+        Key<?> mapOfCollectionOfJakartaProvider =
+                mapKey.ofType(mapOfCollectionOfJakartaProviderOf(keyType, valueType));
+        Key<?> setOfJakartaEntry = mapKey.ofType(setOf(entryOfJakartaProviderOf(keyType, valueType)));
+        Key<?> collectionOfJakartaProvidersOfEntryOfProvider =
+                mapKey.ofType(collectionOfJakartaProvidersOf(entryOfProviderOf(keyType, valueType)));
+
+        assertEquals(
+                ImmutableSet.of(
+                        mapOfProvider,
+                        mapOfJakartaProvider,
+                        mapOfSetOfProvider,
+                        mapOfSetOfJakartaProvider,
+                        mapOfCollectionOfProvider,
+                        mapOfCollectionOfJakartaProvider,
+                        mapOfSet,
+                        mapOfKeyExtendsValueKey),
+                mapbinder.getAlternateMapKeys());
+
+        boolean entrySetMatch = false;
+        boolean mapProviderMatch = false;
+        boolean mapSetMatch = false;
+        boolean mapSetProviderMatch = false;
+        boolean mapCollectionProviderMatch = false;
+        boolean collectionOfProvidersOfEntryOfProviderMatch = false;
+        boolean setOfExtendsOfEntryOfProviderMatch = false;
+        boolean mapOfKeyExtendsValueKeyMatch = false;
+
+        boolean entrySetJakartaMatch = false;
+        boolean mapJakartaProviderMatch = false;
+        boolean mapSetJakartaProviderMatch = false;
+        boolean mapCollectionJakartaProviderMatch = false;
+        boolean collectionOfJakartaProvidersOfEntryOfProviderMatch = false;
+
+        List<Object> otherMapBindings = new ArrayList<>();
+        List<Element> otherMatches = new ArrayList<>();
+        List<Element> otherElements = new ArrayList<>();
+        Indexer indexer = new Indexer(null);
+        Multimap<Object, IndexedBinding> indexedEntries =
+                MultimapBuilder.hashKeys().hashSetValues().build();
+        int duplicates = 0;
+        for (Element element : elements) {
+            boolean contains = mapbinder.containsElement(element);
+            if (!contains) {
+                otherElements.add(element);
+            }
+            boolean matched = false;
+            Key<T> key = null;
+            Binding<T> b = null;
+            if (element instanceof Binding) {
+                b = (Binding) element;
+                if (b instanceof ProviderInstanceBinding) {
+                    ProviderInstanceBinding<?> pb = (ProviderInstanceBinding<?>) b;
+                    if (pb.getUserSuppliedProvider() instanceof ProviderMapEntry) {
+                        // weird casting required to workaround jdk6 compilation problems
+                        ProviderMapEntry<?, ?> pme =
+                                (ProviderMapEntry<?, ?>) (Provider) pb.getUserSuppliedProvider();
+                        Binding<?> valueBinding = keyMap.get(pme.getValueKey());
+                        if (indexer.isIndexable(valueBinding)
+                                && !indexedEntries.put(pme.getKey(), valueBinding.acceptTargetVisitor(indexer))) {
+                            duplicates++;
+                        }
+                    }
+                }
+
+                key = b.getKey();
+                Object visited = b.acceptTargetVisitor(visitor);
+                if (visited instanceof MapBinderBinding) {
+                    matched = true;
+                    if (visited.equals(mapbinder)) {
+                        assertTrue(contains);
+                    }
+                    else {
+                        otherMapBindings.add(visited);
+                    }
+                }
+            }
+            else if (element instanceof ProviderLookup) {
+                key = ((ProviderLookup) element).getKey();
+            }
+
+            if (!matched && key != null) {
+                if (key.equals(mapOfProvider)) {
+                    matched = true;
+                    assertTrue(contains);
+                    mapProviderMatch = true;
+                }
+                else if (key.equals(mapOfSet)) {
+                    matched = true;
+                    assertTrue(contains);
+                    mapSetMatch = true;
+                }
+                else if (key.equals(mapOfSetOfProvider)) {
+                    matched = true;
+                    assertTrue(contains);
+                    mapSetProviderMatch = true;
+                }
+                else if (key.equals(mapOfCollectionOfProvider)) {
+                    matched = true;
+                    assertTrue(contains);
+                    mapCollectionProviderMatch = true;
+                }
+                else if (key.equals(setOfEntry)) {
+                    matched = true;
+                    assertTrue(contains);
+                    entrySetMatch = true;
+                    // Validate that this binding is also a MultibinderBinding.
+                    if (b != null) {
+                        assertTrue(b.acceptTargetVisitor(visitor) instanceof MultibinderBinding);
+                    }
+                }
+                else if (key.equals(collectionOfProvidersOfEntryOfProvider)) {
+                    matched = true;
+                    assertTrue(contains);
+                    collectionOfProvidersOfEntryOfProviderMatch = true;
+                }
+                else if (key.equals(setOfExtendsOfEntryOfProvider)) {
+                    matched = true;
+                    assertTrue(contains);
+                    setOfExtendsOfEntryOfProviderMatch = true;
+                }
+                else if (key.equals(mapOfKeyExtendsValueKey)) {
+                    matched = true;
+                    assertTrue(contains);
+                    mapOfKeyExtendsValueKeyMatch = true;
+                }
+                else if (key.equals(mapOfJakartaProvider)) {
+                    matched = true;
+                    assertTrue(contains);
+                    mapJakartaProviderMatch = true;
+                }
+                else if (key.equals(mapOfSetOfJakartaProvider)) {
+                    matched = true;
+                    assertTrue(contains);
+                    mapSetJakartaProviderMatch = true;
+                }
+                else if (key.equals(mapOfCollectionOfJakartaProvider)) {
+                    matched = true;
+                    assertTrue(contains);
+                    mapCollectionJakartaProviderMatch = true;
+                }
+                else if (key.equals(setOfJakartaEntry)) {
+                    matched = true;
+                    assertTrue(contains);
+                    entrySetJakartaMatch = true;
+                }
+                else if (key.equals(collectionOfJakartaProvidersOfEntryOfProvider)) {
+                    matched = true;
+                    assertTrue(contains);
+                    collectionOfJakartaProvidersOfEntryOfProviderMatch = true;
+                }
+            }
+
+            if (!matched && contains) {
+                otherMatches.add(element);
+            }
         }
-        key = binding.getKey();
-        Object visited = binding.acceptTargetVisitor(visitor);
-        if (visited != null) {
-          matched = true;
-          if (visited.equals(multibinder)) {
-            assertTrue(contains);
-          } else {
-            otherMultibinders.add(visited);
-          }
+
+        int otherMatchesSize = otherMatches.size();
+        if (allowDuplicates) {
+            otherMatchesSize--; // allow for 1 duplicate binding
         }
-      }
+        // Multiply by 2 because each has a value, and Map.Entry
+        int expectedSize = (mapResults.size() + duplicates) * 2;
+        assertEquals(expectedSize, otherMatchesSize, "incorrect number of contains, leftover matches:\n" + otherMatches.stream().map(Object::toString).collect(joining("\n\t")));
 
-      if (collectionOfProvidersKey.equals(key)) {
-        assertTrue(contains);
-        assertFalse(matched);
-        collectionOfProvidersMatch = true;
-      } else if (collectionOfJakartaProvidersKey.equals(key)) {
-        assertTrue(contains);
-        assertFalse(matched);
-        collectionOfJakartaProvidersMatch = true;
-      } else if (setOfExtendsKey.equals(key)) {
-        assertTrue(contains);
-        assertFalse(matched);
-        setOfExtendsMatch = true;
-      } else if (!matched && contains) {
-        otherContains.add(element);
-      }
+        assertTrue(entrySetMatch);
+        assertTrue(mapProviderMatch);
+        assertTrue(collectionOfProvidersOfEntryOfProviderMatch);
+        assertTrue(setOfExtendsOfEntryOfProviderMatch);
+        assertTrue(mapOfKeyExtendsValueKeyMatch);
+        assertTrue(entrySetJakartaMatch);
+        assertTrue(mapJakartaProviderMatch);
+        assertTrue(collectionOfJakartaProvidersOfEntryOfProviderMatch);
+        assertEquals(allowDuplicates, mapSetMatch);
+        assertEquals(allowDuplicates, mapSetProviderMatch);
+        assertEquals(allowDuplicates, mapCollectionProviderMatch);
+        assertEquals(allowDuplicates, mapSetJakartaProviderMatch);
+        assertEquals(allowDuplicates, mapCollectionJakartaProviderMatch);
+        assertEquals(expectedMapBindings, otherMapBindings.size(), "other MapBindings found: " + otherMapBindings);
+
+        // Validate that we can construct an injector out of the remaining bindings.
+        Guice.createInjector(Elements.getModule(otherElements));
     }
 
-    if (allowDuplicates) {
-      assertEquals(bindResults.size() + 1 + duplicates, otherContains.size(), "wrong contained elements: " + otherContains);
-    } else {
-      assertEquals(bindResults.size() + duplicates, otherContains.size(), "wrong contained elements: " + otherContains);
-    }
-
-    assertEquals(otherMultibindings, otherMultibinders.size(), "other multibindings found: " + otherMultibinders);
-    assertTrue(collectionOfProvidersMatch);
-    assertTrue(collectionOfJakartaProvidersMatch);
-    assertTrue(setOfExtendsMatch);
-
-    // Validate that we can construct an injector out of the remaining bindings.
-    Guice.createInjector(Elements.getModule(otherElements));
-  }
-
-  /**
-   * Asserts that OptionalBinderBinding visitors for work correctly.
-   *
-   * @param <T> The type of the binding
-   * @param keyType The key OptionalBinder is binding
-   * @param modules The modules that define the bindings
-   * @param visitType The kind of test we should perform. A live Injector, a raw Elements (Module)
-   *     test, or both.
-   * @param expectedOtherOptionalBindings the # of other optional bindings we expect to see.
-   * @param expectedDefault the expected default binding, or null if none
-   * @param expectedActual the expected actual binding, or null if none
-   * @param expectedUserLinkedActual the user binding that is the actual binding, used if neither
-   *     the default nor actual are set and a user binding existed for the type.
-   */
-  static <T> void assertOptionalVisitor(
-      Key<T> keyType,
-      Iterable<? extends Module> modules,
-      VisitType visitType,
-      int expectedOtherOptionalBindings,
-      BindResult<?> expectedDefault,
-      BindResult<?> expectedActual,
-      BindResult<?> expectedUserLinkedActual) {
-    if (visitType == null) {
-      fail("must test something");
-    }
-
-    if (visitType == BOTH || visitType == INJECTOR) {
-      optionalInjectorTest(
-          keyType,
-          modules,
-          expectedOtherOptionalBindings,
-          expectedDefault,
-          expectedActual,
-          expectedUserLinkedActual);
-    }
-
-    if (visitType == BOTH || visitType == MODULE) {
-      optionalModuleTest(
-          keyType,
-          modules,
-          expectedOtherOptionalBindings,
-          expectedDefault,
-          expectedActual,
-          expectedUserLinkedActual);
-    }
-  }
-
-  @SuppressWarnings({"unchecked", "rawtypes"})
-  private static <T> void optionalInjectorTest(
-      Key<T> keyType,
-      Iterable<? extends Module> modules,
-      int expectedOtherOptionalBindings,
-      BindResult<?> expectedDefault,
-      BindResult<?> expectedActual,
-      BindResult<?> expectedUserLinkedActual) {
-    if (expectedUserLinkedActual != null) {
-      assertNull(expectedActual, "cannot have actual if expecting user binding");
-      assertNull(expectedDefault, "cannot have default if expecting user binding");
-    }
-
-    Key<Optional<T>> optionalKey =
-        keyType.ofType(RealOptionalBinder.javaOptionalOf(keyType.getTypeLiteral()));
-    Injector injector = Guice.createInjector(modules);
-    Binding<Optional<T>> optionalBinding = injector.getBinding(optionalKey);
-    Visitor visitor = new Visitor();
-    OptionalBinderBinding<Optional<T>> optionalBinder =
-        (OptionalBinderBinding<Optional<T>>) optionalBinding.acceptTargetVisitor(visitor);
-    assertNotNull(optionalBinder);
-    assertEquals(optionalKey, optionalBinder.getKey());
-
-    if (expectedDefault == null) {
-      assertNull(optionalBinder.getDefaultBinding(), "did not expect a default binding");
-    } else {
-      assertTrue(matches(optionalBinder.getDefaultBinding(), expectedDefault), "expectedDefault: "
-              + expectedDefault
-              + ", actualDefault: "
-              + optionalBinder.getDefaultBinding());
-    }
-
-    if (expectedActual == null && expectedUserLinkedActual == null) {
-      assertNull(optionalBinder.getActualBinding());
-
-    } else if (expectedActual != null) {
-      assertTrue(matches(optionalBinder.getActualBinding(), expectedActual), "expectedActual: "
-              + expectedActual
-              + ", actualActual: "
-              + optionalBinder.getActualBinding());
-
-    } else if (expectedUserLinkedActual != null) {
-      assertTrue(matches(optionalBinder.getActualBinding(), expectedUserLinkedActual), "expectedUserLinkedActual: "
-              + expectedUserLinkedActual
-              + ", actualActual: "
-              + optionalBinder.getActualBinding());
-    }
-
-    Key<Optional<jakarta.inject.Provider<T>>> optionalJakartaProviderKey =
-        keyType.ofType(RealOptionalBinder.javaOptionalOfJakartaProvider(keyType.getTypeLiteral()));
-    Key<Optional<Provider<T>>> optionalProviderKey =
-        keyType.ofType(RealOptionalBinder.javaOptionalOfProvider(keyType.getTypeLiteral()));
-    assertEquals(
-        ImmutableSet.of(
-            optionalProviderKey,
-            optionalJakartaProviderKey),
-        optionalBinder.getAlternateKeys());
-
-    boolean keyMatch = false;
-    boolean optionalKeyMatch = false;
-    boolean optionalJakartaProviderKeyMatch = false;
-    boolean optionalProviderKeyMatch = false;
-    boolean defaultMatch = false;
-    boolean actualMatch = false;
-    List<Object> otherOptionalBindings = new ArrayList<>();
-    List<Binding> otherMatches = new ArrayList<>();
-    for (Binding b : injector.getAllBindings().values()) {
-      boolean contains = optionalBinder.containsElement(b);
-
-      Object visited = b.acceptTargetVisitor(visitor);
-      if (visited instanceof OptionalBinderBinding) {
-        if (visited.equals(optionalBinder)) {
-          assertTrue(contains);
-        } else {
-          otherOptionalBindings.add(visited);
+    /**
+     * Asserts that MultibinderBinding visitors work correctly.
+     *
+     * @param <T> The type of the binding
+     * @param setKey The key the set belongs to.
+     * @param elementType the TypeLiteral of the element
+     * @param modules The modules that define the multibindings
+     * @param visitType The kind of test we should perform. A live Injector, a raw Elements (Module)
+     *         test, or both.
+     * @param allowDuplicates If duplicates are allowed.
+     * @param expectedMultibindings The number of other multibinders we expect to see.
+     * @param results The kind of bindings contained in the multibinder.
+     */
+    static <T> void assertSetVisitor(
+            Key<Set<T>> setKey,
+            TypeLiteral<?> elementType,
+            Iterable<? extends Module> modules,
+            VisitType visitType,
+            boolean allowDuplicates,
+            int expectedMultibindings,
+            BindResult<T>... results)
+    {
+        if (visitType == null) {
+            fail("must test something");
         }
-      }
-      if (b.getKey().equals(keyType)) {
-        // keyType might match because a user bound it
-        // (which is possible in a purely absent OptionalBinder)
-        assertEquals(expectedDefault != null || expectedActual != null, contains);
-        if (contains) {
-          keyMatch = true;
+
+        if (visitType == BOTH || visitType == INJECTOR) {
+            setInjectorTest(
+                    setKey, elementType, modules, allowDuplicates, expectedMultibindings, results);
         }
-      } else if (b.getKey().equals(optionalKey)) {
-        assertTrue(contains);
-        optionalKeyMatch = true;
-      } else if (b.getKey().equals(optionalJakartaProviderKey)) {
-        assertTrue(contains);
-        optionalJakartaProviderKeyMatch = true;
-      } else if (b.getKey().equals(optionalProviderKey)) {
-        assertTrue(contains);
-        optionalProviderKeyMatch = true;
-      } else if (expectedDefault != null && matches(b, expectedDefault)) {
-        assertTrue(contains);
-        defaultMatch = true;
-      } else if (expectedActual != null && matches(b, expectedActual)) {
-        assertTrue(contains);
-        actualMatch = true;
-      } else if (contains) {
-        otherMatches.add(b);
-      }
-    }
 
-    assertEquals(0, otherMatches.size(), otherMatches.toString());
-    // only expect a keymatch if either default or actual are set
-    assertEquals(expectedDefault != null || expectedActual != null, keyMatch);
-    assertTrue(optionalKeyMatch);
-    assertTrue(optionalJakartaProviderKeyMatch);
-    assertTrue(optionalProviderKeyMatch);
-    assertEquals(expectedDefault != null, defaultMatch);
-    assertEquals(expectedActual != null, actualMatch);
-    assertEquals(expectedOtherOptionalBindings, otherOptionalBindings.size(), "other OptionalBindings found: " + otherOptionalBindings);
-  }
-
-  @SuppressWarnings({"unchecked", "rawtypes"})
-  private static <T> void optionalModuleTest(
-      Key<T> keyType,
-      Iterable<? extends Module> modules,
-      int expectedOtherOptionalBindings,
-      BindResult<?> expectedDefault,
-      BindResult<?> expectedActual,
-      BindResult<?> expectedUserLinkedActual) {
-    if (expectedUserLinkedActual != null) {
-      assertNull(expectedActual, "cannot have actual if expecting user binding");
-      assertNull(expectedDefault, "cannot have default if expecting user binding");
-    }
-    Set<Element> elements = ImmutableSet.copyOf(Elements.getElements(modules));
-    Map<Key<?>, Binding<?>> indexed = index(elements);
-    Key<Optional<T>> optionalKey =
-        keyType.ofType(RealOptionalBinder.javaOptionalOf(keyType.getTypeLiteral()));
-    Visitor visitor = new Visitor();
-    Key<?> defaultKey = null;
-    Key<?> actualKey = null;
-
-    Binding optionalBinding = indexed.get(optionalKey);
-    OptionalBinderBinding<Optional<T>> optionalBinder =
-        (OptionalBinderBinding<Optional<T>>) optionalBinding.acceptTargetVisitor(visitor);
-
-    // Locate the defaultKey & actualKey
-    for (Element element : elements) {
-      if (optionalBinder.containsElement(element) && element instanceof Binding) {
-        Binding binding = (Binding) element;
-        if (isSourceEntry(binding, RealOptionalBinder.Source.DEFAULT)) {
-          defaultKey = binding.getKey();
-        } else if (isSourceEntry(binding, RealOptionalBinder.Source.ACTUAL)) {
-          actualKey = binding.getKey();
+        if (visitType == BOTH || visitType == MODULE) {
+            setModuleTest(setKey, elementType, modules, allowDuplicates, expectedMultibindings, results);
         }
-      }
     }
-    assertNotNull(optionalBinder);
 
-    assertEquals(expectedDefault == null, defaultKey == null);
-    assertEquals(expectedActual == null, actualKey == null);
+    @SuppressWarnings("unchecked")
+    private static <T> void setInjectorTest(
+            Key<Set<T>> setKey,
+            TypeLiteral<?> elementType,
+            Iterable<? extends Module> modules,
+            boolean allowDuplicates,
+            int otherMultibindings,
+            BindResult<T>... results)
+    {
+        Key<?> collectionOfProvidersKey = setKey.ofType(collectionOfProvidersOf(elementType));
+        Key<?> collectionOfJakartaProvidersKey =
+                setKey.ofType(collectionOfJakartaProvidersOf(elementType));
+        Key<?> setOfExtendsKey = setKey.ofType(setOfExtendsOf(elementType));
+        Injector injector = Guice.createInjector(modules);
+        Visitor<Set<T>> visitor = new Visitor<>();
+        Binding<Set<T>> binding = injector.getBinding(setKey);
+        MultibinderBinding<Set<T>> multibinder =
+                (MultibinderBinding<Set<T>>) binding.acceptTargetVisitor(visitor);
+        assertNotNull(multibinder);
+        assertEquals(setKey, multibinder.getSetKey());
+        assertEquals(elementType, multibinder.getElementTypeLiteral());
+        assertEquals(allowDuplicates, multibinder.permitsDuplicates());
+        assertEquals(
+                ImmutableSet.of(
+                        collectionOfProvidersKey,
+                        collectionOfJakartaProvidersKey,
+                        setOfExtendsKey),
+                multibinder.getAlternateSetKeys());
+        List<Binding<?>> elements = new ArrayList<>(multibinder.getElements());
+        List<BindResult<?>> bindResults = new ArrayList<>(Arrays.asList(results));
+        assertEquals(bindResults.size(), elements.size(), "wrong bind elements, expected: " + bindResults + ", but was: " + multibinder.getElements());
 
-    Key<Optional<jakarta.inject.Provider<T>>> optionalJakartaProviderKey =
-        keyType.ofType(RealOptionalBinder.javaOptionalOfJakartaProvider(keyType.getTypeLiteral()));
-    Key<Optional<Provider<T>>> optionalProviderKey =
-        keyType.ofType(RealOptionalBinder.javaOptionalOfProvider(keyType.getTypeLiteral()));
-    boolean keyMatch = false;
-    boolean optionalKeyMatch = false;
-    boolean optionalJakartaProviderKeyMatch = false;
-    boolean optionalProviderKeyMatch = false;
-    boolean defaultMatch = false;
-    boolean actualMatch = false;
-    List<Object> otherOptionalElements = new ArrayList<>();
-    List<Element> otherContains = new ArrayList<>();
-    List<Element> nonContainedElements = new ArrayList<>();
-    for (Element element : elements) {
-      boolean contains = optionalBinder.containsElement(element);
-
-      if (!contains) {
-        nonContainedElements.add(element);
-      }
-      Key key = null;
-      Binding b = null;
-      if (element instanceof Binding) {
-        b = (Binding) element;
-        key = b.getKey();
-        Object visited = b.acceptTargetVisitor(visitor);
-        if (visited instanceof OptionalBinderBinding) {
-          if (visited.equals(optionalBinder)) {
-            assertTrue(contains);
-          } else {
-            otherOptionalElements.add(visited);
-          }
+        for (BindResult<?> result : bindResults) {
+            Binding<?> found = null;
+            for (Binding<?> item : elements) {
+                if (matches(item, result)) {
+                    found = item;
+                    break;
+                }
+            }
+            if (found == null) {
+                fail("Could not find element: " + result + " in remaining elements: " + elements);
+            }
+            else {
+                elements.remove(found);
+            }
         }
-      } else if (element instanceof ProviderLookup) {
-        key = ((ProviderLookup) element).getKey();
-      }
 
-      if (key != null && key.equals(keyType)) {
-        // keyType might match because a user bound it
-        // (which is possible in a purely absent OptionalBinder)
-        assertEquals(expectedDefault != null || expectedActual != null, contains);
-        if (contains) {
-          keyMatch = true;
+        if (!elements.isEmpty()) {
+            fail("Found all elements of: " + bindResults + ", but more were left over: " + elements);
         }
-      } else if (key != null && key.equals(optionalKey)) {
-        assertTrue(contains);
-        optionalKeyMatch = true;
-      } else if (key != null && key.equals(optionalJakartaProviderKey)) {
-        assertTrue(contains);
-        optionalJakartaProviderKeyMatch = true;
-      } else if (key != null && key.equals(optionalProviderKey)) {
-        assertTrue(contains);
-        optionalProviderKeyMatch = true;
-      } else if (key != null && key.equals(defaultKey)) {
-        assertTrue(contains);
-        if (b != null) { // otherwise it might just be a ProviderLookup into it
-          assertTrue(matches(b, expectedDefault), "expected: " + expectedDefault + ", but was: " + b);
-          defaultMatch = true;
+
+        Set<Binding<?>> setOfElements = new HashSet<>(multibinder.getElements());
+        Set<IndexedBinding> setOfIndexed = new HashSet<>();
+        Indexer indexer = new Indexer(injector);
+        for (Binding<?> oneBinding : setOfElements) {
+            setOfIndexed.add(oneBinding.acceptTargetVisitor(indexer));
         }
-      } else if (key != null && key.equals(actualKey)) {
-        assertTrue(contains);
-        if (b != null) { // otherwise it might just be a ProviderLookup into it
-          assertTrue(matches(b, expectedActual), "expected: " + expectedActual + ", but was: " + b);
-          actualMatch = true;
+
+        List<Object> otherMultibinders = new ArrayList<>();
+        List<Binding<?>> otherContains = new ArrayList<>();
+        boolean collectionOfProvidersMatch = false;
+        boolean collectionOfJakartaProvidersMatch = false;
+        boolean setOfExtendsKeyMatch = false;
+        for (Binding<?> b : injector.getAllBindings().values()) {
+            boolean contains = multibinder.containsElement(b);
+            Key<?> key = b.getKey();
+            Object visited = ((Binding<Set<T>>) b).acceptTargetVisitor(visitor);
+            if (visited != null) {
+                if (visited.equals(multibinder)) {
+                    assertTrue(contains);
+                }
+                else {
+                    otherMultibinders.add(visited);
+                }
+            }
+            else if (setOfElements.contains(b)) {
+                assertTrue(contains);
+            }
+            else if (key.equals(collectionOfProvidersKey)) {
+                assertTrue(contains);
+                collectionOfProvidersMatch = true;
+            }
+            else if (key.equals(collectionOfJakartaProvidersKey)) {
+                assertTrue(contains);
+                collectionOfJakartaProvidersMatch = true;
+            }
+            else if (key.equals(setOfExtendsKey)) {
+                assertTrue(contains);
+                setOfExtendsKeyMatch = true;
+            }
+            else if (contains) {
+                if (!indexer.isIndexable(b) || !setOfIndexed.contains(b.acceptTargetVisitor(indexer))) {
+                    otherContains.add(b);
+                }
+            }
         }
-      } else if (contains) {
-        otherContains.add(element);
-      }
-    }
 
-    // only expect a keymatch if either default or actual are set
-    assertEquals(expectedDefault != null || expectedActual != null, keyMatch);
-    assertTrue(optionalKeyMatch);
-    assertTrue(optionalJakartaProviderKeyMatch);
-    assertTrue(optionalProviderKeyMatch);
-    assertEquals(expectedDefault != null, defaultMatch);
-    assertEquals(expectedActual != null, actualMatch);
-    assertEquals(0, otherContains.size(), otherContains.toString());
-    assertEquals(expectedOtherOptionalBindings, otherOptionalElements.size(), "other OptionalBindings found: " + otherOptionalElements);
+        assertTrue(collectionOfProvidersMatch);
+        assertTrue(collectionOfJakartaProvidersMatch);
+        assertTrue(setOfExtendsKeyMatch);
 
-    // Validate that we can construct an injector out of the remaining bindings.
-    Guice.createInjector(Elements.getModule(nonContainedElements));
-  }
-
-  private static boolean isSourceEntry(Binding<?> b, RealOptionalBinder.Source type) {
-    switch (type) {
-      case ACTUAL:
-        return b.getKey().getAnnotation() instanceof RealOptionalBinder.Actual;
-      case DEFAULT:
-        return b.getKey().getAnnotation() instanceof RealOptionalBinder.Default;
-      default:
-        throw new IllegalStateException("invalid type: " + type);
-    }
-  }
-
-  /** Returns the subset of elements that have keys, indexed by them. */
-  private static Map<Key<?>, Binding<?>> index(Iterable<Element> elements) {
-    ImmutableMap.Builder<Key<?>, Binding<?>> builder = ImmutableMap.builder();
-    for (Element element : elements) {
-      if (element instanceof Binding) {
-        builder.put(((Binding) element).getKey(), (Binding) element);
-      }
-    }
-    return builder.buildOrThrow();
-  }
-
-  static <K, V> MapResult<K, V> instance(K k, V v) {
-    return new MapResult<K, V>(k, new BindResult<V>(INSTANCE, v, null));
-  }
-
-  static <K, V> MapResult<K, V> linked(K k, Class<? extends V> clazz) {
-    return new MapResult<K, V>(k, new BindResult<V>(LINKED, null, Key.get(clazz)));
-  }
-
-  static <K, V> MapResult<K, V> linked(K k, Key<? extends V> key) {
-    return new MapResult<K, V>(k, new BindResult<V>(LINKED, null, key));
-  }
-
-  static <K, V> MapResult<K, V> providerInstance(K k, V v) {
-    return new MapResult<K, V>(k, new BindResult<V>(PROVIDER_INSTANCE, v, null));
-  }
-
-  static class MapResult<K, V> {
-    private final K k;
-    private final BindResult<V> v;
-
-    MapResult(K k, BindResult<V> v) {
-      this.k = k;
-      this.v = v;
-    }
-
-    @Override
-    public String toString() {
-      return "entry[key[" + k + "],value[" + v + "]]";
-    }
-  }
-
-  private static boolean matches(Binding<?> item, BindResult<?> result) {
-    switch (result.type) {
-      case INSTANCE:
-        if (item instanceof InstanceBinding
-            && ((InstanceBinding) item).getInstance().equals(result.instance)) {
-          return true;
+        if (allowDuplicates) {
+            assertEquals(1, otherContains.size(), "contained more than it should: " + otherContains);
         }
-        break;
-      case LINKED:
-        if (item instanceof LinkedKeyBinding
-            && ((LinkedKeyBinding) item).getLinkedKey().equals(result.key)) {
-          return true;
+        else {
+            assertTrue(otherContains.isEmpty(), "contained more than it should: " + otherContains);
         }
-        break;
-      case PROVIDER_INSTANCE:
-        if (item instanceof ProviderInstanceBinding
-            && Objects.equals(
-                ((ProviderInstanceBinding) item).getUserSuppliedProvider().get(),
-                result.instance)) {
-          return true;
+        assertEquals(otherMultibindings, otherMultibinders.size(), "other multibindings found: " + otherMultibinders);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> void setModuleTest(
+            Key<Set<T>> setKey,
+            TypeLiteral<?> elementType,
+            Iterable<? extends Module> modules,
+            boolean allowDuplicates,
+            int otherMultibindings,
+            BindResult<?>... results)
+    {
+        Key<?> collectionOfProvidersKey = setKey.ofType(collectionOfProvidersOf(elementType));
+        Key<?> collectionOfJakartaProvidersKey =
+                setKey.ofType(collectionOfJakartaProvidersOf(elementType));
+        Key<?> setOfExtendsKey = setKey.ofType(setOfExtendsOf(elementType));
+        List<BindResult<?>> bindResults = new ArrayList<>(Arrays.asList(results));
+        List<Element> elements = Elements.getElements(modules);
+        Visitor<T> visitor = new Visitor<>();
+        MultibinderBinding<Set<T>> multibinder = null;
+        for (Element element : elements) {
+            if (element instanceof Binding && ((Binding) element).getKey().equals(setKey)) {
+                multibinder = (MultibinderBinding<Set<T>>) ((Binding) element).acceptTargetVisitor(visitor);
+                break;
+            }
         }
-        break;
-      case PROVIDER_KEY:
-        if (item instanceof ProviderKeyBinding
-            && ((ProviderKeyBinding) item).getProviderKey().equals(result.key)) {
-          return true;
+        assertNotNull(multibinder);
+
+        assertEquals(setKey, multibinder.getSetKey());
+        assertEquals(elementType, multibinder.getElementTypeLiteral());
+        assertEquals(
+                ImmutableSet.of(
+                        collectionOfProvidersKey,
+                        collectionOfJakartaProvidersKey,
+                        setOfExtendsKey),
+                multibinder.getAlternateSetKeys());
+        List<Object> otherMultibinders = new ArrayList<>();
+        Set<Element> otherContains = new HashSet<>();
+        List<Element> otherElements = new ArrayList<>();
+        int duplicates = 0;
+        Set<IndexedBinding> setOfIndexed = new HashSet<>();
+        Indexer indexer = new Indexer(null);
+        boolean collectionOfProvidersMatch = false;
+        boolean collectionOfJakartaProvidersMatch = false;
+        boolean setOfExtendsMatch = false;
+        for (Element element : elements) {
+            boolean contains = multibinder.containsElement(element);
+            if (!contains) {
+                otherElements.add(element);
+            }
+            boolean matched = false;
+            Key<T> key = null;
+            if (element instanceof Binding) {
+                Binding<T> binding = (Binding) element;
+                if (indexer.isIndexable(binding)
+                        && !setOfIndexed.add((IndexedBinding) binding.acceptTargetVisitor(indexer))) {
+                    duplicates++;
+                }
+                key = binding.getKey();
+                Object visited = binding.acceptTargetVisitor(visitor);
+                if (visited != null) {
+                    matched = true;
+                    if (visited.equals(multibinder)) {
+                        assertTrue(contains);
+                    }
+                    else {
+                        otherMultibinders.add(visited);
+                    }
+                }
+            }
+
+            if (collectionOfProvidersKey.equals(key)) {
+                assertTrue(contains);
+                assertFalse(matched);
+                collectionOfProvidersMatch = true;
+            }
+            else if (collectionOfJakartaProvidersKey.equals(key)) {
+                assertTrue(contains);
+                assertFalse(matched);
+                collectionOfJakartaProvidersMatch = true;
+            }
+            else if (setOfExtendsKey.equals(key)) {
+                assertTrue(contains);
+                assertFalse(matched);
+                setOfExtendsMatch = true;
+            }
+            else if (!matched && contains) {
+                otherContains.add(element);
+            }
         }
-        break;
-    }
-    return false;
-  }
 
-  static <T> BindResult<T> instance(T t) {
-    return new BindResult<T>(INSTANCE, t, null);
-  }
+        if (allowDuplicates) {
+            assertEquals(bindResults.size() + 1 + duplicates, otherContains.size(), "wrong contained elements: " + otherContains);
+        }
+        else {
+            assertEquals(bindResults.size() + duplicates, otherContains.size(), "wrong contained elements: " + otherContains);
+        }
 
-  static <T> BindResult<T> linked(Class<? extends T> clazz) {
-    return new BindResult<T>(LINKED, null, Key.get(clazz));
-  }
+        assertEquals(otherMultibindings, otherMultibinders.size(), "other multibindings found: " + otherMultibinders);
+        assertTrue(collectionOfProvidersMatch);
+        assertTrue(collectionOfJakartaProvidersMatch);
+        assertTrue(setOfExtendsMatch);
 
-  static <T> BindResult<T> linked(Key<? extends T> key) {
-    return new BindResult<T>(LINKED, null, key);
-  }
-
-  static <T> BindResult<T> providerInstance(T t) {
-    return new BindResult<T>(PROVIDER_INSTANCE, t, null);
-  }
-
-  static <T> BindResult<T> providerKey(Key<T> key) {
-    return new BindResult<T>(PROVIDER_KEY, null, key);
-  }
-
-  /** The kind of binding. */
-  static enum BindType {
-    INSTANCE,
-    LINKED,
-    PROVIDER_INSTANCE,
-    PROVIDER_KEY
-  }
-  /** The result of the binding. */
-  static class BindResult<T> {
-    private final BindType type;
-    private final Key<?> key;
-    private final T instance;
-
-    private BindResult(BindType type, T instance, Key<?> key) {
-      this.type = type;
-      this.instance = instance;
-      this.key = key;
+        // Validate that we can construct an injector out of the remaining bindings.
+        Guice.createInjector(Elements.getModule(otherElements));
     }
 
-    @Override
-    public String toString() {
-      switch (type) {
-        case INSTANCE:
-          return "instance[" + instance + "]";
-        case LINKED:
-          return "linkedKey[" + key + "]";
-        case PROVIDER_INSTANCE:
-          return "providerInstance[" + instance + "]";
-        case PROVIDER_KEY:
-          return "providerKey[" + key + "]";
-      }
-      return null;
-    }
-  }
+    /**
+     * Asserts that OptionalBinderBinding visitors for work correctly.
+     *
+     * @param <T> The type of the binding
+     * @param keyType The key OptionalBinder is binding
+     * @param modules The modules that define the bindings
+     * @param visitType The kind of test we should perform. A live Injector, a raw Elements (Module)
+     *         test, or both.
+     * @param expectedOtherOptionalBindings the # of other optional bindings we expect to see.
+     * @param expectedDefault the expected default binding, or null if none
+     * @param expectedActual the expected actual binding, or null if none
+     * @param expectedUserLinkedActual the user binding that is the actual binding, used if neither
+     *         the default nor actual are set and a user binding existed for the type.
+     */
+    static <T> void assertOptionalVisitor(
+            Key<T> keyType,
+            Iterable<? extends Module> modules,
+            VisitType visitType,
+            int expectedOtherOptionalBindings,
+            BindResult<?> expectedDefault,
+            BindResult<?> expectedActual,
+            BindResult<?> expectedUserLinkedActual)
+    {
+        if (visitType == null) {
+            fail("must test something");
+        }
 
-  private static class Visitor<T> extends DefaultBindingTargetVisitor<T, Object>
-      implements MultibindingsTargetVisitor<T, Object> {
+        if (visitType == BOTH || visitType == INJECTOR) {
+            optionalInjectorTest(
+                    keyType,
+                    modules,
+                    expectedOtherOptionalBindings,
+                    expectedDefault,
+                    expectedActual,
+                    expectedUserLinkedActual);
+        }
 
-    @Override
-    public Object visit(MultibinderBinding<? extends T> multibinding) {
-      return multibinding;
+        if (visitType == BOTH || visitType == MODULE) {
+            optionalModuleTest(
+                    keyType,
+                    modules,
+                    expectedOtherOptionalBindings,
+                    expectedDefault,
+                    expectedActual,
+                    expectedUserLinkedActual);
+        }
     }
 
-    @Override
-    public Object visit(MapBinderBinding<? extends T> mapbinding) {
-      return mapbinding;
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static <T> void optionalInjectorTest(
+            Key<T> keyType,
+            Iterable<? extends Module> modules,
+            int expectedOtherOptionalBindings,
+            BindResult<?> expectedDefault,
+            BindResult<?> expectedActual,
+            BindResult<?> expectedUserLinkedActual)
+    {
+        if (expectedUserLinkedActual != null) {
+            assertNull(expectedActual, "cannot have actual if expecting user binding");
+            assertNull(expectedDefault, "cannot have default if expecting user binding");
+        }
+
+        Key<Optional<T>> optionalKey =
+                keyType.ofType(RealOptionalBinder.javaOptionalOf(keyType.getTypeLiteral()));
+        Injector injector = Guice.createInjector(modules);
+        Binding<Optional<T>> optionalBinding = injector.getBinding(optionalKey);
+        Visitor visitor = new Visitor();
+        OptionalBinderBinding<Optional<T>> optionalBinder =
+                (OptionalBinderBinding<Optional<T>>) optionalBinding.acceptTargetVisitor(visitor);
+        assertNotNull(optionalBinder);
+        assertEquals(optionalKey, optionalBinder.getKey());
+
+        if (expectedDefault == null) {
+            assertNull(optionalBinder.getDefaultBinding(), "did not expect a default binding");
+        }
+        else {
+            assertTrue(matches(optionalBinder.getDefaultBinding(), expectedDefault), "expectedDefault: "
+                    + expectedDefault
+                    + ", actualDefault: "
+                    + optionalBinder.getDefaultBinding());
+        }
+
+        if (expectedActual == null && expectedUserLinkedActual == null) {
+            assertNull(optionalBinder.getActualBinding());
+        }
+        else if (expectedActual != null) {
+            assertTrue(matches(optionalBinder.getActualBinding(), expectedActual), "expectedActual: "
+                    + expectedActual
+                    + ", actualActual: "
+                    + optionalBinder.getActualBinding());
+        }
+        else if (expectedUserLinkedActual != null) {
+            assertTrue(matches(optionalBinder.getActualBinding(), expectedUserLinkedActual), "expectedUserLinkedActual: "
+                    + expectedUserLinkedActual
+                    + ", actualActual: "
+                    + optionalBinder.getActualBinding());
+        }
+
+        Key<Optional<jakarta.inject.Provider<T>>> optionalJakartaProviderKey =
+                keyType.ofType(RealOptionalBinder.javaOptionalOfJakartaProvider(keyType.getTypeLiteral()));
+        Key<Optional<Provider<T>>> optionalProviderKey =
+                keyType.ofType(RealOptionalBinder.javaOptionalOfProvider(keyType.getTypeLiteral()));
+        assertEquals(
+                ImmutableSet.of(
+                        optionalProviderKey,
+                        optionalJakartaProviderKey),
+                optionalBinder.getAlternateKeys());
+
+        boolean keyMatch = false;
+        boolean optionalKeyMatch = false;
+        boolean optionalJakartaProviderKeyMatch = false;
+        boolean optionalProviderKeyMatch = false;
+        boolean defaultMatch = false;
+        boolean actualMatch = false;
+        List<Object> otherOptionalBindings = new ArrayList<>();
+        List<Binding> otherMatches = new ArrayList<>();
+        for (Binding b : injector.getAllBindings().values()) {
+            boolean contains = optionalBinder.containsElement(b);
+
+            Object visited = b.acceptTargetVisitor(visitor);
+            if (visited instanceof OptionalBinderBinding) {
+                if (visited.equals(optionalBinder)) {
+                    assertTrue(contains);
+                }
+                else {
+                    otherOptionalBindings.add(visited);
+                }
+            }
+            if (b.getKey().equals(keyType)) {
+                // keyType might match because a user bound it
+                // (which is possible in a purely absent OptionalBinder)
+                assertEquals(expectedDefault != null || expectedActual != null, contains);
+                if (contains) {
+                    keyMatch = true;
+                }
+            }
+            else if (b.getKey().equals(optionalKey)) {
+                assertTrue(contains);
+                optionalKeyMatch = true;
+            }
+            else if (b.getKey().equals(optionalJakartaProviderKey)) {
+                assertTrue(contains);
+                optionalJakartaProviderKeyMatch = true;
+            }
+            else if (b.getKey().equals(optionalProviderKey)) {
+                assertTrue(contains);
+                optionalProviderKeyMatch = true;
+            }
+            else if (expectedDefault != null && matches(b, expectedDefault)) {
+                assertTrue(contains);
+                defaultMatch = true;
+            }
+            else if (expectedActual != null && matches(b, expectedActual)) {
+                assertTrue(contains);
+                actualMatch = true;
+            }
+            else if (contains) {
+                otherMatches.add(b);
+            }
+        }
+
+        assertEquals(0, otherMatches.size(), otherMatches.toString());
+        // only expect a keymatch if either default or actual are set
+        assertEquals(expectedDefault != null || expectedActual != null, keyMatch);
+        assertTrue(optionalKeyMatch);
+        assertTrue(optionalJakartaProviderKeyMatch);
+        assertTrue(optionalProviderKeyMatch);
+        assertEquals(expectedDefault != null, defaultMatch);
+        assertEquals(expectedActual != null, actualMatch);
+        assertEquals(expectedOtherOptionalBindings, otherOptionalBindings.size(), "other OptionalBindings found: " + otherOptionalBindings);
     }
 
-    @Override
-    public Object visit(OptionalBinderBinding<? extends T> optionalbinding) {
-      return optionalbinding;
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static <T> void optionalModuleTest(
+            Key<T> keyType,
+            Iterable<? extends Module> modules,
+            int expectedOtherOptionalBindings,
+            BindResult<?> expectedDefault,
+            BindResult<?> expectedActual,
+            BindResult<?> expectedUserLinkedActual)
+    {
+        if (expectedUserLinkedActual != null) {
+            assertNull(expectedActual, "cannot have actual if expecting user binding");
+            assertNull(expectedDefault, "cannot have default if expecting user binding");
+        }
+        Set<Element> elements = ImmutableSet.copyOf(Elements.getElements(modules));
+        Map<Key<?>, Binding<?>> indexed = index(elements);
+        Key<Optional<T>> optionalKey =
+                keyType.ofType(RealOptionalBinder.javaOptionalOf(keyType.getTypeLiteral()));
+        Visitor visitor = new Visitor();
+        Key<?> defaultKey = null;
+        Key<?> actualKey = null;
+
+        Binding optionalBinding = indexed.get(optionalKey);
+        OptionalBinderBinding<Optional<T>> optionalBinder =
+                (OptionalBinderBinding<Optional<T>>) optionalBinding.acceptTargetVisitor(visitor);
+
+        // Locate the defaultKey & actualKey
+        for (Element element : elements) {
+            if (optionalBinder.containsElement(element) && element instanceof Binding) {
+                Binding binding = (Binding) element;
+                if (isSourceEntry(binding, RealOptionalBinder.Source.DEFAULT)) {
+                    defaultKey = binding.getKey();
+                }
+                else if (isSourceEntry(binding, RealOptionalBinder.Source.ACTUAL)) {
+                    actualKey = binding.getKey();
+                }
+            }
+        }
+        assertNotNull(optionalBinder);
+
+        assertEquals(expectedDefault == null, defaultKey == null);
+        assertEquals(expectedActual == null, actualKey == null);
+
+        Key<Optional<jakarta.inject.Provider<T>>> optionalJakartaProviderKey =
+                keyType.ofType(RealOptionalBinder.javaOptionalOfJakartaProvider(keyType.getTypeLiteral()));
+        Key<Optional<Provider<T>>> optionalProviderKey =
+                keyType.ofType(RealOptionalBinder.javaOptionalOfProvider(keyType.getTypeLiteral()));
+        boolean keyMatch = false;
+        boolean optionalKeyMatch = false;
+        boolean optionalJakartaProviderKeyMatch = false;
+        boolean optionalProviderKeyMatch = false;
+        boolean defaultMatch = false;
+        boolean actualMatch = false;
+        List<Object> otherOptionalElements = new ArrayList<>();
+        List<Element> otherContains = new ArrayList<>();
+        List<Element> nonContainedElements = new ArrayList<>();
+        for (Element element : elements) {
+            boolean contains = optionalBinder.containsElement(element);
+
+            if (!contains) {
+                nonContainedElements.add(element);
+            }
+            Key key = null;
+            Binding b = null;
+            if (element instanceof Binding) {
+                b = (Binding) element;
+                key = b.getKey();
+                Object visited = b.acceptTargetVisitor(visitor);
+                if (visited instanceof OptionalBinderBinding) {
+                    if (visited.equals(optionalBinder)) {
+                        assertTrue(contains);
+                    }
+                    else {
+                        otherOptionalElements.add(visited);
+                    }
+                }
+            }
+            else if (element instanceof ProviderLookup) {
+                key = ((ProviderLookup) element).getKey();
+            }
+
+            if (key != null && key.equals(keyType)) {
+                // keyType might match because a user bound it
+                // (which is possible in a purely absent OptionalBinder)
+                assertEquals(expectedDefault != null || expectedActual != null, contains);
+                if (contains) {
+                    keyMatch = true;
+                }
+            }
+            else if (key != null && key.equals(optionalKey)) {
+                assertTrue(contains);
+                optionalKeyMatch = true;
+            }
+            else if (key != null && key.equals(optionalJakartaProviderKey)) {
+                assertTrue(contains);
+                optionalJakartaProviderKeyMatch = true;
+            }
+            else if (key != null && key.equals(optionalProviderKey)) {
+                assertTrue(contains);
+                optionalProviderKeyMatch = true;
+            }
+            else if (key != null && key.equals(defaultKey)) {
+                assertTrue(contains);
+                if (b != null) { // otherwise it might just be a ProviderLookup into it
+                    assertTrue(matches(b, expectedDefault), "expected: " + expectedDefault + ", but was: " + b);
+                    defaultMatch = true;
+                }
+            }
+            else if (key != null && key.equals(actualKey)) {
+                assertTrue(contains);
+                if (b != null) { // otherwise it might just be a ProviderLookup into it
+                    assertTrue(matches(b, expectedActual), "expected: " + expectedActual + ", but was: " + b);
+                    actualMatch = true;
+                }
+            }
+            else if (contains) {
+                otherContains.add(element);
+            }
+        }
+
+        // only expect a keymatch if either default or actual are set
+        assertEquals(expectedDefault != null || expectedActual != null, keyMatch);
+        assertTrue(optionalKeyMatch);
+        assertTrue(optionalJakartaProviderKeyMatch);
+        assertTrue(optionalProviderKeyMatch);
+        assertEquals(expectedDefault != null, defaultMatch);
+        assertEquals(expectedActual != null, actualMatch);
+        assertEquals(0, otherContains.size(), otherContains.toString());
+        assertEquals(expectedOtherOptionalBindings, otherOptionalElements.size(), "other OptionalBindings found: " + otherOptionalElements);
+
+        // Validate that we can construct an injector out of the remaining bindings.
+        Guice.createInjector(Elements.getModule(nonContainedElements));
     }
-  }
+
+    private static boolean isSourceEntry(Binding<?> b, RealOptionalBinder.Source type)
+    {
+        switch (type) {
+            case ACTUAL:
+                return b.getKey().getAnnotation() instanceof RealOptionalBinder.Actual;
+            case DEFAULT:
+                return b.getKey().getAnnotation() instanceof RealOptionalBinder.Default;
+            default:
+                throw new IllegalStateException("invalid type: " + type);
+        }
+    }
+
+    /**
+     * Returns the subset of elements that have keys, indexed by them.
+     */
+    private static Map<Key<?>, Binding<?>> index(Iterable<Element> elements)
+    {
+        ImmutableMap.Builder<Key<?>, Binding<?>> builder = ImmutableMap.builder();
+        for (Element element : elements) {
+            if (element instanceof Binding) {
+                builder.put(((Binding) element).getKey(), (Binding) element);
+            }
+        }
+        return builder.buildOrThrow();
+    }
+
+    static <K, V> MapResult<K, V> instance(K k, V v)
+    {
+        return new MapResult<K, V>(k, new BindResult<V>(INSTANCE, v, null));
+    }
+
+    static <K, V> MapResult<K, V> linked(K k, Class<? extends V> clazz)
+    {
+        return new MapResult<K, V>(k, new BindResult<V>(LINKED, null, Key.get(clazz)));
+    }
+
+    static <K, V> MapResult<K, V> linked(K k, Key<? extends V> key)
+    {
+        return new MapResult<K, V>(k, new BindResult<V>(LINKED, null, key));
+    }
+
+    static <K, V> MapResult<K, V> providerInstance(K k, V v)
+    {
+        return new MapResult<K, V>(k, new BindResult<V>(PROVIDER_INSTANCE, v, null));
+    }
+
+    static class MapResult<K, V>
+    {
+        private final K k;
+        private final BindResult<V> v;
+
+        MapResult(K k, BindResult<V> v)
+        {
+            this.k = k;
+            this.v = v;
+        }
+
+        @Override
+        public String toString()
+        {
+            return "entry[key[" + k + "],value[" + v + "]]";
+        }
+    }
+
+    private static boolean matches(Binding<?> item, BindResult<?> result)
+    {
+        switch (result.type) {
+            case INSTANCE:
+                if (item instanceof InstanceBinding
+                        && ((InstanceBinding) item).getInstance().equals(result.instance)) {
+                    return true;
+                }
+                break;
+            case LINKED:
+                if (item instanceof LinkedKeyBinding
+                        && ((LinkedKeyBinding) item).getLinkedKey().equals(result.key)) {
+                    return true;
+                }
+                break;
+            case PROVIDER_INSTANCE:
+                if (item instanceof ProviderInstanceBinding
+                        && Objects.equals(
+                        ((ProviderInstanceBinding) item).getUserSuppliedProvider().get(),
+                        result.instance)) {
+                    return true;
+                }
+                break;
+            case PROVIDER_KEY:
+                if (item instanceof ProviderKeyBinding
+                        && ((ProviderKeyBinding) item).getProviderKey().equals(result.key)) {
+                    return true;
+                }
+                break;
+        }
+        return false;
+    }
+
+    static <T> BindResult<T> instance(T t)
+    {
+        return new BindResult<T>(INSTANCE, t, null);
+    }
+
+    static <T> BindResult<T> linked(Class<? extends T> clazz)
+    {
+        return new BindResult<T>(LINKED, null, Key.get(clazz));
+    }
+
+    static <T> BindResult<T> linked(Key<? extends T> key)
+    {
+        return new BindResult<T>(LINKED, null, key);
+    }
+
+    static <T> BindResult<T> providerInstance(T t)
+    {
+        return new BindResult<T>(PROVIDER_INSTANCE, t, null);
+    }
+
+    static <T> BindResult<T> providerKey(Key<T> key)
+    {
+        return new BindResult<T>(PROVIDER_KEY, null, key);
+    }
+
+    /**
+     * The kind of binding.
+     */
+    static enum BindType
+    {
+        INSTANCE,
+        LINKED,
+        PROVIDER_INSTANCE,
+        PROVIDER_KEY,
+    }
+
+    /**
+     * The result of the binding.
+     */
+    static class BindResult<T>
+    {
+        private final BindType type;
+        private final Key<?> key;
+        private final T instance;
+
+        private BindResult(BindType type, T instance, Key<?> key)
+        {
+            this.type = type;
+            this.instance = instance;
+            this.key = key;
+        }
+
+        @Override
+        public String toString()
+        {
+            switch (type) {
+                case INSTANCE:
+                    return "instance[" + instance + "]";
+                case LINKED:
+                    return "linkedKey[" + key + "]";
+                case PROVIDER_INSTANCE:
+                    return "providerInstance[" + instance + "]";
+                case PROVIDER_KEY:
+                    return "providerKey[" + key + "]";
+            }
+            return null;
+        }
+    }
+
+    private static class Visitor<T>
+            extends DefaultBindingTargetVisitor<T, Object>
+            implements MultibindingsTargetVisitor<T, Object>
+    {
+        @Override
+        public Object visit(MultibinderBinding<? extends T> multibinding)
+        {
+            return multibinding;
+        }
+
+        @Override
+        public Object visit(MapBinderBinding<? extends T> mapbinding)
+        {
+            return mapbinding;
+        }
+
+        @Override
+        public Object visit(OptionalBinderBinding<? extends T> optionalbinding)
+        {
+            return optionalbinding;
+        }
+    }
 }

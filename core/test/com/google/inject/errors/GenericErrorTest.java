@@ -1,9 +1,5 @@
 package com.google.inject.errors;
 
-import static com.google.inject.errors.ErrorMessageTestUtils.assertGuiceErrorEqualsIgnoreLineNumber;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
-
 import com.google.inject.AbstractModule;
 import com.google.inject.CreationException;
 import com.google.inject.Guice;
@@ -15,61 +11,77 @@ import com.google.inject.internal.InternalFlags.IncludeStackTraceOption;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public final class GenericErrorTest {
+import static com.google.inject.errors.ErrorMessageTestUtils.assertGuiceErrorEqualsIgnoreLineNumber;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-  @BeforeEach
-  public void checkStackTraceIsIncluded() {
-    // Only run the tests when the stack traces are included in the errors.
-    assumeTrue(InternalFlags.getIncludeStackTraceOption() != IncludeStackTraceOption.OFF);
-  }
-
-  static class ErrorModule extends AbstractModule {
-    @Override
-    protected void configure() {
-      binder().addError("Custom error");
-    }
-  }
-
-  static class BadConstructor {
-    BadConstructor() {
-      throw new RuntimeException("bad");
-    }
-  }
-
-  static class ProvisionErrorModule extends AbstractModule {
-
-    @Provides
-    String provideString() {
-      throw new RuntimeException("can't do that");
+public final class GenericErrorTest
+{
+    @BeforeEach
+    public void checkStackTraceIsIncluded()
+    {
+        // Only run the tests when the stack traces are included in the errors.
+        assumeTrue(InternalFlags.getIncludeStackTraceOption() != IncludeStackTraceOption.OFF);
     }
 
-    @Provides
-    Object provideObject(BadConstructor bad) {
-      return bad;
+    static class ErrorModule
+            extends AbstractModule
+    {
+        @Override
+        protected void configure()
+        {
+            binder().addError("Custom error");
+        }
     }
-  }
 
-  @Test
-  public void customError() {
-    CreationException exception =
-        assertThrows(CreationException.class, () -> Guice.createInjector(new ErrorModule()));
-    assertGuiceErrorEqualsIgnoreLineNumber(exception.getMessage(), "custom_error.txt");
-  }
+    static class BadConstructor
+    {
+        BadConstructor()
+        {
+            throw new RuntimeException("bad");
+        }
+    }
 
-  @Test
-  public void errorInCustomProvider() {
-    Injector injector = Guice.createInjector(new ProvisionErrorModule());
-    ProvisionException exception =
-        assertThrows(ProvisionException.class, () -> injector.getInstance(String.class));
-    assertGuiceErrorEqualsIgnoreLineNumber(exception.getMessage(), "error_in_custom_provider.txt");
-  }
+    static class ProvisionErrorModule
+            extends AbstractModule
+    {
+        @Provides
+        String provideString()
+        {
+            throw new RuntimeException("can't do that");
+        }
 
-  @Test
-  public void errorInjectingConstructor() {
-    Injector injector = Guice.createInjector(new ProvisionErrorModule());
-    ProvisionException exception =
-        assertThrows(ProvisionException.class, () -> injector.getInstance(Object.class));
-    assertGuiceErrorEqualsIgnoreLineNumber(
-        exception.getMessage(), "error_injecting_constructor.txt");
-  }
+        @Provides
+        Object provideObject(BadConstructor bad)
+        {
+            return bad;
+        }
+    }
+
+    @Test
+    public void customError()
+    {
+        CreationException exception =
+                assertThrows(CreationException.class, () -> Guice.createInjector(new ErrorModule()));
+        assertGuiceErrorEqualsIgnoreLineNumber(exception.getMessage(), "custom_error.txt");
+    }
+
+    @Test
+    public void errorInCustomProvider()
+    {
+        Injector injector = Guice.createInjector(new ProvisionErrorModule());
+        ProvisionException exception =
+                assertThrows(ProvisionException.class, () -> injector.getInstance(String.class));
+        assertGuiceErrorEqualsIgnoreLineNumber(exception.getMessage(), "error_in_custom_provider.txt");
+    }
+
+    @Test
+    public void errorInjectingConstructor()
+    {
+        Injector injector = Guice.createInjector(new ProvisionErrorModule());
+        ProvisionException exception =
+                assertThrows(ProvisionException.class, () -> injector.getInstance(Object.class));
+        assertGuiceErrorEqualsIgnoreLineNumber(
+                exception.getMessage(), "error_injecting_constructor.txt");
+    }
 }

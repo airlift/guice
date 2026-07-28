@@ -32,17 +32,21 @@ import java.lang.annotation.Annotation;
  *
  * @author jessewilson@google.com (Jesse Wilson)
  */
-public class Nullability {
-  private Nullability() {}
+public class Nullability
+{
+    private Nullability() {}
 
-  /** Returns true if the given annotation array contains an annotation named {@code Nullable}. */
-  public static boolean hasNullableAnnotation(Annotation[] annotations) {
-    for (Annotation a : annotations) {
-      Class<? extends Annotation> type = a.annotationType();
-      if ("Nullable".equals(type.getSimpleName())) {
-        return true;
-      }
+    /**
+     * Returns true if the given annotation array contains an annotation named {@code Nullable}.
+     */
+    public static boolean hasNullableAnnotation(Annotation[] annotations)
+    {
+        for (Annotation a : annotations) {
+            Class<? extends Annotation> type = a.annotationType();
+            if ("Nullable".equals(type.getSimpleName())) {
+                return true;
+            }
+        }
+        return false;
     }
-    return false;
-  }
 }

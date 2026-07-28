@@ -24,30 +24,33 @@ package com.google.inject.grapher.graphviz;
  *
  * @author phopkins@gmail.com (Pete Hopkins)
  */
-public enum ArrowType {
-  BOX("box"),
-  BOX_OPEN("obox"),
-  CROW("crow"),
-  DIAMOND("diamond"),
-  DIAMOND_OPEN("odiamond"),
-  DOT("dot"),
-  DOT_OPEN("odot"),
-  INVERTED("inv"),
-  INVERTED_OPEN("oinv"),
-  NONE("none"),
-  NORMAL("normal"),
-  NORMAL_OPEN("onormal"),
-  TEE("tee"),
-  VEE("vee");
+public enum ArrowType
+{
+    BOX("box"),
+    BOX_OPEN("obox"),
+    CROW("crow"),
+    DIAMOND("diamond"),
+    DIAMOND_OPEN("odiamond"),
+    DOT("dot"),
+    DOT_OPEN("odot"),
+    INVERTED("inv"),
+    INVERTED_OPEN("oinv"),
+    NONE("none"),
+    NORMAL("normal"),
+    NORMAL_OPEN("onormal"),
+    TEE("tee"),
+    VEE("vee");
 
-  private final String arrowType;
+    private final String arrowType;
 
-  ArrowType(String arrowType) {
-    this.arrowType = arrowType;
-  }
+    ArrowType(String arrowType)
+    {
+        this.arrowType = arrowType;
+    }
 
-  @Override
-  public String toString() {
-    return arrowType;
-  }
+    @Override
+    public String toString()
+    {
+        return arrowType;
+    }
 }

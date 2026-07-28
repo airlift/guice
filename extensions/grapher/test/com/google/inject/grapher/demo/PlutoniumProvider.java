@@ -19,12 +19,15 @@ package com.google.inject.grapher.demo;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
-class PlutoniumProvider implements Provider<Plutonium> {
-  @Inject
-  public PlutoniumProvider(@Inventor Person inventor, @Used PinballParts parts) {}
+class PlutoniumProvider
+        implements Provider<Plutonium>
+{
+    @Inject
+    public PlutoniumProvider(@Inventor Person inventor, @Used PinballParts parts) {}
 
-  @Override
-  public Plutonium get() {
-    return null;
-  }
+    @Override
+    public Plutonium get()
+    {
+        return null;
+    }
 }

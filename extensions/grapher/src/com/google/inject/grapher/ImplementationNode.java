@@ -29,44 +29,52 @@ import java.util.Objects;
  * @author phopkins@gmail.com (Pete Hopkins)
  * @since 4.0 (since 2.0 as an interface)
  */
-public class ImplementationNode extends Node {
-  private final Collection<Member> members;
+public class ImplementationNode
+        extends Node
+{
+    private final Collection<Member> members;
 
-  public ImplementationNode(NodeId id, Object source, Collection<Member> members) {
-    super(id, source);
-    this.members = members;
-  }
-
-  public Collection<Member> getMembers() {
-    return members;
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (!(obj instanceof ImplementationNode other)) {
-      return false;
+    public ImplementationNode(NodeId id, Object source, Collection<Member> members)
+    {
+        super(id, source);
+        this.members = members;
     }
-    return super.equals(other) && Objects.equals(members, other.members);
-  }
 
-  @Override
-  public int hashCode() {
-    return 31 * super.hashCode() + Objects.hash(members);
-  }
+    public Collection<Member> getMembers()
+    {
+        return members;
+    }
 
-  @Override
-  public String toString() {
-    return "ImplementationNode{id="
-        + getId()
-        + " source="
-        + getSource()
-        + " members="
-        + members
-        + "}";
-  }
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (!(obj instanceof ImplementationNode other)) {
+            return false;
+        }
+        return super.equals(other) && Objects.equals(members, other.members);
+    }
 
-  @Override
-  public Node copy(NodeId id) {
-    return new ImplementationNode(id, getSource(), getMembers());
-  }
+    @Override
+    public int hashCode()
+    {
+        return 31 * super.hashCode() + Objects.hash(members);
+    }
+
+    @Override
+    public String toString()
+    {
+        return "ImplementationNode{id="
+                + getId()
+                + " source="
+                + getSource()
+                + " members="
+                + members
+                + "}";
+    }
+
+    @Override
+    public Node copy(NodeId id)
+    {
+        return new ImplementationNode(id, getSource(), getMembers());
+    }
 }

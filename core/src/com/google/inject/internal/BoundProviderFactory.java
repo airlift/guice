@@ -20,60 +20,71 @@ import com.google.inject.Key;
 import com.google.inject.internal.InjectorImpl.JitLimitation;
 import com.google.inject.spi.Dependency;
 
-/** Delegates to a custom factory which is also bound in the injector. */
-final class BoundProviderFactory<T> extends ProviderInternalFactory<T> implements CreationListener {
+/**
+ * Delegates to a custom factory which is also bound in the injector.
+ */
+final class BoundProviderFactory<T>
+        extends ProviderInternalFactory<T>
+        implements CreationListener
+{
+    private final ProvisionListenerStackCallback<T> provisionCallback;
+    private final InjectorImpl injector;
+    final Key<? extends jakarta.inject.Provider<? extends T>> providerKey;
+    private InternalFactory<? extends jakarta.inject.Provider<? extends T>> providerFactory;
 
-  private final ProvisionListenerStackCallback<T> provisionCallback;
-  private final InjectorImpl injector;
-  final Key<? extends jakarta.inject.Provider<? extends T>> providerKey;
-  private InternalFactory<? extends jakarta.inject.Provider<? extends T>> providerFactory;
-
-  BoundProviderFactory(
-      Class<? super T> rawType,
-      InjectorImpl injector,
-      Key<? extends jakarta.inject.Provider<? extends T>> providerKey,
-      Object source,
-      ProvisionListenerStackCallback<T> provisionCallback) {
-    super(rawType, source, injector.circularFactoryIdFactory.next());
-    this.provisionCallback = provisionCallback;
-    this.injector = injector;
-    this.providerKey = providerKey;
-  }
-
-  @Override
-  public void notify(Errors errors) {
-    try {
-      providerFactory =
-          injector.getInternalFactory(
-              providerKey, errors.withSource(source), JitLimitation.NEW_OR_EXISTING_JIT);
-    } catch (ErrorsException e) {
-      errors.merge(e.getErrors());
+    BoundProviderFactory(
+            Class<? super T> rawType,
+            InjectorImpl injector,
+            Key<? extends jakarta.inject.Provider<? extends T>> providerKey,
+            Object source,
+            ProvisionListenerStackCallback<T> provisionCallback)
+    {
+        super(rawType, source, injector.circularFactoryIdFactory.next());
+        this.provisionCallback = provisionCallback;
+        this.injector = injector;
+        this.providerKey = providerKey;
     }
-  }
 
-  @Override
-  public T get(InternalContext context, Dependency<?> dependency, boolean linked)
-      throws InternalProvisionException {
-    try {
-      // TODO: lukes - are we passing the right dependency here?
-      jakarta.inject.Provider<? extends T> provider = providerFactory.get(context, dependency, true);
-      return circularGet(provider, context, dependency, provisionCallback);
-    } catch (InternalProvisionException ipe) {
-      throw ipe.addSource(providerKey);
+    @Override
+    public void notify(Errors errors)
+    {
+        try {
+            providerFactory =
+                    injector.getInternalFactory(
+                            providerKey, errors.withSource(source), JitLimitation.NEW_OR_EXISTING_JIT);
+        }
+        catch (ErrorsException e) {
+            errors.merge(e.getErrors());
+        }
     }
-  }
 
-  @Override
-  MethodHandleResult makeHandle(LinkageContext context, boolean linked) {
-    return makeCachable(
-        InternalMethodHandles.catchInternalProvisionExceptionAndRethrowWithSource(
-            circularGetHandle(
-                providerFactory.getHandle(context, /* linked= */ true), provisionCallback),
-            providerKey));
-  }
+    @Override
+    public T get(InternalContext context, Dependency<?> dependency, boolean linked)
+            throws InternalProvisionException
+    {
+        try {
+            // TODO: lukes - are we passing the right dependency here?
+            jakarta.inject.Provider<? extends T> provider = providerFactory.get(context, dependency, true);
+            return circularGet(provider, context, dependency, provisionCallback);
+        }
+        catch (InternalProvisionException ipe) {
+            throw ipe.addSource(providerKey);
+        }
+    }
 
-  @Override
-  public String toString() {
-    return providerKey.toString();
-  }
+    @Override
+    MethodHandleResult makeHandle(LinkageContext context, boolean linked)
+    {
+        return makeCachable(
+                InternalMethodHandles.catchInternalProvisionExceptionAndRethrowWithSource(
+                        circularGetHandle(
+                                providerFactory.getHandle(context, /* linked= */ true), provisionCallback),
+                        providerKey));
+    }
+
+    @Override
+    public String toString()
+    {
+        return providerKey.toString();
+    }
 }

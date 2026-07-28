@@ -16,59 +16,63 @@
 
 package com.google.inject.servlet;
 
-import static org.junit.jupiter.api.Assertions.fail;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
-public class UriPatternTypeTest {
+public class UriPatternTypeTest
+{
+    @Test
+    public void testMatches_servlet()
+    {
+        UriPatternMatcher pattern = UriPatternType.get(UriPatternType.SERVLET, "/foo/*");
+        assertTrue(pattern.matches("/foo/asdf"));
+        assertTrue(pattern.matches("/foo/asdf?val=1"));
+        assertFalse(pattern.matches("/path/file.bar"));
+        assertFalse(pattern.matches("/path/file.bar?val=1"));
+        assertFalse(pattern.matches("/asdf"));
+        assertFalse(pattern.matches("/asdf?val=1"));
 
-  @Test
-  public void testMatches_servlet() {
-    UriPatternMatcher pattern = UriPatternType.get(UriPatternType.SERVLET, "/foo/*");
-    assertTrue(pattern.matches("/foo/asdf"));
-    assertTrue(pattern.matches("/foo/asdf?val=1"));
-    assertFalse(pattern.matches("/path/file.bar"));
-    assertFalse(pattern.matches("/path/file.bar?val=1"));
-    assertFalse(pattern.matches("/asdf"));
-    assertFalse(pattern.matches("/asdf?val=1"));
+        pattern = UriPatternType.get(UriPatternType.SERVLET, "*.bar");
+        assertFalse(pattern.matches("/foo/asdf"));
+        assertFalse(pattern.matches("/foo/asdf?val=1"));
+        assertTrue(pattern.matches("/path/file.bar"));
+        assertTrue(pattern.matches("/path/file.bar?val=1"));
+        assertFalse(pattern.matches("/asdf"));
+        assertFalse(pattern.matches("/asdf?val=1"));
 
-    pattern = UriPatternType.get(UriPatternType.SERVLET, "*.bar");
-    assertFalse(pattern.matches("/foo/asdf"));
-    assertFalse(pattern.matches("/foo/asdf?val=1"));
-    assertTrue(pattern.matches("/path/file.bar"));
-    assertTrue(pattern.matches("/path/file.bar?val=1"));
-    assertFalse(pattern.matches("/asdf"));
-    assertFalse(pattern.matches("/asdf?val=1"));
-
-    pattern = UriPatternType.get(UriPatternType.SERVLET, "/asdf");
-    assertFalse(pattern.matches("/foo/asdf"));
-    assertFalse(pattern.matches("/foo/asdf?val=1"));
-    assertFalse(pattern.matches("/path/file.bar"));
-    assertFalse(pattern.matches("/path/file.bar?val=1"));
-    assertTrue(pattern.matches("/asdf"));
-    assertTrue(pattern.matches("/asdf?val=1"));
-  }
-
-  @Test
-  public void testMatches_regex() {
-    UriPatternMatcher pattern = UriPatternType.get(UriPatternType.REGEX, "/.*/foo");
-    assertFalse(pattern.matches("/foo/asdf"));
-    assertFalse(pattern.matches("/foo/asdf?val=1"));
-    assertTrue(pattern.matches("/path/foo"));
-    assertTrue(pattern.matches("/path/foo?val=1"));
-    assertFalse(pattern.matches("/foo"));
-    assertFalse(pattern.matches("/foo?val=1"));
-  }
-
-  @Test
-  public void testPatternWithPercentEncodedChars_servlet() {
-    try {
-      UriPatternType.get(UriPatternType.SERVLET, "/foo/%2f/*");
-      fail();
-    } catch (IllegalArgumentException iae) {
-      assertTrue(iae.getMessage().contains("Servlet patterns cannot contain escape patterns."));
+        pattern = UriPatternType.get(UriPatternType.SERVLET, "/asdf");
+        assertFalse(pattern.matches("/foo/asdf"));
+        assertFalse(pattern.matches("/foo/asdf?val=1"));
+        assertFalse(pattern.matches("/path/file.bar"));
+        assertFalse(pattern.matches("/path/file.bar?val=1"));
+        assertTrue(pattern.matches("/asdf"));
+        assertTrue(pattern.matches("/asdf?val=1"));
     }
-  }
+
+    @Test
+    public void testMatches_regex()
+    {
+        UriPatternMatcher pattern = UriPatternType.get(UriPatternType.REGEX, "/.*/foo");
+        assertFalse(pattern.matches("/foo/asdf"));
+        assertFalse(pattern.matches("/foo/asdf?val=1"));
+        assertTrue(pattern.matches("/path/foo"));
+        assertTrue(pattern.matches("/path/foo?val=1"));
+        assertFalse(pattern.matches("/foo"));
+        assertFalse(pattern.matches("/foo?val=1"));
+    }
+
+    @Test
+    public void testPatternWithPercentEncodedChars_servlet()
+    {
+        try {
+            UriPatternType.get(UriPatternType.SERVLET, "/foo/%2f/*");
+            fail();
+        }
+        catch (IllegalArgumentException iae) {
+            assertTrue(iae.getMessage().contains("Servlet patterns cannot contain escape patterns."));
+        }
+    }
 }

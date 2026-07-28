@@ -1,9 +1,5 @@
 package com.google.inject.internal;
 
-import static com.google.common.collect.MoreCollectors.onlyElement;
-import static java.util.Objects.requireNonNull;
-
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ListMultimap;
 import com.google.inject.Injector;
@@ -16,9 +12,15 @@ import com.google.inject.Singleton;
 import com.google.inject.internal.CycleDetectingLock.CycleDetectingLockFactory;
 import com.google.inject.spi.Dependency;
 import com.google.inject.spi.Message;
+
+import javax.annotation.Nullable;
+
 import java.util.Formatter;
 import java.util.List;
-import javax.annotation.Nullable;
+
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.MoreCollectors.onlyElement;
+import static java.util.Objects.requireNonNull;
 
 /**
  * One instance per {@link Injector}. Also see {@code @}{@link Singleton}.
@@ -62,267 +64,286 @@ import javax.annotation.Nullable;
  * @see CycleDetectingLock
  * @author timofeyb (Timothy Basanov)
  */
-public class SingletonScope implements Scope {
+public class SingletonScope
+        implements Scope
+{
+    /**
+     * A sentinel value representing null.
+     */
+    private static final Object NULL = new Object();
 
-  /** A sentinel value representing null. */
-  private static final Object NULL = new Object();
+    /**
+     * Allows us to detect when circular proxies are necessary. It's only used during singleton
+     * instance initialization, after initialization direct access through volatile field is used.
+     *
+     * <p>NB: Factory uses {@link Key}s as a user locks ids, different injectors can share them.
+     * Cycles are detected properly as cycle detection does not rely on user locks ids, but error
+     * message generated could be less than ideal.
+     */
+    // TODO(user): we may use one factory per injector tree for optimization reasons
+    private static final CycleDetectingLockFactory<Key<?>> cycleDetectingLockFactory =
+            new CycleDetectingLockFactory<Key<?>>();
 
-  /**
-   * Allows us to detect when circular proxies are necessary. It's only used during singleton
-   * instance initialization, after initialization direct access through volatile field is used.
-   *
-   * <p>NB: Factory uses {@link Key}s as a user locks ids, different injectors can share them.
-   * Cycles are detected properly as cycle detection does not rely on user locks ids, but error
-   * message generated could be less than ideal.
-   */
-  // TODO(user): we may use one factory per injector tree for optimization reasons
-  private static final CycleDetectingLockFactory<Key<?>> cycleDetectingLockFactory =
-      new CycleDetectingLockFactory<Key<?>>();
+    /**
+     * Provides singleton scope with the following properties:
+     *
+     * <ul>
+     *   <li>creates no more than one instance per Key as a creator is used no more than once
+     *   <li>result is cached and returned quickly on subsequent calls
+     *   <li>exception in a creator is not treated as instance creation and is not cached
+     *   <li>creates singletons in parallel whenever possible
+     *   <li>waits for dependent singletons to be created even across threads and when dependencies
+     *       are shared as long as no circular dependencies are detected
+     *   <li>returns circular proxy only when circular dependencies are detected
+     *   <li>aside from that, blocking synchronization is only used for proxy creation and
+     *       initialization
+     * </ul>
+     *
+     * @see CycleDetectingLockFactory
+     */
+    @Override
+    public <T> Provider<T> scope(final Key<T> key, final Provider<T> creator)
+    {
+        /**
+         * Locking strategy:
+         */
+        return new Provider<T>()
+        {
+            /**
+             * The lazily initialized singleton instance. Once set, this will either have type T or will
+             * be equal to NULL. Would never be reset to null.
+             *
+             * <p>Locking strategy: double-checked locking for quick exit when scope is initialized.
+             */
+            volatile Object instance;
 
-  /**
-   * Provides singleton scope with the following properties:
-   *
-   * <ul>
-   *   <li>creates no more than one instance per Key as a creator is used no more than once
-   *   <li>result is cached and returned quickly on subsequent calls
-   *   <li>exception in a creator is not treated as instance creation and is not cached
-   *   <li>creates singletons in parallel whenever possible
-   *   <li>waits for dependent singletons to be created even across threads and when dependencies
-   *       are shared as long as no circular dependencies are detected
-   *   <li>returns circular proxy only when circular dependencies are detected
-   *   <li>aside from that, blocking synchronization is only used for proxy creation and
-   *       initialization
-   * </ul>
-   *
-   * @see CycleDetectingLockFactory
-   */
-  @Override
-  public <T> Provider<T> scope(final Key<T> key, final Provider<T> creator) {
-    /** Locking strategy: */
-    return new Provider<T>() {
-      /**
-       * The lazily initialized singleton instance. Once set, this will either have type T or will
-       * be equal to NULL. Would never be reset to null.
-       *
-       * <p>Locking strategy: double-checked locking for quick exit when scope is initialized.
-       */
-      volatile Object instance;
+            /**
+             * Circular proxies are used when potential deadlocks are detected. This lock is used to guard
+             * accesses to the list of invocation handlers.
+             *
+             * <p>Locking strategy: manipulations with proxies list or instance initialization.
+             */
+            final Object proxyCycleLock = new Object();
 
-      /**
-       * Circular proxies are used when potential deadlocks are detected. This lock is used to guard
-       * accesses to the list of invocation handlers.
-       *
-       * <p>Locking strategy: manipulations with proxies list or instance initialization.
-       */
-      final Object proxyCycleLock = new Object();
+            /**
+             * An invocation handler for circular proxies. Typically this is `null` as we don't allocate
+             * proxies, but when we do, we allocate a handler and pass it to each allocated proxy
+             *
+             * <p>TODO: lukes - We could instead store the actual proxy here and then reuse it instead of
+             * allocating a new one, and we can access the invocation handler via
+             * `Proxy.getInvocationHandler(proxy)`.
+             */
+            DelegatingInvocationHandler invocationHandler;
 
-      /**
-       * An invocation handler for circular proxies. Typically this is `null` as we don't allocate
-       * proxies, but when we do, we allocate a handler and pass it to each allocated proxy
-       *
-       * <p>TODO: lukes - We could instead store the actual proxy here and then reuse it instead of
-       * allocating a new one, and we can access the invocation handler via
-       * `Proxy.getInvocationHandler(proxy)`.
-       */
-      DelegatingInvocationHandler invocationHandler;
+            /**
+             * For each binding there is a separate lock that we hold during object creation.
+             *
+             * <p>Locking strategy: singleton instance creation.
+             *
+             * <ul>
+             *   <li>allows to guarantee only one instance per singleton,
+             *   <li>special type of a lock, that prevents potential deadlocks,
+             *   <li>guards constructionContext for all operations except proxy creation
+             * </ul>
+             */
+            final CycleDetectingLock<Key<?>> creationLock = cycleDetectingLockFactory.create(key);
 
-      /**
-       * For each binding there is a separate lock that we hold during object creation.
-       *
-       * <p>Locking strategy: singleton instance creation.
-       *
-       * <ul>
-       *   <li>allows to guarantee only one instance per singleton,
-       *   <li>special type of a lock, that prevents potential deadlocks,
-       *   <li>guards constructionContext for all operations except proxy creation
-       * </ul>
-       */
-      final CycleDetectingLock<Key<?>> creationLock = cycleDetectingLockFactory.create(key);
+            /**
+             * The singleton provider needs a reference back to the injector, in order to get ahold of
+             * InternalContext during instantiation.
+             */
+            @Nullable
+            final InjectorImpl injector;
 
-      /**
-       * The singleton provider needs a reference back to the injector, in order to get ahold of
-       * InternalContext during instantiation.
-       */
-      @Nullable final InjectorImpl injector;
+            {
+                // If we are getting called by Scoping
+                if (creator instanceof ProviderToInternalFactoryAdapter) {
+                    injector = ((ProviderToInternalFactoryAdapter) creator).getInjector();
+                }
+                else {
+                    injector = null;
+                }
+            }
 
-      {
-        // If we are getting called by Scoping
-        if (creator instanceof ProviderToInternalFactoryAdapter) {
-          injector = ((ProviderToInternalFactoryAdapter) creator).getInjector();
-        } else {
-          injector = null;
-        }
-      }
+            @SuppressWarnings("DoubleCheckedLocking")
+            @Override
+            public T get()
+            {
+                // cache volatile variable for the usual case of already initialized object
+                final Object initialInstance = instance;
+                if (initialInstance == null) {
+                    // instance is not initialized yet
 
-      @SuppressWarnings("DoubleCheckedLocking")
-      @Override
-      public T get() {
-        // cache volatile variable for the usual case of already initialized object
-        final Object initialInstance = instance;
-        if (initialInstance == null) {
-          // instance is not initialized yet
+                    // first, store the current InternalContext in a map, so that if there is a circular
+                    // dependency error, we can use the InternalContext objects to create a complete
+                    // error message.
+                    // Handle injector being null, which can happen when users call Scoping.scope themselves
+                    final InternalContext context = injector == null ? null : injector.getLocalContext();
+                    // acquire lock for current binding to initialize an instance
+                    final ListMultimap<Thread, Key<?>> locksCycle =
+                            creationLock.lockOrDetectPotentialLocksCycle();
 
-          // first, store the current InternalContext in a map, so that if there is a circular
-          // dependency error, we can use the InternalContext objects to create a complete
-          // error message.
-          // Handle injector being null, which can happen when users call Scoping.scope themselves
-          final InternalContext context = injector == null ? null : injector.getLocalContext();
-          // acquire lock for current binding to initialize an instance
-          final ListMultimap<Thread, Key<?>> locksCycle =
-              creationLock.lockOrDetectPotentialLocksCycle();
+                    if (locksCycle.isEmpty()) {
+                        // this thread now owns creation of an instance
+                        try {
+                            // intentionally reread volatile variable to prevent double initialization
+                            if (instance == null) {
+                                // creator throwing an exception can cause circular proxies created in
+                                // different thread to never be resolved, just a warning
+                                T provided = creator.get();
+                                Object providedNotNull = provided == null ? NULL : provided;
 
-          if (locksCycle.isEmpty()) {
-            // this thread now owns creation of an instance
-            try {
-              // intentionally reread volatile variable to prevent double initialization
-              if (instance == null) {
-                // creator throwing an exception can cause circular proxies created in
-                // different thread to never be resolved, just a warning
-                T provided = creator.get();
-                Object providedNotNull = provided == null ? NULL : provided;
+                                // scope called recursively can initialize instance as a side effect
+                                if (instance == null) {
+                                    // instance is still not initialized, so we can proceed
 
-                // scope called recursively can initialize instance as a side effect
-                if (instance == null) {
-                  // instance is still not initialized, so we can proceed
+                                    // don't remember proxies created by Guice on circular dependency
+                                    // detection within the same thread; they are not real instances to cache
+                                    if (Scopes.isCircularProxy(provided)) {
+                                        return provided;
+                                    }
 
-                  // don't remember proxies created by Guice on circular dependency
-                  // detection within the same thread; they are not real instances to cache
-                  if (Scopes.isCircularProxy(provided)) {
-                    return provided;
-                  }
-
-                  synchronized (proxyCycleLock) {
-                    // guarantee thread-safety for instance and proxies initialization
-                    instance = providedNotNull;
-                    if (invocationHandler != null) {
-                      invocationHandler.setDelegate(provided);
-                      invocationHandler = null;
+                                    synchronized (proxyCycleLock) {
+                                        // guarantee thread-safety for instance and proxies initialization
+                                        instance = providedNotNull;
+                                        if (invocationHandler != null) {
+                                            invocationHandler.setDelegate(provided);
+                                            invocationHandler = null;
+                                        }
+                                    }
+                                }
+                                else {
+                                    // safety assert in case instance was initialized
+                                    checkState(
+                                            instance == providedNotNull,
+                                            "Singleton is called recursively returning different results");
+                                }
+                            }
+                        }
+                        finally {
+                            // always release our creation lock, even on failures
+                            creationLock.unlock();
+                        }
                     }
-                  }
-                } else {
-                  // safety assert in case instance was initialized
-                  Preconditions.checkState(
-                      instance == providedNotNull,
-                      "Singleton is called recursively returning different results");
+                    else {
+                        if (context == null) {
+                            throw new ProvisionException(
+                                    ImmutableList.of(createCycleDependenciesMessage(locksCycle, null)));
+                        }
+                        // potential deadlock detected, creation lock is not taken by this thread
+                        synchronized (proxyCycleLock) {
+                            // guarantee thread-safety for instance and proxies initialization
+                            if (instance == null) {
+                                // creating a proxy to satisfy circular dependency across several threads
+                                Dependency<?> dependency =
+                                        requireNonNull(
+                                                context.getDependency(), "internalContext.getDependency()");
+                                Class<?> rawType = dependency.getKey().getTypeLiteral().getRawType();
+
+                                try {
+                                    if (!context.areCircularProxiesEnabled()) {
+                                        throw InternalProvisionException.circularDependenciesDisabled(rawType);
+                                    }
+                                    if (!rawType.isInterface()) {
+                                        throw InternalProvisionException.cannotProxyClass(rawType);
+                                    }
+
+                                    if (invocationHandler == null) {
+                                        invocationHandler = new DelegatingInvocationHandler();
+                                    }
+
+                                    @SuppressWarnings("unchecked")
+                                    T proxy = (T) BytecodeGen.newCircularProxy(rawType, invocationHandler);
+                                    return proxy;
+                                }
+                                catch (InternalProvisionException e) {
+                                    // best effort to create a rich error message
+                                    Message proxyCreationError = e.getErrors().stream().collect(onlyElement());
+                                    Message cycleDependenciesMessage =
+                                            createCycleDependenciesMessage(locksCycle, proxyCreationError);
+                                    // adding stack trace generated by us in addition to a standard one
+                                    throw new ProvisionException(
+                                            ImmutableList.of(cycleDependenciesMessage, proxyCreationError));
+                                }
+                            }
+                        }
+                    }
+
+                    // at this point we're sure that singleton was initialized,
+                    // reread volatile variable to catch all corner cases
+
+                    // caching volatile variable to minimize number of reads performed
+                    final Object initializedInstance = instance;
+                    checkState(
+                            initializedInstance != null,
+                            "Internal error: Singleton is not initialized contrary to our expectations");
+                    @SuppressWarnings("unchecked")
+                    T initializedTypedInstance = (T) initializedInstance;
+                    return initializedInstance == NULL ? null : initializedTypedInstance;
                 }
-              }
-            } finally {
-              // always release our creation lock, even on failures
-              creationLock.unlock();
-            }
-          } else {
-            if (context == null) {
-              throw new ProvisionException(
-                  ImmutableList.of(createCycleDependenciesMessage(locksCycle, null)));
-            }
-            // potential deadlock detected, creation lock is not taken by this thread
-            synchronized (proxyCycleLock) {
-              // guarantee thread-safety for instance and proxies initialization
-              if (instance == null) {
-                // creating a proxy to satisfy circular dependency across several threads
-                Dependency<?> dependency =
-                    requireNonNull(
-                        context.getDependency(), "internalContext.getDependency()");
-                Class<?> rawType = dependency.getKey().getTypeLiteral().getRawType();
-
-                try {
-                  if (!context.areCircularProxiesEnabled()) {
-                    throw InternalProvisionException.circularDependenciesDisabled(rawType);
-                  }
-                  if (!rawType.isInterface()) {
-                    throw InternalProvisionException.cannotProxyClass(rawType);
-                  }
-
-                  if (invocationHandler == null) {
-                    invocationHandler = new DelegatingInvocationHandler();
-                  }
-
-                  @SuppressWarnings("unchecked")
-                  T proxy = (T) BytecodeGen.newCircularProxy(rawType, invocationHandler);
-                  return proxy;
-                } catch (InternalProvisionException e) {
-                  // best effort to create a rich error message
-                  Message proxyCreationError = e.getErrors().stream().collect(onlyElement());
-                  Message cycleDependenciesMessage =
-                      createCycleDependenciesMessage(locksCycle, proxyCreationError);
-                  // adding stack trace generated by us in addition to a standard one
-                  throw new ProvisionException(
-                      ImmutableList.of(cycleDependenciesMessage, proxyCreationError));
+                else {
+                    // singleton is already initialized and local cache can be used
+                    @SuppressWarnings("unchecked")
+                    T typedInitialIntance = (T) initialInstance;
+                    return initialInstance == NULL ? null : typedInitialIntance;
                 }
-              }
             }
-          }
 
-          // at this point we're sure that singleton was initialized,
-          // reread volatile variable to catch all corner cases
+            /**
+             * Helper method to create beautiful and rich error descriptions. Best effort and slow. Tries
+             * its best to provide dependency information from injectors currently available in a global
+             * internal context.
+             *
+             * <p>The main thing being done is creating a list of Dependencies involved into lock cycle
+             * across all the threads involved. This is a structure we're creating:
+             *
+             * <pre>
+             * { Current Thread, C.class, B.class, Other Thread, B.class, C.class, Current Thread }
+             * To be inserted in the beginning by Guice: { A.class, B.class, C.class }
+             * </pre>
+             *
+             * When we're calling Guice to create A and it fails in the deadlock while trying to create C,
+             * which is being created by another thread, which waits for B. List would be reversed before
+             * printing it to the end user.
+             */
+            private Message createCycleDependenciesMessage(
+                    ListMultimap<Thread, Key<?>> locksCycle,
+                    @Nullable Message proxyCreationError)
+            {
+                // this is the main thing that we'll show in an error message,
+                // current thread is populate by Guice
+                StringBuilder sb = new StringBuilder();
+                Formatter fmt = new Formatter(sb);
+                fmt.format("Encountered circular dependency spanning several threads.");
+                if (proxyCreationError != null) {
+                    fmt.format(" %s", proxyCreationError.getMessage());
+                }
+                fmt.format("\n");
+                for (Thread lockedThread : locksCycle.keySet()) {
+                    List<Key<?>> lockedKeys = locksCycle.get(lockedThread);
+                    fmt.format("%s is holding locks the following singletons in the cycle:\n", lockedThread);
+                    for (Key<?> lockedKey : lockedKeys) {
+                        fmt.format("%s\n", Errors.convert(lockedKey));
+                    }
+                    for (StackTraceElement traceElement : lockedThread.getStackTrace()) {
+                        fmt.format("\tat %s\n", traceElement);
+                    }
+                }
+                fmt.close();
+                return new Message(Thread.currentThread(), sb.toString());
+            }
 
-          // caching volatile variable to minimize number of reads performed
-          final Object initializedInstance = instance;
-          Preconditions.checkState(
-              initializedInstance != null,
-              "Internal error: Singleton is not initialized contrary to our expectations");
-          @SuppressWarnings("unchecked")
-          T initializedTypedInstance = (T) initializedInstance;
-          return initializedInstance == NULL ? null : initializedTypedInstance;
-        } else {
-          // singleton is already initialized and local cache can be used
-          @SuppressWarnings("unchecked")
-          T typedInitialIntance = (T) initialInstance;
-          return initialInstance == NULL ? null : typedInitialIntance;
-        }
-      }
+            @Override
+            public String toString()
+            {
+                return "%s[%s]".formatted(creator, Scopes.SINGLETON);
+            }
+        };
+    }
 
-      /**
-       * Helper method to create beautiful and rich error descriptions. Best effort and slow. Tries
-       * its best to provide dependency information from injectors currently available in a global
-       * internal context.
-       *
-       * <p>The main thing being done is creating a list of Dependencies involved into lock cycle
-       * across all the threads involved. This is a structure we're creating:
-       *
-       * <pre>
-       * { Current Thread, C.class, B.class, Other Thread, B.class, C.class, Current Thread }
-       * To be inserted in the beginning by Guice: { A.class, B.class, C.class }
-       * </pre>
-       *
-       * When we're calling Guice to create A and it fails in the deadlock while trying to create C,
-       * which is being created by another thread, which waits for B. List would be reversed before
-       * printing it to the end user.
-       */
-      private Message createCycleDependenciesMessage(
-          ListMultimap<Thread, Key<?>> locksCycle, @Nullable Message proxyCreationError) {
-        // this is the main thing that we'll show in an error message,
-        // current thread is populate by Guice
-        StringBuilder sb = new StringBuilder();
-        Formatter fmt = new Formatter(sb);
-        fmt.format("Encountered circular dependency spanning several threads.");
-        if (proxyCreationError != null) {
-          fmt.format(" %s", proxyCreationError.getMessage());
-        }
-        fmt.format("\n");
-        for (Thread lockedThread : locksCycle.keySet()) {
-          List<Key<?>> lockedKeys = locksCycle.get(lockedThread);
-          fmt.format("%s is holding locks the following singletons in the cycle:\n", lockedThread);
-          for (Key<?> lockedKey : lockedKeys) {
-            fmt.format("%s\n", Errors.convert(lockedKey));
-          }
-          for (StackTraceElement traceElement : lockedThread.getStackTrace()) {
-            fmt.format("\tat %s\n", traceElement);
-          }
-        }
-        fmt.close();
-        return new Message(Thread.currentThread(), sb.toString());
-      }
-
-      @Override
-      public String toString() {
-        return "%s[%s]".formatted(creator, Scopes.SINGLETON);
-      }
-    };
-  }
-
-  @Override
-  public String toString() {
-    return "Scopes.SINGLETON";
-  }
+    @Override
+    public String toString()
+    {
+        return "Scopes.SINGLETON";
+    }
 }

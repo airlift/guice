@@ -16,7 +16,6 @@
 
 package com.google.inject.internal;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Binder;
 import com.google.inject.Injector;
@@ -25,51 +24,62 @@ import com.google.inject.spi.BindingTargetVisitor;
 import com.google.inject.spi.Dependency;
 import com.google.inject.spi.ExposedBinding;
 import com.google.inject.spi.PrivateElements;
+
 import java.util.Set;
 
-final class ExposedBindingImpl<T> extends BindingImpl<T> implements ExposedBinding<T> {
+import static com.google.common.base.MoreObjects.toStringHelper;
 
-  private final PrivateElements privateElements;
+final class ExposedBindingImpl<T>
+        extends BindingImpl<T>
+        implements ExposedBinding<T>
+{
+    private final PrivateElements privateElements;
 
-  ExposedBindingImpl(
-      InjectorImpl injector,
-      Object source,
-      Key<T> key,
-      InternalFactory<T> factory,
-      PrivateElements privateElements) {
-    super(injector, key, source, factory, Scoping.UNSCOPED);
-    this.privateElements = privateElements;
-  }
+    ExposedBindingImpl(
+            InjectorImpl injector,
+            Object source,
+            Key<T> key,
+            InternalFactory<T> factory,
+            PrivateElements privateElements)
+    {
+        super(injector, key, source, factory, Scoping.UNSCOPED);
+        this.privateElements = privateElements;
+    }
 
-  @Override
-  public <V> V acceptTargetVisitor(BindingTargetVisitor<? super T, V> visitor) {
-    return visitor.visit(this);
-  }
+    @Override
+    public <V> V acceptTargetVisitor(BindingTargetVisitor<? super T, V> visitor)
+    {
+        return visitor.visit(this);
+    }
 
-  @Override
-  public Set<Dependency<?>> getDependencies() {
-    return ImmutableSet.<Dependency<?>>of(Dependency.get(Key.get(Injector.class)));
-  }
+    @Override
+    public Set<Dependency<?>> getDependencies()
+    {
+        return ImmutableSet.<Dependency<?>>of(Dependency.get(Key.get(Injector.class)));
+    }
 
-  @Override
-  public PrivateElements getPrivateElements() {
-    return privateElements;
-  }
+    @Override
+    public PrivateElements getPrivateElements()
+    {
+        return privateElements;
+    }
 
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(ExposedBinding.class)
-        .add("key", getKey())
-        .add("source", getSource())
-        .add("privateElements", privateElements)
-        .toString();
-  }
+    @Override
+    public String toString()
+    {
+        return toStringHelper(ExposedBinding.class)
+                .add("key", getKey())
+                .add("source", getSource())
+                .add("privateElements", privateElements)
+                .toString();
+    }
 
-  @Override
-  public void applyTo(Binder binder) {
-    throw new UnsupportedOperationException("This element represents a synthetic binding.");
-  }
+    @Override
+    public void applyTo(Binder binder)
+    {
+        throw new UnsupportedOperationException("This element represents a synthetic binding.");
+    }
 
-  // Purposely does not override equals/hashcode, because exposed bindings are only equal to
-  // themselves right now -- that is, there cannot be "duplicate" exposed bindings.
+    // Purposely does not override equals/hashcode, because exposed bindings are only equal to
+    // themselves right now -- that is, there cannot be "duplicate" exposed bindings.
 }

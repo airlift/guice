@@ -16,10 +16,6 @@
 
 package com.google.inject.internal;
 
-import static com.google.inject.internal.GuiceInternal.GUICE_INTERNAL;
-import static com.google.inject.spi.Elements.withTrustedSource;
-
-import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Binder;
 import com.google.inject.Key;
@@ -27,88 +23,106 @@ import com.google.inject.spi.BindingTargetVisitor;
 import com.google.inject.spi.Dependency;
 import com.google.inject.spi.HasDependencies;
 import com.google.inject.spi.LinkedKeyBinding;
+
 import java.util.Objects;
 import java.util.Set;
 
-final class LinkedBindingImpl<T> extends BindingImpl<T>
-    implements LinkedKeyBinding<T>, HasDependencies {
+import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.inject.internal.GuiceInternal.GUICE_INTERNAL;
+import static com.google.inject.spi.Elements.withTrustedSource;
 
-  final Key<? extends T> targetKey;
+final class LinkedBindingImpl<T>
+        extends BindingImpl<T>
+        implements LinkedKeyBinding<T>, HasDependencies
+{
+    final Key<? extends T> targetKey;
 
-  LinkedBindingImpl(
-      InjectorImpl injector,
-      Key<T> key,
-      Object source,
-      InternalFactory<? extends T> internalFactory,
-      Scoping scoping,
-      Key<? extends T> targetKey) {
-    super(injector, key, source, internalFactory, scoping);
-    this.targetKey = targetKey;
-  }
-
-  LinkedBindingImpl(Object source, Key<T> key, Scoping scoping, Key<? extends T> targetKey) {
-    super(source, key, scoping);
-    this.targetKey = targetKey;
-  }
-
-  @Override
-  public <V> V acceptTargetVisitor(BindingTargetVisitor<? super T, V> visitor) {
-    return visitor.visit(this);
-  }
-
-  @Override
-  public Key<? extends T> getLinkedKey() {
-    return targetKey;
-  }
-
-  @Override
-  public Set<Dependency<?>> getDependencies() {
-    return ImmutableSet.<Dependency<?>>of(Dependency.get(targetKey));
-  }
-
-  @Override
-  public BindingImpl<T> withScoping(Scoping scoping) {
-    return new LinkedBindingImpl<T>(getSource(), getKey(), scoping, targetKey);
-  }
-
-  @Override
-  public BindingImpl<T> withKey(Key<T> key) {
-    return new LinkedBindingImpl<T>(getSource(), key, getScoping(), targetKey);
-  }
-
-  @Override
-  public void applyTo(Binder binder) {
-    getScoping()
-        .applyTo(
-            withTrustedSource(GUICE_INTERNAL, binder, getSource())
-                .bind(getKey())
-                .to(getLinkedKey()));
-  }
-
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(LinkedKeyBinding.class)
-        .add("key", getKey())
-        .add("source", getSource())
-        .add("scope", getScoping())
-        .add("target", targetKey)
-        .toString();
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (obj instanceof LinkedBindingImpl) {
-      LinkedBindingImpl<?> o = (LinkedBindingImpl<?>) obj;
-      return getKey().equals(o.getKey())
-          && getScoping().equals(o.getScoping())
-          && Objects.equals(targetKey, o.targetKey);
-    } else {
-      return false;
+    LinkedBindingImpl(
+            InjectorImpl injector,
+            Key<T> key,
+            Object source,
+            InternalFactory<? extends T> internalFactory,
+            Scoping scoping,
+            Key<? extends T> targetKey)
+    {
+        super(injector, key, source, internalFactory, scoping);
+        this.targetKey = targetKey;
     }
-  }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(getKey(), getScoping(), targetKey);
-  }
+    LinkedBindingImpl(Object source, Key<T> key, Scoping scoping, Key<? extends T> targetKey)
+    {
+        super(source, key, scoping);
+        this.targetKey = targetKey;
+    }
+
+    @Override
+    public <V> V acceptTargetVisitor(BindingTargetVisitor<? super T, V> visitor)
+    {
+        return visitor.visit(this);
+    }
+
+    @Override
+    public Key<? extends T> getLinkedKey()
+    {
+        return targetKey;
+    }
+
+    @Override
+    public Set<Dependency<?>> getDependencies()
+    {
+        return ImmutableSet.<Dependency<?>>of(Dependency.get(targetKey));
+    }
+
+    @Override
+    public BindingImpl<T> withScoping(Scoping scoping)
+    {
+        return new LinkedBindingImpl<T>(getSource(), getKey(), scoping, targetKey);
+    }
+
+    @Override
+    public BindingImpl<T> withKey(Key<T> key)
+    {
+        return new LinkedBindingImpl<T>(getSource(), key, getScoping(), targetKey);
+    }
+
+    @Override
+    public void applyTo(Binder binder)
+    {
+        getScoping()
+                .applyTo(
+                        withTrustedSource(GUICE_INTERNAL, binder, getSource())
+                                .bind(getKey())
+                                .to(getLinkedKey()));
+    }
+
+    @Override
+    public String toString()
+    {
+        return toStringHelper(LinkedKeyBinding.class)
+                .add("key", getKey())
+                .add("source", getSource())
+                .add("scope", getScoping())
+                .add("target", targetKey)
+                .toString();
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (obj instanceof LinkedBindingImpl) {
+            LinkedBindingImpl<?> o = (LinkedBindingImpl<?>) obj;
+            return getKey().equals(o.getKey())
+                    && getScoping().equals(o.getScoping())
+                    && Objects.equals(targetKey, o.targetKey);
+        }
+        else {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(getKey(), getScoping(), targetKey);
+    }
 }

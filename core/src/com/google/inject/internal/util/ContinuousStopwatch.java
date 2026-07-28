@@ -16,12 +16,14 @@
 
 package com.google.inject.internal.util;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-
 import com.google.common.base.Stopwatch;
+
+import javax.annotation.concurrent.NotThreadSafe;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.concurrent.NotThreadSafe;
+
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 /**
  * A continuously timing stopwatch that is used for simple performance monitoring.
@@ -29,38 +31,44 @@ import javax.annotation.concurrent.NotThreadSafe;
  * @author crazybob@google.com (Bob Lee)
  */
 @NotThreadSafe
-public final class ContinuousStopwatch {
-  private static final Logger logger =
-      Logger.getLogger(ContinuousStopwatch.class.getName());
-  private final Stopwatch stopwatch;
+public final class ContinuousStopwatch
+{
+    private static final Logger logger =
+            Logger.getLogger(ContinuousStopwatch.class.getName());
+    private final Stopwatch stopwatch;
 
-  /**
-   * Constructs a ContinuousStopwatch, which will start timing immediately after construction.
-   *
-   * @param stopwatch the internal stopwatch used by ContinuousStopwatch
-   */
-  public ContinuousStopwatch(Stopwatch stopwatch) {
-    this.stopwatch = stopwatch;
-    reset();
-  }
-
-  /** Resets and returns elapsed time in milliseconds. */
-  public long reset() {
-    long elapsedTimeMs = stopwatch.elapsed(MILLISECONDS);
-    stopwatch.reset();
-    stopwatch.start();
-    return elapsedTimeMs;
-  }
-
-  /**
-   * Resets and logs elapsed time in milliseconds.
-   *
-   * <p>Injector creation calls this about ten times, so the message is only built when it would
-   * actually be logged.
-   */
-  public void resetAndLog(String label) {
-    if (logger.isLoggable(Level.FINE)) {
-      logger.fine(label + ": " + reset() + "ms");
+    /**
+     * Constructs a ContinuousStopwatch, which will start timing immediately after construction.
+     *
+     * @param stopwatch the internal stopwatch used by ContinuousStopwatch
+     */
+    public ContinuousStopwatch(Stopwatch stopwatch)
+    {
+        this.stopwatch = stopwatch;
+        reset();
     }
-  }
+
+    /**
+     * Resets and returns elapsed time in milliseconds.
+     */
+    public long reset()
+    {
+        long elapsedTimeMs = stopwatch.elapsed(MILLISECONDS);
+        stopwatch.reset();
+        stopwatch.start();
+        return elapsedTimeMs;
+    }
+
+    /**
+     * Resets and logs elapsed time in milliseconds.
+     *
+     * <p>Injector creation calls this about ten times, so the message is only built when it would
+     * actually be logged.
+     */
+    public void resetAndLog(String label)
+    {
+        if (logger.isLoggable(Level.FINE)) {
+            logger.fine(label + ": " + reset() + "ms");
+        }
+    }
 }

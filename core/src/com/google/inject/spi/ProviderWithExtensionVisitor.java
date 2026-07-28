@@ -46,16 +46,18 @@ import com.google.inject.Provider;
  * @since 3.0
  * @author sameb@google.com (Sam Berlin)
  */
-public interface ProviderWithExtensionVisitor<T> extends Provider<T> {
-
-  /**
-   * Instructs the extension determine if the visitor is an instance of a custom extension visitor,
-   * and if so, visit it using that method. If the visitor is not an instance of the custom
-   * extension visitor, this method <b>MUST</b> call visitor.visit(binding).
-   *
-   * <p>Due to issues with generics, the type parameters of this method do not relate to the type of
-   * the provider. In practice, the 'B' type will always be a supertype of 'T'.
-   */
-  <B, V> V acceptExtensionVisitor(
-      BindingTargetVisitor<B, V> visitor, ProviderInstanceBinding<? extends B> binding);
+public interface ProviderWithExtensionVisitor<T>
+        extends Provider<T>
+{
+    /**
+     * Instructs the extension determine if the visitor is an instance of a custom extension visitor,
+     * and if so, visit it using that method. If the visitor is not an instance of the custom
+     * extension visitor, this method <b>MUST</b> call visitor.visit(binding).
+     *
+     * <p>Due to issues with generics, the type parameters of this method do not relate to the type of
+     * the provider. In practice, the 'B' type will always be a supertype of 'T'.
+     */
+    <B, V> V acceptExtensionVisitor(
+            BindingTargetVisitor<B, V> visitor,
+            ProviderInstanceBinding<? extends B> binding);
 }

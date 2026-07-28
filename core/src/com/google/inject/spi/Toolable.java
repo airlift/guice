@@ -16,14 +16,15 @@
 
 package com.google.inject.spi;
 
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
 import com.google.inject.Injector;
 import com.google.inject.Stage;
+
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Instructs an {@link Injector} running in {@link Stage#TOOL} that a method should be injected.

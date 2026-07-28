@@ -16,13 +16,14 @@
 
 package com.google.inject.throwingproviders;
 
-import static java.lang.annotation.ElementType.CONSTRUCTOR;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
 import com.google.inject.Inject;
+
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+
+import static java.lang.annotation.ElementType.CONSTRUCTOR;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * A version of {@literal @}{@link Inject} designed for ThrowingProviders. Use by:

@@ -16,55 +16,67 @@
 
 package com.google.inject.internal;
 
-import static java.util.Objects.requireNonNull;
-
 import com.google.inject.Binder;
 import com.google.inject.Key;
 import com.google.inject.binder.AnnotatedElementBuilder;
+
 import java.lang.annotation.Annotation;
 
-/** For private binder's expose() method. */
-public class ExposureBuilder<T> implements AnnotatedElementBuilder {
-  private final Binder binder;
-  private final Object source;
-  private Key<T> key;
+import static java.util.Objects.requireNonNull;
 
-  public ExposureBuilder(Binder binder, Object source, Key<T> key) {
-    this.binder = binder;
-    this.source = source;
-    this.key = key;
-  }
+/**
+ * For private binder's expose() method.
+ */
+public class ExposureBuilder<T>
+        implements AnnotatedElementBuilder
+{
+    private final Binder binder;
+    private final Object source;
+    private Key<T> key;
 
-  protected void checkNotAnnotated() {
-    if (key.getAnnotationType() != null) {
-      binder.addError(AbstractBindingBuilder.ANNOTATION_ALREADY_SPECIFIED);
+    public ExposureBuilder(Binder binder, Object source, Key<T> key)
+    {
+        this.binder = binder;
+        this.source = source;
+        this.key = key;
     }
-  }
 
-  @Override
-  public void annotatedWith(Class<? extends Annotation> annotationType) {
-    requireNonNull(annotationType, "annotationType");
-    checkNotAnnotated();
-    key = key.withAnnotation(annotationType);
-  }
+    protected void checkNotAnnotated()
+    {
+        if (key.getAnnotationType() != null) {
+            binder.addError(AbstractBindingBuilder.ANNOTATION_ALREADY_SPECIFIED);
+        }
+    }
 
-  @Override
-  public void annotatedWith(Annotation annotation) {
-    requireNonNull(annotation, "annotation");
-    checkNotAnnotated();
-    key = key.withAnnotation(annotation);
-  }
+    @Override
+    public void annotatedWith(Class<? extends Annotation> annotationType)
+    {
+        requireNonNull(annotationType, "annotationType");
+        checkNotAnnotated();
+        key = key.withAnnotation(annotationType);
+    }
 
-  public Key<?> getKey() {
-    return key;
-  }
+    @Override
+    public void annotatedWith(Annotation annotation)
+    {
+        requireNonNull(annotation, "annotation");
+        checkNotAnnotated();
+        key = key.withAnnotation(annotation);
+    }
 
-  public Object getSource() {
-    return source;
-  }
+    public Key<?> getKey()
+    {
+        return key;
+    }
 
-  @Override
-  public String toString() {
-    return "AnnotatedElementBuilder";
-  }
+    public Object getSource()
+    {
+        return source;
+    }
+
+    @Override
+    public String toString()
+    {
+        return "AnnotatedElementBuilder";
+    }
 }

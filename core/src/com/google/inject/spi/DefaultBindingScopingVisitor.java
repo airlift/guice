@@ -17,6 +17,7 @@
 package com.google.inject.spi;
 
 import com.google.inject.Scope;
+
 import java.lang.annotation.Annotation;
 
 /**
@@ -24,34 +25,42 @@ import java.lang.annotation.Annotation;
  * returning its result.
  *
  * @param <V> any type to be returned by the visit method. Use {@link Void} with {@code return null}
- *     if no return type is needed.
+ *         if no return type is needed.
  * @author jessewilson@google.com (Jesse Wilson)
  * @since 2.0
  */
-public class DefaultBindingScopingVisitor<V> implements BindingScopingVisitor<V> {
+public class DefaultBindingScopingVisitor<V>
+        implements BindingScopingVisitor<V>
+{
+    /**
+     * Default visit implementation. Returns {@code null}.
+     */
+    protected V visitOther()
+    {
+        return null;
+    }
 
-  /** Default visit implementation. Returns {@code null}. */
-  protected V visitOther() {
-    return null;
-  }
+    @Override
+    public V visitEagerSingleton()
+    {
+        return visitOther();
+    }
 
-  @Override
-  public V visitEagerSingleton() {
-    return visitOther();
-  }
+    @Override
+    public V visitScope(Scope scope)
+    {
+        return visitOther();
+    }
 
-  @Override
-  public V visitScope(Scope scope) {
-    return visitOther();
-  }
+    @Override
+    public V visitScopeAnnotation(Class<? extends Annotation> scopeAnnotation)
+    {
+        return visitOther();
+    }
 
-  @Override
-  public V visitScopeAnnotation(Class<? extends Annotation> scopeAnnotation) {
-    return visitOther();
-  }
-
-  @Override
-  public V visitNoScoping() {
-    return visitOther();
-  }
+    @Override
+    public V visitNoScoping()
+    {
+        return visitOther();
+    }
 }

@@ -22,6 +22,7 @@ import com.google.inject.internal.Annotations;
 import com.google.inject.internal.ProviderMethod;
 import com.google.inject.internal.util.StackTraceElements;
 import com.google.inject.spi.ElementSource;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Member;
@@ -35,107 +36,123 @@ import java.util.List;
  *
  * @author phopkins@gmail.com (Pete Hopkins)
  */
-public class ShortNameFactory implements NameFactory {
-  @Override
-  public String getMemberName(Member member) {
-    if (member instanceof Constructor) {
-      return "<init>";
-    } else if (member instanceof Method) {
-      return "#" + member.getName() + "(...)";
-    } else {
-      return member.getName();
-    }
-  }
-
-  @Override
-  public String getAnnotationName(Key<?> key) {
-    Annotation annotation = key.getAnnotation();
-    Class<? extends Annotation> annotationType = key.getAnnotationType();
-    if (annotation != null) {
-      annotationType = annotation.annotationType();
-
-      String annotationString = annotation.toString();
-      String canonicalName =
-          Annotations.annotationInstanceClassString(annotationType, /* includePackage = */ true)
-              .substring(1);
-      String simpleName = annotationType.getSimpleName();
-      return annotationString.replace(canonicalName, simpleName).replace("()", "");
-    } else if (annotationType != null) {
-      return "@" + annotationType.getSimpleName();
-    } else {
-      return "";
-    }
-  }
-
-  @Override
-  public String getClassName(Key<?> key) {
-    TypeLiteral<?> typeLiteral = key.getTypeLiteral();
-    return stripPackages(typeLiteral.toString());
-  }
-
-  @Override
-  public String getInstanceName(Object instance) {
-    if (instance instanceof ProviderMethod) {
-      return getMethodString(((ProviderMethod<?>) instance).getMethod());
+public class ShortNameFactory
+        implements NameFactory
+{
+    @Override
+    public String getMemberName(Member member)
+    {
+        if (member instanceof Constructor) {
+            return "<init>";
+        }
+        else if (member instanceof Method) {
+            return "#" + member.getName() + "(...)";
+        }
+        else {
+            return member.getName();
+        }
     }
 
-    if (instance instanceof CharSequence) {
-      return "\"" + instance + "\"";
+    @Override
+    public String getAnnotationName(Key<?> key)
+    {
+        Annotation annotation = key.getAnnotation();
+        Class<? extends Annotation> annotationType = key.getAnnotationType();
+        if (annotation != null) {
+            annotationType = annotation.annotationType();
+
+            String annotationString = annotation.toString();
+            String canonicalName =
+                    Annotations.annotationInstanceClassString(annotationType, /* includePackage = */ true)
+                            .substring(1);
+            String simpleName = annotationType.getSimpleName();
+            return annotationString.replace(canonicalName, simpleName).replace("()", "");
+        }
+        else if (annotationType != null) {
+            return "@" + annotationType.getSimpleName();
+        }
+        else {
+            return "";
+        }
     }
 
-    try {
-      if (instance.getClass().getMethod("toString").getDeclaringClass().equals(Object.class)) {
-        return stripPackages(instance.getClass().getName());
-      }
-    } catch (SecurityException e) {
-      throw new AssertionError(e);
-    } catch (NoSuchMethodException e) {
-      throw new AssertionError(e);
+    @Override
+    public String getClassName(Key<?> key)
+    {
+        TypeLiteral<?> typeLiteral = key.getTypeLiteral();
+        return stripPackages(typeLiteral.toString());
     }
 
-    return instance.toString();
-  }
+    @Override
+    public String getInstanceName(Object instance)
+    {
+        if (instance instanceof ProviderMethod) {
+            return getMethodString(((ProviderMethod<?>) instance).getMethod());
+        }
 
-  /**
-   * Returns a name for a Guice "source" object. This will typically be either a {@link
-   * StackTraceElement} for when the binding is made to the instance, or a {@link Method} when a
-   * provider method is used.
-   */
-  @Override
-  public String getSourceName(Object source) {
-    if (source instanceof ElementSource) {
-      source = ((ElementSource) source).getDeclaringSource();
-    }
-    if (source instanceof Method) {
-      source = StackTraceElements.forMember((Method) source);
-    }
+        if (instance instanceof CharSequence) {
+            return "\"" + instance + "\"";
+        }
 
-    if (source instanceof StackTraceElement) {
-      return getFileString((StackTraceElement) source);
-    }
+        try {
+            if (instance.getClass().getMethod("toString").getDeclaringClass().equals(Object.class)) {
+                return stripPackages(instance.getClass().getName());
+            }
+        }
+        catch (SecurityException e) {
+            throw new AssertionError(e);
+        }
+        catch (NoSuchMethodException e) {
+            throw new AssertionError(e);
+        }
 
-    return stripPackages(source.toString());
-  }
-
-  protected String getFileString(StackTraceElement stackTraceElement) {
-    return stackTraceElement.getFileName() + ":" + stackTraceElement.getLineNumber();
-  }
-
-  protected String getMethodString(Method method) {
-    List<String> paramStrings = new ArrayList<>();
-    for (Class<?> paramType : method.getParameterTypes()) {
-      paramStrings.add(paramType.getSimpleName());
+        return instance.toString();
     }
 
-    String paramString = String.join(", ", paramStrings);
-    return "#" + method.getName() + "(" + paramString + ")";
-  }
+    /**
+     * Returns a name for a Guice "source" object. This will typically be either a {@link
+     * StackTraceElement} for when the binding is made to the instance, or a {@link Method} when a
+     * provider method is used.
+     */
+    @Override
+    public String getSourceName(Object source)
+    {
+        if (source instanceof ElementSource) {
+            source = ((ElementSource) source).getDeclaringSource();
+        }
+        if (source instanceof Method) {
+            source = StackTraceElements.forMember((Method) source);
+        }
 
-  /**
-   * Eliminates runs of lowercase characters and numbers separated by periods. Seems to remove
-   * packages from fully-qualified type names pretty well.
-   */
-  private String stripPackages(String str) {
-    return str.replaceAll("(^|[< .\\(])([a-z0-9]+\\.)*", "$1");
-  }
+        if (source instanceof StackTraceElement) {
+            return getFileString((StackTraceElement) source);
+        }
+
+        return stripPackages(source.toString());
+    }
+
+    protected String getFileString(StackTraceElement stackTraceElement)
+    {
+        return stackTraceElement.getFileName() + ":" + stackTraceElement.getLineNumber();
+    }
+
+    protected String getMethodString(Method method)
+    {
+        List<String> paramStrings = new ArrayList<>();
+        for (Class<?> paramType : method.getParameterTypes()) {
+            paramStrings.add(paramType.getSimpleName());
+        }
+
+        String paramString = String.join(", ", paramStrings);
+        return "#" + method.getName() + "(" + paramString + ")";
+    }
+
+    /**
+     * Eliminates runs of lowercase characters and numbers separated by periods. Seems to remove
+     * packages from fully-qualified type names pretty well.
+     */
+    private String stripPackages(String str)
+    {
+        return str.replaceAll("(^|[< .\\(])([a-z0-9]+\\.)*", "$1");
+    }
 }

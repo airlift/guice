@@ -25,4 +25,5 @@ import com.google.inject.throwingproviders.ThrowingProviderBinder.SecondaryBinde
  *
  * @author sameb@google.com (Sam Berlin)
  */
-interface CheckedProviderWithDependencies<T> extends CheckedProvider<T>, HasDependencies {}
+interface CheckedProviderWithDependencies<T>
+        extends CheckedProvider<T>, HasDependencies {}

@@ -21,6 +21,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,61 +32,71 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @author jessewilson@google.com (Jesse Wilson)
  */
-public abstract class FailableCache<K, V> {
+public abstract class FailableCache<K, V>
+{
+    private final Set<K> loadingSet = ConcurrentHashMap.newKeySet();
 
-  private final Set<K> loadingSet = ConcurrentHashMap.newKeySet();
+    private final LoadingCache<K, Object> delegate =
+            CacheBuilder.newBuilder()
+                    .build(
+                            new CacheLoader<K, Object>()
+                            {
+                                @Override
+                                public Object load(K key)
+                                {
+                                    loadingSet.add(key);
+                                    Errors errors = new Errors();
+                                    V result = null;
+                                    try {
+                                        result = FailableCache.this.create(key, errors);
+                                    }
+                                    catch (ErrorsException e) {
+                                        errors.merge(e.getErrors());
+                                    }
+                                    finally {
+                                        loadingSet.remove(key);
+                                    }
+                                    return errors.hasErrors() ? errors : result;
+                                }
+                            });
 
-  private final LoadingCache<K, Object> delegate =
-      CacheBuilder.newBuilder()
-          .build(
-              new CacheLoader<K, Object>() {
-                @Override
-                public Object load(K key) {
-                  loadingSet.add(key);
-                  Errors errors = new Errors();
-                  V result = null;
-                  try {
-                    result = FailableCache.this.create(key, errors);
-                  } catch (ErrorsException e) {
-                    errors.merge(e.getErrors());
-                  } finally {
-                    loadingSet.remove(key);
-                  }
-                  return errors.hasErrors() ? errors : result;
-                }
-              });
+    protected abstract V create(K key, Errors errors) throws ErrorsException;
 
-  protected abstract V create(K key, Errors errors) throws ErrorsException;
-
-  public V get(K key, Errors errors) throws ErrorsException {
-    Object resultOrError = delegate.getUnchecked(key);
-    if (resultOrError instanceof Errors) {
-      errors.merge((Errors) resultOrError);
-      throw errors.toException();
-    } else {
-      @SuppressWarnings("unchecked") // create returned a non-error result, so this is safe
-      V result = (V) resultOrError;
-      return result;
+    public V get(K key, Errors errors)
+            throws ErrorsException
+    {
+        Object resultOrError = delegate.getUnchecked(key);
+        if (resultOrError instanceof Errors) {
+            errors.merge((Errors) resultOrError);
+            throw errors.toException();
+        }
+        else {
+            @SuppressWarnings("unchecked") // create returned a non-error result, so this is safe
+            V result = (V) resultOrError;
+            return result;
+        }
     }
-  }
 
-  boolean remove(K key) {
-    return delegate.asMap().remove(key) != null;
-  }
+    boolean remove(K key)
+    {
+        return delegate.asMap().remove(key) != null;
+    }
 
-  boolean isLoading(K key) {
-    return loadingSet.contains(key);
-  }
+    boolean isLoading(K key)
+    {
+        return loadingSet.contains(key);
+    }
 
-  Map<K, V> asMap() {
-    return Maps.transformValues(
-        Maps.filterValues(
-            ImmutableMap.copyOf(delegate.asMap()),
-            resultOrError -> !(resultOrError instanceof Errors)),
-        resultOrError -> {
-          @SuppressWarnings("unchecked") // create returned a non-error result, so this is safe
-          V result = (V) resultOrError;
-          return result;
-        });
-  }
+    Map<K, V> asMap()
+    {
+        return Maps.transformValues(
+                Maps.filterValues(
+                        ImmutableMap.copyOf(delegate.asMap()),
+                        resultOrError -> !(resultOrError instanceof Errors)),
+                resultOrError -> {
+                    @SuppressWarnings("unchecked") // create returned a non-error result, so this is safe
+                    V result = (V) resultOrError;
+                    return result;
+                });
+    }
 }

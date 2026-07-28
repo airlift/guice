@@ -23,40 +23,49 @@ import java.util.Map;
  *
  * @author sameb@google.com (Sam Berlin)
  */
-class AbstractServletModuleBinding<T> implements ServletModuleBinding {
+class AbstractServletModuleBinding<T>
+        implements ServletModuleBinding
+{
+    private final Map<String, String> initParams;
+    private final T target;
+    private final UriPatternMatcher patternMatcher;
 
-  private final Map<String, String> initParams;
-  private final T target;
-  private final UriPatternMatcher patternMatcher;
+    AbstractServletModuleBinding(
+            Map<String, String> initParams,
+            T target,
+            UriPatternMatcher patternMatcher)
+    {
+        this.initParams = initParams;
+        this.target = target;
+        this.patternMatcher = patternMatcher;
+    }
 
-  AbstractServletModuleBinding(
-      Map<String, String> initParams, T target, UriPatternMatcher patternMatcher) {
-    this.initParams = initParams;
-    this.target = target;
-    this.patternMatcher = patternMatcher;
-  }
+    @Override
+    public Map<String, String> getInitParams()
+    {
+        return initParams;
+    }
 
-  @Override
-  public Map<String, String> getInitParams() {
-    return initParams;
-  }
+    @Override
+    public String getPattern()
+    {
+        return patternMatcher.getOriginalPattern();
+    }
 
-  @Override
-  public String getPattern() {
-    return patternMatcher.getOriginalPattern();
-  }
+    protected T getTarget()
+    {
+        return target;
+    }
 
-  protected T getTarget() {
-    return target;
-  }
+    @Override
+    public UriPatternType getUriPatternType()
+    {
+        return patternMatcher.getPatternType();
+    }
 
-  @Override
-  public UriPatternType getUriPatternType() {
-    return patternMatcher.getPatternType();
-  }
-
-  @Override
-  public boolean matchesUri(String uri) {
-    return patternMatcher.matches(uri);
-  }
+    @Override
+    public boolean matchesUri(String uri)
+    {
+        return patternMatcher.matches(uri);
+    }
 }

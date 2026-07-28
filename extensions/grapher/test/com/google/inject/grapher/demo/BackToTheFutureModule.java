@@ -27,25 +27,29 @@ import com.google.inject.name.Names;
  * @see InjectorGrapherDemo
  * @author phopkins@gmail.com (Pete Hopkins)
  */
-public class BackToTheFutureModule extends AbstractModule {
-  @Override
-  protected void configure() {
-    bind(DeLorian.class);
+public class BackToTheFutureModule
+        extends AbstractModule
+{
+    @Override
+    protected void configure()
+    {
+        bind(DeLorian.class);
 
-    bind(EnergySource.class).annotatedWith(Nuclear.class).to(Plutonium.class);
-    bind(EnergySource.class).annotatedWith(Renewable.class).to(Lightning.class);
+        bind(EnergySource.class).annotatedWith(Nuclear.class).to(Plutonium.class);
+        bind(EnergySource.class).annotatedWith(Renewable.class).to(Lightning.class);
 
-    bind(Plutonium.class).toProvider(PlutoniumProvider.class);
-    bind(PinballParts.class).annotatedWith(Used.class).toInstance(new PinballParts());
+        bind(Plutonium.class).toProvider(PlutoniumProvider.class);
+        bind(PinballParts.class).annotatedWith(Used.class).toInstance(new PinballParts());
 
-    bind(Person.class).annotatedWith(Driver.class).to(MartyMcFly.class).in(Singleton.class);
-    bind(Person.class).annotatedWith(Inventor.class).to(DocBrown.class).in(Singleton.class);
+        bind(Person.class).annotatedWith(Driver.class).to(MartyMcFly.class).in(Singleton.class);
+        bind(Person.class).annotatedWith(Inventor.class).to(DocBrown.class).in(Singleton.class);
 
-    bindConstant().annotatedWith(Names.named("year")).to("1955");
-  }
+        bindConstant().annotatedWith(Names.named("year")).to("1955");
+    }
 
-  @Provides
-  public FluxCapacitor provideFluxCapacitor(EnergySource energySource) {
-    return null;
-  }
+    @Provides
+    public FluxCapacitor provideFluxCapacitor(EnergySource energySource)
+    {
+        return null;
+    }
 }

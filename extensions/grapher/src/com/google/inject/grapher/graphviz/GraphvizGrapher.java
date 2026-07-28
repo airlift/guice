@@ -16,8 +16,6 @@
 
 package com.google.inject.grapher.graphviz;
 
-import static java.util.stream.Collectors.joining;
-
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Key;
@@ -30,6 +28,7 @@ import com.google.inject.grapher.InterfaceNode;
 import com.google.inject.grapher.NameFactory;
 import com.google.inject.grapher.NodeId;
 import com.google.inject.spi.InjectionPoint;
+
 import java.io.PrintWriter;
 import java.lang.reflect.Member;
 import java.util.ArrayList;
@@ -37,6 +36,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import static java.util.stream.Collectors.joining;
 
 /**
  * {@link com.google.inject.grapher.InjectorGrapher} implementation that writes out a Graphviz DOT
@@ -47,287 +48,312 @@ import java.util.Map.Entry;
  * @author phopkins@gmail.com (Pete Hopkins)
  * @since 4.0
  */
-public class GraphvizGrapher extends AbstractInjectorGrapher {
-  private final Map<NodeId, GraphvizNode> nodes = new HashMap<>();
-  private final List<GraphvizEdge> edges = new ArrayList<>();
-  private final NameFactory nameFactory;
-  private final PortIdFactory portIdFactory;
+public class GraphvizGrapher
+        extends AbstractInjectorGrapher
+{
+    private final Map<NodeId, GraphvizNode> nodes = new HashMap<>();
+    private final List<GraphvizEdge> edges = new ArrayList<>();
+    private final NameFactory nameFactory;
+    private final PortIdFactory portIdFactory;
 
-  private PrintWriter out;
-  private String rankdir = "TB";
+    private PrintWriter out;
+    private String rankdir = "TB";
 
-  @Inject
-  GraphvizGrapher(@Graphviz NameFactory nameFactory, @Graphviz PortIdFactory portIdFactory) {
-    this.nameFactory = nameFactory;
-    this.portIdFactory = portIdFactory;
-  }
-
-  @Override
-  protected void reset() {
-    nodes.clear();
-    edges.clear();
-  }
-
-  public void setOut(PrintWriter out) {
-    this.out = out;
-  }
-
-  public void setRankdir(String rankdir) {
-    this.rankdir = rankdir;
-  }
-
-  @Override
-  protected void postProcess() {
-    start();
-
-    for (GraphvizNode node : nodes.values()) {
-      renderNode(node);
+    @Inject
+    GraphvizGrapher(@Graphviz NameFactory nameFactory, @Graphviz PortIdFactory portIdFactory)
+    {
+        this.nameFactory = nameFactory;
+        this.portIdFactory = portIdFactory;
     }
 
-    for (GraphvizEdge edge : edges) {
-      renderEdge(edge);
+    @Override
+    protected void reset()
+    {
+        nodes.clear();
+        edges.clear();
     }
 
-    finish();
-
-    out.flush();
-  }
-
-  protected Map<String, String> getGraphAttributes() {
-    Map<String, String> attrs = new HashMap<>();
-    attrs.put("rankdir", rankdir);
-    return attrs;
-  }
-
-  protected void start() {
-    out.println("digraph injector {");
-
-    Map<String, String> attrs = getGraphAttributes();
-    out.println("graph " + getAttrString(attrs) + ";");
-  }
-
-  protected void finish() {
-    out.println("}");
-  }
-
-  protected void renderNode(GraphvizNode node) {
-    Map<String, String> attrs = getNodeAttributes(node);
-    out.println(node.getIdentifier() + " " + getAttrString(attrs));
-  }
-
-  protected Map<String, String> getNodeAttributes(GraphvizNode node) {
-    Map<String, String> attrs = new HashMap<>();
-
-    attrs.put("label", getNodeLabel(node));
-    // remove most of the margin because the table has internal padding
-    attrs.put("margin", "\"0.02,0\"");
-    attrs.put("shape", node.getShape().toString());
-    attrs.put("style", node.getStyle().toString());
-
-    return attrs;
-  }
-
-  /**
-   * Creates the "label" for a node. This is a string of HTML that defines a table with a heading at
-   * the top and (in the case of {@link ImplementationNode}s) rows for each of the member fields.
-   */
-  protected String getNodeLabel(GraphvizNode node) {
-    String cellborder = node.getStyle() == NodeStyle.INVISIBLE ? "1" : "0";
-
-    StringBuilder html = new StringBuilder();
-    html.append("<");
-    html.append("<table cellspacing=\"0\" cellpadding=\"5\" cellborder=\"");
-    html.append(cellborder).append("\" border=\"0\">");
-
-    html.append("<tr>").append("<td align=\"left\" port=\"header\" ");
-    html.append("bgcolor=\"" + node.getHeaderBackgroundColor() + "\">");
-
-    String subtitle = String.join("<br align=\"left\"/>", node.getSubtitles());
-    if (subtitle.length() != 0) {
-      html.append("<font color=\"").append(node.getHeaderTextColor());
-      html.append("\" point-size=\"10\">");
-      html.append(subtitle).append("<br align=\"left\"/>").append("</font>");
+    public void setOut(PrintWriter out)
+    {
+        this.out = out;
     }
 
-    html.append("<font color=\"" + node.getHeaderTextColor() + "\">");
-    html.append(htmlEscape(node.getTitle())).append("<br align=\"left\"/>");
-    html.append("</font>").append("</td>").append("</tr>");
-
-    for (Map.Entry<String, String> field : node.getFields().entrySet()) {
-      html.append("<tr>");
-      html.append("<td align=\"left\" port=\"").append(htmlEscape(field.getKey())).append("\">");
-      html.append(htmlEscape(field.getValue()));
-      html.append("</td>").append("</tr>");
+    public void setRankdir(String rankdir)
+    {
+        this.rankdir = rankdir;
     }
 
-    html.append("</table>");
-    html.append(">");
-    return html.toString();
-  }
+    @Override
+    protected void postProcess()
+    {
+        start();
 
-  protected void renderEdge(GraphvizEdge edge) {
-    Map<String, String> attrs = getEdgeAttributes(edge);
+        for (GraphvizNode node : nodes.values()) {
+            renderNode(node);
+        }
 
-    String tailId =
-        getEdgeEndPoint(
-            nodes.get(edge.getTailNodeId()).getIdentifier(),
-            edge.getTailPortId(),
-            edge.getTailCompassPoint());
+        for (GraphvizEdge edge : edges) {
+            renderEdge(edge);
+        }
 
-    String headId =
-        getEdgeEndPoint(
-            nodes.get(edge.getHeadNodeId()).getIdentifier(),
-            edge.getHeadPortId(),
-            edge.getHeadCompassPoint());
+        finish();
 
-    out.println(tailId + " -> " + headId + " " + getAttrString(attrs));
-  }
-
-  protected Map<String, String> getEdgeAttributes(GraphvizEdge edge) {
-    Map<String, String> attrs = new HashMap<>();
-
-    attrs.put("arrowhead", getArrowString(edge.getArrowHead()));
-    attrs.put("arrowtail", getArrowString(edge.getArrowTail()));
-    attrs.put("style", edge.getStyle().toString());
-
-    return attrs;
-  }
-
-  private String getAttrString(Map<String, String> attrs) {
-    List<String> attrList = new ArrayList<>();
-
-    for (Entry<String, String> attr : attrs.entrySet()) {
-      String value = attr.getValue();
-
-      if (value != null) {
-        attrList.add(attr.getKey() + "=" + value);
-      }
+        out.flush();
     }
 
-    return "[" + String.join(", ", attrList) + "]";
-  }
-
-  /**
-   * Turns a {@link List} of {@link ArrowType}s into a {@link String} that represents combining
-   * them. With Graphviz, that just means concatenating them.
-   */
-  protected String getArrowString(List<ArrowType> arrows) {
-    return arrows.stream().map(Object::toString).collect(joining());
-  }
-
-  protected String getEdgeEndPoint(String nodeId, String portId, CompassPoint compassPoint) {
-    List<String> portStrings = new ArrayList<>();
-    portStrings.add(nodeId);
-
-    if (portId != null) {
-      portStrings.add(portId);
+    protected Map<String, String> getGraphAttributes()
+    {
+        Map<String, String> attrs = new HashMap<>();
+        attrs.put("rankdir", rankdir);
+        return attrs;
     }
 
-    if (compassPoint != null) {
-      portStrings.add(compassPoint.toString());
+    protected void start()
+    {
+        out.println("digraph injector {");
+
+        Map<String, String> attrs = getGraphAttributes();
+        out.println("graph " + getAttrString(attrs) + ";");
     }
 
-    return String.join(":", portStrings);
-  }
-
-  protected String htmlEscape(String str) {
-    return str.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
-  }
-
-  protected List<String> htmlEscape(List<String> elements) {
-    List<String> escaped = new ArrayList<>();
-    for (String element : elements) {
-      escaped.add(htmlEscape(element));
-    }
-    return escaped;
-  }
-
-  @Override
-  protected void newInterfaceNode(InterfaceNode node) {
-    // TODO(user): Show the Module on the graph, which comes from the
-    // class name when source is a StackTraceElement.
-
-    NodeId nodeId = node.getId();
-    GraphvizNode gnode = new GraphvizNode(nodeId);
-    gnode.setStyle(NodeStyle.DASHED);
-    Key<?> key = nodeId.getKey();
-    gnode.setTitle(nameFactory.getClassName(key));
-    gnode.addSubtitle(0, nameFactory.getAnnotationName(key));
-    addNode(gnode);
-  }
-
-  @Override
-  protected void newImplementationNode(ImplementationNode node) {
-    NodeId nodeId = node.getId();
-    GraphvizNode gnode = new GraphvizNode(nodeId);
-    gnode.setStyle(NodeStyle.SOLID);
-
-    gnode.setHeaderBackgroundColor("#000000");
-    gnode.setHeaderTextColor("#ffffff");
-    gnode.setTitle(nameFactory.getClassName(nodeId.getKey()));
-
-    for (Member member : node.getMembers()) {
-      gnode.addField(portIdFactory.getPortId(member), nameFactory.getMemberName(member));
+    protected void finish()
+    {
+        out.println("}");
     }
 
-    addNode(gnode);
-  }
-
-  @Override
-  protected void newInstanceNode(InstanceNode node) {
-    NodeId nodeId = node.getId();
-    GraphvizNode gnode = new GraphvizNode(nodeId);
-    gnode.setStyle(NodeStyle.SOLID);
-
-    gnode.setHeaderBackgroundColor("#000000");
-    gnode.setHeaderTextColor("#ffffff");
-    gnode.setTitle(nameFactory.getClassName(nodeId.getKey()));
-
-    gnode.addSubtitle(0, nameFactory.getSourceName(node.getSource()));
-
-    gnode.setHeaderBackgroundColor("#aaaaaa");
-    gnode.setHeaderTextColor("#ffffff");
-    gnode.setTitle(nameFactory.getInstanceName(node.getInstance()));
-
-    for (Member member : node.getMembers()) {
-      gnode.addField(portIdFactory.getPortId(member), nameFactory.getMemberName(member));
+    protected void renderNode(GraphvizNode node)
+    {
+        Map<String, String> attrs = getNodeAttributes(node);
+        out.println(node.getIdentifier() + " " + getAttrString(attrs));
     }
 
-    addNode(gnode);
-  }
+    protected Map<String, String> getNodeAttributes(GraphvizNode node)
+    {
+        Map<String, String> attrs = new HashMap<>();
 
-  @Override
-  protected void newDependencyEdge(DependencyEdge edge) {
-    GraphvizEdge gedge = new GraphvizEdge(edge.getFromId(), edge.getToId());
-    InjectionPoint fromPoint = edge.getInjectionPoint();
-    if (fromPoint == null) {
-      gedge.setTailPortId("header");
-    } else {
-      gedge.setTailPortId(portIdFactory.getPortId(fromPoint.getMember()));
-    }
-    gedge.setArrowHead(ImmutableList.of(ArrowType.NORMAL));
-    gedge.setTailCompassPoint(CompassPoint.EAST);
+        attrs.put("label", getNodeLabel(node));
+        // remove most of the margin because the table has internal padding
+        attrs.put("margin", "\"0.02,0\"");
+        attrs.put("shape", node.getShape().toString());
+        attrs.put("style", node.getStyle().toString());
 
-    edges.add(gedge);
-  }
-
-  @Override
-  protected void newBindingEdge(BindingEdge edge) {
-    GraphvizEdge gedge = new GraphvizEdge(edge.getFromId(), edge.getToId());
-    gedge.setStyle(EdgeStyle.DASHED);
-    switch (edge.getType()) {
-      case NORMAL -> gedge.setArrowHead(ImmutableList.of(ArrowType.NORMAL_OPEN));
-      case PROVIDER ->
-          gedge.setArrowHead(ImmutableList.of(ArrowType.NORMAL_OPEN, ArrowType.NORMAL_OPEN));
-      case CONVERTED_CONSTANT ->
-          gedge.setArrowHead(ImmutableList.of(ArrowType.NORMAL_OPEN, ArrowType.DOT_OPEN));
+        return attrs;
     }
 
-    edges.add(gedge);
-  }
+    /**
+     * Creates the "label" for a node. This is a string of HTML that defines a table with a heading at
+     * the top and (in the case of {@link ImplementationNode}s) rows for each of the member fields.
+     */
+    protected String getNodeLabel(GraphvizNode node)
+    {
+        String cellborder = node.getStyle() == NodeStyle.INVISIBLE ? "1" : "0";
 
-  private void addNode(GraphvizNode node) {
-    node.setIdentifier("x" + nodes.size());
-    nodes.put(node.getNodeId(), node);
-  }
+        StringBuilder html = new StringBuilder();
+        html.append("<");
+        html.append("<table cellspacing=\"0\" cellpadding=\"5\" cellborder=\"");
+        html.append(cellborder).append("\" border=\"0\">");
+
+        html.append("<tr>").append("<td align=\"left\" port=\"header\" ");
+        html.append("bgcolor=\"" + node.getHeaderBackgroundColor() + "\">");
+
+        String subtitle = String.join("<br align=\"left\"/>", node.getSubtitles());
+        if (subtitle.length() != 0) {
+            html.append("<font color=\"").append(node.getHeaderTextColor());
+            html.append("\" point-size=\"10\">");
+            html.append(subtitle).append("<br align=\"left\"/>").append("</font>");
+        }
+
+        html.append("<font color=\"" + node.getHeaderTextColor() + "\">");
+        html.append(htmlEscape(node.getTitle())).append("<br align=\"left\"/>");
+        html.append("</font>").append("</td>").append("</tr>");
+
+        for (Map.Entry<String, String> field : node.getFields().entrySet()) {
+            html.append("<tr>");
+            html.append("<td align=\"left\" port=\"").append(htmlEscape(field.getKey())).append("\">");
+            html.append(htmlEscape(field.getValue()));
+            html.append("</td>").append("</tr>");
+        }
+
+        html.append("</table>");
+        html.append(">");
+        return html.toString();
+    }
+
+    protected void renderEdge(GraphvizEdge edge)
+    {
+        Map<String, String> attrs = getEdgeAttributes(edge);
+
+        String tailId =
+                getEdgeEndPoint(
+                        nodes.get(edge.getTailNodeId()).getIdentifier(),
+                        edge.getTailPortId(),
+                        edge.getTailCompassPoint());
+
+        String headId =
+                getEdgeEndPoint(
+                        nodes.get(edge.getHeadNodeId()).getIdentifier(),
+                        edge.getHeadPortId(),
+                        edge.getHeadCompassPoint());
+
+        out.println(tailId + " -> " + headId + " " + getAttrString(attrs));
+    }
+
+    protected Map<String, String> getEdgeAttributes(GraphvizEdge edge)
+    {
+        Map<String, String> attrs = new HashMap<>();
+
+        attrs.put("arrowhead", getArrowString(edge.getArrowHead()));
+        attrs.put("arrowtail", getArrowString(edge.getArrowTail()));
+        attrs.put("style", edge.getStyle().toString());
+
+        return attrs;
+    }
+
+    private String getAttrString(Map<String, String> attrs)
+    {
+        List<String> attrList = new ArrayList<>();
+
+        for (Entry<String, String> attr : attrs.entrySet()) {
+            String value = attr.getValue();
+
+            if (value != null) {
+                attrList.add(attr.getKey() + "=" + value);
+            }
+        }
+
+        return "[" + String.join(", ", attrList) + "]";
+    }
+
+    /**
+     * Turns a {@link List} of {@link ArrowType}s into a {@link String} that represents combining
+     * them. With Graphviz, that just means concatenating them.
+     */
+    protected String getArrowString(List<ArrowType> arrows)
+    {
+        return arrows.stream().map(Object::toString).collect(joining());
+    }
+
+    protected String getEdgeEndPoint(String nodeId, String portId, CompassPoint compassPoint)
+    {
+        List<String> portStrings = new ArrayList<>();
+        portStrings.add(nodeId);
+
+        if (portId != null) {
+            portStrings.add(portId);
+        }
+
+        if (compassPoint != null) {
+            portStrings.add(compassPoint.toString());
+        }
+
+        return String.join(":", portStrings);
+    }
+
+    protected String htmlEscape(String str)
+    {
+        return str.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+    }
+
+    protected List<String> htmlEscape(List<String> elements)
+    {
+        List<String> escaped = new ArrayList<>();
+        for (String element : elements) {
+            escaped.add(htmlEscape(element));
+        }
+        return escaped;
+    }
+
+    @Override
+    protected void newInterfaceNode(InterfaceNode node)
+    {
+        // TODO(user): Show the Module on the graph, which comes from the
+        // class name when source is a StackTraceElement.
+
+        NodeId nodeId = node.getId();
+        GraphvizNode gnode = new GraphvizNode(nodeId);
+        gnode.setStyle(NodeStyle.DASHED);
+        Key<?> key = nodeId.getKey();
+        gnode.setTitle(nameFactory.getClassName(key));
+        gnode.addSubtitle(0, nameFactory.getAnnotationName(key));
+        addNode(gnode);
+    }
+
+    @Override
+    protected void newImplementationNode(ImplementationNode node)
+    {
+        NodeId nodeId = node.getId();
+        GraphvizNode gnode = new GraphvizNode(nodeId);
+        gnode.setStyle(NodeStyle.SOLID);
+
+        gnode.setHeaderBackgroundColor("#000000");
+        gnode.setHeaderTextColor("#ffffff");
+        gnode.setTitle(nameFactory.getClassName(nodeId.getKey()));
+
+        for (Member member : node.getMembers()) {
+            gnode.addField(portIdFactory.getPortId(member), nameFactory.getMemberName(member));
+        }
+
+        addNode(gnode);
+    }
+
+    @Override
+    protected void newInstanceNode(InstanceNode node)
+    {
+        NodeId nodeId = node.getId();
+        GraphvizNode gnode = new GraphvizNode(nodeId);
+        gnode.setStyle(NodeStyle.SOLID);
+
+        gnode.setHeaderBackgroundColor("#000000");
+        gnode.setHeaderTextColor("#ffffff");
+        gnode.setTitle(nameFactory.getClassName(nodeId.getKey()));
+
+        gnode.addSubtitle(0, nameFactory.getSourceName(node.getSource()));
+
+        gnode.setHeaderBackgroundColor("#aaaaaa");
+        gnode.setHeaderTextColor("#ffffff");
+        gnode.setTitle(nameFactory.getInstanceName(node.getInstance()));
+
+        for (Member member : node.getMembers()) {
+            gnode.addField(portIdFactory.getPortId(member), nameFactory.getMemberName(member));
+        }
+
+        addNode(gnode);
+    }
+
+    @Override
+    protected void newDependencyEdge(DependencyEdge edge)
+    {
+        GraphvizEdge gedge = new GraphvizEdge(edge.getFromId(), edge.getToId());
+        InjectionPoint fromPoint = edge.getInjectionPoint();
+        if (fromPoint == null) {
+            gedge.setTailPortId("header");
+        }
+        else {
+            gedge.setTailPortId(portIdFactory.getPortId(fromPoint.getMember()));
+        }
+        gedge.setArrowHead(ImmutableList.of(ArrowType.NORMAL));
+        gedge.setTailCompassPoint(CompassPoint.EAST);
+
+        edges.add(gedge);
+    }
+
+    @Override
+    protected void newBindingEdge(BindingEdge edge)
+    {
+        GraphvizEdge gedge = new GraphvizEdge(edge.getFromId(), edge.getToId());
+        gedge.setStyle(EdgeStyle.DASHED);
+        switch (edge.getType()) {
+            case NORMAL -> gedge.setArrowHead(ImmutableList.of(ArrowType.NORMAL_OPEN));
+            case PROVIDER -> gedge.setArrowHead(ImmutableList.of(ArrowType.NORMAL_OPEN, ArrowType.NORMAL_OPEN));
+            case CONVERTED_CONSTANT -> gedge.setArrowHead(ImmutableList.of(ArrowType.NORMAL_OPEN, ArrowType.DOT_OPEN));
+        }
+
+        edges.add(gedge);
+    }
+
+    private void addNode(GraphvizNode node)
+    {
+        node.setIdentifier("x" + nodes.size());
+        nodes.put(node.getNodeId(), node);
+    }
 }

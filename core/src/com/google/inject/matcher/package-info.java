@@ -14,5 +14,7 @@
  * limitations under the License.
  */
 
-/** Used for matching things. Primarily used to pick out methods to which to apply interceptors. */
+/**
+ * Used for matching things. Primarily used to pick out methods to which to apply interceptors.
+ */
 package com.google.inject.matcher;

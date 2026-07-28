@@ -19,66 +19,80 @@ package com.google.inject;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.spi.ElementSource;
 import com.google.inject.util.Modules;
-import java.util.Arrays;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
 
-/** @author jessewilson@google.com (Jesse Wilson) */
-public class ModulesTest {
+import java.util.Arrays;
 
-  @Test
-  public void testCombineVarargs() {
-    Module combined = Modules.combine(newModule(1), newModule(2L), newModule((short) 3));
-    Injector injector = Guice.createInjector(combined);
-    assertEquals(1, injector.getInstance(Integer.class).intValue());
-    assertEquals(2L, injector.getInstance(Long.class).longValue());
-    assertEquals(3, injector.getInstance(Short.class).shortValue());
-  }
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-  @Test
-  public void testCombineIterable() {
-    Iterable<Module> modules = Arrays.asList(newModule(1), newModule(2L), newModule((short) 3));
-    Injector injector = Guice.createInjector(Modules.combine(modules));
-    assertEquals(1, injector.getInstance(Integer.class).intValue());
-    assertEquals(2, injector.getInstance(Long.class).longValue());
-    assertEquals(3, injector.getInstance(Short.class).shortValue());
-  }
+/**
+ * @author jessewilson@google.com (Jesse Wilson)
+ */
+public class ModulesTest
+{
+    @Test
+    public void testCombineVarargs()
+    {
+        Module combined = Modules.combine(newModule(1), newModule(2L), newModule((short) 3));
+        Injector injector = Guice.createInjector(combined);
+        assertEquals(1, injector.getInstance(Integer.class).intValue());
+        assertEquals(2L, injector.getInstance(Long.class).longValue());
+        assertEquals(3, injector.getInstance(Short.class).shortValue());
+    }
 
-  /** The module returned by Modules.combine shouldn't show up in binder sources. */
-  @Test
-  public void testCombineSources() {
-    final Module m1 = newModule(1);
-    final Module m2 = newModule(2L);
-    final Module combined1 = Modules.combine(m1, m2);
-    Module skipSourcesModule =
-        new AbstractModule() {
-          @Override
-          protected void configure() {
-            install(combined1);
-          }
+    @Test
+    public void testCombineIterable()
+    {
+        Iterable<Module> modules = Arrays.asList(newModule(1), newModule(2L), newModule((short) 3));
+        Injector injector = Guice.createInjector(Modules.combine(modules));
+        assertEquals(1, injector.getInstance(Integer.class).intValue());
+        assertEquals(2, injector.getInstance(Long.class).longValue());
+        assertEquals(3, injector.getInstance(Short.class).shortValue());
+    }
+
+    /**
+     * The module returned by Modules.combine shouldn't show up in binder sources.
+     */
+    @Test
+    public void testCombineSources()
+    {
+        final Module m1 = newModule(1);
+        final Module m2 = newModule(2L);
+        final Module combined1 = Modules.combine(m1, m2);
+        Module skipSourcesModule =
+                new AbstractModule()
+                {
+                    @Override
+                    protected void configure()
+                    {
+                        install(combined1);
+                    }
+                };
+        final Module combined2 = Modules.combine(skipSourcesModule); // returns skipSourcesModule
+        Injector injector = Guice.createInjector(combined2);
+        ElementSource source = (ElementSource) injector.getBinding(Integer.class).getSource();
+        assertEquals(3, source.getModuleClassNames().size());
+        assertEquals(
+                ImmutableList.of(
+                        m1.getClass().getName(),
+                        combined1.getClass().getName(),
+                        skipSourcesModule.getClass().getName()),
+                source.getModuleClassNames());
+        StackTraceElement stackTraceElement = (StackTraceElement) source.getDeclaringSource();
+        assertEquals(skipSourcesModule.getClass().getName(), stackTraceElement.getClassName());
+    }
+
+    private <T> Module newModule(final T toBind)
+    {
+        return new AbstractModule()
+        {
+            @Override
+            protected void configure()
+            {
+                @SuppressWarnings("unchecked") // getClass always needs a cast
+                Class<T> tClass = (Class<T>) toBind.getClass();
+                binder().skipSources(getClass()).bind(tClass).toInstance(toBind);
+            }
         };
-    final Module combined2 = Modules.combine(skipSourcesModule); // returns skipSourcesModule
-    Injector injector = Guice.createInjector(combined2);
-    ElementSource source = (ElementSource) injector.getBinding(Integer.class).getSource();
-    assertEquals(3, source.getModuleClassNames().size());
-    assertEquals(
-        ImmutableList.of(
-            m1.getClass().getName(),
-            combined1.getClass().getName(),
-            skipSourcesModule.getClass().getName()),
-        source.getModuleClassNames());
-    StackTraceElement stackTraceElement = (StackTraceElement) source.getDeclaringSource();
-    assertEquals(skipSourcesModule.getClass().getName(), stackTraceElement.getClassName());
-  }
-
-  private <T> Module newModule(final T toBind) {
-    return new AbstractModule() {
-      @Override
-      protected void configure() {
-        @SuppressWarnings("unchecked") // getClass always needs a cast
-        Class<T> tClass = (Class<T>) toBind.getClass();
-        binder().skipSources(getClass()).bind(tClass).toInstance(toBind);
-      }
-    };
-  }
+    }
 }

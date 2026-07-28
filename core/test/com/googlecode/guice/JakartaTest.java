@@ -16,9 +16,6 @@
 
 package com.googlecode.guice;
 
-import static com.google.inject.Asserts.assertContains;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
 import com.google.inject.AbstractModule;
 import com.google.inject.Binding;
 import com.google.inject.CreationException;
@@ -38,522 +35,613 @@ import jakarta.inject.Named;
 import jakarta.inject.Provider;
 import jakarta.inject.Qualifier;
 import jakarta.inject.Singleton;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.util.Set;
+
+import static com.google.inject.Asserts.assertContains;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.BeforeEach;
 
-public class JakartaTest {
+public class JakartaTest
+{
+    private final B b = new B();
+    private final C c = new C();
+    private final D d = new D();
+    private final E e = new E();
 
-  private final B b = new B();
-  private final C c = new C();
-  private final D d = new D();
-  private final E e = new E();
+    @BeforeEach
+    public void setUp()
+            throws Exception
+    {
+        J.nextInstanceId = 0;
+        K.nextInstanceId = 0;
+    }
 
-  @BeforeEach
-  public void setUp() throws Exception {
-    J.nextInstanceId = 0;
-    K.nextInstanceId = 0;
-  }
+    @Test
+    public void testInject()
+    {
+        Injector injector =
+                Guice.createInjector(
+                        new AbstractModule()
+                        {
+                            @Override
+                            protected void configure()
+                            {
+                                bind(B.class).toInstance(b);
+                                bind(C.class).toInstance(c);
+                                bind(D.class).toInstance(d);
+                                bind(E.class).toInstance(e);
+                                bind(A.class);
+                            }
+                        });
 
-  @Test
-  public void testInject() {
-    Injector injector =
+        A a = injector.getInstance(A.class);
+        assertSame(b, a.b);
+        assertSame(c, a.c);
+        assertSame(d, a.d);
+        assertSame(e, a.e);
+    }
+
+    @Test
+    public void testQualifiedInject()
+    {
+        Injector injector =
+                Guice.createInjector(
+                        new AbstractModule()
+                        {
+                            @Override
+                            protected void configure()
+                            {
+                                bind(B.class).annotatedWith(Names.named("jodie")).toInstance(b);
+                                bind(C.class).annotatedWith(Red.class).toInstance(c);
+                                bind(D.class).annotatedWith(RED).toInstance(d);
+                                bind(E.class).annotatedWith(Names.named("jesse")).toInstance(e);
+                                bind(F.class);
+                            }
+                        });
+
+        F f = injector.getInstance(F.class);
+        assertSame(b, f.b);
+        assertSame(c, f.c);
+        assertSame(d, f.d);
+        assertSame(e, f.e);
+    }
+
+    @Test
+    public void testProviderInject()
+    {
+        Injector injector =
+                Guice.createInjector(
+                        new AbstractModule()
+                        {
+                            @Override
+                            protected void configure()
+                            {
+                                bind(B.class).annotatedWith(Names.named("jodie")).toInstance(b);
+                                bind(C.class).toInstance(c);
+                                bind(D.class).annotatedWith(RED).toInstance(d);
+                                bind(E.class).toInstance(e);
+                                bind(G.class);
+                            }
+                        });
+
+        G g = injector.getInstance(G.class);
+        assertSame(b, g.bProvider.get());
+        assertSame(c, g.cProvider.get());
+        assertSame(d, g.dProvider.get());
+        assertSame(e, g.eProvider.get());
+    }
+
+    @Test
+    public void testScopeAnnotation()
+    {
+        final TestScope scope = new TestScope();
+
+        Injector injector =
+                Guice.createInjector(
+                        new AbstractModule()
+                        {
+                            @Override
+                            protected void configure()
+                            {
+                                bind(B.class).in(scope);
+                                bind(C.class).in(TestScoped.class);
+                                bindScope(TestScoped.class, scope);
+                            }
+                        });
+
+        B b = injector.getInstance(B.class);
+        assertSame(b, injector.getInstance(B.class));
+        assertSame(b, injector.getInstance(B.class));
+
+        C c = injector.getInstance(C.class);
+        assertSame(c, injector.getInstance(C.class));
+        assertSame(c, injector.getInstance(C.class));
+
+        H h = injector.getInstance(H.class);
+        assertSame(h, injector.getInstance(H.class));
+        assertSame(h, injector.getInstance(H.class));
+
+        scope.reset();
+
+        assertNotSame(b, injector.getInstance(B.class));
+        assertNotSame(c, injector.getInstance(C.class));
+        assertNotSame(h, injector.getInstance(H.class));
+    }
+
+    @Test
+    public void testSingleton()
+    {
+        Injector injector =
+                Guice.createInjector(
+                        new AbstractModule()
+                        {
+                            @Override
+                            protected void configure()
+                            {
+                                bind(B.class).in(Singleton.class);
+                            }
+                        });
+
+        B b = injector.getInstance(B.class);
+        assertSame(b, injector.getInstance(B.class));
+        assertSame(b, injector.getInstance(B.class));
+
+        J j = injector.getInstance(J.class);
+        assertSame(j, injector.getInstance(J.class));
+        assertSame(j, injector.getInstance(J.class));
+    }
+
+    @Test
+    public void testEagerSingleton()
+    {
         Guice.createInjector(
-            new AbstractModule() {
-              @Override
-              protected void configure() {
-                bind(B.class).toInstance(b);
-                bind(C.class).toInstance(c);
-                bind(D.class).toInstance(d);
-                bind(E.class).toInstance(e);
-                bind(A.class);
-              }
-            });
+                Stage.PRODUCTION,
+                new AbstractModule()
+                {
+                    @Override
+                    protected void configure()
+                    {
+                        bind(J.class);
+                        bind(K.class).in(Singleton.class);
+                    }
+                });
 
-    A a = injector.getInstance(A.class);
-    assertSame(b, a.b);
-    assertSame(c, a.c);
-    assertSame(d, a.d);
-    assertSame(e, a.e);
-  }
+        assertEquals(1, J.nextInstanceId);
+        assertEquals(1, K.nextInstanceId);
+    }
 
-  @Test
-  public void testQualifiedInject() {
-    Injector injector =
+    @Test
+    public void testScopesIsSingleton()
+    {
+        Injector injector =
+                Guice.createInjector(
+                        new AbstractModule()
+                        {
+                            @Override
+                            protected void configure()
+                            {
+                                bind(J.class);
+                                bind(K.class).in(Singleton.class);
+                            }
+                        });
+
+        assertTrue(Scopes.isSingleton(injector.getBinding(J.class)));
+        assertTrue(Scopes.isSingleton(injector.getBinding(K.class)));
+    }
+
+    @Test
+    public void testInjectingFinalFieldsIsForbidden()
+    {
+        try {
+            Guice.createInjector(
+                    new AbstractModule()
+                    {
+                        @Override
+                        protected void configure()
+                        {
+                            bind(L.class);
+                        }
+                    });
+            fail();
+        }
+        catch (CreationException expected) {
+            assertContains(expected.getMessage(), "Injected field JakartaTest$L.b cannot be final.");
+        }
+    }
+
+    @Test
+    public void testInjectingAbstractMethodsIsForbidden()
+    {
+        try {
+            Guice.createInjector(
+                    new AbstractModule()
+                    {
+                        @Override
+                        protected void configure()
+                        {
+                            bind(M.class);
+                        }
+                    });
+            fail();
+        }
+        catch (CreationException expected) {
+            assertContains(
+                    expected.getMessage(),
+                    "Injected method JakartaTest$AbstractM.setB() cannot be abstract.");
+        }
+    }
+
+    @Test
+    public void testInjectingMethodsWithTypeParametersIsForbidden()
+    {
+        try {
+            Guice.createInjector(
+                    new AbstractModule()
+                    {
+                        @Override
+                        protected void configure()
+                        {
+                            bind(N.class);
+                        }
+                    });
+            fail();
+        }
+        catch (CreationException expected) {
+            assertContains(
+                    expected.getMessage(), "Injected method JakartaTest$N.setB() cannot declare type ");
+        }
+    }
+
+    @Test
+    public void testInjectingMethodsWithNonVoidReturnTypes()
+    {
         Guice.createInjector(
-            new AbstractModule() {
-              @Override
-              protected void configure() {
-                bind(B.class).annotatedWith(Names.named("jodie")).toInstance(b);
-                bind(C.class).annotatedWith(Red.class).toInstance(c);
-                bind(D.class).annotatedWith(RED).toInstance(d);
-                bind(E.class).annotatedWith(Names.named("jesse")).toInstance(e);
-                bind(F.class);
-              }
-            });
+                new AbstractModule()
+                {
+                    @Override
+                    protected void configure()
+                    {
+                        bind(P.class);
+                    }
+                });
+    }
 
-    F f = injector.getInstance(F.class);
-    assertSame(b, f.b);
-    assertSame(c, f.c);
-    assertSame(d, f.d);
-    assertSame(e, f.e);
-  }
+    // TODO(sameb): Uncomment this when Guice supports toProvider on jakarta.inject.Provider types.
+    // /**
+    //  * This test verifies that we can compile bindings to provider instances whose compile-time
+    // type
+    //  * implements jakarta.inject.Provider but not com.google.inject.Provider
+    //  */
+    // public void testBindProviderClass() {
+    //   Injector injector =
+    //       Guice.createInjector(
+    //           new AbstractModule() {
+    //             @Override
+    //             protected void configure() {
+    //               bind(B.class).toProvider(BProvider.class);
+    //               bind(B.class).annotatedWith(Names.named("1")).toProvider(BProvider.class);
+    //
+    // bind(B.class).annotatedWith(Names.named("2")).toProvider(Key.get(BProvider.class));
+    //               bind(B.class)
+    //                   .annotatedWith(Names.named("3"))
+    //                   .toProvider(TypeLiteral.get(BProvider.class));
+    //             }
+    //           });
+    //
+    //   injector.getInstance(Key.get(B.class));
+    //   injector.getInstance(Key.get(B.class, Names.named("1")));
+    //   injector.getInstance(Key.get(B.class, Names.named("2")));
+    //   injector.getInstance(Key.get(B.class, Names.named("3")));
+    // }
 
-  @Test
-  public void testProviderInject() {
-    Injector injector =
-        Guice.createInjector(
-            new AbstractModule() {
-              @Override
-              protected void configure() {
-                bind(B.class).annotatedWith(Names.named("jodie")).toInstance(b);
-                bind(C.class).toInstance(c);
-                bind(D.class).annotatedWith(RED).toInstance(d);
-                bind(E.class).toInstance(e);
-                bind(G.class);
-              }
-            });
+    @Test
+    public void testGuicifyJakartaProvider()
+    {
+        Provider<String> jakartaProvider =
+                new Provider<String>()
+                {
+                    @Override
+                    public String get()
+                    {
+                        return "A";
+                    }
 
-    G g = injector.getInstance(G.class);
-    assertSame(b, g.bProvider.get());
-    assertSame(c, g.cProvider.get());
-    assertSame(d, g.dProvider.get());
-    assertSame(e, g.eProvider.get());
-  }
+                    @Override
+                    public String toString()
+                    {
+                        return "jakartaProvider";
+                    }
+                };
 
-  @Test
-  public void testScopeAnnotation() {
-    final TestScope scope = new TestScope();
+        com.google.inject.Provider<String> guicified = Providers.guicify(jakartaProvider);
+        assertEquals("guicified(jakartaProvider)", guicified.toString());
+        assertEquals("A", guicified.get());
 
-    Injector injector =
-        Guice.createInjector(
-            new AbstractModule() {
-              @Override
-              protected void configure() {
-                bind(B.class).in(scope);
-                bind(C.class).in(TestScoped.class);
-                bindScope(TestScoped.class, scope);
-              }
-            });
+        // when you guicify the Guice-friendly, it's a no-op
+        assertSame(guicified, Providers.guicify(guicified));
 
-    B b = injector.getInstance(B.class);
-    assertSame(b, injector.getInstance(B.class));
-    assertSame(b, injector.getInstance(B.class));
+        assertFalse(guicified instanceof HasDependencies);
+    }
 
-    C c = injector.getInstance(C.class);
-    assertSame(c, injector.getInstance(C.class));
-    assertSame(c, injector.getInstance(C.class));
+    @Test
+    public void testGuicifyWithDependencies()
+    {
+        Provider<String> jakartaProvider =
+                new Provider<String>()
+                {
+                    @Inject
+                    double d;
+                    int i;
 
-    H h = injector.getInstance(H.class);
-    assertSame(h, injector.getInstance(H.class));
-    assertSame(h, injector.getInstance(H.class));
+                    @Inject
+                    void injectMe(int i)
+                    {
+                        this.i = i;
+                    }
 
-    scope.reset();
+                    @Override
+                    public String get()
+                    {
+                        return d + "-" + i;
+                    }
+                };
 
-    assertNotSame(b, injector.getInstance(B.class));
-    assertNotSame(c, injector.getInstance(C.class));
-    assertNotSame(h, injector.getInstance(H.class));
-  }
+        final com.google.inject.Provider<String> guicified = Providers.guicify(jakartaProvider);
+        assertTrue(guicified instanceof HasDependencies);
+        Set<Dependency<?>> actual = ((HasDependencies) guicified).getDependencies();
+        validateDependencies(actual, jakartaProvider.getClass());
 
-  @Test
-  public void testSingleton() {
-    Injector injector =
-        Guice.createInjector(
-            new AbstractModule() {
-              @Override
-              protected void configure() {
-                bind(B.class).in(Singleton.class);
-              }
-            });
+        Injector injector =
+                Guice.createInjector(
+                        new AbstractModule()
+                        {
+                            @Override
+                            protected void configure()
+                            {
+                                bind(String.class).toProvider(guicified);
+                                bind(int.class).toInstance(1);
+                                bind(double.class).toInstance(2.0d);
+                            }
+                        });
 
-    B b = injector.getInstance(B.class);
-    assertSame(b, injector.getInstance(B.class));
-    assertSame(b, injector.getInstance(B.class));
+        Binding<String> binding = injector.getBinding(String.class);
+        assertEquals("2.0-1", binding.getProvider().get());
+        validateDependencies(actual, jakartaProvider.getClass());
+    }
 
-    J j = injector.getInstance(J.class);
-    assertSame(j, injector.getInstance(J.class));
-    assertSame(j, injector.getInstance(J.class));
-  }
-
-  @Test
-  public void testEagerSingleton() {
-    Guice.createInjector(
-        Stage.PRODUCTION,
-        new AbstractModule() {
-          @Override
-          protected void configure() {
-            bind(J.class);
-            bind(K.class).in(Singleton.class);
-          }
-        });
-
-    assertEquals(1, J.nextInstanceId);
-    assertEquals(1, K.nextInstanceId);
-  }
-
-  @Test
-  public void testScopesIsSingleton() {
-    Injector injector =
-        Guice.createInjector(
-            new AbstractModule() {
-              @Override
-              protected void configure() {
-                bind(J.class);
-                bind(K.class).in(Singleton.class);
-              }
-            });
-
-    assertTrue(Scopes.isSingleton(injector.getBinding(J.class)));
-    assertTrue(Scopes.isSingleton(injector.getBinding(K.class)));
-  }
-
-  @Test
-  public void testInjectingFinalFieldsIsForbidden() {
-    try {
-      Guice.createInjector(
-          new AbstractModule() {
-            @Override
-            protected void configure() {
-              bind(L.class);
+    private void validateDependencies(Set<Dependency<?>> actual, Class<?> owner)
+    {
+        assertEquals(2, actual.size(), actual.toString());
+        Dependency<?> dDep = null;
+        Dependency<?> iDep = null;
+        for (Dependency<?> dep : actual) {
+            if (dep.getKey().equals(Key.get(Double.class))) {
+                dDep = dep;
             }
-          });
-      fail();
-    } catch (CreationException expected) {
-      assertContains(expected.getMessage(), "Injected field JakartaTest$L.b cannot be final.");
-    }
-  }
-
-  @Test
-  public void testInjectingAbstractMethodsIsForbidden() {
-    try {
-      Guice.createInjector(
-          new AbstractModule() {
-            @Override
-            protected void configure() {
-              bind(M.class);
+            else if (dep.getKey().equals(Key.get(Integer.class))) {
+                iDep = dep;
             }
-          });
-      fail();
-    } catch (CreationException expected) {
-      assertContains(
-          expected.getMessage(),
-          "Injected method JakartaTest$AbstractM.setB() cannot be abstract.");
-    }
-  }
+        }
+        assertNotNull(dDep);
+        assertNotNull(iDep);
+        assertEquals(TypeLiteral.get(owner), dDep.getInjectionPoint().getDeclaringType());
+        assertEquals("d", dDep.getInjectionPoint().getMember().getName());
+        assertEquals(-1, dDep.getParameterIndex());
 
-  @Test
-  public void testInjectingMethodsWithTypeParametersIsForbidden() {
-    try {
-      Guice.createInjector(
-          new AbstractModule() {
-            @Override
-            protected void configure() {
-              bind(N.class);
-            }
-          });
-      fail();
-    } catch (CreationException expected) {
-      assertContains(
-          expected.getMessage(), "Injected method JakartaTest$N.setB() cannot declare type ");
-    }
-  }
-
-  @Test
-  public void testInjectingMethodsWithNonVoidReturnTypes() {
-    Guice.createInjector(
-        new AbstractModule() {
-          @Override
-          protected void configure() {
-            bind(P.class);
-          }
-        });
-  }
-
-  // TODO(sameb): Uncomment this when Guice supports toProvider on jakarta.inject.Provider types.
-  // /**
-  //  * This test verifies that we can compile bindings to provider instances whose compile-time
-  // type
-  //  * implements jakarta.inject.Provider but not com.google.inject.Provider
-  //  */
-  // public void testBindProviderClass() {
-  //   Injector injector =
-  //       Guice.createInjector(
-  //           new AbstractModule() {
-  //             @Override
-  //             protected void configure() {
-  //               bind(B.class).toProvider(BProvider.class);
-  //               bind(B.class).annotatedWith(Names.named("1")).toProvider(BProvider.class);
-  //
-  // bind(B.class).annotatedWith(Names.named("2")).toProvider(Key.get(BProvider.class));
-  //               bind(B.class)
-  //                   .annotatedWith(Names.named("3"))
-  //                   .toProvider(TypeLiteral.get(BProvider.class));
-  //             }
-  //           });
-  //
-  //   injector.getInstance(Key.get(B.class));
-  //   injector.getInstance(Key.get(B.class, Names.named("1")));
-  //   injector.getInstance(Key.get(B.class, Names.named("2")));
-  //   injector.getInstance(Key.get(B.class, Names.named("3")));
-  // }
-
-  @Test
-  public void testGuicifyJakartaProvider() {
-    Provider<String> jakartaProvider =
-        new Provider<String>() {
-          @Override
-          public String get() {
-            return "A";
-          }
-
-          @Override
-          public String toString() {
-            return "jakartaProvider";
-          }
-        };
-
-    com.google.inject.Provider<String> guicified = Providers.guicify(jakartaProvider);
-    assertEquals("guicified(jakartaProvider)", guicified.toString());
-    assertEquals("A", guicified.get());
-
-    // when you guicify the Guice-friendly, it's a no-op
-    assertSame(guicified, Providers.guicify(guicified));
-
-    assertFalse(guicified instanceof HasDependencies);
-  }
-
-  @Test
-  public void testGuicifyWithDependencies() {
-    Provider<String> jakartaProvider =
-        new Provider<String>() {
-          @Inject double d;
-          int i;
-
-          @Inject
-          void injectMe(int i) {
-            this.i = i;
-          }
-
-          @Override
-          public String get() {
-            return d + "-" + i;
-          }
-        };
-
-    final com.google.inject.Provider<String> guicified = Providers.guicify(jakartaProvider);
-    assertTrue(guicified instanceof HasDependencies);
-    Set<Dependency<?>> actual = ((HasDependencies) guicified).getDependencies();
-    validateDependencies(actual, jakartaProvider.getClass());
-
-    Injector injector =
-        Guice.createInjector(
-            new AbstractModule() {
-              @Override
-              protected void configure() {
-                bind(String.class).toProvider(guicified);
-                bind(int.class).toInstance(1);
-                bind(double.class).toInstance(2.0d);
-              }
-            });
-
-    Binding<String> binding = injector.getBinding(String.class);
-    assertEquals("2.0-1", binding.getProvider().get());
-    validateDependencies(actual, jakartaProvider.getClass());
-  }
-
-  private void validateDependencies(Set<Dependency<?>> actual, Class<?> owner) {
-    assertEquals(2, actual.size(), actual.toString());
-    Dependency<?> dDep = null;
-    Dependency<?> iDep = null;
-    for (Dependency<?> dep : actual) {
-      if (dep.getKey().equals(Key.get(Double.class))) {
-        dDep = dep;
-      } else if (dep.getKey().equals(Key.get(Integer.class))) {
-        iDep = dep;
-      }
-    }
-    assertNotNull(dDep);
-    assertNotNull(iDep);
-    assertEquals(TypeLiteral.get(owner), dDep.getInjectionPoint().getDeclaringType());
-    assertEquals("d", dDep.getInjectionPoint().getMember().getName());
-    assertEquals(-1, dDep.getParameterIndex());
-
-    assertEquals(TypeLiteral.get(owner), iDep.getInjectionPoint().getDeclaringType());
-    assertEquals("injectMe", iDep.getInjectionPoint().getMember().getName());
-    assertEquals(0, iDep.getParameterIndex());
-  }
-
-  static class A {
-    final B b;
-    @Inject C c;
-    D d;
-    E e;
-
-    @Inject
-    A(B b) {
-      this.b = b;
+        assertEquals(TypeLiteral.get(owner), iDep.getInjectionPoint().getDeclaringType());
+        assertEquals("injectMe", iDep.getInjectionPoint().getMember().getName());
+        assertEquals(0, iDep.getParameterIndex());
     }
 
-    @Inject
-    void injectD(D d, E e) {
-      this.d = d;
-      this.e = e;
-    }
-  }
+    static class A
+    {
+        final B b;
+        @Inject
+        C c;
+        D d;
+        E e;
 
-  static class B {}
-
-  static class C {}
-
-  static class D {}
-
-  static class E {}
-
-  static class F {
-    final B b;
-    @Inject @Red C c;
-    D d;
-    E e;
-
-    @Inject
-    F(@Named("jodie") B b) {
-      this.b = b;
-    }
-
-    @Inject
-    void injectD(@Red D d, @Named("jesse") E e) {
-      this.d = d;
-      this.e = e;
-    }
-  }
-
-  @Qualifier
-  @Retention(RUNTIME)
-  @interface Red {}
-
-  public static final Red RED =
-      new Red() {
-        @Override
-        public Class<? extends Annotation> annotationType() {
-          return Red.class;
+        @Inject
+        A(B b)
+        {
+            this.b = b;
         }
 
-        @Override
-        public boolean equals(Object obj) {
-          return obj instanceof Red;
+        @Inject
+        void injectD(D d, E e)
+        {
+            this.d = d;
+            this.e = e;
+        }
+    }
+
+    static class B {}
+
+    static class C {}
+
+    static class D {}
+
+    static class E {}
+
+    static class F
+    {
+        final B b;
+        @Inject
+        @Red
+        C c;
+        D d;
+        E e;
+
+        @Inject
+        F(@Named("jodie") B b)
+        {
+            this.b = b;
         }
 
-        @Override
-        public int hashCode() {
-          return 0;
+        @Inject
+        void injectD(@Red D d, @Named("jesse") E e)
+        {
+            this.d = d;
+            this.e = e;
         }
-      };
-
-  static class G {
-    final Provider<B> bProvider;
-    @Inject Provider<C> cProvider;
-    Provider<D> dProvider;
-    Provider<E> eProvider;
-
-    @Inject
-    G(@Named("jodie") Provider<B> bProvider) {
-      this.bProvider = bProvider;
     }
 
-    @Inject
-    void injectD(@Red Provider<D> dProvider, Provider<E> eProvider) {
-      this.dProvider = dProvider;
-      this.eProvider = eProvider;
+    @Qualifier
+    @Retention(RUNTIME)
+    @interface Red {}
+
+    public static final Red RED =
+            new Red()
+            {
+                @Override
+                public Class<? extends Annotation> annotationType()
+                {
+                    return Red.class;
+                }
+
+                @Override
+                public boolean equals(Object obj)
+                {
+                    return obj instanceof Red;
+                }
+
+                @Override
+                public int hashCode()
+                {
+                    return 0;
+                }
+            };
+
+    static class G
+    {
+        final Provider<B> bProvider;
+        @Inject
+        Provider<C> cProvider;
+        Provider<D> dProvider;
+        Provider<E> eProvider;
+
+        @Inject
+        G(@Named("jodie") Provider<B> bProvider)
+        {
+            this.bProvider = bProvider;
+        }
+
+        @Inject
+        void injectD(@Red Provider<D> dProvider, Provider<E> eProvider)
+        {
+            this.dProvider = dProvider;
+            this.eProvider = eProvider;
+        }
     }
-  }
 
-  @jakarta.inject.Scope
-  @Retention(RUNTIME)
-  @interface TestScoped {}
+    @jakarta.inject.Scope
+    @Retention(RUNTIME)
+    @interface TestScoped {}
 
-  static class TestScope implements Scope {
-    private int now = 0;
-
-    @Override
-    public <T> com.google.inject.Provider<T> scope(
-        Key<T> key, final com.google.inject.Provider<T> unscoped) {
-      return new com.google.inject.Provider<T>() {
-        private T value;
-        private int snapshotTime = -1;
+    static class TestScope
+            implements Scope
+    {
+        private int now;
 
         @Override
-        public T get() {
-          if (snapshotTime != now) {
-            value = unscoped.get();
-            snapshotTime = now;
-          }
-          return value;
+        public <T> com.google.inject.Provider<T> scope(
+                Key<T> key,
+                final com.google.inject.Provider<T> unscoped)
+        {
+            return new com.google.inject.Provider<T>()
+            {
+                private T value;
+                private int snapshotTime = -1;
+
+                @Override
+                public T get()
+                {
+                    if (snapshotTime != now) {
+                        value = unscoped.get();
+                        snapshotTime = now;
+                    }
+                    return value;
+                }
+            };
         }
-      };
+
+        public void reset()
+        {
+            now++;
+        }
     }
 
-    public void reset() {
-      now++;
+    @TestScoped
+    static class H {}
+
+    @Singleton
+    static class J
+    {
+        static int nextInstanceId;
+        int instanceId = nextInstanceId++;
     }
-  }
 
-  @TestScoped
-  static class H {}
-
-  @Singleton
-  static class J {
-    static int nextInstanceId = 0;
-    int instanceId = nextInstanceId++;
-  }
-
-  static class K {
-    static int nextInstanceId = 0;
-    int instanceId = nextInstanceId++;
-  }
-
-  static class L {
-    @SuppressWarnings("InjectJakartaInjectOnFinalField")
-    @Inject
-    final B b = null;
-  }
-
-  abstract static class AbstractM {
-    @SuppressWarnings("JakartaInjectOnAbstractMethod")
-    @Inject
-    abstract void setB(B b);
-  }
-
-  static class M extends AbstractM {
-    @Override
-    @SuppressWarnings("OverridesJakartaInjectableMethod")
-    void setB(B b) {}
-  }
-
-  static class N {
-    @Inject
-    <T> void setB(B b) {}
-  }
-
-  static class P {
-    @Inject
-    B setB(B b) {
-      return b;
+    static class K
+    {
+        static int nextInstanceId;
+        int instanceId = nextInstanceId++;
     }
-  }
 
-  static class BProvider implements Provider<B> {
-    @Override
-    public B get() {
-      return new B();
+    static class L
+    {
+        @SuppressWarnings("InjectJakartaInjectOnFinalField")
+        @Inject
+        final B b = null;
     }
-  }
+
+    abstract static class AbstractM
+    {
+        @SuppressWarnings("JakartaInjectOnAbstractMethod")
+        @Inject
+        abstract void setB(B b);
+    }
+
+    static class M
+            extends AbstractM
+    {
+        @Override
+        @SuppressWarnings("OverridesJakartaInjectableMethod")
+        void setB(B b) {}
+    }
+
+    static class N
+    {
+        @Inject
+        <T> void setB(B b) {}
+    }
+
+    static class P
+    {
+        @Inject
+        B setB(B b)
+        {
+            return b;
+        }
+    }
+
+    static class BProvider
+            implements Provider<B>
+    {
+        @Override
+        public B get()
+        {
+            return new B();
+        }
+    }
 }

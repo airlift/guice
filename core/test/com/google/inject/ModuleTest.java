@@ -3,67 +3,82 @@
 package com.google.inject;
 import org.junit.jupiter.api.Test;
 
-
 /**
  * Tests relating to modules.
  *
  * @author kevinb
  */
-public class ModuleTest {
-
-  static class A implements Module {
-    @Override
-    public void configure(Binder binder) {
-      binder.bind(X.class);
-      binder.install(new B());
-      binder.install(new C());
-    }
-  }
-
-  static class B implements Module {
-    @Override
-    public void configure(Binder binder) {
-      binder.bind(Y.class);
-      binder.install(new D());
-    }
-  }
-
-  static class C implements Module {
-    @Override
-    public void configure(Binder binder) {
-      binder.bind(Z.class);
-      binder.install(new D());
-    }
-  }
-
-  static class D implements Module {
-    @Override
-    public void configure(Binder binder) {
-      binder.bind(W.class);
+public class ModuleTest
+{
+    static class A
+            implements Module
+    {
+        @Override
+        public void configure(Binder binder)
+        {
+            binder.bind(X.class);
+            binder.install(new B());
+            binder.install(new C());
+        }
     }
 
-    @Override
-    @SuppressWarnings("EqualsBrokenForNull") // intentionally NPE on null for the test
-    public boolean equals(Object obj) {
-      return obj.getClass() == D.class; // we're all equal in the eyes of guice
+    static class B
+            implements Module
+    {
+        @Override
+        public void configure(Binder binder)
+        {
+            binder.bind(Y.class);
+            binder.install(new D());
+        }
     }
 
-    @Override
-    public int hashCode() {
-      return D.class.hashCode();
+    static class C
+            implements Module
+    {
+        @Override
+        public void configure(Binder binder)
+        {
+            binder.bind(Z.class);
+            binder.install(new D());
+        }
     }
-  }
 
-  static class X {}
+    static class D
+            implements Module
+    {
+        @Override
+        public void configure(Binder binder)
+        {
+            binder.bind(W.class);
+        }
 
-  static class Y {}
+        @Override
+        @SuppressWarnings("EqualsBrokenForNull") // intentionally NPE on null for the test
+        public boolean equals(Object obj)
+        {
+            return obj.getClass() == D.class; // we're all equal in the eyes of guice
+        }
 
-  static class Z {}
+        @Override
+        public int hashCode()
+        {
+            return D.class.hashCode();
+        }
+    }
 
-  static class W {}
+    static class X {}
 
-  @Test
-  public void testDiamond() throws Exception {
-    Guice.createInjector(new A());
-  }
+    static class Y {}
+
+    static class Z {}
+
+    static class W {}
+
+    @Test
+    public void testDiamond()
+            throws Exception
+    {
+        Guice.createInjector(new A());
+    }
 }

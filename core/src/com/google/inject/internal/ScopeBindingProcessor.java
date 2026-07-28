@@ -16,12 +16,12 @@
 
 package com.google.inject.internal;
 
-
-import static java.util.Objects.requireNonNull;
-
 import com.google.inject.Scope;
 import com.google.inject.spi.ScopeBinding;
+
 import java.lang.annotation.Annotation;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Handles {@code Binder.bindScope} commands.
@@ -29,37 +29,41 @@ import java.lang.annotation.Annotation;
  * @author crazybob@google.com (Bob Lee)
  * @author jessewilson@google.com (Jesse Wilson)
  */
-final class ScopeBindingProcessor extends AbstractProcessor {
-
-  ScopeBindingProcessor(Errors errors) {
-    super(errors);
-  }
-
-  @Override
-  public Boolean visit(ScopeBinding command) {
-    Scope scope = requireNonNull(command.getScope(), "scope");
-    Class<? extends Annotation> annotationType =
-        requireNonNull(command.getAnnotationType(), "annotation type");
-
-    if (!Annotations.isScopeAnnotation(annotationType)) {
-      errors.missingScopeAnnotation(annotationType);
-      // Go ahead and bind anyway so we don't get collateral errors.
+final class ScopeBindingProcessor
+        extends AbstractProcessor
+{
+    ScopeBindingProcessor(Errors errors)
+    {
+        super(errors);
     }
 
-    if (!Annotations.isRetainedAtRuntime(annotationType)) {
-      errors.missingRuntimeRetention(annotationType);
-      // Go ahead and bind anyway so we don't get collateral errors.
-    }
+    @Override
+    public Boolean visit(ScopeBinding command)
+    {
+        Scope scope = requireNonNull(command.getScope(), "scope");
+        Class<? extends Annotation> annotationType =
+                requireNonNull(command.getAnnotationType(), "annotation type");
 
-    ScopeBinding existing = injector.getBindingData().getScopeBinding(annotationType);
-    if (existing != null) {
-      if (!scope.equals(existing.getScope())) {
-        errors.duplicateScopes(existing, annotationType, scope);
-      }
-    } else {
-      injector.getBindingData().putScopeBinding(annotationType, command);
-    }
+        if (!Annotations.isScopeAnnotation(annotationType)) {
+            errors.missingScopeAnnotation(annotationType);
+            // Go ahead and bind anyway so we don't get collateral errors.
+        }
 
-    return true;
-  }
+        if (!Annotations.isRetainedAtRuntime(annotationType)) {
+            errors.missingRuntimeRetention(annotationType);
+            // Go ahead and bind anyway so we don't get collateral errors.
+        }
+
+        ScopeBinding existing = injector.getBindingData().getScopeBinding(annotationType);
+        if (existing != null) {
+            if (!scope.equals(existing.getScope())) {
+                errors.duplicateScopes(existing, annotationType, scope);
+            }
+        }
+        else {
+            injector.getBindingData().putScopeBinding(annotationType, command);
+        }
+
+        return true;
+    }
 }

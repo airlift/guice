@@ -16,14 +16,15 @@
 
 package com.google.inject.multibindings;
 
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
 import com.google.errorprone.annotations.Keep;
 import com.google.inject.Module;
+
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Annotates methods of a {@link Module} to add items to a {@link MapBinder}. The method's return

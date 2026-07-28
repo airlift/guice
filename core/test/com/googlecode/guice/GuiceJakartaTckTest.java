@@ -21,10 +21,6 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Provides;
 import jakarta.inject.Named;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.List;
 import junit.framework.Test;
 import junit.framework.TestFailure;
 import junit.framework.TestResult;
@@ -44,86 +40,104 @@ import org.atinject.tck.auto.accessories.SpareTire;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.List;
+
 /**
  * Runs the Jakarta {@code @Inject} TCK against Guice.
  *
  * <p>The TCK is published as a JUnit 3 {@link TestSuite} and cannot be changed, so the suite is
  * flattened here and each leaf {@link Test} is exposed as a JUnit 5 {@link DynamicTest}.
  */
-public class GuiceJakartaTckTest {
+public class GuiceJakartaTckTest
+{
+    /**
+     * Guice does not guarantee that a supertype's static members are injected before a subtype's, so
+     * these two ordering tests fail. Everything else in the TCK passes.
+     */
+    private static final ImmutableSet<String> SUPPRESSED =
+            ImmutableSet.of(
+                    "testSupertypeStaticMethodsInjectedBeforeSubtypeStaticFields"
+                            + "(org.atinject.tck.auto.Convertible$StaticTests)",
+                    "testSupertypeStaticMethodsInjectedBeforeSubtypeStaticMethods"
+                            + "(org.atinject.tck.auto.Convertible$StaticTests)");
 
-  /**
-   * Guice does not guarantee that a supertype's static members are injected before a subtype's, so
-   * these two ordering tests fail. Everything else in the TCK passes.
-   */
-  private static final ImmutableSet<String> SUPPRESSED =
-      ImmutableSet.of(
-          "testSupertypeStaticMethodsInjectedBeforeSubtypeStaticFields"
-              + "(org.atinject.tck.auto.Convertible$StaticTests)",
-          "testSupertypeStaticMethodsInjectedBeforeSubtypeStaticMethods"
-              + "(org.atinject.tck.auto.Convertible$StaticTests)");
-
-  @TestFactory
-  public List<DynamicTest> tck() {
-    List<DynamicTest> tests = new ArrayList<>();
-    collect((TestSuite) rawSuite(), tests);
-    return tests;
-  }
-
-  /** Recursively flattens {@code suite}, skipping {@link #SUPPRESSED} tests. */
-  private static void collect(TestSuite suite, List<DynamicTest> tests) {
-    for (Enumeration<Test> e = suite.tests(); e.hasMoreElements(); ) {
-      Test test = e.nextElement();
-
-      if (SUPPRESSED.contains(test.toString())) {
-        continue;
-      }
-
-      if (test instanceof TestSuite) {
-        collect((TestSuite) test, tests);
-      } else {
-        tests.add(DynamicTest.dynamicTest(test.toString(), () -> run(test)));
-      }
+    @TestFactory
+    public List<DynamicTest> tck()
+    {
+        List<DynamicTest> tests = new ArrayList<>();
+        collect((TestSuite) rawSuite(), tests);
+        return tests;
     }
-  }
 
-  /** Runs a single JUnit 3 test and rethrows whatever it reported, if anything. */
-  private static void run(Test test) throws Throwable {
-    TestResult result = new TestResult();
-    test.run(result);
+    /**
+     * Recursively flattens {@code suite}, skipping {@link #SUPPRESSED} tests.
+     */
+    private static void collect(TestSuite suite, List<DynamicTest> tests)
+    {
+        for (Enumeration<Test> e = suite.tests(); e.hasMoreElements(); ) {
+            Test test = e.nextElement();
 
-    List<TestFailure> problems = new ArrayList<>();
-    problems.addAll(Collections.list(result.failures()));
-    problems.addAll(Collections.list(result.errors()));
+            if (SUPPRESSED.contains(test.toString())) {
+                continue;
+            }
 
-    if (!problems.isEmpty()) {
-      throw problems.get(0).thrownException();
+            if (test instanceof TestSuite) {
+                collect((TestSuite) test, tests);
+            }
+            else {
+                tests.add(DynamicTest.dynamicTest(test.toString(), () -> run(test)));
+            }
+        }
     }
-  }
 
-  private static Test rawSuite() {
-    return Tck.testsFor(
-        Guice.createInjector(
-                new AbstractModule() {
-                  @Override
-                  protected void configure() {
-                    bind(Car.class).to(Convertible.class);
-                    bind(Seat.class).annotatedWith(Drivers.class).to(DriversSeat.class);
-                    bind(Engine.class).to(V8Engine.class);
-                    bind(Cupholder.class);
-                    bind(Tire.class);
-                    bind(FuelTank.class);
-                    requestStaticInjection(Convertible.class, SpareTire.class);
-                  }
+    /**
+     * Runs a single JUnit 3 test and rethrows whatever it reported, if anything.
+     */
+    private static void run(Test test)
+            throws Throwable
+    {
+        TestResult result = new TestResult();
+        test.run(result);
 
-                  @Provides
-                  @Named("spare")
-                  Tire provideSpareTire(SpareTire spare) {
-                    return spare;
-                  }
-                })
-            .getInstance(Car.class),
-        true,
-        true);
-  }
+        List<TestFailure> problems = new ArrayList<>();
+        problems.addAll(Collections.list(result.failures()));
+        problems.addAll(Collections.list(result.errors()));
+
+        if (!problems.isEmpty()) {
+            throw problems.get(0).thrownException();
+        }
+    }
+
+    private static Test rawSuite()
+    {
+        return Tck.testsFor(
+                Guice.createInjector(
+                                new AbstractModule()
+                                {
+                                    @Override
+                                    protected void configure()
+                                    {
+                                        bind(Car.class).to(Convertible.class);
+                                        bind(Seat.class).annotatedWith(Drivers.class).to(DriversSeat.class);
+                                        bind(Engine.class).to(V8Engine.class);
+                                        bind(Cupholder.class);
+                                        bind(Tire.class);
+                                        bind(FuelTank.class);
+                                        requestStaticInjection(Convertible.class, SpareTire.class);
+                                    }
+
+                                    @Provides
+                                    @Named("spare")
+                                    Tire provideSpareTire(SpareTire spare)
+                                    {
+                                        return spare;
+                                    }
+                                })
+                        .getInstance(Car.class),
+                true,
+                true);
+    }
 }

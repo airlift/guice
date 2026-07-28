@@ -19,97 +19,115 @@ package com.google.inject.util;
 import com.google.common.testing.EqualsTester;
 import com.google.inject.Provider;
 import jakarta.inject.Inject;
+import org.junit.jupiter.api.Test;
+
+import java.util.Objects;
+
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
-import java.util.Objects;
-import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link Providers}.
  *
  * @author Kevin Bourrillion (kevinb9n@gmail.com)
  */
-public class ProvidersTest {
-
-  @Test
-  public void testOfInstance() {
-    String foo = "foo";
-    Provider<String> p = Providers.of(foo);
-    assertSame(foo, p.get());
-    assertSame(foo, p.get());
-  }
-
-  @Test
-  public void testOfNull() {
-    Provider<String> p = Providers.of(null);
-    assertNull(p.get());
-  }
-
-  @Test
-  public void testOfEquality() {
-    new EqualsTester()
-        .addEqualityGroup(Providers.of(null), Providers.of(null))
-        .addEqualityGroup(Providers.of("Hello"), Providers.of("Hello"))
-        .testEquals();
-  }
-
-  @Test
-  public void testGuicifyEquality() {
-    new EqualsTester()
-        .addEqualityGroup(
-            Providers.guicify(new JakartaProvider(10)), Providers.guicify(new JakartaProvider(10)))
-        .addEqualityGroup(
-            Providers.guicify(new JakartaProvider(11)), Providers.guicify(new JakartaProvider(11)))
-        .addEqualityGroup(
-            Providers.guicify(new JakartaProviderWithDependencies()),
-            Providers.guicify(new JakartaProviderWithDependencies()))
-        .testEquals();
-  }
-
-  private static class JakartaProvider implements jakarta.inject.Provider<Integer> {
-    private final int value;
-
-    public JakartaProvider(int value) {
-      this.value = value;
+public class ProvidersTest
+{
+    @Test
+    public void testOfInstance()
+    {
+        String foo = "foo";
+        Provider<String> p = Providers.of(foo);
+        assertSame(foo, p.get());
+        assertSame(foo, p.get());
     }
 
-    @Override
-    public Integer get() {
-      return value;
+    @Test
+    public void testOfNull()
+    {
+        Provider<String> p = Providers.of(null);
+        assertNull(p.get());
     }
 
-    @Override
-    public int hashCode() {
-      return Objects.hash(value);
+    @Test
+    public void testOfEquality()
+    {
+        new EqualsTester()
+                .addEqualityGroup(Providers.of(null), Providers.of(null))
+                .addEqualityGroup(Providers.of("Hello"), Providers.of("Hello"))
+                .testEquals();
     }
 
-    @Override
-    public boolean equals(Object obj) {
-      return (obj instanceof JakartaProvider) && (value == ((JakartaProvider) obj).value);
-    }
-  }
-
-  private static class JakartaProviderWithDependencies implements jakarta.inject.Provider<Integer> {
-    private int value;
-
-    @Inject
-    void setValue(int value) {
-      this.value = value;
-    }
-
-    @Override
-    public Integer get() {
-      return value;
+    @Test
+    public void testGuicifyEquality()
+    {
+        new EqualsTester()
+                .addEqualityGroup(
+                        Providers.guicify(new JakartaProvider(10)), Providers.guicify(new JakartaProvider(10)))
+                .addEqualityGroup(
+                        Providers.guicify(new JakartaProvider(11)), Providers.guicify(new JakartaProvider(11)))
+                .addEqualityGroup(
+                        Providers.guicify(new JakartaProviderWithDependencies()),
+                        Providers.guicify(new JakartaProviderWithDependencies()))
+                .testEquals();
     }
 
-    @Override
-    public int hashCode() {
-      return 42;
+    private static class JakartaProvider
+            implements jakarta.inject.Provider<Integer>
+    {
+        private final int value;
+
+        public JakartaProvider(int value)
+        {
+            this.value = value;
+        }
+
+        @Override
+        public Integer get()
+        {
+            return value;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return Objects.hash(value);
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            return (obj instanceof JakartaProvider) && (value == ((JakartaProvider) obj).value);
+        }
     }
 
-    @Override
-    public boolean equals(Object obj) {
-      return (obj instanceof JakartaProviderWithDependencies);
+    private static class JakartaProviderWithDependencies
+            implements jakarta.inject.Provider<Integer>
+    {
+        private int value;
+
+        @Inject
+        void setValue(int value)
+        {
+            this.value = value;
+        }
+
+        @Override
+        public Integer get()
+        {
+            return value;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return 42;
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            return (obj instanceof JakartaProviderWithDependencies);
+        }
     }
-  }
 }

@@ -1,10 +1,5 @@
 package com.google.inject.errors;
 
-import static com.google.common.truth.Truth.assertThat;
-import static com.google.inject.errors.ErrorMessageTestUtils.assertGuiceErrorEqualsIgnoreLineNumber;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
-
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -14,126 +9,153 @@ import com.google.inject.ProvisionException;
 import com.google.inject.Singleton;
 import com.google.inject.internal.InternalFlags;
 import com.google.inject.internal.InternalFlags.IncludeStackTraceOption;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.reflect.Field;
 import jakarta.inject.Inject;
 import jakarta.inject.Qualifier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public final class NullInjectedIntoNonNullableTest {
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.reflect.Field;
 
-  @Qualifier
-  @Retention(RetentionPolicy.RUNTIME)
-  @interface Bar {}
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.inject.errors.ErrorMessageTestUtils.assertGuiceErrorEqualsIgnoreLineNumber;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-  static class Foo {
-    @Inject
-    Foo(@Bar String string) {}
-  }
+public final class NullInjectedIntoNonNullableTest
+{
+    @Qualifier
+    @Retention(RetentionPolicy.RUNTIME)
+    @interface Bar {}
 
-  static class FromProvidesMethodModule extends AbstractModule {
-    @Provides
-    @Bar
-    String provideString() {
-      return null;
+    static class Foo
+    {
+        @Inject
+        Foo(@Bar String string) {}
     }
-  }
 
-  static class FromProviderModule extends AbstractModule {
-    @Override
-    protected void configure() {
-      bind(String.class).annotatedWith(Bar.class).toProvider(() -> null);
+    static class FromProvidesMethodModule
+            extends AbstractModule
+    {
+        @Provides
+        @Bar
+        String provideString()
+        {
+            return null;
+        }
     }
-  }
 
-  static class IntermediateModule extends AbstractModule {
-    public static final String NULL = null;
-
-    private static final Module MODULE =
-        new AbstractModule() {
-          @Override
-          protected void configure() {
-            Field field = null;
-            try {
-              field = IntermediateModule.class.getField("NULL");
-            } catch (NoSuchFieldException error) {
-              throw new AssertionError("NULL field missing!", error);
-            }
-            binder()
-                .withSource(field)
-                .bind(String.class)
-                .annotatedWith(Bar.class)
-                .toProvider(() -> NULL);
-          }
-        };
-
-    @Override
-    protected void configure() {
-      install(MODULE);
+    static class FromProviderModule
+            extends AbstractModule
+    {
+        @Override
+        protected void configure()
+        {
+            bind(String.class).annotatedWith(Bar.class).toProvider(() -> null);
+        }
     }
-  }
 
-  @BeforeEach
-  public void ensureStackTraceIsIncluded() {
-    assumeTrue(InternalFlags.getIncludeStackTraceOption() != IncludeStackTraceOption.OFF);
-  }
+    static class IntermediateModule
+            extends AbstractModule
+    {
+        public static final String NULL = null;
 
-  @Test
-  public void nullReturnedFromProvidesMethod() {
-    Injector injector = Guice.createInjector(new FromProvidesMethodModule());
+        private static final Module MODULE =
+                new AbstractModule()
+                {
+                    @Override
+                    protected void configure()
+                    {
+                        Field field = null;
+                        try {
+                            field = IntermediateModule.class.getField("NULL");
+                        }
+                        catch (NoSuchFieldException error) {
+                            throw new AssertionError("NULL field missing!", error);
+                        }
+                        binder()
+                                .withSource(field)
+                                .bind(String.class)
+                                .annotatedWith(Bar.class)
+                                .toProvider(() -> NULL);
+                    }
+                };
 
-    ProvisionException exception =
-        assertThrows(ProvisionException.class, () -> injector.getInstance(Foo.class));
-    assertGuiceErrorEqualsIgnoreLineNumber(
-        exception.getMessage(), "null_returned_from_provides_method.txt");
-  }
+        @Override
+        protected void configure()
+        {
+            install(MODULE);
+        }
+    }
 
-  @Test
-  public void nullReturnedFromProvider() {
-    Injector injector = Guice.createInjector(new FromProviderModule());
+    @BeforeEach
+    public void ensureStackTraceIsIncluded()
+    {
+        assumeTrue(InternalFlags.getIncludeStackTraceOption() != IncludeStackTraceOption.OFF);
+    }
 
-    ProvisionException exception =
-        assertThrows(ProvisionException.class, () -> injector.getInstance(Foo.class));
-    assertGuiceErrorEqualsIgnoreLineNumber(
-        exception.getMessage(), "null_returned_from_provider.txt");
-  }
+    @Test
+    public void nullReturnedFromProvidesMethod()
+    {
+        Injector injector = Guice.createInjector(new FromProvidesMethodModule());
 
-  @Test
-  public void nullReturnedFromProviderWithModuleStack() {
-    Injector injector = Guice.createInjector(new IntermediateModule());
+        ProvisionException exception =
+                assertThrows(ProvisionException.class, () -> injector.getInstance(Foo.class));
+        assertGuiceErrorEqualsIgnoreLineNumber(
+                exception.getMessage(), "null_returned_from_provides_method.txt");
+    }
 
-    ProvisionException exception =
-        assertThrows(ProvisionException.class, () -> injector.getInstance(Foo.class));
-    assertGuiceErrorEqualsIgnoreLineNumber(
-        exception.getMessage(), "null_returned_from_provider_with_module_stack.txt");
-  }
+    @Test
+    public void nullReturnedFromProvider()
+    {
+        Injector injector = Guice.createInjector(new FromProviderModule());
 
-  // Ensure we report the error when the dependency is a singleton, no matter how many times we
-  // try to provision it.
-  @Test
-  public void nullReturnedFromSingletonBinding() {
-    Injector injector =
-        Guice.createInjector(
-            new AbstractModule() {
-              @Override
-              protected void configure() {
-                bind(String.class)
-                    .annotatedWith(Bar.class)
-                    .toProvider(() -> null)
-                    .in(Singleton.class);
-              }
+        ProvisionException exception =
+                assertThrows(ProvisionException.class, () -> injector.getInstance(Foo.class));
+        assertGuiceErrorEqualsIgnoreLineNumber(
+                exception.getMessage(), "null_returned_from_provider.txt");
+    }
 
-              @Provides
-              String provideString(@Bar String string) {
-                return string;
-              }
-            });
-    var pe = assertThrows(ProvisionException.class, () -> injector.getInstance(String.class));
-    assertThat(pe).hasMessageThat().contains("[Guice/NullInjectedIntoNonNullable]");
+    @Test
+    public void nullReturnedFromProviderWithModuleStack()
+    {
+        Injector injector = Guice.createInjector(new IntermediateModule());
 
-    pe = assertThrows(ProvisionException.class, () -> injector.getInstance(String.class));
-    assertThat(pe).hasMessageThat().contains("[Guice/NullInjectedIntoNonNullable]");
-  }
+        ProvisionException exception =
+                assertThrows(ProvisionException.class, () -> injector.getInstance(Foo.class));
+        assertGuiceErrorEqualsIgnoreLineNumber(
+                exception.getMessage(), "null_returned_from_provider_with_module_stack.txt");
+    }
+
+    // Ensure we report the error when the dependency is a singleton, no matter how many times we
+    // try to provision it.
+    @Test
+    public void nullReturnedFromSingletonBinding()
+    {
+        Injector injector =
+                Guice.createInjector(
+                        new AbstractModule()
+                        {
+                            @Override
+                            protected void configure()
+                            {
+                                bind(String.class)
+                                        .annotatedWith(Bar.class)
+                                        .toProvider(() -> null)
+                                        .in(Singleton.class);
+                            }
+
+                            @Provides
+                            String provideString(@Bar String string)
+                            {
+                                return string;
+                            }
+                        });
+        var pe = assertThrows(ProvisionException.class, () -> injector.getInstance(String.class));
+        assertThat(pe).hasMessageThat().contains("[Guice/NullInjectedIntoNonNullable]");
+
+        pe = assertThrows(ProvisionException.class, () -> injector.getInstance(String.class));
+        assertThat(pe).hasMessageThat().contains("[Guice/NullInjectedIntoNonNullable]");
+    }
 }

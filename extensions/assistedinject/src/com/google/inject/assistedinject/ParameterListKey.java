@@ -17,6 +17,7 @@
 package com.google.inject.assistedinject;
 
 import com.google.inject.TypeLiteral;
+
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,36 +30,41 @@ import java.util.List;
  * @author jmourits@google.com (Jerome Mourits)
  * @author jessewilson@google.com (Jesse Wilson)
  */
-class ParameterListKey {
+class ParameterListKey
+{
+    private final List<Type> paramList;
 
-  private final List<Type> paramList;
-
-  public ParameterListKey(List<Type> paramList) {
-    this.paramList = new ArrayList<>(paramList);
-  }
-
-  public ParameterListKey(Type[] types) {
-    this(Arrays.asList(types));
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (o == this) {
-      return true;
+    public ParameterListKey(List<Type> paramList)
+    {
+        this.paramList = new ArrayList<>(paramList);
     }
-    if (!(o instanceof ParameterListKey other)) {
-      return false;
+
+    public ParameterListKey(Type[] types)
+    {
+        this(Arrays.asList(types));
     }
-    return paramList.equals(other.paramList);
-  }
 
-  @Override
-  public int hashCode() {
-    return paramList.hashCode();
-  }
+    @Override
+    public boolean equals(Object o)
+    {
+        if (o == this) {
+            return true;
+        }
+        if (!(o instanceof ParameterListKey other)) {
+            return false;
+        }
+        return paramList.equals(other.paramList);
+    }
 
-  @Override
-  public String toString() {
-    return paramList.toString();
-  }
+    @Override
+    public int hashCode()
+    {
+        return paramList.hashCode();
+    }
+
+    @Override
+    public String toString()
+    {
+        return paramList.toString();
+    }
 }

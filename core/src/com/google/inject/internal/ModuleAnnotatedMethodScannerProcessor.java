@@ -23,15 +23,18 @@ import com.google.inject.spi.ModuleAnnotatedMethodScannerBinding;
  *
  * @author sameb@google.com (Sam Berlin)
  */
-final class ModuleAnnotatedMethodScannerProcessor extends AbstractProcessor {
+final class ModuleAnnotatedMethodScannerProcessor
+        extends AbstractProcessor
+{
+    ModuleAnnotatedMethodScannerProcessor(Errors errors)
+    {
+        super(errors);
+    }
 
-  ModuleAnnotatedMethodScannerProcessor(Errors errors) {
-    super(errors);
-  }
-
-  @Override
-  public Boolean visit(ModuleAnnotatedMethodScannerBinding command) {
-    injector.getBindingData().addScanner(command);
-    return true;
-  }
+    @Override
+    public Boolean visit(ModuleAnnotatedMethodScannerBinding command)
+    {
+        injector.getBindingData().addScanner(command);
+        return true;
+    }
 }

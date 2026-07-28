@@ -33,31 +33,31 @@ import com.google.inject.Binder;
  * @author crazybob@google.com (Bob Lee)
  * @since 2.0
  */
-public interface Element {
+public interface Element
+{
+    /**
+     * Returns an arbitrary object containing information about the "place" where this element was
+     * configured. Used by Guice in the production of descriptive error messages.
+     *
+     * <p>Tools might specially handle types they know about; {@code StackTraceElement} is a good
+     * example. Tools should simply call {@code toString()} on the source object if the type is
+     * unfamiliar.
+     */
+    Object getSource();
 
-  /**
-   * Returns an arbitrary object containing information about the "place" where this element was
-   * configured. Used by Guice in the production of descriptive error messages.
-   *
-   * <p>Tools might specially handle types they know about; {@code StackTraceElement} is a good
-   * example. Tools should simply call {@code toString()} on the source object if the type is
-   * unfamiliar.
-   */
-  Object getSource();
+    /**
+     * Accepts an element visitor. Invokes the visitor method specific to this element's type.
+     *
+     * @param visitor to call back on
+     */
+    <T> T acceptVisitor(ElementVisitor<T> visitor);
 
-  /**
-   * Accepts an element visitor. Invokes the visitor method specific to this element's type.
-   *
-   * @param visitor to call back on
-   */
-  <T> T acceptVisitor(ElementVisitor<T> visitor);
-
-  /**
-   * Writes this module element to the given binder (optional operation).
-   *
-   * @param binder to apply configuration element to
-   * @throws UnsupportedOperationException if the {@code applyTo} method is not supported by this
-   *     element.
-   */
-  void applyTo(Binder binder);
+    /**
+     * Writes this module element to the given binder (optional operation).
+     *
+     * @param binder to apply configuration element to
+     * @throws UnsupportedOperationException if the {@code applyTo} method is not supported by this
+     *         element.
+     */
+    void applyTo(Binder binder);
 }

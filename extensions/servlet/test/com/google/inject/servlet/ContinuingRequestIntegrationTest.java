@@ -16,9 +16,6 @@
 
 package com.google.inject.servlet;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Guice;
@@ -27,6 +24,17 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.FilterConfig;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.AbstractExecutorService;
@@ -36,209 +44,234 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.FilterConfig;
-import jakarta.servlet.ServletContext;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-/** Tests continuation of requests */
+/**
+ * Tests continuation of requests
+ */
 
-public class ContinuingRequestIntegrationTest {
-  private static final String PARAM_VALUE = "there";
-  private static final String PARAM_NAME = "hi";
+public class ContinuingRequestIntegrationTest
+{
+    private static final String PARAM_VALUE = "there";
+    private static final String PARAM_NAME = "hi";
 
-  private final AtomicBoolean failed = new AtomicBoolean(false);
-  private final AbstractExecutorService sameThreadExecutor =
-      new AbstractExecutorService() {
-        @Override
-        public void shutdown() {}
+    private final AtomicBoolean failed = new AtomicBoolean(false);
+    private final AbstractExecutorService sameThreadExecutor =
+            new AbstractExecutorService()
+            {
+                @Override
+                public void shutdown() {}
 
-        @Override
-        public List<Runnable> shutdownNow() {
-          return ImmutableList.of();
-        }
+                @Override
+                public List<Runnable> shutdownNow()
+                {
+                    return ImmutableList.of();
+                }
 
-        @Override
-        public boolean isShutdown() {
-          return true;
-        }
+                @Override
+                public boolean isShutdown()
+                {
+                    return true;
+                }
 
-        @Override
-        public boolean isTerminated() {
-          return true;
-        }
+                @Override
+                public boolean isTerminated()
+                {
+                    return true;
+                }
 
-        @Override
-        public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
-          return true;
-        }
+                @Override
+                public boolean awaitTermination(long timeout, TimeUnit unit)
+                        throws InterruptedException
+                {
+                    return true;
+                }
 
-        @Override
-        public void execute(Runnable command) {
-          command.run();
-        }
+                @Override
+                public void execute(Runnable command)
+                {
+                    command.run();
+                }
 
-        @Override
-        public <T> Future<T> submit(Callable<T> task) {
-          try {
-            task.call();
-            fail();
-          } catch (Exception e) {
-            // Expected.
-            assertTrue(e instanceof IllegalStateException);
-            failed.set(true);
-          }
+                @Override
+                public <T> Future<T> submit(Callable<T> task)
+                {
+                    try {
+                        task.call();
+                        fail();
+                    }
+                    catch (Exception e) {
+                        // Expected.
+                        assertTrue(e instanceof IllegalStateException);
+                        failed.set(true);
+                    }
 
-          return null;
-        }
-      };
+                    return null;
+                }
+            };
 
-  private ExecutorService executor;
-  private Injector injector;
+    private ExecutorService executor;
+    private Injector injector;
 
-  @AfterEach
-  public void tearDown() throws Exception {
-    injector.getInstance(GuiceFilter.class).destroy();
-  }
-
-  @Test
-  public final void testRequestContinuesInOtherThread()
-      throws ServletException, IOException, InterruptedException {
-    executor = Executors.newSingleThreadExecutor();
-
-    injector =
-        Guice.createInjector(
-            new ServletModule() {
-              @Override
-              protected void configureServlets() {
-                serve("/*").with(ContinuingServlet.class);
-
-                bind(ExecutorService.class).toInstance(executor);
-              }
-            });
-
-    FilterConfig filterConfig = mock(FilterConfig.class);
-    when(filterConfig.getServletContext()).thenReturn(mock(ServletContext.class));
-
-    GuiceFilter guiceFilter = injector.getInstance(GuiceFilter.class);
-
-    HttpServletRequest request = mock(HttpServletRequest.class);
-    HttpServletResponse response = mock(HttpServletResponse.class);
-
-    when(request.getRequestURI()).thenReturn("/");
-    when(request.getContextPath()).thenReturn("");
-    when(request.getMethod()).thenReturn("GET");
-    when(request.getCookies()).thenReturn(new Cookie[0]);
-
-    FilterChain filterChain = mock(FilterChain.class);
-    when(request.getParameter(PARAM_NAME)).thenReturn(PARAM_VALUE);
-
-    guiceFilter.init(filterConfig);
-    guiceFilter.doFilter(request, response, filterChain);
-
-    // join.
-    executor.shutdown();
-    executor.awaitTermination(10, TimeUnit.SECONDS);
-
-    assertEquals(PARAM_VALUE, injector.getInstance(OffRequestCallable.class).value);
-  }
-
-  @Test
-  public final void testRequestContinuationDiesInHttpRequestThread()
-      throws ServletException, IOException, InterruptedException {
-    executor = sameThreadExecutor;
-    injector =
-        Guice.createInjector(
-            new ServletModule() {
-              @Override
-              protected void configureServlets() {
-                serve("/*").with(ContinuingServlet.class);
-
-                bind(ExecutorService.class).toInstance(executor);
-
-                bind(SomeObject.class);
-              }
-            });
-
-    FilterConfig filterConfig = mock(FilterConfig.class);
-    when(filterConfig.getServletContext()).thenReturn(mock(ServletContext.class));
-
-    GuiceFilter guiceFilter = injector.getInstance(GuiceFilter.class);
-
-    HttpServletRequest request = mock(HttpServletRequest.class);
-    HttpServletResponse response = mock(HttpServletResponse.class);
-
-    when(request.getRequestURI()).thenReturn("/");
-    when(request.getContextPath()).thenReturn("");
-
-    when(request.getMethod()).thenReturn("GET");
-    when(request.getCookies()).thenReturn(new Cookie[0]);
-    FilterChain filterChain = mock(FilterChain.class);
-
-    guiceFilter.init(filterConfig);
-    guiceFilter.doFilter(request, response, filterChain);
-
-    // join.
-    executor.shutdown();
-    executor.awaitTermination(10, TimeUnit.SECONDS);
-
-    assertTrue(failed.get());
-    assertFalse(PARAM_VALUE.equals(injector.getInstance(OffRequestCallable.class).value));
-  }
-
-  @RequestScoped
-  public static class SomeObject {}
-
-  @Singleton
-  public static class ContinuingServlet extends HttpServlet {
-    @Inject OffRequestCallable callable;
-    @Inject ExecutorService executorService;
-
-    private SomeObject someObject;
-
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-        throws ServletException, IOException {
-      assertNull(someObject);
-
-      // Seed with someobject.
-      someObject = new SomeObject();
-      Callable<String> task =
-          ServletScopes.continueRequest(
-              callable, ImmutableMap.<Key<?>, Object>of(Key.get(SomeObject.class), someObject));
-
-      executorService.submit(task);
+    @AfterEach
+    public void tearDown()
+            throws Exception
+    {
+        injector.getInstance(GuiceFilter.class).destroy();
     }
-  }
 
-  @Singleton
-  public static class OffRequestCallable implements Callable<String> {
-    @Inject Provider<HttpServletRequest> request;
-    @Inject Provider<HttpServletResponse> response;
-    @Inject Provider<SomeObject> someObject;
+    @Test
+    public final void testRequestContinuesInOtherThread()
+            throws ServletException, IOException, InterruptedException
+    {
+        executor = Executors.newSingleThreadExecutor();
 
-    public String value;
+        injector =
+                Guice.createInjector(
+                        new ServletModule()
+                        {
+                            @Override
+                            protected void configureServlets()
+                            {
+                                serve("/*").with(ContinuingServlet.class);
 
-    @Override
-    public String call() throws Exception {
-      assertNull(response.get());
+                                bind(ExecutorService.class).toInstance(executor);
+                            }
+                        });
 
-      // Inside this request, we should always get the same instance.
-      assertSame(someObject.get(), someObject.get());
+        FilterConfig filterConfig = mock(FilterConfig.class);
+        when(filterConfig.getServletContext()).thenReturn(mock(ServletContext.class));
 
-      return value = request.get().getParameter(PARAM_NAME);
+        GuiceFilter guiceFilter = injector.getInstance(GuiceFilter.class);
+
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+
+        when(request.getRequestURI()).thenReturn("/");
+        when(request.getContextPath()).thenReturn("");
+        when(request.getMethod()).thenReturn("GET");
+        when(request.getCookies()).thenReturn(new Cookie[0]);
+
+        FilterChain filterChain = mock(FilterChain.class);
+        when(request.getParameter(PARAM_NAME)).thenReturn(PARAM_VALUE);
+
+        guiceFilter.init(filterConfig);
+        guiceFilter.doFilter(request, response, filterChain);
+
+        // join.
+        executor.shutdown();
+        executor.awaitTermination(10, TimeUnit.SECONDS);
+
+        assertEquals(PARAM_VALUE, injector.getInstance(OffRequestCallable.class).value);
     }
-  }
+
+    @Test
+    public final void testRequestContinuationDiesInHttpRequestThread()
+            throws ServletException, IOException, InterruptedException
+    {
+        executor = sameThreadExecutor;
+        injector =
+                Guice.createInjector(
+                        new ServletModule()
+                        {
+                            @Override
+                            protected void configureServlets()
+                            {
+                                serve("/*").with(ContinuingServlet.class);
+
+                                bind(ExecutorService.class).toInstance(executor);
+
+                                bind(SomeObject.class);
+                            }
+                        });
+
+        FilterConfig filterConfig = mock(FilterConfig.class);
+        when(filterConfig.getServletContext()).thenReturn(mock(ServletContext.class));
+
+        GuiceFilter guiceFilter = injector.getInstance(GuiceFilter.class);
+
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+
+        when(request.getRequestURI()).thenReturn("/");
+        when(request.getContextPath()).thenReturn("");
+
+        when(request.getMethod()).thenReturn("GET");
+        when(request.getCookies()).thenReturn(new Cookie[0]);
+        FilterChain filterChain = mock(FilterChain.class);
+
+        guiceFilter.init(filterConfig);
+        guiceFilter.doFilter(request, response, filterChain);
+
+        // join.
+        executor.shutdown();
+        executor.awaitTermination(10, TimeUnit.SECONDS);
+
+        assertTrue(failed.get());
+        assertFalse(PARAM_VALUE.equals(injector.getInstance(OffRequestCallable.class).value));
+    }
+
+    @RequestScoped
+    public static class SomeObject {}
+
+    @Singleton
+    public static class ContinuingServlet
+            extends HttpServlet
+    {
+        @Inject
+        OffRequestCallable callable;
+        @Inject
+        ExecutorService executorService;
+
+        private SomeObject someObject;
+
+        @Override
+        protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+                throws ServletException, IOException
+        {
+            assertNull(someObject);
+
+            // Seed with someobject.
+            someObject = new SomeObject();
+            Callable<String> task =
+                    ServletScopes.continueRequest(
+                            callable, ImmutableMap.<Key<?>, Object>of(Key.get(SomeObject.class), someObject));
+
+            executorService.submit(task);
+        }
+    }
+
+    @Singleton
+    public static class OffRequestCallable
+            implements Callable<String>
+    {
+        @Inject
+        Provider<HttpServletRequest> request;
+        @Inject
+        Provider<HttpServletResponse> response;
+        @Inject
+        Provider<SomeObject> someObject;
+
+        public String value;
+
+        @Override
+        public String call()
+                throws Exception
+        {
+            assertNull(response.get());
+
+            // Inside this request, we should always get the same instance.
+            assertSame(someObject.get(), someObject.get());
+
+            return value = request.get().getParameter(PARAM_NAME);
+        }
+    }
 }

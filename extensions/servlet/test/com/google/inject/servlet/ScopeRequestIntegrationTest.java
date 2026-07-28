@@ -27,6 +27,9 @@ import com.google.inject.ProvisionException;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
+import jakarta.servlet.ServletException;
+import org.junit.jupiter.api.Test;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -35,163 +38,190 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import jakarta.servlet.ServletException;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
-import org.junit.jupiter.api.Test;
 
-/** Tests continuation of requests */
+/**
+ * Tests continuation of requests
+ */
 
-public class ScopeRequestIntegrationTest {
-  private static final String A_VALUE = "thereaoskdao";
-  private static final String A_DIFFERENT_VALUE = "hiaoskd";
+public class ScopeRequestIntegrationTest
+{
+    private static final String A_VALUE = "thereaoskdao";
+    private static final String A_DIFFERENT_VALUE = "hiaoskd";
 
-  private static final String SHOULDNEVERBESEEN = "Shouldneverbeseen!";
+    private static final String SHOULDNEVERBESEEN = "Shouldneverbeseen!";
 
-  @Test
-  public final void testNonHttpRequestScopedCallable()
-      throws ServletException, IOException, InterruptedException, ExecutionException {
-    ExecutorService executor = Executors.newSingleThreadExecutor();
+    @Test
+    public final void testNonHttpRequestScopedCallable()
+            throws ServletException, IOException, InterruptedException, ExecutionException
+    {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
 
-    // We use servlet module here because we want to test that @RequestScoped
-    // behaves properly with the non-HTTP request scope logic.
-    Injector injector =
-        Guice.createInjector(
-            new ServletModule() {
-              @Override
-              protected void configureServlets() {
-                bindConstant().annotatedWith(Names.named(SomeObject.INVALID)).to(SHOULDNEVERBESEEN);
-                bind(SomeObject.class).in(RequestScoped.class);
-              }
-            });
+        // We use servlet module here because we want to test that @RequestScoped
+        // behaves properly with the non-HTTP request scope logic.
+        Injector injector =
+                Guice.createInjector(
+                        new ServletModule()
+                        {
+                            @Override
+                            protected void configureServlets()
+                            {
+                                bindConstant().annotatedWith(Names.named(SomeObject.INVALID)).to(SHOULDNEVERBESEEN);
+                                bind(SomeObject.class).in(RequestScoped.class);
+                            }
+                        });
 
-    SomeObject someObject = new SomeObject(A_VALUE);
-    OffRequestCallable offRequestCallable = injector.getInstance(OffRequestCallable.class);
-    executor
-        .submit(
+        SomeObject someObject = new SomeObject(A_VALUE);
+        OffRequestCallable offRequestCallable = injector.getInstance(OffRequestCallable.class);
+        executor
+                .submit(
+                        ServletScopes.scopeRequest(
+                                offRequestCallable,
+                                ImmutableMap.<Key<?>, Object>of(Key.get(SomeObject.class), someObject)))
+                .get();
+
+        assertSame(injector.getInstance(OffRequestCallable.class), offRequestCallable);
+
+        // Make sure the value was passed on.
+        assertEquals(someObject.value, offRequestCallable.value);
+        assertFalse(SHOULDNEVERBESEEN.equals(someObject.value));
+
+        // Now create a new request and assert that the scopes don't cross.
+        someObject = new SomeObject(A_DIFFERENT_VALUE);
+        executor
+                .submit(
+                        ServletScopes.scopeRequest(
+                                offRequestCallable,
+                                ImmutableMap.<Key<?>, Object>of(Key.get(SomeObject.class), someObject)))
+                .get();
+
+        assertSame(injector.getInstance(OffRequestCallable.class), offRequestCallable);
+
+        // Make sure the value was passed on.
+        assertEquals(someObject.value, offRequestCallable.value);
+        assertFalse(SHOULDNEVERBESEEN.equals(someObject.value));
+        executor.shutdown();
+        executor.awaitTermination(2, TimeUnit.SECONDS);
+    }
+
+    @Test
+    public final void testWrongValueClasses()
+            throws Exception
+    {
+        Injector injector =
+                Guice.createInjector(
+                        new ServletModule()
+                        {
+                            @Override
+                            protected void configureServlets()
+                            {
+                                bindConstant().annotatedWith(Names.named(SomeObject.INVALID)).to(SHOULDNEVERBESEEN);
+                                bind(SomeObject.class).in(RequestScoped.class);
+                            }
+                        });
+
+        OffRequestCallable offRequestCallable = injector.getInstance(OffRequestCallable.class);
+        try {
             ServletScopes.scopeRequest(
-                offRequestCallable,
-                ImmutableMap.<Key<?>, Object>of(Key.get(SomeObject.class), someObject)))
-        .get();
-
-    assertSame(injector.getInstance(OffRequestCallable.class), offRequestCallable);
-
-    // Make sure the value was passed on.
-    assertEquals(someObject.value, offRequestCallable.value);
-    assertFalse(SHOULDNEVERBESEEN.equals(someObject.value));
-
-    // Now create a new request and assert that the scopes don't cross.
-    someObject = new SomeObject(A_DIFFERENT_VALUE);
-    executor
-        .submit(
-            ServletScopes.scopeRequest(
-                offRequestCallable,
-                ImmutableMap.<Key<?>, Object>of(Key.get(SomeObject.class), someObject)))
-        .get();
-
-    assertSame(injector.getInstance(OffRequestCallable.class), offRequestCallable);
-
-    // Make sure the value was passed on.
-    assertEquals(someObject.value, offRequestCallable.value);
-    assertFalse(SHOULDNEVERBESEEN.equals(someObject.value));
-    executor.shutdown();
-    executor.awaitTermination(2, TimeUnit.SECONDS);
-  }
-
-  @Test
-  public final void testWrongValueClasses() throws Exception {
-    Injector injector =
-        Guice.createInjector(
-            new ServletModule() {
-              @Override
-              protected void configureServlets() {
-                bindConstant().annotatedWith(Names.named(SomeObject.INVALID)).to(SHOULDNEVERBESEEN);
-                bind(SomeObject.class).in(RequestScoped.class);
-              }
-            });
-
-    OffRequestCallable offRequestCallable = injector.getInstance(OffRequestCallable.class);
-    try {
-      ServletScopes.scopeRequest(
-          offRequestCallable, ImmutableMap.<Key<?>, Object>of(Key.get(SomeObject.class), "Boo!"));
-      fail();
-    } catch (IllegalArgumentException iae) {
-      assertEquals(
-          "Value[Boo!] of type[java.lang.String] is not compatible with key["
-              + Key.get(SomeObject.class)
-              + "]",
-          iae.getMessage());
-    }
-  }
-
-  @Test
-  public final void testNullReplacement() throws Exception {
-    Injector injector =
-        Guice.createInjector(
-            new ServletModule() {
-              @Override
-              protected void configureServlets() {
-                bindConstant().annotatedWith(Names.named(SomeObject.INVALID)).to(SHOULDNEVERBESEEN);
-                bind(SomeObject.class).in(RequestScoped.class);
-              }
-            });
-
-    Callable<SomeObject> callable = injector.getInstance(Caller.class);
-    try {
-      assertNotNull(callable.call());
-      fail();
-    } catch (ProvisionException pe) {
-      assertTrue(pe.getCause() instanceof OutOfScopeException);
+                    offRequestCallable, ImmutableMap.<Key<?>, Object>of(Key.get(SomeObject.class), "Boo!"));
+            fail();
+        }
+        catch (IllegalArgumentException iae) {
+            assertEquals(
+                    "Value[Boo!] of type[java.lang.String] is not compatible with key["
+                            + Key.get(SomeObject.class)
+                            + "]",
+                    iae.getMessage());
+        }
     }
 
-    // Validate that an actual null entry in the map results in a null injected object.
-    Map<Key<?>, Object> map = new HashMap<>();
-    map.put(Key.get(SomeObject.class), null);
-    callable = ServletScopes.scopeRequest(injector.getInstance(Caller.class), map);
-    assertNull(callable.call());
-  }
+    @Test
+    public final void testNullReplacement()
+            throws Exception
+    {
+        Injector injector =
+                Guice.createInjector(
+                        new ServletModule()
+                        {
+                            @Override
+                            protected void configureServlets()
+                            {
+                                bindConstant().annotatedWith(Names.named(SomeObject.INVALID)).to(SHOULDNEVERBESEEN);
+                                bind(SomeObject.class).in(RequestScoped.class);
+                            }
+                        });
 
-  @RequestScoped
-  public static class SomeObject {
-    private static final String INVALID = "invalid";
+        Callable<SomeObject> callable = injector.getInstance(Caller.class);
+        try {
+            assertNotNull(callable.call());
+            fail();
+        }
+        catch (ProvisionException pe) {
+            assertTrue(pe.getCause() instanceof OutOfScopeException);
+        }
 
-    @Inject
-    public SomeObject(@Named(INVALID) String value) {
-      this.value = value;
+        // Validate that an actual null entry in the map results in a null injected object.
+        Map<Key<?>, Object> map = new HashMap<>();
+        map.put(Key.get(SomeObject.class), null);
+        callable = ServletScopes.scopeRequest(injector.getInstance(Caller.class), map);
+        assertNull(callable.call());
     }
 
-    private final String value;
-  }
+    @RequestScoped
+    public static class SomeObject
+    {
+        private static final String INVALID = "invalid";
 
-  @Singleton
-  public static class OffRequestCallable implements Callable<String> {
-    @Inject Provider<SomeObject> someObject;
+        @Inject
+        public SomeObject(@Named(INVALID) String value)
+        {
+            this.value = value;
+        }
 
-    public String value;
-
-    @Override
-    public String call() throws Exception {
-      // Inside this request, we should always get the same instance.
-      assertSame(someObject.get(), someObject.get());
-
-      value = someObject.get().value;
-      assertFalse(SHOULDNEVERBESEEN.equals(value));
-
-      return value;
+        private final String value;
     }
-  }
 
-  private static class Caller implements Callable<SomeObject> {
-    @Inject Provider<SomeObject> someObject;
+    @Singleton
+    public static class OffRequestCallable
+            implements Callable<String>
+    {
+        @Inject
+        Provider<SomeObject> someObject;
 
-    @Override
-    public SomeObject call() throws Exception {
-      return someObject.get();
+        public String value;
+
+        @Override
+        public String call()
+                throws Exception
+        {
+            // Inside this request, we should always get the same instance.
+            assertSame(someObject.get(), someObject.get());
+
+            value = someObject.get().value;
+            assertFalse(SHOULDNEVERBESEEN.equals(value));
+
+            return value;
+        }
     }
-  }
+
+    private static class Caller
+            implements Callable<SomeObject>
+    {
+        @Inject
+        Provider<SomeObject> someObject;
+
+        @Override
+        public SomeObject call()
+                throws Exception
+        {
+            return someObject.get();
+        }
+    }
 }

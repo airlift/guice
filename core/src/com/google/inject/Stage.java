@@ -21,22 +21,24 @@ package com.google.inject;
  *
  * @author crazybob@google.com (Bob Lee)
  */
-public enum Stage {
+public enum Stage
+{
+    /**
+     * We're running in a tool (an IDE plugin for example). We need binding meta data but not a
+     * functioning Injector. Do not inject members of instances. Do not load eager singletons. Do as
+     * little as possible so our tools run nice and snappy. Injectors created in this stage cannot be
+     * used to satisfy injections.
+     */
+    TOOL,
 
-  /**
-   * We're running in a tool (an IDE plugin for example). We need binding meta data but not a
-   * functioning Injector. Do not inject members of instances. Do not load eager singletons. Do as
-   * little as possible so our tools run nice and snappy. Injectors created in this stage cannot be
-   * used to satisfy injections.
-   */
-  TOOL,
+    /**
+     * We want fast startup times at the expense of runtime performance and some up front error
+     * checking.
+     */
+    DEVELOPMENT,
 
-  /**
-   * We want fast startup times at the expense of runtime performance and some up front error
-   * checking.
-   */
-  DEVELOPMENT,
-
-  /** We want to catch errors as early as possible and take performance hits up front. */
-  PRODUCTION
+    /**
+     * We want to catch errors as early as possible and take performance hits up front.
+     */
+    PRODUCTION,
 }

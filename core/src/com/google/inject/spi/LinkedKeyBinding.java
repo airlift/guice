@@ -25,11 +25,12 @@ import com.google.inject.Key;
  * @author jessewilson@google.com (Jesse Wilson)
  * @since 2.0
  */
-public interface LinkedKeyBinding<T> extends Binding<T> {
-
-  /**
-   * Returns the linked key used to resolve injections. That binding can be retrieved from an
-   * injector using {@link com.google.inject.Injector#getBinding(Key) Injector.getBinding(key)}.
-   */
-  Key<? extends T> getLinkedKey();
+public interface LinkedKeyBinding<T>
+        extends Binding<T>
+{
+    /**
+     * Returns the linked key used to resolve injections. That binding can be retrieved from an
+     * injector using {@link com.google.inject.Injector#getBinding(Key) Injector.getBinding(key)}.
+     */
+    Key<? extends T> getLinkedKey();
 }

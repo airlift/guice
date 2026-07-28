@@ -18,6 +18,7 @@ package com.google.inject.assistedinject;
 
 import com.google.inject.TypeLiteral;
 import com.google.inject.spi.Dependency;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Set;
@@ -28,17 +29,25 @@ import java.util.Set;
  * @since 3.0
  * @author ramakrishna@google.com (Ramakrishna Rajanna)
  */
-public interface AssistedMethod {
+public interface AssistedMethod
+{
+    /**
+     * Returns the factory method that is being assisted.
+     */
+    Method getFactoryMethod();
 
-  /** Returns the factory method that is being assisted. */
-  Method getFactoryMethod();
+    /**
+     * Returns the implementation type that will be created when the method is used.
+     */
+    TypeLiteral<?> getImplementationType();
 
-  /** Returns the implementation type that will be created when the method is used. */
-  TypeLiteral<?> getImplementationType();
+    /**
+     * Returns the constructor that will be used to construct instances of the implementation.
+     */
+    Constructor<?> getImplementationConstructor();
 
-  /** Returns the constructor that will be used to construct instances of the implementation. */
-  Constructor<?> getImplementationConstructor();
-
-  /** Returns all non-assisted dependencies required to construct and inject the implementation. */
-  Set<Dependency<?>> getDependencies();
+    /**
+     * Returns all non-assisted dependencies required to construct and inject the implementation.
+     */
+    Set<Dependency<?>> getDependencies();
 }

@@ -20,44 +20,52 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Test static methods in interfaces.
  *
  * @author tavianator@tavianator.com (Tavian Barnes)
  */
-public class StaticInterfaceMethodsTest {
+public class StaticInterfaceMethodsTest
+{
+    private static class Thing
+    {
+        final int i;
 
-  private static class Thing {
-    final int i;
-
-    @Inject
-    Thing(@Assisted int i) {
-      this.i = i;
+        @Inject
+        Thing(@Assisted int i)
+        {
+            this.i = i;
+        }
     }
-  }
 
-  private interface Factory {
-    Thing create(int i);
+    private interface Factory
+    {
+        Thing create(int i);
 
-    static Factory getDefault() {
-      return Thing::new;
+        static Factory getDefault()
+        {
+            return Thing::new;
+        }
     }
-  }
 
-  @Test
-  public void testAssistedInjection() {
-    Injector injector =
-        Guice.createInjector(
-            new AbstractModule() {
-              @Override
-              protected void configure() {
-                install(new FactoryModuleBuilder().build(Factory.class));
-              }
-            });
-    Factory factory = injector.getInstance(Factory.class);
-    assertEquals(1, factory.create(1).i);
-  }
+    @Test
+    public void testAssistedInjection()
+    {
+        Injector injector =
+                Guice.createInjector(
+                        new AbstractModule()
+                        {
+                            @Override
+                            protected void configure()
+                            {
+                                install(new FactoryModuleBuilder().build(Factory.class));
+                            }
+                        });
+        Factory factory = injector.getInstance(Factory.class);
+        assertEquals(1, factory.create(1).i);
+    }
 }

@@ -27,10 +27,11 @@ import com.google.inject.Provides;
  * @since 4.0
  * @author sameb@google.com (Sam Berlin)
  */
-public interface ProvidesMethodTargetVisitor<T, V> extends BindingTargetVisitor<T, V> {
-
-  /**
-   * Visits an {@link ProvidesMethodBinding} created with an {@literal @}{@link Provides} method.
-   */
-  V visit(ProvidesMethodBinding<? extends T> providesMethodBinding);
+public interface ProvidesMethodTargetVisitor<T, V>
+        extends BindingTargetVisitor<T, V>
+{
+    /**
+     * Visits an {@link ProvidesMethodBinding} created with an {@literal @}{@link Provides} method.
+     */
+    V visit(ProvidesMethodBinding<? extends T> providesMethodBinding);
 }

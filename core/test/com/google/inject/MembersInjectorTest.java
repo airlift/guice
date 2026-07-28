@@ -16,431 +16,504 @@
 
 package com.google.inject;
 
-import static com.google.inject.Asserts.assertContains;
-
 import com.google.inject.internal.Annotations;
 import com.google.inject.name.Names;
 import com.google.inject.util.Providers;
+import jakarta.inject.Inject;
+import org.junit.jupiter.api.Test;
+import org.opentest4j.AssertionFailedError;
+
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
-import jakarta.inject.Inject;
-import org.opentest4j.AssertionFailedError;
+
+import static com.google.inject.Asserts.assertContains;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
-import org.junit.jupiter.api.Test;
 
-/** @author jessewilson@google.com (Jesse Wilson) */
-public class MembersInjectorTest {
+/**
+ * @author jessewilson@google.com (Jesse Wilson)
+ */
+public class MembersInjectorTest
+{
+    private static final long DEADLOCK_TIMEOUT_SECONDS = 1;
 
-  private static final long DEADLOCK_TIMEOUT_SECONDS = 1;
+    private static final A<C> uninjectableA =
+            new A<C>()
+            {
+                @Inject
+                @Override
+                void doNothing()
+                {
+                    throw new AssertionFailedError();
+                }
+            };
 
-  private static final A<C> uninjectableA =
-      new A<C>() {
-        @Inject
-        @Override
-        void doNothing() {
-          throw new AssertionFailedError();
+    private static final B uninjectableB =
+            new B()
+            {
+                @Inject
+                @Override
+                void doNothing()
+                {
+                    throw new AssertionFailedError();
+                }
+            };
+
+    private static final C myFavouriteC = new C();
+
+    @Test
+    public void testMembersInjectorFromBinder()
+    {
+        final AtomicReference<MembersInjector<A<C>>> aMembersInjectorReference =
+                new AtomicReference<MembersInjector<A<C>>>();
+        final AtomicReference<MembersInjector<B>> bMembersInjectorReference =
+                new AtomicReference<MembersInjector<B>>();
+
+        Guice.createInjector(
+                new AbstractModule()
+                {
+                    @Override
+                    protected void configure()
+                    {
+                        MembersInjector<A<C>> aMembersInjector = getMembersInjector(new TypeLiteral<A<C>>() {});
+                        try {
+                            aMembersInjector.injectMembers(uninjectableA);
+                            fail();
+                        }
+                        catch (IllegalStateException expected) {
+                            assertContains(
+                                    expected.getMessage(),
+                                    "This MembersInjector cannot be used until the Injector has been created.");
+                        }
+
+                        MembersInjector<B> bMembersInjector = getMembersInjector(B.class);
+                        try {
+                            bMembersInjector.injectMembers(uninjectableB);
+                            fail();
+                        }
+                        catch (IllegalStateException expected) {
+                            assertContains(
+                                    expected.getMessage(),
+                                    "This MembersInjector cannot be used until the Injector has been created.");
+                        }
+
+                        aMembersInjectorReference.set(aMembersInjector);
+                        bMembersInjectorReference.set(bMembersInjector);
+
+                        assertEquals(
+                                "MembersInjector<java.lang.String>", getMembersInjector(String.class).toString());
+
+                        bind(C.class).toInstance(myFavouriteC);
+                    }
+                });
+
+        A<C> injectableA = new A<>();
+        aMembersInjectorReference.get().injectMembers(injectableA);
+        assertSame(myFavouriteC, injectableA.t);
+        assertSame(myFavouriteC, injectableA.b.c);
+
+        B injectableB = new B();
+        bMembersInjectorReference.get().injectMembers(injectableB);
+        assertSame(myFavouriteC, injectableB.c);
+
+        B anotherInjectableB = new B();
+        bMembersInjectorReference.get().injectMembers(anotherInjectableB);
+        assertSame(myFavouriteC, anotherInjectableB.c);
+    }
+
+    @Test
+    public void testMembersInjectorFromInjector()
+    {
+        Injector injector =
+                Guice.createInjector(
+                        new AbstractModule()
+                        {
+                            @Override
+                            protected void configure()
+                            {
+                                bind(C.class).toInstance(myFavouriteC);
+                            }
+                        });
+
+        MembersInjector<A<C>> aMembersInjector =
+                injector.getMembersInjector(new TypeLiteral<A<C>>() {});
+        MembersInjector<B> bMembersInjector = injector.getMembersInjector(B.class);
+
+        A<C> injectableA = new A<>();
+        aMembersInjector.injectMembers(injectableA);
+        assertSame(myFavouriteC, injectableA.t);
+        assertSame(myFavouriteC, injectableA.b.c);
+
+        B injectableB = new B();
+        bMembersInjector.injectMembers(injectableB);
+        assertSame(myFavouriteC, injectableB.c);
+
+        B anotherInjectableB = new B();
+        bMembersInjector.injectMembers(anotherInjectableB);
+        assertSame(myFavouriteC, anotherInjectableB.c);
+
+        assertEquals(
+                "MembersInjector<java.lang.String>", injector.getMembersInjector(String.class).toString());
+    }
+
+    @Test
+    public void testMembersInjectorWithNonInjectedTypes()
+    {
+        Injector injector = Guice.createInjector();
+
+        MembersInjector<NoInjectedMembers> membersInjector =
+                injector.getMembersInjector(NoInjectedMembers.class);
+
+        membersInjector.injectMembers(new NoInjectedMembers());
+        membersInjector.injectMembers(new NoInjectedMembers());
+    }
+
+    @Test
+    public void testInjectionFailure()
+    {
+        Injector injector = Guice.createInjector();
+
+        MembersInjector<InjectionFailure> membersInjector =
+                injector.getMembersInjector(InjectionFailure.class);
+
+        try {
+            membersInjector.injectMembers(new InjectionFailure());
+            fail();
         }
-      };
-
-  private static final B uninjectableB =
-      new B() {
-        @Inject
-        @Override
-        void doNothing() {
-          throw new AssertionFailedError();
+        catch (ProvisionException expected) {
+            assertContains(expected.getMessage(), "ClassCastException: whoops, failure #1");
         }
-      };
+    }
 
-  private static final C myFavouriteC = new C();
+    @Test
+    public void testInjectionAppliesToSpecifiedType()
+    {
+        Injector injector = Guice.createInjector();
 
-  @Test
-  public void testMembersInjectorFromBinder() {
-    final AtomicReference<MembersInjector<A<C>>> aMembersInjectorReference =
-        new AtomicReference<MembersInjector<A<C>>>();
-    final AtomicReference<MembersInjector<B>> bMembersInjectorReference =
-        new AtomicReference<MembersInjector<B>>();
+        MembersInjector<Object> membersInjector = injector.getMembersInjector(Object.class);
+        membersInjector.injectMembers(new InjectionFailure());
+    }
 
-    Guice.createInjector(
-        new AbstractModule() {
-          @Override
-          protected void configure() {
-            MembersInjector<A<C>> aMembersInjector = getMembersInjector(new TypeLiteral<A<C>>() {});
+    @Test
+    public void testInjectingMembersInjector()
+    {
+        InjectsMembersInjector injectsMembersInjector =
+                Guice.createInjector(
+                                new AbstractModule()
+                                {
+                                    @Override
+                                    protected void configure()
+                                    {
+                                        bind(C.class).toInstance(myFavouriteC);
+                                    }
+                                })
+                        .getInstance(InjectsMembersInjector.class);
+
+        A<C> a = new A<>();
+        injectsMembersInjector.aMembersInjector.injectMembers(a);
+        assertSame(myFavouriteC, a.t);
+        assertSame(myFavouriteC, a.b.c);
+    }
+
+    @Test
+    public void testCannotBindMembersInjector()
+    {
+        try {
+            Guice.createInjector(
+                    new AbstractModule()
+                    {
+                        @Override
+                        protected void configure()
+                        {
+                            bind(MembersInjector.class).toProvider(Providers.of(null));
+                        }
+                    });
+            fail();
+        }
+        catch (CreationException expected) {
+            assertContains(
+                    expected.getMessage(),
+                    "Binding to core guice framework type is not allowed: MembersInjector.");
+        }
+
+        try {
+            Guice.createInjector(
+                    new AbstractModule()
+                    {
+                        @Override
+                        protected void configure()
+                        {
+                            bind(new TypeLiteral<MembersInjector<A<C>>>() {})
+                                    .toProvider(Providers.<MembersInjector<A<C>>>of(null));
+                        }
+                    });
+            fail();
+        }
+        catch (CreationException expected) {
+            assertContains(
+                    expected.getMessage(),
+                    "Binding to core guice framework type is not allowed: MembersInjector.");
+        }
+    }
+
+    @Test
+    public void testInjectingMembersInjectorWithErrorsInDependencies()
+    {
+        try {
+            Guice.createInjector().getInstance(InjectsBrokenMembersInjector.class);
+            fail();
+        }
+        catch (ConfigurationException expected) {
+            assertContains(
+                    expected.getMessage(),
+                    "No implementation for MembersInjectorTest$Unimplemented was bound.",
+                    "MembersInjectorTest$A.t(MembersInjectorTest.java:",
+                    "for field t",
+                    "at MembersInjectorTest$InjectsBrokenMembersInjector.aMembersInjector("
+                            + "MembersInjectorTest.java:",
+                    "for field aMembersInjector",
+                    "while locating MembersInjectorTest$InjectsBrokenMembersInjector");
+        }
+    }
+
+    @Test
+    public void testLookupMembersInjectorBinding()
+    {
+        Injector injector =
+                Guice.createInjector(
+                        new AbstractModule()
+                        {
+                            @Override
+                            protected void configure()
+                            {
+                                bind(C.class).toInstance(myFavouriteC);
+                            }
+                        });
+        MembersInjector<A<C>> membersInjector =
+                injector.getInstance(new Key<MembersInjector<A<C>>>() {});
+
+        A<C> a = new A<>();
+        membersInjector.injectMembers(a);
+        assertSame(myFavouriteC, a.t);
+        assertSame(myFavouriteC, a.b.c);
+
+        assertEquals(
+                "MembersInjector<java.lang.String>",
+                injector.getInstance(new Key<MembersInjector<String>>() {}).toString());
+    }
+
+    @Test
+    public void testGettingRawMembersInjector()
+    {
+        Injector injector = Guice.createInjector();
+        try {
+            injector.getInstance(MembersInjector.class);
+            fail();
+        }
+        catch (ConfigurationException expected) {
+            assertContains(
+                    expected.getMessage(), "Cannot inject a MembersInjector that has no type parameter");
+        }
+    }
+
+    @Test
+    public void testGettingAnnotatedMembersInjector()
+    {
+        Injector injector = Guice.createInjector();
+        try {
+            injector.getInstance(new Key<MembersInjector<String>>(Names.named("foo")) {});
+            fail();
+        }
+        catch (ConfigurationException expected) {
+            assertContains(
+                    expected.getMessage(),
+                    "No implementation for MembersInjector<String> annotated with @Named("
+                            + Annotations.memberValueString("value", "foo")
+                            + ") was bound.");
+        }
+    }
+
+    /**
+     * Callback for member injection. Uses a static type to be referable by getInstance().
+     */
+    abstract static class AbstractParallelMemberInjectionCallback
+    {
+        volatile boolean called;
+
+        private final Thread mainThread;
+        private final Class<? extends AbstractParallelMemberInjectionCallback> otherCallbackClass;
+
+        AbstractParallelMemberInjectionCallback(
+                Class<? extends AbstractParallelMemberInjectionCallback> otherCallbackClass)
+        {
+            this.mainThread = Thread.currentThread();
+            this.otherCallbackClass = otherCallbackClass;
+        }
+
+        @Inject
+        void callback(final Injector injector)
+                throws Exception
+        {
+            called = true;
+            if (mainThread != Thread.currentThread()) {
+                // only execute logic on the main thread
+                return;
+            }
+            // verify that other callback can be finished on a separate thread
+            AbstractParallelMemberInjectionCallback otherCallback =
+                    Executors.newSingleThreadExecutor()
+                            .submit(() -> injector.getInstance(otherCallbackClass))
+                            .get(DEADLOCK_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            assertTrue(otherCallback.called);
+
             try {
-              aMembersInjector.injectMembers(uninjectableA);
-              fail();
-            } catch (IllegalStateException expected) {
-              assertContains(
-                  expected.getMessage(),
-                  "This MembersInjector cannot be used until the Injector has been created.");
+                // other thread would wait for callback to finish on this thread first
+                Executors.newSingleThreadExecutor()
+                        .submit(() -> injector.getInstance(AbstractParallelMemberInjectionCallback.this.getClass()))
+                        .get(DEADLOCK_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+                fail();
             }
-
-            MembersInjector<B> bMembersInjector = getMembersInjector(B.class);
-            try {
-              bMembersInjector.injectMembers(uninjectableB);
-              fail();
-            } catch (IllegalStateException expected) {
-              assertContains(
-                  expected.getMessage(),
-                  "This MembersInjector cannot be used until the Injector has been created.");
+            catch (TimeoutException expected) {
+                // recursive call from another thread should time out
+                // as it would be waiting for this thread to finish
             }
+        }
+    }
 
-            aMembersInjectorReference.set(aMembersInjector);
-            bMembersInjectorReference.set(bMembersInjector);
+    static class ParallelMemberInjectionCallback1
+            extends AbstractParallelMemberInjectionCallback
+    {
+        ParallelMemberInjectionCallback1()
+        {
+            super(ParallelMemberInjectionCallback2.class);
+        }
+    }
 
-            assertEquals(
-                "MembersInjector<java.lang.String>", getMembersInjector(String.class).toString());
+    static class ParallelMemberInjectionCallback2
+            extends AbstractParallelMemberInjectionCallback
+    {
+        ParallelMemberInjectionCallback2()
+        {
+            super(ParallelMemberInjectionCallback1.class);
+        }
+    }
 
-            bind(C.class).toInstance(myFavouriteC);
-          }
-        });
+    /**
+     * Tests that member injections could happen in parallel.
+     *
+     * <p>Additional check that when member injection happen other threads would wait for it to finish
+     * to provide proper resolution order semantics.
+     */
 
-    A<C> injectableA = new A<>();
-    aMembersInjectorReference.get().injectMembers(injectableA);
-    assertSame(myFavouriteC, injectableA.t);
-    assertSame(myFavouriteC, injectableA.b.c);
-
-    B injectableB = new B();
-    bMembersInjectorReference.get().injectMembers(injectableB);
-    assertSame(myFavouriteC, injectableB.c);
-
-    B anotherInjectableB = new B();
-    bMembersInjectorReference.get().injectMembers(anotherInjectableB);
-    assertSame(myFavouriteC, anotherInjectableB.c);
-  }
-
-  @Test
-  public void testMembersInjectorFromInjector() {
-    Injector injector =
+    @Test
+    public void testMemberInjectorParallelization()
+            throws Exception
+    {
+        final ParallelMemberInjectionCallback1 c1 = new ParallelMemberInjectionCallback1();
+        final ParallelMemberInjectionCallback2 c2 = new ParallelMemberInjectionCallback2();
         Guice.createInjector(
-            new AbstractModule() {
-              @Override
-              protected void configure() {
-                bind(C.class).toInstance(myFavouriteC);
-              }
-            });
-
-    MembersInjector<A<C>> aMembersInjector =
-        injector.getMembersInjector(new TypeLiteral<A<C>>() {});
-    MembersInjector<B> bMembersInjector = injector.getMembersInjector(B.class);
-
-    A<C> injectableA = new A<>();
-    aMembersInjector.injectMembers(injectableA);
-    assertSame(myFavouriteC, injectableA.t);
-    assertSame(myFavouriteC, injectableA.b.c);
-
-    B injectableB = new B();
-    bMembersInjector.injectMembers(injectableB);
-    assertSame(myFavouriteC, injectableB.c);
-
-    B anotherInjectableB = new B();
-    bMembersInjector.injectMembers(anotherInjectableB);
-    assertSame(myFavouriteC, anotherInjectableB.c);
-
-    assertEquals(
-        "MembersInjector<java.lang.String>", injector.getMembersInjector(String.class).toString());
-  }
-
-  @Test
-  public void testMembersInjectorWithNonInjectedTypes() {
-    Injector injector = Guice.createInjector();
-
-    MembersInjector<NoInjectedMembers> membersInjector =
-        injector.getMembersInjector(NoInjectedMembers.class);
-
-    membersInjector.injectMembers(new NoInjectedMembers());
-    membersInjector.injectMembers(new NoInjectedMembers());
-  }
-
-  @Test
-  public void testInjectionFailure() {
-    Injector injector = Guice.createInjector();
-
-    MembersInjector<InjectionFailure> membersInjector =
-        injector.getMembersInjector(InjectionFailure.class);
-
-    try {
-      membersInjector.injectMembers(new InjectionFailure());
-      fail();
-    } catch (ProvisionException expected) {
-      assertContains(expected.getMessage(), "ClassCastException: whoops, failure #1");
+                new AbstractModule()
+                {
+                    @Override
+                    protected void configure()
+                    {
+                        bind(ParallelMemberInjectionCallback1.class).toInstance(c1);
+                        bind(ParallelMemberInjectionCallback2.class).toInstance(c2);
+                    }
+                });
+        assertTrue(c1.called);
+        assertTrue(c2.called);
     }
-  }
 
-  @Test
-  public void testInjectionAppliesToSpecifiedType() {
-    Injector injector = Guice.createInjector();
+    /**
+     * Member injection callback that injects itself.
+     */
+    static class RecursiveMemberInjection
+    {
+        boolean called;
 
-    MembersInjector<Object> membersInjector = injector.getMembersInjector(Object.class);
-    membersInjector.injectMembers(new InjectionFailure());
-  }
-
-  @Test
-  public void testInjectingMembersInjector() {
-    InjectsMembersInjector injectsMembersInjector =
-        Guice.createInjector(
-                new AbstractModule() {
-                  @Override
-                  protected void configure() {
-                    bind(C.class).toInstance(myFavouriteC);
-                  }
-                })
-            .getInstance(InjectsMembersInjector.class);
-
-    A<C> a = new A<>();
-    injectsMembersInjector.aMembersInjector.injectMembers(a);
-    assertSame(myFavouriteC, a.t);
-    assertSame(myFavouriteC, a.b.c);
-  }
-
-  @Test
-  public void testCannotBindMembersInjector() {
-    try {
-      Guice.createInjector(
-          new AbstractModule() {
-            @Override
-            protected void configure() {
-              bind(MembersInjector.class).toProvider(Providers.of(null));
+        @Inject
+        void callback(RecursiveMemberInjection recursiveMemberInjection)
+        {
+            if (called) {
+                fail("Should not be called twice");
             }
-          });
-      fail();
-    } catch (CreationException expected) {
-      assertContains(
-          expected.getMessage(),
-          "Binding to core guice framework type is not allowed: MembersInjector.");
+            called = true;
+        }
     }
 
-    try {
-      Guice.createInjector(
-          new AbstractModule() {
-            @Override
-            protected void configure() {
-              bind(new TypeLiteral<MembersInjector<A<C>>>() {})
-                  .toProvider(Providers.<MembersInjector<A<C>>>of(null));
-            }
-          });
-      fail();
-    } catch (CreationException expected) {
-      assertContains(
-          expected.getMessage(),
-          "Binding to core guice framework type is not allowed: MembersInjector.");
-    }
-  }
-
-  @Test
-  public void testInjectingMembersInjectorWithErrorsInDependencies() {
-    try {
-      Guice.createInjector().getInstance(InjectsBrokenMembersInjector.class);
-      fail();
-    } catch (ConfigurationException expected) {
-      assertContains(
-          expected.getMessage(),
-          "No implementation for MembersInjectorTest$Unimplemented was bound.",
-          "MembersInjectorTest$A.t(MembersInjectorTest.java:",
-          "for field t",
-          "at MembersInjectorTest$InjectsBrokenMembersInjector.aMembersInjector("
-              + "MembersInjectorTest.java:",
-          "for field aMembersInjector",
-          "while locating MembersInjectorTest$InjectsBrokenMembersInjector");
-    }
-  }
-
-  @Test
-  public void testLookupMembersInjectorBinding() {
-    Injector injector =
+    /**
+     * Verifies that member injection injecting itself would get a non initialized instance.
+     */
+    @Test
+    public void testRecursiveMemberInjector()
+            throws Exception
+    {
+        final RecursiveMemberInjection rmi = new RecursiveMemberInjection();
         Guice.createInjector(
-            new AbstractModule() {
-              @Override
-              protected void configure() {
-                bind(C.class).toInstance(myFavouriteC);
-              }
-            });
-    MembersInjector<A<C>> membersInjector =
-        injector.getInstance(new Key<MembersInjector<A<C>>>() {});
-
-    A<C> a = new A<>();
-    membersInjector.injectMembers(a);
-    assertSame(myFavouriteC, a.t);
-    assertSame(myFavouriteC, a.b.c);
-
-    assertEquals(
-        "MembersInjector<java.lang.String>",
-        injector.getInstance(new Key<MembersInjector<String>>() {}).toString());
-  }
-
-  @Test
-  public void testGettingRawMembersInjector() {
-    Injector injector = Guice.createInjector();
-    try {
-      injector.getInstance(MembersInjector.class);
-      fail();
-    } catch (ConfigurationException expected) {
-      assertContains(
-          expected.getMessage(), "Cannot inject a MembersInjector that has no type parameter");
-    }
-  }
-
-  @Test
-  public void testGettingAnnotatedMembersInjector() {
-    Injector injector = Guice.createInjector();
-    try {
-      injector.getInstance(new Key<MembersInjector<String>>(Names.named("foo")) {});
-      fail();
-    } catch (ConfigurationException expected) {
-      assertContains(
-          expected.getMessage(),
-          "No implementation for MembersInjector<String> annotated with @Named("
-              + Annotations.memberValueString("value", "foo")
-              + ") was bound.");
-    }
-  }
-
-  /** Callback for member injection. Uses a static type to be referable by getInstance(). */
-  abstract static class AbstractParallelMemberInjectionCallback {
-
-    volatile boolean called = false;
-
-    private final Thread mainThread;
-    private final Class<? extends AbstractParallelMemberInjectionCallback> otherCallbackClass;
-
-    AbstractParallelMemberInjectionCallback(
-        Class<? extends AbstractParallelMemberInjectionCallback> otherCallbackClass) {
-      this.mainThread = Thread.currentThread();
-      this.otherCallbackClass = otherCallbackClass;
+                new AbstractModule()
+                {
+                    @Override
+                    protected void configure()
+                    {
+                        bind(RecursiveMemberInjection.class).toInstance(rmi);
+                    }
+                });
+        assertTrue(rmi.called, "Member injection should happen");
     }
 
-    @Inject
-    void callback(final Injector injector) throws Exception {
-      called = true;
-      if (mainThread != Thread.currentThread()) {
-        // only execute logic on the main thread
-        return;
-      }
-      // verify that other callback can be finished on a separate thread
-      AbstractParallelMemberInjectionCallback otherCallback =
-          Executors.newSingleThreadExecutor()
-              .submit(() -> injector.getInstance(otherCallbackClass))
-              .get(DEADLOCK_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-      assertTrue(otherCallback.called);
+    static class A<T>
+    {
+        @Inject
+        B b;
+        @Inject
+        T t;
 
-      try {
-        // other thread would wait for callback to finish on this thread first
-        Executors.newSingleThreadExecutor()
-            .submit(
-                () -> injector.getInstance(AbstractParallelMemberInjectionCallback.this.getClass()))
-            .get(DEADLOCK_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        fail();
-      } catch (TimeoutException expected) {
-        // recursive call from another thread should time out
-        // as it would be waiting for this thread to finish
-      }
+        @Inject
+        void doNothing() {}
     }
-  }
 
-  static class ParallelMemberInjectionCallback1 extends AbstractParallelMemberInjectionCallback {
+    static class B
+    {
+        @Inject
+        C c;
 
-    ParallelMemberInjectionCallback1() {
-      super(ParallelMemberInjectionCallback2.class);
+        @Inject
+        void doNothing() {}
     }
-  }
 
-  static class ParallelMemberInjectionCallback2 extends AbstractParallelMemberInjectionCallback {
+    static class C {}
 
-    ParallelMemberInjectionCallback2() {
-      super(ParallelMemberInjectionCallback1.class);
+    static class NoInjectedMembers {}
+
+    static class InjectionFailure
+    {
+        int failures;
+
+        @Inject
+        void fail()
+        {
+            throw new ClassCastException("whoops, failure #" + (++failures));
+        }
     }
-  }
 
-  /**
-   * Tests that member injections could happen in parallel.
-   *
-   * <p>Additional check that when member injection happen other threads would wait for it to finish
-   * to provide proper resolution order semantics.
-   */
-
-  @Test
-  public void testMemberInjectorParallelization() throws Exception {
-    final ParallelMemberInjectionCallback1 c1 = new ParallelMemberInjectionCallback1();
-    final ParallelMemberInjectionCallback2 c2 = new ParallelMemberInjectionCallback2();
-    Guice.createInjector(
-        new AbstractModule() {
-          @Override
-          protected void configure() {
-            bind(ParallelMemberInjectionCallback1.class).toInstance(c1);
-            bind(ParallelMemberInjectionCallback2.class).toInstance(c2);
-          }
-        });
-    assertTrue(c1.called);
-    assertTrue(c2.called);
-  }
-
-  /** Member injection callback that injects itself. */
-  static class RecursiveMemberInjection {
-    boolean called = false;
-
-    @Inject
-    void callback(RecursiveMemberInjection recursiveMemberInjection) {
-      if (called) {
-        fail("Should not be called twice");
-      }
-      called = true;
+    static class InjectsMembersInjector
+    {
+        @Inject
+        MembersInjector<A<C>> aMembersInjector;
+        @Inject
+        A<B> ab;
     }
-  }
 
-  /** Verifies that member injection injecting itself would get a non initialized instance. */
-  @Test
-  public void testRecursiveMemberInjector() throws Exception {
-    final RecursiveMemberInjection rmi = new RecursiveMemberInjection();
-    Guice.createInjector(
-        new AbstractModule() {
-          @Override
-          protected void configure() {
-            bind(RecursiveMemberInjection.class).toInstance(rmi);
-          }
-        });
-    assertTrue(rmi.called, "Member injection should happen");
-  }
-
-  static class A<T> {
-    @Inject B b;
-    @Inject T t;
-
-    @Inject
-    void doNothing() {}
-  }
-
-  static class B {
-    @Inject C c;
-
-    @Inject
-    void doNothing() {}
-  }
-
-  static class C {}
-
-  static class NoInjectedMembers {}
-
-  static class InjectionFailure {
-    int failures = 0;
-
-    @Inject
-    void fail() {
-      throw new ClassCastException("whoops, failure #" + (++failures));
+    static class InjectsBrokenMembersInjector
+    {
+        @Inject
+        MembersInjector<A<Unimplemented>> aMembersInjector;
     }
-  }
 
-  static class InjectsMembersInjector {
-    @Inject MembersInjector<A<C>> aMembersInjector;
-    @Inject A<B> ab;
-  }
-
-  static class InjectsBrokenMembersInjector {
-    @Inject MembersInjector<A<Unimplemented>> aMembersInjector;
-  }
-
-  static interface Unimplemented {}
+    static interface Unimplemented {}
 }

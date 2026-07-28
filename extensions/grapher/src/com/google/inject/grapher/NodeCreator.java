@@ -24,8 +24,10 @@ import com.google.inject.Binding;
  * @author bojand@google.com (Bojan Djordjevic)
  * @since 4.0
  */
-public interface NodeCreator {
-
-  /** Returns nodes for the given dependency graph. */
-  Iterable<Node> getNodes(Iterable<Binding<?>> bindings);
+public interface NodeCreator
+{
+    /**
+     * Returns nodes for the given dependency graph.
+     */
+    Iterable<Node> getNodes(Iterable<Binding<?>> bindings);
 }

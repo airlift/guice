@@ -27,6 +27,7 @@ import com.google.inject.Key;
 import com.google.inject.Stage;
 import com.google.inject.spi.ProvisionListener;
 import com.google.inject.spi.ProvisionListenerBinding;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -36,98 +37,111 @@ import java.util.logging.Logger;
  *
  * @author sameb@google.com (Sam Berlin)
  */
-final class ProvisionListenerCallbackStore {
+final class ProvisionListenerCallbackStore
+{
+    // TODO(sameb): Consider exposing this in the API somehow?  Maybe?
+    // Lots of code often want to skip over the internal stuffs.
+    private static final ImmutableSet<Key<?>> INTERNAL_BINDINGS =
+            ImmutableSet.of(Key.get(Injector.class), Key.get(Stage.class), Key.get(Logger.class));
 
-  // TODO(sameb): Consider exposing this in the API somehow?  Maybe?
-  // Lots of code often want to skip over the internal stuffs.
-  private static final ImmutableSet<Key<?>> INTERNAL_BINDINGS =
-      ImmutableSet.of(Key.get(Injector.class), Key.get(Stage.class), Key.get(Logger.class));
+    private final ImmutableList<ProvisionListenerBinding> listenerBindings;
 
-  private final ImmutableList<ProvisionListenerBinding> listenerBindings;
+    private final LoadingCache<KeyBinding, ProvisionListenerStackCallback<?>> cache =
+            CacheBuilder.newBuilder()
+                    .build(
+                            new CacheLoader<KeyBinding, ProvisionListenerStackCallback<?>>()
+                            {
+                                @Override
+                                public ProvisionListenerStackCallback<?> load(KeyBinding key)
+                                {
+                                    return create(key.binding);
+                                }
+                            });
 
-  private final LoadingCache<KeyBinding, ProvisionListenerStackCallback<?>> cache =
-      CacheBuilder.newBuilder()
-          .build(
-              new CacheLoader<KeyBinding, ProvisionListenerStackCallback<?>>() {
-                @Override
-                public ProvisionListenerStackCallback<?> load(KeyBinding key) {
-                  return create(key.binding);
-                }
-              });
-
-  ProvisionListenerCallbackStore(List<ProvisionListenerBinding> listenerBindings) {
-    this.listenerBindings = ImmutableList.copyOf(listenerBindings);
-  }
-
-  /**
-   * Returns a new {@link ProvisionListenerStackCallback} for the key or {@code null} if there are
-   * no listeners
-   */
-  @SuppressWarnings(
-      "unchecked") // the ProvisionListenerStackCallback type always agrees with the passed type
-  public <T> ProvisionListenerStackCallback<T> get(Binding<T> binding) {
-    // Never notify any listeners for internal bindings.
-    if (!INTERNAL_BINDINGS.contains(binding.getKey())) {
-      ProvisionListenerStackCallback<T> callback =
-          (ProvisionListenerStackCallback<T>)
-              cache.getUnchecked(new KeyBinding(binding.getKey(), binding));
-      return callback.hasListeners() ? callback : null;
+    ProvisionListenerCallbackStore(List<ProvisionListenerBinding> listenerBindings)
+    {
+        this.listenerBindings = ImmutableList.copyOf(listenerBindings);
     }
-    return null;
-  }
 
-  /**
-   * Purges a key from the cache. Use this only if the type is not actually valid for binding and
-   * needs to be purged. (See issue 319 and
-   * ImplicitBindingTest#testCircularJitBindingsLeaveNoResidue and
-   * #testInstancesRequestingProvidersForThemselvesWithChildInjectors for examples of when this is
-   * necessary.)
-   *
-   * <p>Returns true if the type was stored in the cache, false otherwise.
-   */
-  boolean remove(Binding<?> type) {
-    return cache.asMap().remove(type) != null;
-  }
-
-  /**
-   * Creates a new {@link ProvisionListenerStackCallback} with the correct listeners for the key.
-   */
-  private <T> ProvisionListenerStackCallback<T> create(Binding<T> binding) {
-    List<ProvisionListener> listeners = null;
-    for (ProvisionListenerBinding provisionBinding : listenerBindings) {
-      if (provisionBinding.getBindingMatcher().matches(binding)) {
-        if (listeners == null) {
-          listeners = new ArrayList<>();
+    /**
+     * Returns a new {@link ProvisionListenerStackCallback} for the key or {@code null} if there are
+     * no listeners
+     */
+    @SuppressWarnings(
+            "unchecked")
+        // the ProvisionListenerStackCallback type always agrees with the passed type
+    public <T> ProvisionListenerStackCallback<T> get(Binding<T> binding)
+    {
+        // Never notify any listeners for internal bindings.
+        if (!INTERNAL_BINDINGS.contains(binding.getKey())) {
+            ProvisionListenerStackCallback<T> callback =
+                    (ProvisionListenerStackCallback<T>)
+                            cache.getUnchecked(new KeyBinding(binding.getKey(), binding));
+            return callback.hasListeners() ? callback : null;
         }
-        listeners.addAll(provisionBinding.getListeners());
-      }
-    }
-    if (listeners == null || listeners.isEmpty()) {
-      // Optimization: don't bother constructing the callback if there are
-      // no listeners.
-      return ProvisionListenerStackCallback.emptyListener();
-    }
-    return new ProvisionListenerStackCallback<T>(binding, listeners);
-  }
-
-  /** A struct that holds key and binding but uses just key for equality/hashcode. */
-  private static class KeyBinding {
-    final Key<?> key;
-    final Binding<?> binding;
-
-    KeyBinding(Key<?> key, Binding<?> binding) {
-      this.key = key;
-      this.binding = binding;
+        return null;
     }
 
-    @Override
-    public boolean equals(Object obj) {
-      return obj instanceof KeyBinding && key.equals(((KeyBinding) obj).key);
+    /**
+     * Purges a key from the cache. Use this only if the type is not actually valid for binding and
+     * needs to be purged. (See issue 319 and
+     * ImplicitBindingTest#testCircularJitBindingsLeaveNoResidue and
+     * #testInstancesRequestingProvidersForThemselvesWithChildInjectors for examples of when this is
+     * necessary.)
+     *
+     * <p>Returns true if the type was stored in the cache, false otherwise.
+     */
+    boolean remove(Binding<?> type)
+    {
+        return cache.asMap().remove(type) != null;
     }
 
-    @Override
-    public int hashCode() {
-      return key.hashCode();
+    /**
+     * Creates a new {@link ProvisionListenerStackCallback} with the correct listeners for the key.
+     */
+    private <T> ProvisionListenerStackCallback<T> create(Binding<T> binding)
+    {
+        List<ProvisionListener> listeners = null;
+        for (ProvisionListenerBinding provisionBinding : listenerBindings) {
+            if (provisionBinding.getBindingMatcher().matches(binding)) {
+                if (listeners == null) {
+                    listeners = new ArrayList<>();
+                }
+                listeners.addAll(provisionBinding.getListeners());
+            }
+        }
+        if (listeners == null || listeners.isEmpty()) {
+            // Optimization: don't bother constructing the callback if there are
+            // no listeners.
+            return ProvisionListenerStackCallback.emptyListener();
+        }
+        return new ProvisionListenerStackCallback<T>(binding, listeners);
     }
-  }
+
+    /**
+     * A struct that holds key and binding but uses just key for equality/hashcode.
+     */
+    private static class KeyBinding
+    {
+        final Key<?> key;
+        final Binding<?> binding;
+
+        KeyBinding(Key<?> key, Binding<?> binding)
+        {
+            this.key = key;
+            this.binding = binding;
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            return obj instanceof KeyBinding && key.equals(((KeyBinding) obj).key);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return key.hashCode();
+        }
+    }
 }

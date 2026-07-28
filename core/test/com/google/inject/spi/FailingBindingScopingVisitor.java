@@ -17,28 +17,34 @@
 package com.google.inject.spi;
 
 import com.google.inject.Scope;
-import java.lang.annotation.Annotation;
 import org.opentest4j.AssertionFailedError;
 
-public class FailingBindingScopingVisitor implements BindingScopingVisitor<Void> {
+import java.lang.annotation.Annotation;
 
-  @Override
-  public Void visitEagerSingleton() {
-    throw new AssertionFailedError();
-  }
+public class FailingBindingScopingVisitor
+        implements BindingScopingVisitor<Void>
+{
+    @Override
+    public Void visitEagerSingleton()
+    {
+        throw new AssertionFailedError();
+    }
 
-  @Override
-  public Void visitScope(Scope scope) {
-    throw new AssertionFailedError();
-  }
+    @Override
+    public Void visitScope(Scope scope)
+    {
+        throw new AssertionFailedError();
+    }
 
-  @Override
-  public Void visitScopeAnnotation(Class<? extends Annotation> scopeAnnotation) {
-    throw new AssertionFailedError();
-  }
+    @Override
+    public Void visitScopeAnnotation(Class<? extends Annotation> scopeAnnotation)
+    {
+        throw new AssertionFailedError();
+    }
 
-  @Override
-  public Void visitNoScoping() {
-    throw new AssertionFailedError();
-  }
+    @Override
+    public Void visitNoScoping()
+    {
+        throw new AssertionFailedError();
+    }
 }

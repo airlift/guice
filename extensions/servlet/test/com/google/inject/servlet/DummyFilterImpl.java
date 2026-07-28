@@ -16,7 +16,6 @@
 
 package com.google.inject.servlet;
 
-import java.io.IOException;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.FilterConfig;
@@ -24,28 +23,38 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 
+import java.io.IOException;
+
 /**
  * Used in unit tests to verify the EDSL.
  *
  * @author Dhanji R. Prasanna (dhanji@gmail com)
  */
-public class DummyFilterImpl implements Filter {
-  int num;
+public class DummyFilterImpl
+        implements Filter
+{
+    int num;
 
-  public DummyFilterImpl() {}
+    public DummyFilterImpl() {}
 
-  public DummyFilterImpl(int num) {
-    this.num = num;
-  }
+    public DummyFilterImpl(int num)
+    {
+        this.num = num;
+    }
 
-  @Override
-  public void init(FilterConfig filterConfig) throws ServletException {}
+    @Override
+    public void init(FilterConfig filterConfig)
+            throws ServletException
+    {}
 
-  @Override
-  public void doFilter(
-      ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
-      throws IOException, ServletException {}
+    @Override
+    public void doFilter(
+            ServletRequest servletRequest,
+            ServletResponse servletResponse,
+            FilterChain filterChain)
+            throws IOException, ServletException
+    {}
 
-  @Override
-  public void destroy() {}
+    @Override
+    public void destroy() {}
 }

@@ -24,48 +24,65 @@ import java.util.Objects;
  * @author phopkins@gmail.com (Pete Hopkins)
  * @since 4.0 (since 2.0 as an interface)
  */
-public class BindingEdge extends Edge {
-  /** Classification for what kind of binding this edge represents. */
-  public enum Type {
-    /** Binding is to an instance or class of the binding's same type. */
-    NORMAL,
-    /** Binding is to an instance or class that provides the binding's type. */
-    PROVIDER,
-    /** Binding is to the interface for a constant of a different type. */
-    CONVERTED_CONSTANT
-  }
-
-  private final Type type;
-
-  public BindingEdge(NodeId fromId, NodeId toId, Type type) {
-    super(fromId, toId);
-    this.type = type;
-  }
-
-  public Type getType() {
-    return type;
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (!(obj instanceof BindingEdge other)) {
-      return false;
+public class BindingEdge
+        extends Edge
+{
+    /**
+     * Classification for what kind of binding this edge represents.
+     */
+    public enum Type
+    {
+        /**
+         * Binding is to an instance or class of the binding's same type.
+         */
+        NORMAL,
+        /**
+         * Binding is to an instance or class that provides the binding's type.
+         */
+        PROVIDER,
+        /**
+         * Binding is to the interface for a constant of a different type.
+         */
+        CONVERTED_CONSTANT,
     }
-    return super.equals(other) && Objects.equals(type, other.type);
-  }
 
-  @Override
-  public int hashCode() {
-    return 31 * super.hashCode() + Objects.hash(type);
-  }
+    private final Type type;
 
-  @Override
-  public String toString() {
-    return "BindingEdge{fromId=" + getFromId() + " toId=" + getToId() + " type=" + type + "}";
-  }
+    public BindingEdge(NodeId fromId, NodeId toId, Type type)
+    {
+        super(fromId, toId);
+        this.type = type;
+    }
 
-  @Override
-  public Edge copy(NodeId fromId, NodeId toId) {
-    return new BindingEdge(fromId, toId, type);
-  }
+    public Type getType()
+    {
+        return type;
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (!(obj instanceof BindingEdge other)) {
+            return false;
+        }
+        return super.equals(other) && Objects.equals(type, other.type);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return 31 * super.hashCode() + Objects.hash(type);
+    }
+
+    @Override
+    public String toString()
+    {
+        return "BindingEdge{fromId=" + getFromId() + " toId=" + getToId() + " type=" + type + "}";
+    }
+
+    @Override
+    public Edge copy(NodeId fromId, NodeId toId)
+    {
+        return new BindingEdge(fromId, toId, type);
+    }
 }

@@ -17,6 +17,7 @@
 package com.google.inject.internal;
 
 import com.google.inject.spi.PrivateElements;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,23 +26,27 @@ import java.util.List;
  *
  * @author jessewilson@google.com (Jesse Wilson)
  */
-final class PrivateElementProcessor extends AbstractProcessor {
+final class PrivateElementProcessor
+        extends AbstractProcessor
+{
+    private final List<InjectorShell.Builder> injectorShellBuilders = new ArrayList<>();
 
-  private final List<InjectorShell.Builder> injectorShellBuilders = new ArrayList<>();
+    PrivateElementProcessor(Errors errors)
+    {
+        super(errors);
+    }
 
-  PrivateElementProcessor(Errors errors) {
-    super(errors);
-  }
+    @Override
+    public Boolean visit(PrivateElements privateElements)
+    {
+        InjectorShell.Builder builder =
+                new InjectorShell.Builder().parent(injector).privateElements(privateElements);
+        injectorShellBuilders.add(builder);
+        return true;
+    }
 
-  @Override
-  public Boolean visit(PrivateElements privateElements) {
-    InjectorShell.Builder builder =
-        new InjectorShell.Builder().parent(injector).privateElements(privateElements);
-    injectorShellBuilders.add(builder);
-    return true;
-  }
-
-  public List<InjectorShell.Builder> getInjectorShellBuilders() {
-    return injectorShellBuilders;
-  }
+    public List<InjectorShell.Builder> getInjectorShellBuilders()
+    {
+        return injectorShellBuilders;
+    }
 }

@@ -21,8 +21,11 @@ package com.google.inject.internal;
  *
  * @author jessewilson@google.com (Jesse Wilson)
  */
-interface Initializable<T> {
-
-  /** Ensures the reference is initialized, then returns it. */
-  T get(InternalContext context) throws InternalProvisionException;
+interface Initializable<T>
+{
+    /**
+     * Ensures the reference is initialized, then returns it.
+     */
+    T get(InternalContext context)
+            throws InternalProvisionException;
 }

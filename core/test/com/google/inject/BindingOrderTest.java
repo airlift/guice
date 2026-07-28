@@ -16,97 +16,120 @@
 
 package com.google.inject;
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicReference;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import org.junit.jupiter.api.Test;
 
-/** @author jessewilson@google.com (Jesse Wilson) */
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicReference;
 
-public class BindingOrderTest {
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
-  @Test
-  public void testBindingOutOfOrder() {
-    Guice.createInjector(
-        new AbstractModule() {
-          @Override
-          protected void configure() {
-            bind(BoundFirst.class);
-            bind(BoundSecond.class).to(BoundSecondImpl.class);
-          }
-        });
-  }
+/**
+ * @author jessewilson@google.com (Jesse Wilson)
+ */
 
-  public static class BoundFirst {
-    @Inject
-    public BoundFirst(BoundSecond boundSecond) {}
-  }
-
-  interface BoundSecond {}
-
-  static class BoundSecondImpl implements BoundSecond {}
-
-  @Test
-  public void testBindingOrderAndScopes() {
-    Injector injector =
+public class BindingOrderTest
+{
+    @Test
+    public void testBindingOutOfOrder()
+    {
         Guice.createInjector(
-            new AbstractModule() {
-              @Override
-              protected void configure() {
-                bind(A.class);
-                bind(B.class).asEagerSingleton();
-              }
-            });
+                new AbstractModule()
+                {
+                    @Override
+                    protected void configure()
+                    {
+                        bind(BoundFirst.class);
+                        bind(BoundSecond.class).to(BoundSecondImpl.class);
+                    }
+                });
+    }
 
-    assertSame(injector.getInstance(A.class).b, injector.getInstance(A.class).b);
-  }
+    public static class BoundFirst
+    {
+        @Inject
+        public BoundFirst(BoundSecond boundSecond) {}
+    }
 
-  @Test
-  public void testBindingWithExtraThreads() throws InterruptedException {
-    final CountDownLatch ready = new CountDownLatch(1);
-    final CountDownLatch done = new CountDownLatch(1);
-    final AtomicReference<B> ref = new AtomicReference<>();
+    interface BoundSecond {}
 
-    final Object createsAThread =
-        new Object() {
-          @Inject
-          void createAnotherThread(final Injector injector) {
-            new Thread() {
-              @Override
-              public void run() {
-                ready.countDown();
-                A a = injector.getInstance(A.class);
-                ref.set(a.b);
-                done.countDown();
-              }
-            }.start();
+    static class BoundSecondImpl
+            implements BoundSecond {}
 
-            // to encourage collisions, we make sure the other thread is running before returning
-            try {
-              ready.await();
-            } catch (InterruptedException e) {
-              throw new RuntimeException(e);
-            }
-          }
-        };
+    @Test
+    public void testBindingOrderAndScopes()
+    {
+        Injector injector =
+                Guice.createInjector(
+                        new AbstractModule()
+                        {
+                            @Override
+                            protected void configure()
+                            {
+                                bind(A.class);
+                                bind(B.class).asEagerSingleton();
+                            }
+                        });
 
-    Guice.createInjector(
-        new AbstractModule() {
-          @Override
-          protected void configure() {
-            requestInjection(createsAThread);
-            bind(A.class).toInstance(new A());
-          }
-        });
+        assertSame(injector.getInstance(A.class).b, injector.getInstance(A.class).b);
+    }
 
-    done.await();
-    assertNotNull(ref.get());
-  }
+    @Test
+    public void testBindingWithExtraThreads()
+            throws InterruptedException
+    {
+        final CountDownLatch ready = new CountDownLatch(1);
+        final CountDownLatch done = new CountDownLatch(1);
+        final AtomicReference<B> ref = new AtomicReference<>();
 
-  static class A {
-    @Inject B b;
-  }
+        final Object createsAThread =
+                new Object()
+                {
+                    @Inject
+                    void createAnotherThread(final Injector injector)
+                    {
+                        new Thread()
+                        {
+                            @Override
+                            public void run()
+                            {
+                                ready.countDown();
+                                A a = injector.getInstance(A.class);
+                                ref.set(a.b);
+                                done.countDown();
+                            }
+                        }.start();
 
-  static class B {}
+                        // to encourage collisions, we make sure the other thread is running before returning
+                        try {
+                            ready.await();
+                        }
+                        catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                };
+
+        Guice.createInjector(
+                new AbstractModule()
+                {
+                    @Override
+                    protected void configure()
+                    {
+                        requestInjection(createsAThread);
+                        bind(A.class).toInstance(new A());
+                    }
+                });
+
+        done.await();
+        assertNotNull(ref.get());
+    }
+
+    static class A
+    {
+        @Inject
+        B b;
+    }
+
+    static class B {}
 }

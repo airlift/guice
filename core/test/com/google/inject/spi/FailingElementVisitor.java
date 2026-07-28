@@ -18,9 +18,12 @@ package com.google.inject.spi;
 
 import org.opentest4j.AssertionFailedError;
 
-class FailingElementVisitor extends DefaultElementVisitor<Void> {
-  @Override
-  protected Void visitOther(Element element) {
-    throw new AssertionFailedError();
-  }
+class FailingElementVisitor
+        extends DefaultElementVisitor<Void>
+{
+    @Override
+    protected Void visitOther(Element element)
+    {
+        throw new AssertionFailedError();
+    }
 }

@@ -16,9 +16,6 @@
 
 package com.google.inject.matcher;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static java.util.Objects.requireNonNull;
-
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
@@ -26,451 +23,577 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static java.util.Objects.requireNonNull;
+
 /**
  * Matcher implementations. Supports matching classes and methods.
  *
  * @author crazybob@google.com (Bob Lee)
  */
 @SuppressWarnings("rawtypes") // lots of preexisting issues, and it's not worth fixing them all
-public class Matchers {
-  private Matchers() {}
+public class Matchers
+{
+    private Matchers() {}
 
-  /** Returns a matcher which matches any input. */
-  public static Matcher<Object> any() {
-    return ANY;
-  }
-
-  private static final Matcher<Object> ANY = new Any();
-
-  private static class Any extends AbstractMatcher<Object> implements Serializable {
-    @Override
-    public boolean matches(Object o) {
-      return true;
+    /**
+     * Returns a matcher which matches any input.
+     */
+    public static Matcher<Object> any()
+    {
+        return ANY;
     }
 
-    @Override
-    public String toString() {
-      return "any()";
+    private static final Matcher<Object> ANY = new Any();
+
+    private static class Any
+            extends AbstractMatcher<Object>
+            implements Serializable
+    {
+        @Override
+        public boolean matches(Object o)
+        {
+            return true;
+        }
+
+        @Override
+        public String toString()
+        {
+            return "any()";
+        }
+
+        public Object readResolve()
+        {
+            return any();
+        }
+
+        private static final long serialVersionUID = 0;
     }
 
-    public Object readResolve() {
-      return any();
+    /**
+     * Inverts the given matcher.
+     */
+    public static <T> Matcher<T> not(final Matcher<? super T> p)
+    {
+        return new Not<T>(p);
     }
 
-    private static final long serialVersionUID = 0;
-  }
+    private static class Not<T>
+            extends AbstractMatcher<T>
+            implements Serializable
+    {
+        final Matcher<? super T> delegate;
 
-  /** Inverts the given matcher. */
-  public static <T> Matcher<T> not(final Matcher<? super T> p) {
-    return new Not<T>(p);
-  }
+        private Not(Matcher<? super T> delegate)
+        {
+            this.delegate = requireNonNull(delegate, "delegate");
+        }
 
-  private static class Not<T> extends AbstractMatcher<T> implements Serializable {
-    final Matcher<? super T> delegate;
+        @Override
+        public boolean matches(T t)
+        {
+            return !delegate.matches(t);
+        }
 
-    private Not(Matcher<? super T> delegate) {
-      this.delegate = requireNonNull(delegate, "delegate");
+        @Override
+        public boolean equals(Object other)
+        {
+            return other instanceof Not && ((Not) other).delegate.equals(delegate);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return -delegate.hashCode();
+        }
+
+        @Override
+        public String toString()
+        {
+            return "not(" + delegate + ")";
+        }
+
+        private static final long serialVersionUID = 0;
     }
 
-    @Override
-    public boolean matches(T t) {
-      return !delegate.matches(t);
+    private static void checkForRuntimeRetention(Class<? extends Annotation> annotationType)
+    {
+        Retention retention = annotationType.getAnnotation(Retention.class);
+        checkArgument(
+                retention != null && retention.value() == RetentionPolicy.RUNTIME,
+                "Annotation %s is missing RUNTIME retention",
+                annotationType.getSimpleName());
     }
 
-    @Override
-    public boolean equals(Object other) {
-      return other instanceof Not && ((Not) other).delegate.equals(delegate);
+    /**
+     * Returns a matcher which matches elements (methods, classes, etc.) with a given annotation.
+     */
+    public static Matcher<AnnotatedElement> annotatedWith(
+            final Class<? extends Annotation> annotationType)
+    {
+        return new AnnotatedWithType(annotationType);
     }
 
-    @Override
-    public int hashCode() {
-      return -delegate.hashCode();
+    private static class AnnotatedWithType
+            extends AbstractMatcher<AnnotatedElement>
+            implements Serializable
+    {
+        private final Class<? extends Annotation> annotationType;
+
+        public AnnotatedWithType(Class<? extends Annotation> annotationType)
+        {
+            this.annotationType = requireNonNull(annotationType, "annotation type");
+            checkForRuntimeRetention(annotationType);
+        }
+
+        @Override
+        public boolean matches(AnnotatedElement element)
+        {
+            return element.isAnnotationPresent(annotationType);
+        }
+
+        @Override
+        public boolean equals(Object other)
+        {
+            return other instanceof AnnotatedWithType
+                    && ((AnnotatedWithType) other).annotationType.equals(annotationType);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return 37 * annotationType.hashCode();
+        }
+
+        @Override
+        public String toString()
+        {
+            return "annotatedWith(" + annotationType.getSimpleName() + ".class)";
+        }
+
+        private static final long serialVersionUID = 0;
     }
 
-    @Override
-    public String toString() {
-      return "not(" + delegate + ")";
+    /**
+     * Returns a matcher which matches elements (methods, classes, etc.) with a given annotation.
+     */
+    public static Matcher<AnnotatedElement> annotatedWith(final Annotation annotation)
+    {
+        return new AnnotatedWith(annotation);
     }
 
-    private static final long serialVersionUID = 0;
-  }
+    private static class AnnotatedWith
+            extends AbstractMatcher<AnnotatedElement>
+            implements Serializable
+    {
+        private final Annotation annotation;
 
-  private static void checkForRuntimeRetention(Class<? extends Annotation> annotationType) {
-    Retention retention = annotationType.getAnnotation(Retention.class);
-    checkArgument(
-        retention != null && retention.value() == RetentionPolicy.RUNTIME,
-        "Annotation %s is missing RUNTIME retention",
-        annotationType.getSimpleName());
-  }
+        public AnnotatedWith(Annotation annotation)
+        {
+            this.annotation = requireNonNull(annotation, "annotation");
+            checkForRuntimeRetention(annotation.annotationType());
+        }
 
-  /** Returns a matcher which matches elements (methods, classes, etc.) with a given annotation. */
-  public static Matcher<AnnotatedElement> annotatedWith(
-      final Class<? extends Annotation> annotationType) {
-    return new AnnotatedWithType(annotationType);
-  }
+        @Override
+        public boolean matches(AnnotatedElement element)
+        {
+            Annotation fromElement = element.getAnnotation(annotation.annotationType());
+            return fromElement != null && annotation.equals(fromElement);
+        }
 
-  private static class AnnotatedWithType extends AbstractMatcher<AnnotatedElement>
-      implements Serializable {
-    private final Class<? extends Annotation> annotationType;
+        @Override
+        public boolean equals(Object other)
+        {
+            return other instanceof AnnotatedWith
+                    && ((AnnotatedWith) other).annotation.equals(annotation);
+        }
 
-    public AnnotatedWithType(Class<? extends Annotation> annotationType) {
-      this.annotationType = requireNonNull(annotationType, "annotation type");
-      checkForRuntimeRetention(annotationType);
+        @Override
+        public int hashCode()
+        {
+            return 37 * annotation.hashCode();
+        }
+
+        @Override
+        public String toString()
+        {
+            return "annotatedWith(" + annotation + ")";
+        }
+
+        private static final long serialVersionUID = 0;
     }
 
-    @Override
-    public boolean matches(AnnotatedElement element) {
-      return element.isAnnotationPresent(annotationType);
+    /**
+     * Returns a matcher which matches subclasses of the given type (as well as the given type).
+     */
+    public static Matcher<Class> subclassesOf(final Class<?> superclass)
+    {
+        return new SubclassesOf(superclass);
     }
 
-    @Override
-    public boolean equals(Object other) {
-      return other instanceof AnnotatedWithType
-          && ((AnnotatedWithType) other).annotationType.equals(annotationType);
+    private static class SubclassesOf
+            extends AbstractMatcher<Class>
+            implements Serializable
+    {
+        private final Class<?> superclass;
+
+        public SubclassesOf(Class<?> superclass)
+        {
+            this.superclass = requireNonNull(superclass, "superclass");
+        }
+
+        @Override
+        public boolean matches(Class subclass)
+        {
+            return superclass.isAssignableFrom(subclass);
+        }
+
+        @Override
+        public boolean equals(Object other)
+        {
+            return other instanceof SubclassesOf && ((SubclassesOf) other).superclass.equals(superclass);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return 37 * superclass.hashCode();
+        }
+
+        @Override
+        public String toString()
+        {
+            return "subclassesOf(" + superclass.getSimpleName() + ".class)";
+        }
+
+        private static final long serialVersionUID = 0;
     }
 
-    @Override
-    public int hashCode() {
-      return 37 * annotationType.hashCode();
+    /**
+     * Returns a matcher which matches objects equal to the given object.
+     */
+    public static Matcher<Object> only(Object value)
+    {
+        return new Only(value);
     }
 
-    @Override
-    public String toString() {
-      return "annotatedWith(" + annotationType.getSimpleName() + ".class)";
+    private static class Only
+            extends AbstractMatcher<Object>
+            implements Serializable
+    {
+        private final Object value;
+
+        public Only(Object value)
+        {
+            this.value = requireNonNull(value, "value");
+        }
+
+        @Override
+        public boolean matches(Object other)
+        {
+            return value.equals(other);
+        }
+
+        @Override
+        public boolean equals(Object other)
+        {
+            return other instanceof Only && ((Only) other).value.equals(value);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return 37 * value.hashCode();
+        }
+
+        @Override
+        public String toString()
+        {
+            return "only(" + value + ")";
+        }
+
+        private static final long serialVersionUID = 0;
     }
 
-    private static final long serialVersionUID = 0;
-  }
-
-  /** Returns a matcher which matches elements (methods, classes, etc.) with a given annotation. */
-  public static Matcher<AnnotatedElement> annotatedWith(final Annotation annotation) {
-    return new AnnotatedWith(annotation);
-  }
-
-  private static class AnnotatedWith extends AbstractMatcher<AnnotatedElement>
-      implements Serializable {
-    private final Annotation annotation;
-
-    public AnnotatedWith(Annotation annotation) {
-      this.annotation = requireNonNull(annotation, "annotation");
-      checkForRuntimeRetention(annotation.annotationType());
+    /**
+     * Returns a matcher which matches only the given object.
+     */
+    public static Matcher<Object> identicalTo(final Object value)
+    {
+        return new IdenticalTo(value);
     }
 
-    @Override
-    public boolean matches(AnnotatedElement element) {
-      Annotation fromElement = element.getAnnotation(annotation.annotationType());
-      return fromElement != null && annotation.equals(fromElement);
+    private static class IdenticalTo
+            extends AbstractMatcher<Object>
+            implements Serializable
+    {
+        private final Object value;
+
+        public IdenticalTo(Object value)
+        {
+            this.value = requireNonNull(value, "value");
+        }
+
+        @Override
+        public boolean matches(Object other)
+        {
+            return value == other;
+        }
+
+        @Override
+        public boolean equals(Object other)
+        {
+            return other instanceof IdenticalTo && ((IdenticalTo) other).value == value;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return 37 * System.identityHashCode(value);
+        }
+
+        @Override
+        public String toString()
+        {
+            return "identicalTo(" + value + ")";
+        }
+
+        private static final long serialVersionUID = 0;
     }
 
-    @Override
-    public boolean equals(Object other) {
-      return other instanceof AnnotatedWith
-          && ((AnnotatedWith) other).annotation.equals(annotation);
+    /**
+     * Returns a matcher which matches classes in the given package. Packages are specific to their
+     * classloader, so classes with the same package name may not have the same package at runtime.
+     */
+    public static Matcher<Class> inPackage(final Package targetPackage)
+    {
+        return new InPackage(targetPackage);
     }
 
-    @Override
-    public int hashCode() {
-      return 37 * annotation.hashCode();
+    private static class InPackage
+            extends AbstractMatcher<Class>
+            implements Serializable
+    {
+        private final transient Package targetPackage;
+        private final String packageName;
+
+        public InPackage(Package targetPackage)
+        {
+            this.targetPackage = requireNonNull(targetPackage, "package");
+            this.packageName = targetPackage.getName();
+        }
+
+        @Override
+        public boolean matches(Class c)
+        {
+            return c.getPackage().equals(targetPackage);
+        }
+
+        @Override
+        public boolean equals(Object other)
+        {
+            return other instanceof InPackage && ((InPackage) other).targetPackage.equals(targetPackage);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return 37 * targetPackage.hashCode();
+        }
+
+        @Override
+        public String toString()
+        {
+            return "inPackage(" + targetPackage.getName() + ")";
+        }
+
+        public Object readResolve()
+        {
+            return inPackage(Package.getPackage(packageName));
+        }
+
+        private static final long serialVersionUID = 0;
     }
 
-    @Override
-    public String toString() {
-      return "annotatedWith(" + annotation + ")";
+    /**
+     * Returns a matcher which matches classes in the given package and its subpackages. Unlike {@link
+     * #inPackage(Package) inPackage()}, this matches classes from any classloader.
+     *
+     * @since 2.0
+     */
+    public static Matcher<Class> inSubpackage(final String targetPackageName)
+    {
+        return new InSubpackage(targetPackageName);
     }
 
-    private static final long serialVersionUID = 0;
-  }
+    private static class InSubpackage
+            extends AbstractMatcher<Class>
+            implements Serializable
+    {
+        private final String targetPackageName;
 
-  /** Returns a matcher which matches subclasses of the given type (as well as the given type). */
-  public static Matcher<Class> subclassesOf(final Class<?> superclass) {
-    return new SubclassesOf(superclass);
-  }
+        public InSubpackage(String targetPackageName)
+        {
+            this.targetPackageName = targetPackageName;
+        }
 
-  private static class SubclassesOf extends AbstractMatcher<Class> implements Serializable {
-    private final Class<?> superclass;
+        @Override
+        public boolean matches(Class c)
+        {
+            String classPackageName = c.getPackage().getName();
+            return classPackageName.equals(targetPackageName)
+                    || classPackageName.startsWith(targetPackageName + ".");
+        }
 
-    public SubclassesOf(Class<?> superclass) {
-      this.superclass = requireNonNull(superclass, "superclass");
+        @Override
+        public boolean equals(Object other)
+        {
+            return other instanceof InSubpackage
+                    && ((InSubpackage) other).targetPackageName.equals(targetPackageName);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return 37 * targetPackageName.hashCode();
+        }
+
+        @Override
+        public String toString()
+        {
+            return "inSubpackage(" + targetPackageName + ")";
+        }
+
+        private static final long serialVersionUID = 0;
     }
 
-    @Override
-    public boolean matches(Class subclass) {
-      return superclass.isAssignableFrom(subclass);
+    /**
+     * Returns a matcher which matches methods with matching return types.
+     */
+    public static Matcher<Method> returns(final Matcher<? super Class<?>> returnType)
+    {
+        return new Returns(returnType);
     }
 
-    @Override
-    public boolean equals(Object other) {
-      return other instanceof SubclassesOf && ((SubclassesOf) other).superclass.equals(superclass);
+    private static class Returns
+            extends AbstractMatcher<Method>
+            implements Serializable
+    {
+        private final Matcher<? super Class<?>> returnType;
+
+        public Returns(Matcher<? super Class<?>> returnType)
+        {
+            this.returnType = requireNonNull(returnType, "return type matcher");
+        }
+
+        @Override
+        public boolean matches(Method m)
+        {
+            return returnType.matches(m.getReturnType());
+        }
+
+        @Override
+        public boolean equals(Object other)
+        {
+            return other instanceof Returns && ((Returns) other).returnType.equals(returnType);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return 37 * returnType.hashCode();
+        }
+
+        @Override
+        public String toString()
+        {
+            return "returns(" + returnType + ")";
+        }
+
+        private static final long serialVersionUID = 0;
     }
 
-    @Override
-    public int hashCode() {
-      return 37 * superclass.hashCode();
+    static class AndMatcher<T>
+            extends AbstractMatcher<T>
+            implements Serializable
+    {
+        private final Matcher<? super T> a;
+        private final Matcher<? super T> b;
+
+        public AndMatcher(Matcher<? super T> a, Matcher<? super T> b)
+        {
+            this.a = a;
+            this.b = b;
+        }
+
+        @Override
+        public boolean matches(T t)
+        {
+            return a.matches(t) && b.matches(t);
+        }
+
+        @Override
+        public boolean equals(Object other)
+        {
+            return other instanceof AndMatcher
+                    && ((AndMatcher) other).a.equals(a)
+                    && ((AndMatcher) other).b.equals(b);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return 41 * (a.hashCode() ^ b.hashCode());
+        }
+
+        @Override
+        public String toString()
+        {
+            return "and(" + a + ", " + b + ")";
+        }
+
+        private static final long serialVersionUID = 0;
     }
 
-    @Override
-    public String toString() {
-      return "subclassesOf(" + superclass.getSimpleName() + ".class)";
+    static class OrMatcher<T>
+            extends AbstractMatcher<T>
+            implements Serializable
+    {
+        private final Matcher<? super T> a;
+        private final Matcher<? super T> b;
+
+        public OrMatcher(Matcher<? super T> a, Matcher<? super T> b)
+        {
+            this.a = a;
+            this.b = b;
+        }
+
+        @Override
+        public boolean matches(T t)
+        {
+            return a.matches(t) || b.matches(t);
+        }
+
+        @Override
+        public boolean equals(Object other)
+        {
+            return other instanceof OrMatcher
+                    && ((OrMatcher) other).a.equals(a)
+                    && ((OrMatcher) other).b.equals(b);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return 37 * (a.hashCode() ^ b.hashCode());
+        }
+
+        @Override
+        public String toString()
+        {
+            return "or(" + a + ", " + b + ")";
+        }
+
+        private static final long serialVersionUID = 0;
     }
-
-    private static final long serialVersionUID = 0;
-  }
-
-  /** Returns a matcher which matches objects equal to the given object. */
-  public static Matcher<Object> only(Object value) {
-    return new Only(value);
-  }
-
-  private static class Only extends AbstractMatcher<Object> implements Serializable {
-    private final Object value;
-
-    public Only(Object value) {
-      this.value = requireNonNull(value, "value");
-    }
-
-    @Override
-    public boolean matches(Object other) {
-      return value.equals(other);
-    }
-
-    @Override
-    public boolean equals(Object other) {
-      return other instanceof Only && ((Only) other).value.equals(value);
-    }
-
-    @Override
-    public int hashCode() {
-      return 37 * value.hashCode();
-    }
-
-    @Override
-    public String toString() {
-      return "only(" + value + ")";
-    }
-
-    private static final long serialVersionUID = 0;
-  }
-
-  /** Returns a matcher which matches only the given object. */
-  public static Matcher<Object> identicalTo(final Object value) {
-    return new IdenticalTo(value);
-  }
-
-  private static class IdenticalTo extends AbstractMatcher<Object> implements Serializable {
-    private final Object value;
-
-    public IdenticalTo(Object value) {
-      this.value = requireNonNull(value, "value");
-    }
-
-    @Override
-    public boolean matches(Object other) {
-      return value == other;
-    }
-
-    @Override
-    public boolean equals(Object other) {
-      return other instanceof IdenticalTo && ((IdenticalTo) other).value == value;
-    }
-
-    @Override
-    public int hashCode() {
-      return 37 * System.identityHashCode(value);
-    }
-
-    @Override
-    public String toString() {
-      return "identicalTo(" + value + ")";
-    }
-
-    private static final long serialVersionUID = 0;
-  }
-
-  /**
-   * Returns a matcher which matches classes in the given package. Packages are specific to their
-   * classloader, so classes with the same package name may not have the same package at runtime.
-   */
-  public static Matcher<Class> inPackage(final Package targetPackage) {
-    return new InPackage(targetPackage);
-  }
-
-  private static class InPackage extends AbstractMatcher<Class> implements Serializable {
-    private final transient Package targetPackage;
-    private final String packageName;
-
-    public InPackage(Package targetPackage) {
-      this.targetPackage = requireNonNull(targetPackage, "package");
-      this.packageName = targetPackage.getName();
-    }
-
-    @Override
-    public boolean matches(Class c) {
-      return c.getPackage().equals(targetPackage);
-    }
-
-    @Override
-    public boolean equals(Object other) {
-      return other instanceof InPackage && ((InPackage) other).targetPackage.equals(targetPackage);
-    }
-
-    @Override
-    public int hashCode() {
-      return 37 * targetPackage.hashCode();
-    }
-
-    @Override
-    public String toString() {
-      return "inPackage(" + targetPackage.getName() + ")";
-    }
-
-    public Object readResolve() {
-      return inPackage(Package.getPackage(packageName));
-    }
-
-    private static final long serialVersionUID = 0;
-  }
-
-  /**
-   * Returns a matcher which matches classes in the given package and its subpackages. Unlike {@link
-   * #inPackage(Package) inPackage()}, this matches classes from any classloader.
-   *
-   * @since 2.0
-   */
-  public static Matcher<Class> inSubpackage(final String targetPackageName) {
-    return new InSubpackage(targetPackageName);
-  }
-
-  private static class InSubpackage extends AbstractMatcher<Class> implements Serializable {
-    private final String targetPackageName;
-
-    public InSubpackage(String targetPackageName) {
-      this.targetPackageName = targetPackageName;
-    }
-
-    @Override
-    public boolean matches(Class c) {
-      String classPackageName = c.getPackage().getName();
-      return classPackageName.equals(targetPackageName)
-          || classPackageName.startsWith(targetPackageName + ".");
-    }
-
-    @Override
-    public boolean equals(Object other) {
-      return other instanceof InSubpackage
-          && ((InSubpackage) other).targetPackageName.equals(targetPackageName);
-    }
-
-    @Override
-    public int hashCode() {
-      return 37 * targetPackageName.hashCode();
-    }
-
-    @Override
-    public String toString() {
-      return "inSubpackage(" + targetPackageName + ")";
-    }
-
-    private static final long serialVersionUID = 0;
-  }
-
-  /** Returns a matcher which matches methods with matching return types. */
-  public static Matcher<Method> returns(final Matcher<? super Class<?>> returnType) {
-    return new Returns(returnType);
-  }
-
-  private static class Returns extends AbstractMatcher<Method> implements Serializable {
-    private final Matcher<? super Class<?>> returnType;
-
-    public Returns(Matcher<? super Class<?>> returnType) {
-      this.returnType = requireNonNull(returnType, "return type matcher");
-    }
-
-    @Override
-    public boolean matches(Method m) {
-      return returnType.matches(m.getReturnType());
-    }
-
-    @Override
-    public boolean equals(Object other) {
-      return other instanceof Returns && ((Returns) other).returnType.equals(returnType);
-    }
-
-    @Override
-    public int hashCode() {
-      return 37 * returnType.hashCode();
-    }
-
-    @Override
-    public String toString() {
-      return "returns(" + returnType + ")";
-    }
-
-    private static final long serialVersionUID = 0;
-  }
-
-  static class AndMatcher<T> extends AbstractMatcher<T> implements Serializable {
-    private final Matcher<? super T> a, b;
-
-    public AndMatcher(Matcher<? super T> a, Matcher<? super T> b) {
-      this.a = a;
-      this.b = b;
-    }
-
-    @Override
-    public boolean matches(T t) {
-      return a.matches(t) && b.matches(t);
-    }
-
-    @Override
-    public boolean equals(Object other) {
-      return other instanceof AndMatcher
-          && ((AndMatcher) other).a.equals(a)
-          && ((AndMatcher) other).b.equals(b);
-    }
-
-    @Override
-    public int hashCode() {
-      return 41 * (a.hashCode() ^ b.hashCode());
-    }
-
-    @Override
-    public String toString() {
-      return "and(" + a + ", " + b + ")";
-    }
-
-    private static final long serialVersionUID = 0;
-  }
-
-  static class OrMatcher<T> extends AbstractMatcher<T> implements Serializable {
-    private final Matcher<? super T> a, b;
-
-    public OrMatcher(Matcher<? super T> a, Matcher<? super T> b) {
-      this.a = a;
-      this.b = b;
-    }
-
-    @Override
-    public boolean matches(T t) {
-      return a.matches(t) || b.matches(t);
-    }
-
-    @Override
-    public boolean equals(Object other) {
-      return other instanceof OrMatcher
-          && ((OrMatcher) other).a.equals(a)
-          && ((OrMatcher) other).b.equals(b);
-    }
-
-    @Override
-    public int hashCode() {
-      return 37 * (a.hashCode() ^ b.hashCode());
-    }
-
-    @Override
-    public String toString() {
-      return "or(" + a + ", " + b + ")";
-    }
-
-    private static final long serialVersionUID = 0;
-  }
 }

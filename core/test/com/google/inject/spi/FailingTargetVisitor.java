@@ -19,9 +19,12 @@ package com.google.inject.spi;
 import com.google.inject.Binding;
 import org.opentest4j.AssertionFailedError;
 
-public class FailingTargetVisitor<T> extends DefaultBindingTargetVisitor<T, Void> {
-  @Override
-  protected Void visitOther(Binding<? extends T> binding) {
-    throw new AssertionFailedError();
-  }
+public class FailingTargetVisitor<T>
+        extends DefaultBindingTargetVisitor<T, Void>
+{
+    @Override
+    protected Void visitOther(Binding<? extends T> binding)
+    {
+        throw new AssertionFailedError();
+    }
 }

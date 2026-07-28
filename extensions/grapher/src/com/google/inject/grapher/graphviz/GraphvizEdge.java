@@ -18,6 +18,7 @@ package com.google.inject.grapher.graphviz;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.grapher.NodeId;
+
 import java.util.List;
 
 /**
@@ -25,87 +26,109 @@ import java.util.List;
  *
  * @author phopkins@gmail.com (Pete Hopkins)
  */
-public class GraphvizEdge {
-  private final NodeId headNodeId;
-  private String headPortId;
-  private CompassPoint headCompassPoint;
-  private List<ArrowType> arrowHead = ImmutableList.of(ArrowType.NORMAL);
+public class GraphvizEdge
+{
+    private final NodeId headNodeId;
+    private String headPortId;
+    private CompassPoint headCompassPoint;
+    private List<ArrowType> arrowHead = ImmutableList.of(ArrowType.NORMAL);
 
-  private final NodeId tailNodeId;
-  private String tailPortId;
-  private CompassPoint tailCompassPoint;
-  private List<ArrowType> arrowTail = ImmutableList.of(ArrowType.NONE);
+    private final NodeId tailNodeId;
+    private String tailPortId;
+    private CompassPoint tailCompassPoint;
+    private List<ArrowType> arrowTail = ImmutableList.of(ArrowType.NONE);
 
-  private EdgeStyle style = EdgeStyle.SOLID;
+    private EdgeStyle style = EdgeStyle.SOLID;
 
-  public GraphvizEdge(NodeId tailNodeId, NodeId headNodeId) {
-    this.tailNodeId = tailNodeId;
-    this.headNodeId = headNodeId;
-  }
+    public GraphvizEdge(NodeId tailNodeId, NodeId headNodeId)
+    {
+        this.tailNodeId = tailNodeId;
+        this.headNodeId = headNodeId;
+    }
 
-  /** @since 4.0 */
-  public NodeId getHeadNodeId() {
-    return headNodeId;
-  }
+    /**
+     * @since 4.0
+     */
+    public NodeId getHeadNodeId()
+    {
+        return headNodeId;
+    }
 
-  public String getHeadPortId() {
-    return headPortId;
-  }
+    public String getHeadPortId()
+    {
+        return headPortId;
+    }
 
-  public void setHeadPortId(String headPortId) {
-    this.headPortId = headPortId;
-  }
+    public void setHeadPortId(String headPortId)
+    {
+        this.headPortId = headPortId;
+    }
 
-  public CompassPoint getHeadCompassPoint() {
-    return headCompassPoint;
-  }
+    public CompassPoint getHeadCompassPoint()
+    {
+        return headCompassPoint;
+    }
 
-  public void setHeadCompassPoint(CompassPoint headCompassPoint) {
-    this.headCompassPoint = headCompassPoint;
-  }
+    public void setHeadCompassPoint(CompassPoint headCompassPoint)
+    {
+        this.headCompassPoint = headCompassPoint;
+    }
 
-  public List<ArrowType> getArrowHead() {
-    return arrowHead;
-  }
+    public List<ArrowType> getArrowHead()
+    {
+        return arrowHead;
+    }
 
-  public void setArrowHead(List<ArrowType> arrowHead) {
-    this.arrowHead = ImmutableList.copyOf(arrowHead);
-  }
+    public void setArrowHead(List<ArrowType> arrowHead)
+    {
+        this.arrowHead = ImmutableList.copyOf(arrowHead);
+    }
 
-  /** @since 4.0 */
-  public NodeId getTailNodeId() {
-    return tailNodeId;
-  }
+    /**
+     * @since 4.0
+     */
+    public NodeId getTailNodeId()
+    {
+        return tailNodeId;
+    }
 
-  public String getTailPortId() {
-    return tailPortId;
-  }
+    public String getTailPortId()
+    {
+        return tailPortId;
+    }
 
-  public void setTailPortId(String tailPortId) {
-    this.tailPortId = tailPortId;
-  }
+    public void setTailPortId(String tailPortId)
+    {
+        this.tailPortId = tailPortId;
+    }
 
-  public CompassPoint getTailCompassPoint() {
-    return tailCompassPoint;
-  }
+    public CompassPoint getTailCompassPoint()
+    {
+        return tailCompassPoint;
+    }
 
-  public void setTailCompassPoint(CompassPoint tailCompassPoint) {
-    this.tailCompassPoint = tailCompassPoint;
-  }
+    public void setTailCompassPoint(CompassPoint tailCompassPoint)
+    {
+        this.tailCompassPoint = tailCompassPoint;
+    }
 
-  public List<ArrowType> getArrowTail() {
-    return arrowTail;
-  }
+    public List<ArrowType> getArrowTail()
+    {
+        return arrowTail;
+    }
 
-  public void setArrowTail(List<ArrowType> arrowTail) {
-    this.arrowTail = ImmutableList.copyOf(arrowTail);
-  }
+    public void setArrowTail(List<ArrowType> arrowTail)
+    {
+        this.arrowTail = ImmutableList.copyOf(arrowTail);
+    }
 
-  public EdgeStyle getStyle() {
-    return style;
-  }
+    public EdgeStyle getStyle()
+    {
+        return style;
+    }
 
-  public void setStyle(EdgeStyle style) {
-    this.style = style;
-  }
+    public void setStyle(EdgeStyle style)
+    {
+        this.style = style;
+    }
 }

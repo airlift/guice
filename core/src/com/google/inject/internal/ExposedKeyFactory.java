@@ -24,50 +24,58 @@ import com.google.inject.spi.PrivateElements;
  * This factory exists in a parent injector. When invoked, it retrieves its value from a child
  * injector.
  */
-final class ExposedKeyFactory<T> extends InternalFactory<T> implements CreationListener {
-  private final Key<T> key;
-  private final Object source;
-  private final PrivateElements privateElements;
-  private InternalFactory<T> delegate;
+final class ExposedKeyFactory<T>
+        extends InternalFactory<T>
+        implements CreationListener
+{
+    private final Key<T> key;
+    private final Object source;
+    private final PrivateElements privateElements;
+    private InternalFactory<T> delegate;
 
-  ExposedKeyFactory(Key<T> key, Object source, PrivateElements privateElements) {
-    this.key = key;
-    this.source = source;
-    this.privateElements = privateElements;
-  }
-
-  @Override
-  public void notify(Errors errors) {
-    InjectorImpl privateInjector = (InjectorImpl) privateElements.getInjector();
-    BindingImpl<T> explicitBinding = privateInjector.getBindingData().getExplicitBinding(key);
-
-    // validate that the child injector has its own factory. If the getInternalFactory() returns
-    // this, then that child injector doesn't have a factory (and getExplicitBinding has returned
-    // its parent's binding instead
-    if (explicitBinding.getInternalFactory() == this) {
-      errors.withSource(explicitBinding.getSource()).exposedButNotBound(key);
-      return;
+    ExposedKeyFactory(Key<T> key, Object source, PrivateElements privateElements)
+    {
+        this.key = key;
+        this.source = source;
+        this.privateElements = privateElements;
     }
 
-    @SuppressWarnings("unchecked") // safe because InternalFactory<T> is covariant
-    InternalFactory<T> delegate = (InternalFactory<T>) explicitBinding.getInternalFactory();
-    this.delegate = delegate;
-  }
+    @Override
+    public void notify(Errors errors)
+    {
+        InjectorImpl privateInjector = (InjectorImpl) privateElements.getInjector();
+        BindingImpl<T> explicitBinding = privateInjector.getBindingData().getExplicitBinding(key);
 
-  @Override
-  public T get(InternalContext context, Dependency<?> dependency, boolean linked)
-      throws InternalProvisionException {
-    try {
-      return delegate.get(context, dependency, linked);
-    } catch (InternalProvisionException ipe) {
-      throw ipe.addSource(source);
+        // validate that the child injector has its own factory. If the getInternalFactory() returns
+        // this, then that child injector doesn't have a factory (and getExplicitBinding has returned
+        // its parent's binding instead
+        if (explicitBinding.getInternalFactory() == this) {
+            errors.withSource(explicitBinding.getSource()).exposedButNotBound(key);
+            return;
+        }
+
+        @SuppressWarnings("unchecked") // safe because InternalFactory<T> is covariant
+        InternalFactory<T> delegate = (InternalFactory<T>) explicitBinding.getInternalFactory();
+        this.delegate = delegate;
     }
-  }
 
-  @Override
-  MethodHandleResult makeHandle(LinkageContext context, boolean linked) {
-    return makeCachableOnLinkedSetting(
-        InternalMethodHandles.catchInternalProvisionExceptionAndRethrowWithSource(
-            this.delegate.getHandle(context, linked), source));
-  }
+    @Override
+    public T get(InternalContext context, Dependency<?> dependency, boolean linked)
+            throws InternalProvisionException
+    {
+        try {
+            return delegate.get(context, dependency, linked);
+        }
+        catch (InternalProvisionException ipe) {
+            throw ipe.addSource(source);
+        }
+    }
+
+    @Override
+    MethodHandleResult makeHandle(LinkageContext context, boolean linked)
+    {
+        return makeCachableOnLinkedSetting(
+                InternalMethodHandles.catchInternalProvisionExceptionAndRethrowWithSource(
+                        this.delegate.getHandle(context, linked), source));
+    }
 }

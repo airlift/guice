@@ -16,13 +16,13 @@
 
 package com.google.inject.multibindings;
 
-import static com.google.inject.internal.RealOptionalBinder.newRealOptionalBinder;
-
 import com.google.inject.Binder;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
 import com.google.inject.binder.LinkedBindingBuilder;
 import com.google.inject.internal.RealOptionalBinder;
+
+import static com.google.inject.internal.RealOptionalBinder.newRealOptionalBinder;
 
 /**
  * An API to bind optional values, optionally with a default value. OptionalBinder fulfills two
@@ -137,61 +137,70 @@ import com.google.inject.internal.RealOptionalBinder;
  * @author sameb@google.com (Sam Berlin)
  * @since 4.0
  */
-public class OptionalBinder<T> {
-  // This class is non-final due to users mocking this in tests :(
+public class OptionalBinder<T>
+{
+    // This class is non-final due to users mocking this in tests :(
 
-  public static <T> OptionalBinder<T> newOptionalBinder(Binder binder, Class<T> type) {
-    return new OptionalBinder<T>(newRealOptionalBinder(binder, Key.get(type)));
-  }
-
-  public static <T> OptionalBinder<T> newOptionalBinder(Binder binder, TypeLiteral<T> type) {
-    return new OptionalBinder<T>(newRealOptionalBinder(binder, Key.get(type)));
-  }
-
-  public static <T> OptionalBinder<T> newOptionalBinder(Binder binder, Key<T> type) {
-    return new OptionalBinder<T>(newRealOptionalBinder(binder, type));
-  }
-
-  private final RealOptionalBinder<T> delegate;
-
-  private OptionalBinder(RealOptionalBinder<T> delegate) {
-    this.delegate = delegate;
-  }
-
-  /**
-   * Returns a binding builder used to set the default value that will be injected. The binding set
-   * by this method will be ignored if {@link #setBinding} is called.
-   *
-   * <p>It is an error to call this method without also calling one of the {@code to} methods on the
-   * returned binding builder.
-   */
-  public LinkedBindingBuilder<T> setDefault() {
-    return delegate.setDefault();
-  }
-
-  /**
-   * Returns a binding builder used to set the actual value that will be injected. This overrides
-   * any binding set by {@link #setDefault}.
-   *
-   * <p>It is an error to call this method without also calling one of the {@code to} methods on the
-   * returned binding builder.
-   */
-  public LinkedBindingBuilder<T> setBinding() {
-    return delegate.setBinding();
-  }
-
-  // Some tests depend on equals/hashCode behavior of OptionalBinder
-
-  @Override
-  public boolean equals(Object obj) {
-    if (obj instanceof OptionalBinder) {
-      return delegate.equals(((OptionalBinder<?>) obj).delegate);
+    public static <T> OptionalBinder<T> newOptionalBinder(Binder binder, Class<T> type)
+    {
+        return new OptionalBinder<T>(newRealOptionalBinder(binder, Key.get(type)));
     }
-    return false;
-  }
 
-  @Override
-  public int hashCode() {
-    return delegate.hashCode();
-  }
+    public static <T> OptionalBinder<T> newOptionalBinder(Binder binder, TypeLiteral<T> type)
+    {
+        return new OptionalBinder<T>(newRealOptionalBinder(binder, Key.get(type)));
+    }
+
+    public static <T> OptionalBinder<T> newOptionalBinder(Binder binder, Key<T> type)
+    {
+        return new OptionalBinder<T>(newRealOptionalBinder(binder, type));
+    }
+
+    private final RealOptionalBinder<T> delegate;
+
+    private OptionalBinder(RealOptionalBinder<T> delegate)
+    {
+        this.delegate = delegate;
+    }
+
+    /**
+     * Returns a binding builder used to set the default value that will be injected. The binding set
+     * by this method will be ignored if {@link #setBinding} is called.
+     *
+     * <p>It is an error to call this method without also calling one of the {@code to} methods on the
+     * returned binding builder.
+     */
+    public LinkedBindingBuilder<T> setDefault()
+    {
+        return delegate.setDefault();
+    }
+
+    /**
+     * Returns a binding builder used to set the actual value that will be injected. This overrides
+     * any binding set by {@link #setDefault}.
+     *
+     * <p>It is an error to call this method without also calling one of the {@code to} methods on the
+     * returned binding builder.
+     */
+    public LinkedBindingBuilder<T> setBinding()
+    {
+        return delegate.setBinding();
+    }
+
+    // Some tests depend on equals/hashCode behavior of OptionalBinder
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (obj instanceof OptionalBinder) {
+            return delegate.equals(((OptionalBinder<?>) obj).delegate);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return delegate.hashCode();
+    }
 }

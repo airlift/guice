@@ -1,171 +1,209 @@
 package com.google.inject.throwingproviders;
 
+import com.google.inject.TypeLiteral;
+import org.junit.jupiter.api.Test;
+
+import java.util.Arrays;
+
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
-
-import com.google.inject.TypeLiteral;
-import java.util.Arrays;
 import static org.junit.jupiter.api.Assertions.fail;
-import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link CheckedProviders}.
  *
  * @author eatnumber1@google.com (Russ Harmon)
  */
-public final class CheckedProvidersTest {
-  private static interface StringCheckedProvider extends CheckedProvider<String> {}
+public final class CheckedProvidersTest
+{
+    private static interface StringCheckedProvider
+            extends CheckedProvider<String> {}
 
-  @Test
-  public void testCheckedProviderClass_get_returnsValidString() throws Exception {
-    String expected = "rick";
+    @Test
+    public void testCheckedProviderClass_get_returnsValidString()
+            throws Exception
+    {
+        String expected = "rick";
 
-    StringCheckedProvider provider = CheckedProviders.of(StringCheckedProvider.class, expected);
-    assertThat(provider.get()).isEqualTo(expected);
-  }
-
-  @Test
-  public void testCheckedProviderTypeLiteral_get_returnsValidString() throws Exception {
-    String expected = "morty";
-
-    StringCheckedProvider provider =
-        CheckedProviders.of(TypeLiteral.get(StringCheckedProvider.class), expected);
-    assertThat(provider.get()).isEqualTo(expected);
-  }
-
-  @Test
-  public void testCheckedProviderClassNull_get_returnsNull() throws Exception {
-    StringCheckedProvider provider = CheckedProviders.of(StringCheckedProvider.class, null);
-    assertThat(provider.get()).isNull();
-  }
-
-  @Test
-  public void testCheckedProviderTypeLiteralNull_get_returnsNull() throws Exception {
-    StringCheckedProvider provider =
-        CheckedProviders.of(TypeLiteral.get(StringCheckedProvider.class), null);
-    assertThat(provider.get()).isNull();
-  }
-
-  private static final class FooException extends Exception {}
-
-  private interface FooCheckedProvider extends CheckedProvider<Object> {
-    @Override
-    Object get() throws FooException;
-  }
-
-  @Test
-  public void testThrowingCheckedProviderClass_get_throwsException() {
-    FooCheckedProvider provider =
-        CheckedProviders.throwing(FooCheckedProvider.class, FooException.class);
-    try {
-      provider.get();
-      fail();
-    } catch (FooException expected) {
+        StringCheckedProvider provider = CheckedProviders.of(StringCheckedProvider.class, expected);
+        assertThat(provider.get()).isEqualTo(expected);
     }
-  }
 
-  @Test
-  public void testThrowingCheckedProviderTypeLiteral_get_throwsException() {
-    FooCheckedProvider provider =
-        CheckedProviders.throwing(TypeLiteral.get(FooCheckedProvider.class), FooException.class);
-    try {
-      provider.get();
-      fail();
-    } catch (FooException expected) {
+    @Test
+    public void testCheckedProviderTypeLiteral_get_returnsValidString()
+            throws Exception
+    {
+        String expected = "morty";
+
+        StringCheckedProvider provider =
+                CheckedProviders.of(TypeLiteral.get(StringCheckedProvider.class), expected);
+        assertThat(provider.get()).isEqualTo(expected);
     }
-  }
 
-  private interface MoreMethodsCheckedProvider<T> extends CheckedProvider<T> {
-    @Override
-    T get() throws FooException;
-
-    void otherMethod();
-  }
-
-  @Test
-  public void testUnsupportedMethods_otherMethod_throwsIllegalArgumentException()
-      throws NoSuchMethodException {
-    String message =
-        "%s may not declare any new methods, but declared %s"
-            .formatted(
-                MoreMethodsCheckedProvider.class.getName(),
-                Arrays.toString(MoreMethodsCheckedProvider.class.getDeclaredMethods()));
-
-    try {
-      CheckedProviders.of(
-          new TypeLiteral<MoreMethodsCheckedProvider<String>>() {}, "SHOW ME WHAT YOU GOT");
-      fail("Expected an exception to be thrown");
-    } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessageThat().isEqualTo(message);
+    @Test
+    public void testCheckedProviderClassNull_get_returnsNull()
+            throws Exception
+    {
+        StringCheckedProvider provider = CheckedProviders.of(StringCheckedProvider.class, null);
+        assertThat(provider.get()).isNull();
     }
-  }
 
-  private static final class StringException extends RuntimeException {
-    StringException(String arg) {}
-  }
-
-  @Test
-  public void testCheckThrowable_unsupportedThrowableConstructor_throwsIllegalArgumentException() {
-    String message =
-        "Thrown exception <%s> must have a no-argument constructor"
-            .formatted(StringException.class.getName());
-
-    try {
-      CheckedProviders.throwing(FooCheckedProvider.class, StringException.class);
-      fail("Expected an exception to be thrown");
-    } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessageThat().isEqualTo(message);
-      assertWithMessage("exception <%s> with cause", e)
-          .that(e.getCause())
-          .isInstanceOf(NoSuchMethodException.class);
+    @Test
+    public void testCheckedProviderTypeLiteralNull_get_returnsNull()
+            throws Exception
+    {
+        StringCheckedProvider provider =
+                CheckedProviders.of(TypeLiteral.get(StringCheckedProvider.class), null);
+        assertThat(provider.get()).isNull();
     }
-  }
 
-  private static final class BarException extends Exception {}
+    private static final class FooException
+            extends Exception {}
 
-  @Test
-  public void testCheckThrowable_checkedExceptionNotDeclared_throwsIllegalArgumentException()
-      throws Exception {
-    String message =
-        "Thrown exception <%s> is not declared to be thrown by <%s>"
-            .formatted(BarException.class.getName(), FooCheckedProvider.class.getMethod("get"));
-
-    try {
-      CheckedProviders.throwing(FooCheckedProvider.class, BarException.class);
-      fail("Expected an exception to be thrown");
-    } catch (IllegalArgumentException e) {
-      assertThat(e).hasMessageThat().isEqualTo(message);
+    private interface FooCheckedProvider
+            extends CheckedProvider<Object>
+    {
+        @Override
+        Object get()
+                throws FooException;
     }
-  }
 
-  private static final class ExpectedRuntimeException extends RuntimeException {}
-
-  @Test
-  public void testCheckThrowable_runtimeExceptionNotDeclared_throwsExpectedRuntimeException()
-      throws Exception {
-    FooCheckedProvider provider =
-        CheckedProviders.throwing(FooCheckedProvider.class, ExpectedRuntimeException.class);
-
-    try {
-      provider.get();
-      fail("Expected an exception to be thrown");
-    } catch (ExpectedRuntimeException e) {
-      // expected
+    @Test
+    public void testThrowingCheckedProviderClass_get_throwsException()
+    {
+        FooCheckedProvider provider =
+                CheckedProviders.throwing(FooCheckedProvider.class, FooException.class);
+        try {
+            provider.get();
+            fail();
+        }
+        catch (FooException expected) {
+        }
     }
-  }
 
-  private static final class ExpectedError extends Error {}
-
-  @Test
-  public void testCheckThrowable_errorNotDeclared_throwsExpectedError() throws Exception {
-    FooCheckedProvider provider =
-        CheckedProviders.throwing(FooCheckedProvider.class, ExpectedError.class);
-
-    try {
-      provider.get();
-      fail("Expected an exception to be thrown");
-    } catch (ExpectedError e) {
-      // expected
+    @Test
+    public void testThrowingCheckedProviderTypeLiteral_get_throwsException()
+    {
+        FooCheckedProvider provider =
+                CheckedProviders.throwing(TypeLiteral.get(FooCheckedProvider.class), FooException.class);
+        try {
+            provider.get();
+            fail();
+        }
+        catch (FooException expected) {
+        }
     }
-  }
+
+    private interface MoreMethodsCheckedProvider<T>
+            extends CheckedProvider<T>
+    {
+        @Override
+        T get()
+                throws FooException;
+
+        void otherMethod();
+    }
+
+    @Test
+    public void testUnsupportedMethods_otherMethod_throwsIllegalArgumentException()
+            throws NoSuchMethodException
+    {
+        String message =
+                "%s may not declare any new methods, but declared %s"
+                        .formatted(
+                                MoreMethodsCheckedProvider.class.getName(),
+                                Arrays.toString(MoreMethodsCheckedProvider.class.getDeclaredMethods()));
+
+        try {
+            CheckedProviders.of(
+                    new TypeLiteral<MoreMethodsCheckedProvider<String>>() {}, "SHOW ME WHAT YOU GOT");
+            fail("Expected an exception to be thrown");
+        }
+        catch (IllegalArgumentException e) {
+            assertThat(e).hasMessageThat().isEqualTo(message);
+        }
+    }
+
+    private static final class StringException
+            extends RuntimeException
+    {
+        StringException(String arg) {}
+    }
+
+    @Test
+    public void testCheckThrowable_unsupportedThrowableConstructor_throwsIllegalArgumentException()
+    {
+        String message =
+                "Thrown exception <%s> must have a no-argument constructor"
+                        .formatted(StringException.class.getName());
+
+        try {
+            CheckedProviders.throwing(FooCheckedProvider.class, StringException.class);
+            fail("Expected an exception to be thrown");
+        }
+        catch (IllegalArgumentException e) {
+            assertThat(e).hasMessageThat().isEqualTo(message);
+            assertWithMessage("exception <%s> with cause", e)
+                    .that(e.getCause())
+                    .isInstanceOf(NoSuchMethodException.class);
+        }
+    }
+
+    private static final class BarException
+            extends Exception {}
+
+    @Test
+    public void testCheckThrowable_checkedExceptionNotDeclared_throwsIllegalArgumentException()
+            throws Exception
+    {
+        String message =
+                "Thrown exception <%s> is not declared to be thrown by <%s>"
+                        .formatted(BarException.class.getName(), FooCheckedProvider.class.getMethod("get"));
+
+        try {
+            CheckedProviders.throwing(FooCheckedProvider.class, BarException.class);
+            fail("Expected an exception to be thrown");
+        }
+        catch (IllegalArgumentException e) {
+            assertThat(e).hasMessageThat().isEqualTo(message);
+        }
+    }
+
+    private static final class ExpectedRuntimeException
+            extends RuntimeException {}
+
+    @Test
+    public void testCheckThrowable_runtimeExceptionNotDeclared_throwsExpectedRuntimeException()
+            throws Exception
+    {
+        FooCheckedProvider provider =
+                CheckedProviders.throwing(FooCheckedProvider.class, ExpectedRuntimeException.class);
+
+        try {
+            provider.get();
+            fail("Expected an exception to be thrown");
+        }
+        catch (ExpectedRuntimeException e) {
+            // expected
+        }
+    }
+
+    private static final class ExpectedError
+            extends Error {}
+
+    @Test
+    public void testCheckThrowable_errorNotDeclared_throwsExpectedError()
+            throws Exception
+    {
+        FooCheckedProvider provider =
+                CheckedProviders.throwing(FooCheckedProvider.class, ExpectedError.class);
+
+        try {
+            provider.get();
+            fail("Expected an exception to be thrown");
+        }
+        catch (ExpectedError e) {
+            // expected
+        }
+    }
 }

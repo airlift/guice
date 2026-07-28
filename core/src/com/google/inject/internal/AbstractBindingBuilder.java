@@ -16,16 +16,16 @@
 
 package com.google.inject.internal;
 
-
-import static java.util.Objects.requireNonNull;
-
 import com.google.inject.Binder;
 import com.google.inject.Key;
 import com.google.inject.Scope;
 import com.google.inject.spi.Element;
 import com.google.inject.spi.InstanceBinding;
+
 import java.lang.annotation.Annotation;
 import java.util.List;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Base class used to create a new binding with the Guice EDSL described in {@link Binder}.
@@ -35,110 +35,130 @@ import java.util.List;
  * @author jessewilson@google.com (Jesse Wilson)
  */
 public abstract sealed class AbstractBindingBuilder<T>
-    permits BindingBuilder, ConstantBindingBuilderImpl {
+        permits BindingBuilder, ConstantBindingBuilderImpl
+{
+    public static final String IMPLEMENTATION_ALREADY_SET = "Implementation is set more than once.";
+    public static final String SINGLE_INSTANCE_AND_SCOPE =
+            "Setting the scope is not permitted when binding to a single instance.";
+    public static final String SCOPE_ALREADY_SET = "Scope is set more than once.";
+    public static final String BINDING_TO_NULL =
+            "Binding to null instances is not allowed. "
+                    + "Use toProvider(() -> null) if this is your intended behaviour.";
+    public static final String CONSTANT_VALUE_ALREADY_SET = "Constant value is set more than once.";
+    public static final String ANNOTATION_ALREADY_SPECIFIED =
+            "More than one annotation is specified for this binding.";
 
-  public static final String IMPLEMENTATION_ALREADY_SET = "Implementation is set more than once.";
-  public static final String SINGLE_INSTANCE_AND_SCOPE =
-      "Setting the scope is not permitted when binding to a single instance.";
-  public static final String SCOPE_ALREADY_SET = "Scope is set more than once.";
-  public static final String BINDING_TO_NULL =
-      "Binding to null instances is not allowed. "
-          + "Use toProvider(() -> null) if this is your intended behaviour.";
-  public static final String CONSTANT_VALUE_ALREADY_SET = "Constant value is set more than once.";
-  public static final String ANNOTATION_ALREADY_SPECIFIED =
-      "More than one annotation is specified for this binding.";
+    protected static final Key<?> NULL_KEY = Key.get(Void.class);
 
-  protected static final Key<?> NULL_KEY = Key.get(Void.class);
+    /**
+     * The binder that the new binding will be added to.
+     */
+    protected final Binder binder;
+    /**
+     * The list of elements stored inside the {@link #binder}. The new binding is added to this list.
+     */
+    protected List<Element> elements;
+    /**
+     * The index of the new binding in {@link #elements}. This is used by subclasses of
+     * AbstractBindingBuilder to repeatedly replace the binding object in {@link #elements} as more
+     * Guice EDSL methods are called to update the binding.
+     */
+    protected int position;
+    /**
+     * The new binding being added to the {@link #binder}'s {@link #elements} list
+     */
+    private BindingImpl<T> binding;
 
-  /** The binder that the new binding will be added to. */
-  protected final Binder binder;
-  /**
-   * The list of elements stored inside the {@link #binder}. The new binding is added to this list.
-   */
-  protected List<Element> elements;
-  /**
-   * The index of the new binding in {@link #elements}. This is used by subclasses of
-   * AbstractBindingBuilder to repeatedly replace the binding object in {@link #elements} as more
-   * Guice EDSL methods are called to update the binding.
-   */
-  protected int position;
-  /** The new binding being added to the {@link #binder}'s {@link #elements} list */
-  private BindingImpl<T> binding;
-
-  public AbstractBindingBuilder(Binder binder, List<Element> elements, Object source, Key<T> key) {
-    this.binder = binder;
-    this.elements = elements;
-    this.position = elements.size();
-    this.binding = new UntargettedBindingImpl<>(source, key, Scoping.UNSCOPED);
-    elements.add(position, this.binding);
-  }
-
-  protected BindingImpl<T> getBinding() {
-    return binding;
-  }
-
-  protected BindingImpl<T> setBinding(BindingImpl<T> binding) {
-    this.binding = binding;
-    elements.set(position, binding);
-    return binding;
-  }
-
-  /** Sets the binding to a copy with the specified annotation on the bound key */
-  protected BindingImpl<T> annotatedWithInternal(Class<? extends Annotation> annotationType) {
-    requireNonNull(annotationType, "annotationType");
-    checkNotAnnotated();
-    return setBinding(binding.withKey(this.binding.getKey().withAnnotation(annotationType)));
-  }
-
-  /** Sets the binding to a copy with the specified annotation on the bound key */
-  protected BindingImpl<T> annotatedWithInternal(Annotation annotation) {
-    requireNonNull(annotation, "annotation");
-    checkNotAnnotated();
-    return setBinding(binding.withKey(this.binding.getKey().withAnnotation(annotation)));
-  }
-
-  public void in(final Class<? extends Annotation> scopeAnnotation) {
-    requireNonNull(scopeAnnotation, "scopeAnnotation");
-    checkNotScoped();
-    setBinding(getBinding().withScoping(Scoping.forAnnotation(scopeAnnotation)));
-  }
-
-  public void in(final Scope scope) {
-    requireNonNull(scope, "scope");
-    checkNotScoped();
-    setBinding(getBinding().withScoping(Scoping.forInstance(scope)));
-  }
-
-  public void asEagerSingleton() {
-    checkNotScoped();
-    setBinding(getBinding().withScoping(Scoping.EAGER_SINGLETON));
-  }
-
-  protected boolean keyTypeIsSet() {
-    return !Void.class.equals(binding.getKey().getTypeLiteral().getType());
-  }
-
-  protected void checkNotTargetted() {
-    if (!(binding instanceof UntargettedBindingImpl)) {
-      binder.addError(IMPLEMENTATION_ALREADY_SET);
-    }
-  }
-
-  protected void checkNotAnnotated() {
-    if (binding.getKey().getAnnotationType() != null) {
-      binder.addError(ANNOTATION_ALREADY_SPECIFIED);
-    }
-  }
-
-  protected void checkNotScoped() {
-    // Scoping isn't allowed when we have only one instance.
-    if (binding instanceof InstanceBinding) {
-      binder.addError(SINGLE_INSTANCE_AND_SCOPE);
-      return;
+    public AbstractBindingBuilder(Binder binder, List<Element> elements, Object source, Key<T> key)
+    {
+        this.binder = binder;
+        this.elements = elements;
+        this.position = elements.size();
+        this.binding = new UntargettedBindingImpl<>(source, key, Scoping.UNSCOPED);
+        elements.add(position, this.binding);
     }
 
-    if (binding.getScoping().isExplicitlyScoped()) {
-      binder.addError(SCOPE_ALREADY_SET);
+    protected BindingImpl<T> getBinding()
+    {
+        return binding;
     }
-  }
+
+    protected BindingImpl<T> setBinding(BindingImpl<T> binding)
+    {
+        this.binding = binding;
+        elements.set(position, binding);
+        return binding;
+    }
+
+    /**
+     * Sets the binding to a copy with the specified annotation on the bound key
+     */
+    protected BindingImpl<T> annotatedWithInternal(Class<? extends Annotation> annotationType)
+    {
+        requireNonNull(annotationType, "annotationType");
+        checkNotAnnotated();
+        return setBinding(binding.withKey(this.binding.getKey().withAnnotation(annotationType)));
+    }
+
+    /**
+     * Sets the binding to a copy with the specified annotation on the bound key
+     */
+    protected BindingImpl<T> annotatedWithInternal(Annotation annotation)
+    {
+        requireNonNull(annotation, "annotation");
+        checkNotAnnotated();
+        return setBinding(binding.withKey(this.binding.getKey().withAnnotation(annotation)));
+    }
+
+    public void in(final Class<? extends Annotation> scopeAnnotation)
+    {
+        requireNonNull(scopeAnnotation, "scopeAnnotation");
+        checkNotScoped();
+        setBinding(getBinding().withScoping(Scoping.forAnnotation(scopeAnnotation)));
+    }
+
+    public void in(final Scope scope)
+    {
+        requireNonNull(scope, "scope");
+        checkNotScoped();
+        setBinding(getBinding().withScoping(Scoping.forInstance(scope)));
+    }
+
+    public void asEagerSingleton()
+    {
+        checkNotScoped();
+        setBinding(getBinding().withScoping(Scoping.EAGER_SINGLETON));
+    }
+
+    protected boolean keyTypeIsSet()
+    {
+        return !Void.class.equals(binding.getKey().getTypeLiteral().getType());
+    }
+
+    protected void checkNotTargetted()
+    {
+        if (!(binding instanceof UntargettedBindingImpl)) {
+            binder.addError(IMPLEMENTATION_ALREADY_SET);
+        }
+    }
+
+    protected void checkNotAnnotated()
+    {
+        if (binding.getKey().getAnnotationType() != null) {
+            binder.addError(ANNOTATION_ALREADY_SPECIFIED);
+        }
+    }
+
+    protected void checkNotScoped()
+    {
+        // Scoping isn't allowed when we have only one instance.
+        if (binding instanceof InstanceBinding) {
+            binder.addError(SINGLE_INSTANCE_AND_SCOPE);
+            return;
+        }
+
+        if (binding.getScoping().isExplicitlyScoped()) {
+            binder.addError(SCOPE_ALREADY_SET);
+        }
+    }
 }

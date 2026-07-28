@@ -27,9 +27,9 @@ import com.google.inject.TypeLiteral;
  *
  * @author jessewilson@google.com (Jesse Wilson)
  */
-interface Lookups {
+interface Lookups
+{
+    <T> Provider<T> getProvider(Key<T> key);
 
-  <T> Provider<T> getProvider(Key<T> key);
-
-  <T> MembersInjector<T> getMembersInjector(TypeLiteral<T> type);
+    <T> MembersInjector<T> getMembersInjector(TypeLiteral<T> type);
 }

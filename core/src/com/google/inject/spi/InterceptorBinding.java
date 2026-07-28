@@ -16,15 +16,15 @@
 
 package com.google.inject.spi;
 
-
-import static java.util.Objects.requireNonNull;
-
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Binder;
 import com.google.inject.matcher.Matcher;
+import org.aopalliance.intercept.MethodInterceptor;
+
 import java.lang.reflect.Method;
 import java.util.List;
-import org.aopalliance.intercept.MethodInterceptor;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Registration of interceptors for matching methods of matching classes. Instances are created
@@ -42,52 +42,61 @@ import org.aopalliance.intercept.MethodInterceptor;
  * @author jessewilson@google.com (Jesse Wilson)
  * @since 2.0
  */
-public final class InterceptorBinding implements Element {
-  private final Object source;
-  private final Matcher<? super Class<?>> classMatcher;
-  private final Matcher<? super Method> methodMatcher;
-  private final ImmutableList<MethodInterceptor> interceptors;
+public final class InterceptorBinding
+        implements Element
+{
+    private final Object source;
+    private final Matcher<? super Class<?>> classMatcher;
+    private final Matcher<? super Method> methodMatcher;
+    private final ImmutableList<MethodInterceptor> interceptors;
 
-  InterceptorBinding(
-      Object source,
-      Matcher<? super Class<?>> classMatcher,
-      Matcher<? super Method> methodMatcher,
-      MethodInterceptor[] interceptors) {
-    this.source = requireNonNull(source, "source");
-    this.classMatcher = requireNonNull(classMatcher, "classMatcher");
-    this.methodMatcher = requireNonNull(methodMatcher, "methodMatcher");
-    this.interceptors = ImmutableList.copyOf(interceptors);
-  }
+    InterceptorBinding(
+            Object source,
+            Matcher<? super Class<?>> classMatcher,
+            Matcher<? super Method> methodMatcher,
+            MethodInterceptor[] interceptors)
+    {
+        this.source = requireNonNull(source, "source");
+        this.classMatcher = requireNonNull(classMatcher, "classMatcher");
+        this.methodMatcher = requireNonNull(methodMatcher, "methodMatcher");
+        this.interceptors = ImmutableList.copyOf(interceptors);
+    }
 
-  @Override
-  public Object getSource() {
-    return source;
-  }
+    @Override
+    public Object getSource()
+    {
+        return source;
+    }
 
-  public Matcher<? super Class<?>> getClassMatcher() {
-    return classMatcher;
-  }
+    public Matcher<? super Class<?>> getClassMatcher()
+    {
+        return classMatcher;
+    }
 
-  public Matcher<? super Method> getMethodMatcher() {
-    return methodMatcher;
-  }
+    public Matcher<? super Method> getMethodMatcher()
+    {
+        return methodMatcher;
+    }
 
-  public List<MethodInterceptor> getInterceptors() {
-    return interceptors;
-  }
+    public List<MethodInterceptor> getInterceptors()
+    {
+        return interceptors;
+    }
 
-  @Override
-  public <T> T acceptVisitor(ElementVisitor<T> visitor) {
-    return visitor.visit(this);
-  }
+    @Override
+    public <T> T acceptVisitor(ElementVisitor<T> visitor)
+    {
+        return visitor.visit(this);
+    }
 
-  @Override
-  public void applyTo(Binder binder) {
-    binder
-        .withSource(getSource())
-        .bindInterceptor(
-            classMatcher,
-            methodMatcher,
-            interceptors.toArray(MethodInterceptor[]::new));
-  }
+    @Override
+    public void applyTo(Binder binder)
+    {
+        binder
+                .withSource(getSource())
+                .bindInterceptor(
+                        classMatcher,
+                        methodMatcher,
+                        interceptors.toArray(MethodInterceptor[]::new));
+    }
 }

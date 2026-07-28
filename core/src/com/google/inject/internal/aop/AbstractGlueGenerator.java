@@ -16,12 +16,10 @@
 
 package com.google.inject.internal.aop;
 
-import static java.lang.reflect.Modifier.PUBLIC;
-import static java.lang.reflect.Modifier.STATIC;
-import static org.objectweb.asm.Opcodes.ACONST_NULL;
-import static org.objectweb.asm.Opcodes.ARETURN;
-import static org.objectweb.asm.Opcodes.F_SAME;
-import static org.objectweb.asm.Opcodes.ILOAD;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Label;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Type;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Constructor;
@@ -34,10 +32,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.ToIntFunction;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Type;
+
+import static java.lang.reflect.Modifier.PUBLIC;
+import static java.lang.reflect.Modifier.STATIC;
+import static org.objectweb.asm.Opcodes.ACONST_NULL;
+import static org.objectweb.asm.Opcodes.ARETURN;
+import static org.objectweb.asm.Opcodes.F_SAME;
+import static org.objectweb.asm.Opcodes.ILOAD;
 
 /**
  * Support code for generating enhancer/fast-class glue.
@@ -73,147 +74,175 @@ import org.objectweb.asm.Type;
  *
  * @author mcculls@gmail.com (Stuart McCulloch)
  */
-abstract class AbstractGlueGenerator {
+abstract class AbstractGlueGenerator
+{
+    protected static final String GENERATED_SOURCE = "<generated>";
 
-  protected static final String GENERATED_SOURCE = "<generated>";
+    protected static final String TRAMPOLINE_NAME = "GUICE$TRAMPOLINE";
 
-  protected static final String TRAMPOLINE_NAME = "GUICE$TRAMPOLINE";
+    /**
+     * The trampoline method takes an index, along with a context object and an array of argument
+     * objects, and invokes the appropriate constructor/method returning the result as an object.
+     */
+    protected static final String TRAMPOLINE_DESCRIPTOR =
+            "(ILjava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;";
 
-  /**
-   * The trampoline method takes an index, along with a context object and an array of argument
-   * objects, and invokes the appropriate constructor/method returning the result as an object.
-   */
-  protected static final String TRAMPOLINE_DESCRIPTOR =
-      "(ILjava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;";
+    protected final Class<?> hostClass;
 
-  protected final Class<?> hostClass;
+    protected final String hostName;
 
-  protected final String hostName;
+    protected final String proxyName;
 
-  protected final String proxyName;
+    private static final AtomicInteger COUNTER = new AtomicInteger();
 
-  private static final AtomicInteger COUNTER = new AtomicInteger();
-
-  protected AbstractGlueGenerator(Class<?> hostClass, String marker) {
-    this.hostClass = hostClass;
-    this.hostName = Type.getInternalName(hostClass);
-    this.proxyName = proxyName(hostName, marker, hashCode());
-  }
-
-  /** Generates a unique name based on the original class name and marker. */
-  private static String proxyName(String hostName, String marker, int hash) {
-    long id = ((hash & 0x000FFFFF) | (COUNTER.getAndIncrement() << 20));
-    String proxyName = hostName + marker + Long.toHexString(id);
-    if (proxyName.startsWith("java/") && !ClassDefining.hasPackageAccess()) {
-      proxyName = '$' + proxyName; // can't define java.* glue in same package
-    }
-    return proxyName;
-  }
-
-  /** Generates the enhancer/fast-class and returns a mapping from signature to invoker. */
-  public final Function<String, BiFunction<Object, Object[], Object>> glue(
-      NavigableMap<String, Executable> glueMap) {
-    final MethodHandle invokerTable;
-    try {
-      byte[] bytecode = generateGlue(glueMap.values());
-      Class<?> glueClass = ClassDefining.define(hostClass, bytecode);
-      invokerTable = lookupInvokerTable(glueClass);
-    } catch (Throwable e) {
-      throw new GlueException("Problem generating " + proxyName, e);
+    protected AbstractGlueGenerator(Class<?> hostClass, String marker)
+    {
+        this.hostClass = hostClass;
+        this.hostName = Type.getInternalName(hostClass);
+        this.proxyName = proxyName(hostName, marker, hashCode());
     }
 
-    // build optimized index for these signatures and bind it to the generated invokers
-    ToIntFunction<String> signatureTable = ImmutableStringTrie.buildTrie(glueMap.keySet());
-    return bindSignaturesToInvokers(signatureTable, invokerTable);
-  }
-
-  /** Generates enhancer/fast-class bytecode for the given constructors/methods. */
-  protected abstract byte[] generateGlue(Collection<Executable> members);
-
-  /** Lookup the invoker table; this may be represented by a function or a trampoline. */
-  protected abstract MethodHandle lookupInvokerTable(Class<?> glueClass) throws Throwable;
-
-  /** Combines the signature and invoker tables into a mapping from signature to invoker. */
-  private static Function<String, BiFunction<Object, Object[], Object>> bindSignaturesToInvokers(
-      ToIntFunction<String> signatureTable, MethodHandle invokerTable) {
-
-    // single-argument method; the table must be a function from integer index to invoker function
-    if (invokerTable.type().parameterCount() == 1) {
-      return signature -> {
-        try {
-          // pass this signature's index into the table function to retrieve the invoker
-          @SuppressWarnings("unchecked")
-          var invoker =
-              (BiFunction<Object, Object[], Object>)
-                  invokerTable.invokeExact(signatureTable.applyAsInt(signature));
-          return invoker;
-        } catch (Throwable e) {
-          throw asIfUnchecked(e);
+    /**
+     * Generates a unique name based on the original class name and marker.
+     */
+    private static String proxyName(String hostName, String marker, int hash)
+    {
+        long id = ((hash & 0x000FFFFF) | (COUNTER.getAndIncrement() << 20));
+        String proxyName = hostName + marker + Long.toHexString(id);
+        if (proxyName.startsWith("java/") && !ClassDefining.hasPackageAccess()) {
+            proxyName = '$' + proxyName; // can't define java.* glue in same package
         }
-      };
+        return proxyName;
     }
 
-    // otherwise must be a trampoline method that takes the index and invoker arguments all at once
-    return signature -> {
-      // bind the index as soon as we have the signature...
-      int index = signatureTable.applyAsInt(signature);
-      return (instance, arguments) -> {
+    /**
+     * Generates the enhancer/fast-class and returns a mapping from signature to invoker.
+     */
+    public final Function<String, BiFunction<Object, Object[], Object>> glue(
+            NavigableMap<String, Executable> glueMap)
+    {
+        final MethodHandle invokerTable;
         try {
-          // ...but delay calling trampoline until invocation time when we have the other arguments
-          return invokerTable.invokeExact(index, instance, arguments);
-        } catch (Throwable e) {
-          throw asIfUnchecked(e);
+            byte[] bytecode = generateGlue(glueMap.values());
+            Class<?> glueClass = ClassDefining.define(hostClass, bytecode);
+            invokerTable = lookupInvokerTable(glueClass);
         }
-      };
-    };
-  }
+        catch (Throwable e) {
+            throw new GlueException("Problem generating " + proxyName, e);
+        }
 
-  /** Generics trick to get compiler to treat given exception as if unchecked (as JVM does). */
-  @SuppressWarnings("unchecked")
-  private static <E extends Throwable> RuntimeException asIfUnchecked(Throwable e) throws E {
-    throw (E) e;
-  }
-
-  /**
-   * Generate trampoline that takes an index, along with a context object and array of argument
-   * objects, and invokes the appropriate constructor/method returning the result as an object.
-   */
-  protected final void generateTrampoline(ClassWriter cw, Collection<Executable> members) {
-    MethodVisitor mv =
-        cw.visitMethod(PUBLIC | STATIC, TRAMPOLINE_NAME, TRAMPOLINE_DESCRIPTOR, null, null);
-    mv.visitCode();
-
-    Label[] labels = new Label[members.size()];
-    Arrays.setAll(labels, i -> new Label());
-    Label defaultLabel = new Label();
-
-    mv.visitVarInsn(ILOAD, 0);
-    mv.visitTableSwitchInsn(0, labels.length - 1, defaultLabel, labels);
-
-    int labelIndex = 0;
-    for (Executable member : members) {
-      mv.visitLabel(labels[labelIndex++]);
-      mv.visitFrame(F_SAME, 0, null, 0, null);
-      if (member instanceof Constructor<?>) {
-        generateConstructorInvoker(mv, (Constructor<?>) member);
-      } else {
-        generateMethodInvoker(mv, (Method) member);
-      }
-      mv.visitInsn(ARETURN);
+        // build optimized index for these signatures and bind it to the generated invokers
+        ToIntFunction<String> signatureTable = ImmutableStringTrie.buildTrie(glueMap.keySet());
+        return bindSignaturesToInvokers(signatureTable, invokerTable);
     }
 
-    mv.visitLabel(defaultLabel);
-    mv.visitFrame(F_SAME, 0, null, 0, null);
-    mv.visitInsn(ACONST_NULL);
-    mv.visitInsn(ARETURN);
+    /**
+     * Generates enhancer/fast-class bytecode for the given constructors/methods.
+     */
+    protected abstract byte[] generateGlue(Collection<Executable> members);
 
-    mv.visitMaxs(0, 0);
-    mv.visitEnd();
-  }
+    /**
+     * Lookup the invoker table; this may be represented by a function or a trampoline.
+     */
+    protected abstract MethodHandle lookupInvokerTable(Class<?> glueClass)
+            throws Throwable;
 
-  /** Generate invoker that takes a context and an argument array and calls the constructor. */
-  protected abstract void generateConstructorInvoker(MethodVisitor mv, Constructor<?> constructor);
+    /**
+     * Combines the signature and invoker tables into a mapping from signature to invoker.
+     */
+    private static Function<String, BiFunction<Object, Object[], Object>> bindSignaturesToInvokers(
+            ToIntFunction<String> signatureTable,
+            MethodHandle invokerTable)
+    {
+        // single-argument method; the table must be a function from integer index to invoker function
+        if (invokerTable.type().parameterCount() == 1) {
+            return signature -> {
+                try {
+                    // pass this signature's index into the table function to retrieve the invoker
+                    @SuppressWarnings("unchecked")
+                    var invoker =
+                            (BiFunction<Object, Object[], Object>)
+                                    invokerTable.invokeExact(signatureTable.applyAsInt(signature));
+                    return invoker;
+                }
+                catch (Throwable e) {
+                    throw asIfUnchecked(e);
+                }
+            };
+        }
 
-  /** Generate invoker that takes an instance and an argument array and calls the method. */
-  protected abstract void generateMethodInvoker(MethodVisitor mv, Method method);
+        // otherwise must be a trampoline method that takes the index and invoker arguments all at once
+        return signature -> {
+            // bind the index as soon as we have the signature...
+            int index = signatureTable.applyAsInt(signature);
+            return (instance, arguments) -> {
+                try {
+                    // ...but delay calling trampoline until invocation time when we have the other arguments
+                    return invokerTable.invokeExact(index, instance, arguments);
+                }
+                catch (Throwable e) {
+                    throw asIfUnchecked(e);
+                }
+            };
+        };
+    }
+
+    /**
+     * Generics trick to get compiler to treat given exception as if unchecked (as JVM does).
+     */
+    @SuppressWarnings("unchecked")
+    private static <E extends Throwable> RuntimeException asIfUnchecked(Throwable e)
+            throws E
+    {
+        throw (E) e;
+    }
+
+    /**
+     * Generate trampoline that takes an index, along with a context object and array of argument
+     * objects, and invokes the appropriate constructor/method returning the result as an object.
+     */
+    protected final void generateTrampoline(ClassWriter cw, Collection<Executable> members)
+    {
+        MethodVisitor mv =
+                cw.visitMethod(PUBLIC | STATIC, TRAMPOLINE_NAME, TRAMPOLINE_DESCRIPTOR, null, null);
+        mv.visitCode();
+
+        Label[] labels = new Label[members.size()];
+        Arrays.setAll(labels, _ -> new Label());
+        Label defaultLabel = new Label();
+
+        mv.visitVarInsn(ILOAD, 0);
+        mv.visitTableSwitchInsn(0, labels.length - 1, defaultLabel, labels);
+
+        int labelIndex = 0;
+        for (Executable member : members) {
+            mv.visitLabel(labels[labelIndex++]);
+            mv.visitFrame(F_SAME, 0, null, 0, null);
+            if (member instanceof Constructor<?>) {
+                generateConstructorInvoker(mv, (Constructor<?>) member);
+            }
+            else {
+                generateMethodInvoker(mv, (Method) member);
+            }
+            mv.visitInsn(ARETURN);
+        }
+
+        mv.visitLabel(defaultLabel);
+        mv.visitFrame(F_SAME, 0, null, 0, null);
+        mv.visitInsn(ACONST_NULL);
+        mv.visitInsn(ARETURN);
+
+        mv.visitMaxs(0, 0);
+        mv.visitEnd();
+    }
+
+    /**
+     * Generate invoker that takes a context and an argument array and calls the constructor.
+     */
+    protected abstract void generateConstructorInvoker(MethodVisitor mv, Constructor<?> constructor);
+
+    /**
+     * Generate invoker that takes an instance and an argument array and calls the method.
+     */
+    protected abstract void generateMethodInvoker(MethodVisitor mv, Method method);
 }

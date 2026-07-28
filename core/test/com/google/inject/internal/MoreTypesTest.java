@@ -16,93 +16,103 @@
 
 package com.google.inject.internal;
 
-import static com.google.inject.Asserts.assertContains;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
 import com.google.inject.TypeLiteral;
 import com.google.inject.internal.MoreTypes.ParameterizedTypeImpl;
+import org.junit.jupiter.api.Test;
+
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import static com.google.inject.Asserts.assertContains;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import org.junit.jupiter.api.Test;
 
-/** @author schmitt@google.com (Peter Schmitt) */
-public class MoreTypesTest {
+/**
+ * @author schmitt@google.com (Peter Schmitt)
+ */
+public class MoreTypesTest
+{
+    @Test
+    public void testParameterizedTypeToString()
+    {
+        TypeLiteral<Inner<String>> innerString = new TypeLiteral<Inner<String>>() {};
+        assertEquals(
+                "com.google.inject.internal.MoreTypesTest$Inner<java.lang.String>",
+                MoreTypes.typeToString(innerString.getType()));
 
-  @Test
-  public void testParameterizedTypeToString() {
-    TypeLiteral<Inner<String>> innerString = new TypeLiteral<Inner<String>>() {};
-    assertEquals(
-        "com.google.inject.internal.MoreTypesTest$Inner<java.lang.String>",
-        MoreTypes.typeToString(innerString.getType()));
+        TypeLiteral<Set<Inner<Integer>>> mapInnerInteger = new TypeLiteral<Set<Inner<Integer>>>() {};
+        assertEquals(
+                "java.util.Set<com.google.inject.internal.MoreTypesTest$Inner<java.lang.Integer>>",
+                MoreTypes.typeToString(mapInnerInteger.getType()));
 
-    TypeLiteral<Set<Inner<Integer>>> mapInnerInteger = new TypeLiteral<Set<Inner<Integer>>>() {};
-    assertEquals(
-        "java.util.Set<com.google.inject.internal.MoreTypesTest$Inner<java.lang.Integer>>",
-        MoreTypes.typeToString(mapInnerInteger.getType()));
+        TypeLiteral<Map<Inner<Long>, Set<Inner<Long>>>> mapInnerLongToSetInnerLong =
+                new TypeLiteral<Map<Inner<Long>, Set<Inner<Long>>>>() {};
+        assertEquals(
+                "java.util.Map<com.google.inject.internal.MoreTypesTest$Inner<java.lang.Long>, "
+                        + "java.util.Set<com.google.inject.internal.MoreTypesTest$Inner<java.lang.Long>>>",
+                MoreTypes.typeToString(mapInnerLongToSetInnerLong.getType()));
+    }
 
-    TypeLiteral<Map<Inner<Long>, Set<Inner<Long>>>> mapInnerLongToSetInnerLong =
-        new TypeLiteral<Map<Inner<Long>, Set<Inner<Long>>>>() {};
-    assertEquals(
-        "java.util.Map<com.google.inject.internal.MoreTypesTest$Inner<java.lang.Long>, "
-            + "java.util.Set<com.google.inject.internal.MoreTypesTest$Inner<java.lang.Long>>>",
-        MoreTypes.typeToString(mapInnerLongToSetInnerLong.getType()));
-  }
+    @Test
+    public void testParameterizedType_lessArgs()
+    {
+        IllegalArgumentException expected =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> {
+                            new ParameterizedTypeImpl(MoreTypesTest.class, D.class, String.class);
+                        });
+        assertContains(
+                expected.getMessage(),
+                "Length of provided type arguments is less than length of required parameters for"
+                        + " class");
+    }
 
-  @Test
-  public void testParameterizedType_lessArgs() {
-    IllegalArgumentException expected =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> {
-              new ParameterizedTypeImpl(MoreTypesTest.class, D.class, String.class);
-            });
-    assertContains(
-        expected.getMessage(),
-        "Length of provided type arguments is less than length of required parameters for"
-            + " class");
-  }
+    @Test
+    public void testParameterizedType_correctArgs()
+    {
+        ParameterizedTypeImpl parameterizedType =
+                new ParameterizedTypeImpl(MoreTypesTest.class, D.class, String.class, Integer.class);
+        assertEquals(parameterizedType.getRawType(), D.class);
+    }
 
-  @Test
-  public void testParameterizedType_correctArgs() {
+    @Test
+    public void testParameterizedType_moreArgs()
+    {
+        ParameterizedTypeImpl parameterizedType =
+                new ParameterizedTypeImpl(
+                        MoreTypesTest.class, D.class, String.class, Integer.class, Integer.class);
+        assertEquals(parameterizedType.getRawType(), D.class);
+    }
 
-    ParameterizedTypeImpl parameterizedType =
-        new ParameterizedTypeImpl(MoreTypesTest.class, D.class, String.class, Integer.class);
-    assertEquals(parameterizedType.getRawType(), D.class);
-  }
+    @Test
+    public <T> void testEquals_typeVariable()
+            throws Exception
+    {
+        Type type = getClass().getMethod("testEquals_typeVariable").getTypeParameters()[0];
+        assertTrue(MoreTypes.equals(new TypeLiteral<T>() {}.getType(), type));
+    }
 
-  @Test
-  public void testParameterizedType_moreArgs() {
+    @Test
+    public <T> void testGetRawType_wildcard()
+            throws Exception
+    {
+        WildcardType wildcard =
+                (WildcardType)
+                        ((ParameterizedType) new TypeLiteral<List<?>>() {}.getType())
+                        .getActualTypeArguments()[0];
+        assertEquals(Object.class, MoreTypes.getRawType(wildcard));
+    }
 
-    ParameterizedTypeImpl parameterizedType =
-        new ParameterizedTypeImpl(
-            MoreTypesTest.class, D.class, String.class, Integer.class, Integer.class);
-    assertEquals(parameterizedType.getRawType(), D.class);
-  }
+    public static class Inner<T> {}
 
-  @Test
-  public <T> void testEquals_typeVariable() throws Exception {
-    Type type = getClass().getMethod("testEquals_typeVariable").getTypeParameters()[0];
-    assertTrue(MoreTypes.equals(new TypeLiteral<T>() {}.getType(), type));
-  }
+    static class D<S, T> {}
 
-  @Test
-  public <T> void testGetRawType_wildcard() throws Exception {
-    WildcardType wildcard =
-        (WildcardType)
-            ((ParameterizedType) new TypeLiteral<List<?>>() {}.getType())
-                .getActualTypeArguments()[0];
-    assertEquals(Object.class, MoreTypes.getRawType(wildcard));
-  }
-
-  public static class Inner<T> {}
-
-  static class D<S, T> {}
-
-  static class E extends D<String, Integer> {}
+    static class E
+            extends D<String, Integer> {}
 }

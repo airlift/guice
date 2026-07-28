@@ -7,8 +7,9 @@ package com.google.inject.internal;
  * so adding this class as a method param ensures that only this package can call it (provided null
  * is disallowed).
  */
-public final class GuiceInternal {
-  static final GuiceInternal GUICE_INTERNAL = new GuiceInternal();
+public final class GuiceInternal
+{
+    static final GuiceInternal GUICE_INTERNAL = new GuiceInternal();
 
-  private GuiceInternal() {}
+    private GuiceInternal() {}
 }

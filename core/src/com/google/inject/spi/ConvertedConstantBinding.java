@@ -18,6 +18,7 @@ package com.google.inject.spi;
 
 import com.google.inject.Binding;
 import com.google.inject.Key;
+
 import java.util.Set;
 
 /**
@@ -27,25 +28,30 @@ import java.util.Set;
  * @author jessewilson@google.com (Jesse Wilson)
  * @since 2.0
  */
-public interface ConvertedConstantBinding<T> extends Binding<T>, HasDependencies {
+public interface ConvertedConstantBinding<T>
+        extends Binding<T>, HasDependencies
+{
+    /**
+     * Returns the converted value.
+     */
+    T getValue();
 
-  /** Returns the converted value. */
-  T getValue();
+    /**
+     * Returns the type converter binding used to convert the constant.
+     *
+     * @since 3.0
+     */
+    TypeConverterBinding getTypeConverterBinding();
 
-  /**
-   * Returns the type converter binding used to convert the constant.
-   *
-   * @since 3.0
-   */
-  TypeConverterBinding getTypeConverterBinding();
+    /**
+     * Returns the key for the source binding. That binding can be retrieved from an injector using
+     * {@link com.google.inject.Injector#getBinding(Key) Injector.getBinding(key)}.
+     */
+    Key<String> getSourceKey();
 
-  /**
-   * Returns the key for the source binding. That binding can be retrieved from an injector using
-   * {@link com.google.inject.Injector#getBinding(Key) Injector.getBinding(key)}.
-   */
-  Key<String> getSourceKey();
-
-  /** Returns a singleton set containing only the converted key. */
-  @Override
-  Set<Dependency<?>> getDependencies();
+    /**
+     * Returns a singleton set containing only the converted key.
+     */
+    @Override
+    Set<Dependency<?>> getDependencies();
 }

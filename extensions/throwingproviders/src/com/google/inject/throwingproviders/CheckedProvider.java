@@ -35,6 +35,7 @@ package com.google.inject.throwingproviders;
  *
  * @since 3.0
  */
-public interface CheckedProvider<T> {
-  T get() throws Exception;
+public interface CheckedProvider<T>
+{
+    T get() throws Exception;
 }

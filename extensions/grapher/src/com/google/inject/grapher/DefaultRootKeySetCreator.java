@@ -19,6 +19,7 @@ package com.google.inject.grapher;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
+
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -30,18 +31,21 @@ import java.util.logging.Logger;
  * @author bojand@google.com (Bojan Djordjevic)
  * @since 4.0
  */
-public class DefaultRootKeySetCreator implements RootKeySetCreator {
-  private static final Key<Logger> loggerKey = Key.get(Logger.class);
+public class DefaultRootKeySetCreator
+        implements RootKeySetCreator
+{
+    private static final Key<Logger> loggerKey = Key.get(Logger.class);
 
-  @Override
-  public Set<Key<?>> getRootKeys(Injector injector) {
-    Set<Key<?>> root = new HashSet<>();
-    for (Key<?> key : injector.getBindings().keySet()) {
-      if (key.getTypeLiteral().getRawType().getPackage() != Guice.class.getPackage()
-          && !loggerKey.equals(key)) {
-        root.add(key);
-      }
+    @Override
+    public Set<Key<?>> getRootKeys(Injector injector)
+    {
+        Set<Key<?>> root = new HashSet<>();
+        for (Key<?> key : injector.getBindings().keySet()) {
+            if (key.getTypeLiteral().getRawType().getPackage() != Guice.class.getPackage()
+                    && !loggerKey.equals(key)) {
+                root.add(key);
+            }
+        }
+        return root;
     }
-    return root;
-  }
 }

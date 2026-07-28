@@ -17,6 +17,7 @@
 package com.google.inject.assistedinject;
 
 import com.google.inject.Key;
+
 import java.util.Collection;
 
 /**
@@ -26,11 +27,15 @@ import java.util.Collection;
  * @since 3.0
  * @author ramakrishna@google.com (Ramakrishna Rajanna)
  */
-public interface AssistedInjectBinding<T> {
+public interface AssistedInjectBinding<T>
+{
+    /**
+     * Returns the {@link Key} for the factory binding.
+     */
+    Key<T> getKey();
 
-  /** Returns the {@link Key} for the factory binding. */
-  Key<T> getKey();
-
-  /** Returns an {@link AssistedMethod} for each method in the factory. */
-  Collection<AssistedMethod> getAssistedMethods();
+    /**
+     * Returns an {@link AssistedMethod} for each method in the factory.
+     */
+    Collection<AssistedMethod> getAssistedMethods();
 }

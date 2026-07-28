@@ -15,94 +15,99 @@
  */
 package com.google.inject.servlet;
 
-import static com.google.inject.servlet.GuiceServletContextListener.INJECTOR_NAME;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isA;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.http.HttpServlet;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertNotSame;
 import org.junit.jupiter.api.Test;
+
+import static com.google.inject.servlet.GuiceServletContextListener.INJECTOR_NAME;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isA;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 /**
  * This gorgeous test asserts that multiple servlet pipelines can run in the SAME JVM. booya.
  *
  * @author dhanji@gmail.com (Dhanji R. Prasanna)
  */
-public class MultipleServletInjectorsTest {
+public class MultipleServletInjectorsTest
+{
+    private Injector injectorOne;
+    private Injector injectorTwo;
 
-  private Injector injectorOne;
-  private Injector injectorTwo;
+    @Test
+    public final void testTwoInjectors()
+    {
+        ServletContext fakeContextOne = mock(ServletContext.class);
+        ServletContext fakeContextTwo = mock(ServletContext.class);
 
-  @Test
-  public final void testTwoInjectors() {
-    ServletContext fakeContextOne = mock(ServletContext.class);
-    ServletContext fakeContextTwo = mock(ServletContext.class);
+        // Simulate the start of a servlet container.
+        new GuiceServletContextListener()
+        {
+            @Override
+            protected Injector getInjector()
+            {
+                // Cache this injector in the test for later testing...
+                return injectorOne =
+                        Guice.createInjector(
+                                new ServletModule()
+                                {
+                                    @Override
+                                    protected void configureServlets()
+                                    {
+                                        // This creates a ManagedFilterPipeline internally...
+                                        serve("/*").with(DummyServlet.class);
+                                    }
+                                });
+            }
+        }.contextInitialized(new ServletContextEvent(fakeContextOne));
 
-    // Simulate the start of a servlet container.
-    new GuiceServletContextListener() {
+        ServletContext contextOne = injectorOne.getInstance(ServletContext.class);
+        assertNotNull(contextOne);
 
-      @Override
-      protected Injector getInjector() {
-        // Cache this injector in the test for later testing...
-        return injectorOne =
-            Guice.createInjector(
-                new ServletModule() {
+        // Now simulate a second injector with a slightly different config.
+        new GuiceServletContextListener()
+        {
+            @Override
+            protected Injector getInjector()
+            {
+                return injectorTwo =
+                        Guice.createInjector(
+                                new ServletModule()
+                                {
+                                    @Override
+                                    protected void configureServlets()
+                                    {
+                                        // This creates a ManagedFilterPipeline internally...
+                                        filter("/8").through(DummyFilterImpl.class);
 
-                  @Override
-                  protected void configureServlets() {
-                    // This creates a ManagedFilterPipeline internally...
-                    serve("/*").with(DummyServlet.class);
-                  }
-                });
-      }
-    }.contextInitialized(new ServletContextEvent(fakeContextOne));
+                                        serve("/*").with(HttpServlet.class);
+                                    }
+                                });
+            }
+        }.contextInitialized(new ServletContextEvent(fakeContextTwo));
 
-    ServletContext contextOne = injectorOne.getInstance(ServletContext.class);
-    assertNotNull(contextOne);
+        ServletContext contextTwo = injectorTwo.getInstance(ServletContext.class);
 
-    // Now simulate a second injector with a slightly different config.
-    new GuiceServletContextListener() {
+        // Make sure they are different.
+        assertNotNull(contextTwo);
+        assertNotSame(contextOne, contextTwo);
 
-      @Override
-      protected Injector getInjector() {
-        return injectorTwo =
-            Guice.createInjector(
-                new ServletModule() {
+        // Make sure they are as expected
+        assertSame(fakeContextOne, contextOne);
+        assertSame(fakeContextTwo, contextTwo);
 
-                  @Override
-                  protected void configureServlets() {
-                    // This creates a ManagedFilterPipeline internally...
-                    filter("/8").through(DummyFilterImpl.class);
+        // Make sure they are consistent.
+        assertSame(contextOne, injectorOne.getInstance(ServletContext.class));
+        assertSame(contextTwo, injectorTwo.getInstance(ServletContext.class));
 
-                    serve("/*").with(HttpServlet.class);
-                  }
-                });
-      }
-    }.contextInitialized(new ServletContextEvent(fakeContextTwo));
-
-    ServletContext contextTwo = injectorTwo.getInstance(ServletContext.class);
-
-    // Make sure they are different.
-    assertNotNull(contextTwo);
-    assertNotSame(contextOne, contextTwo);
-
-    // Make sure they are as expected
-    assertSame(fakeContextOne, contextOne);
-    assertSame(fakeContextTwo, contextTwo);
-
-    // Make sure they are consistent.
-    assertSame(contextOne, injectorOne.getInstance(ServletContext.class));
-    assertSame(contextTwo, injectorTwo.getInstance(ServletContext.class));
-
-    verify(fakeContextOne).setAttribute(eq(INJECTOR_NAME), isA(Injector.class));
-    verify(fakeContextTwo).setAttribute(eq(INJECTOR_NAME), isA(Injector.class));
-  }
+        verify(fakeContextOne).setAttribute(eq(INJECTOR_NAME), isA(Injector.class));
+        verify(fakeContextTwo).setAttribute(eq(INJECTOR_NAME), isA(Injector.class));
+    }
 }

@@ -16,10 +16,9 @@
 
 package com.google.inject.spi;
 
+import com.google.inject.Binder;
 
 import static java.util.Objects.requireNonNull;
-
-import com.google.inject.Binder;
 
 /**
  * A request to disable circular proxies.
@@ -27,25 +26,31 @@ import com.google.inject.Binder;
  * @author sameb@google.com (Sam Berlin)
  * @since 3.0
  */
-public final class DisableCircularProxiesOption implements Element {
-  private final Object source;
+public final class DisableCircularProxiesOption
+        implements Element
+{
+    private final Object source;
 
-  DisableCircularProxiesOption(Object source) {
-    this.source = requireNonNull(source, "source");
-  }
+    DisableCircularProxiesOption(Object source)
+    {
+        this.source = requireNonNull(source, "source");
+    }
 
-  @Override
-  public Object getSource() {
-    return source;
-  }
+    @Override
+    public Object getSource()
+    {
+        return source;
+    }
 
-  @Override
-  public void applyTo(Binder binder) {
-    binder.withSource(getSource()).disableCircularProxies();
-  }
+    @Override
+    public void applyTo(Binder binder)
+    {
+        binder.withSource(getSource()).disableCircularProxies();
+    }
 
-  @Override
-  public <T> T acceptVisitor(ElementVisitor<T> visitor) {
-    return visitor.visit(this);
-  }
+    @Override
+    public <T> T acceptVisitor(ElementVisitor<T> visitor)
+    {
+        return visitor.visit(this);
+    }
 }

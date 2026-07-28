@@ -17,41 +17,49 @@
 package com.google.inject.internal;
 
 import com.google.inject.internal.Element.Type;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-/** Tests for {@link com.google.inject.internal.RealElement}. */
-public class RealElementTest {
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-  private Element systemElement;
-  private RealElement realElement;
+/**
+ * Tests for {@link com.google.inject.internal.RealElement}.
+ */
+public class RealElementTest
+{
+    private Element systemElement;
+    private RealElement realElement;
 
-  @BeforeEach
-  public void setUp() throws Exception {
-    this.systemElement = Holder.class.getAnnotation(Element.class);
-    this.realElement = new RealElement("b", Type.MULTIBINDER, "a", 1);
-  }
+    @BeforeEach
+    public void setUp()
+            throws Exception
+    {
+        this.systemElement = Holder.class.getAnnotation(Element.class);
+        this.realElement = new RealElement("b", Type.MULTIBINDER, "a", 1);
+    }
 
-  @Test
-  public void testEquals() {
-    assertEquals(systemElement, realElement);
-    assertEquals(realElement, systemElement);
-  }
+    @Test
+    public void testEquals()
+    {
+        assertEquals(systemElement, realElement);
+        assertEquals(realElement, systemElement);
+    }
 
-  @Test
-  public void testHashCode() {
-    assertEquals(systemElement.hashCode(), realElement.hashCode());
-  }
+    @Test
+    public void testHashCode()
+    {
+        assertEquals(systemElement.hashCode(), realElement.hashCode());
+    }
 
-  @Test
-  public void testProperties() {
-    assertEquals("a", realElement.keyType());
-    assertEquals("b", realElement.setName());
-    assertEquals(Type.MULTIBINDER, realElement.type());
-    assertEquals(1, realElement.uniqueId());
-  }
+    @Test
+    public void testProperties()
+    {
+        assertEquals("a", realElement.keyType());
+        assertEquals("b", realElement.setName());
+        assertEquals(Type.MULTIBINDER, realElement.type());
+        assertEquals(1, realElement.uniqueId());
+    }
 
-  @Element(keyType = "a", setName = "b", type = Type.MULTIBINDER, uniqueId = 1)
-  static class Holder {}
+    @Element(keyType = "a", setName = "b", type = Type.MULTIBINDER, uniqueId = 1)
+    static class Holder {}
 }

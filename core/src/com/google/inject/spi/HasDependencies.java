@@ -25,14 +25,14 @@ import java.util.Set;
  * @author jessewilson@google.com (Jesse Wilson)
  * @since 2.0
  */
-public interface HasDependencies {
-
-  /**
-   * Returns the known dependencies for this type. If this has dependencies whose values are not
-   * known statically, a dependency for the {@link com.google.inject.Injector Injector} will be
-   * included in the returned set.
-   *
-   * @return a possibly empty set
-   */
-  Set<Dependency<?>> getDependencies();
+public interface HasDependencies
+{
+    /**
+     * Returns the known dependencies for this type. If this has dependencies whose values are not
+     * known statically, a dependency for the {@link com.google.inject.Injector Injector} will be
+     * included in the returned set.
+     *
+     * @return a possibly empty set
+     */
+    Set<Dependency<?>> getDependencies();
 }

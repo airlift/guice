@@ -29,6 +29,7 @@ import com.google.inject.spi.LinkedKeyBinding;
 import com.google.inject.spi.ProviderBinding;
 import com.google.inject.spi.ProviderInstanceBinding;
 import com.google.inject.spi.ProviderKeyBinding;
+
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -41,56 +42,67 @@ import java.util.Set;
  * @author phopkins@gmail.com (Pete Hopkins)
  */
 public class TransitiveDependencyVisitor
-    extends DefaultBindingTargetVisitor<Object, Collection<Key<?>>> {
+        extends DefaultBindingTargetVisitor<Object, Collection<Key<?>>>
+{
+    private Collection<Key<?>> visitHasDependencies(HasDependencies hasDependencies)
+    {
+        Set<Key<?>> dependencies = new HashSet<>();
 
-  private Collection<Key<?>> visitHasDependencies(HasDependencies hasDependencies) {
-    Set<Key<?>> dependencies = new HashSet<>();
+        for (Dependency<?> dependency : hasDependencies.getDependencies()) {
+            dependencies.add(dependency.getKey());
+        }
 
-    for (Dependency<?> dependency : hasDependencies.getDependencies()) {
-      dependencies.add(dependency.getKey());
+        return dependencies;
     }
 
-    return dependencies;
-  }
+    @Override
+    public Collection<Key<?>> visit(ConstructorBinding<?> binding)
+    {
+        return visitHasDependencies(binding);
+    }
 
-  @Override
-  public Collection<Key<?>> visit(ConstructorBinding<?> binding) {
-    return visitHasDependencies(binding);
-  }
+    @Override
+    public Collection<Key<?>> visit(ConvertedConstantBinding<?> binding)
+    {
+        return visitHasDependencies(binding);
+    }
 
-  @Override
-  public Collection<Key<?>> visit(ConvertedConstantBinding<?> binding) {
-    return visitHasDependencies(binding);
-  }
+    @Override
+    public Collection<Key<?>> visit(InstanceBinding<?> binding)
+    {
+        return visitHasDependencies(binding);
+    }
 
-  @Override
-  public Collection<Key<?>> visit(InstanceBinding<?> binding) {
-    return visitHasDependencies(binding);
-  }
+    @Override
+    public Collection<Key<?>> visit(LinkedKeyBinding<?> binding)
+    {
+        return ImmutableSet.<Key<?>>of(binding.getLinkedKey());
+    }
 
-  @Override
-  public Collection<Key<?>> visit(LinkedKeyBinding<?> binding) {
-    return ImmutableSet.<Key<?>>of(binding.getLinkedKey());
-  }
+    @Override
+    public Collection<Key<?>> visit(ProviderBinding<?> binding)
+    {
+        return ImmutableSet.<Key<?>>of(binding.getProvidedKey());
+    }
 
-  @Override
-  public Collection<Key<?>> visit(ProviderBinding<?> binding) {
-    return ImmutableSet.<Key<?>>of(binding.getProvidedKey());
-  }
+    @Override
+    public Collection<Key<?>> visit(ProviderInstanceBinding<?> binding)
+    {
+        return visitHasDependencies(binding);
+    }
 
-  @Override
-  public Collection<Key<?>> visit(ProviderInstanceBinding<?> binding) {
-    return visitHasDependencies(binding);
-  }
+    @Override
+    public Collection<Key<?>> visit(ProviderKeyBinding<?> binding)
+    {
+        return ImmutableSet.<Key<?>>of(binding.getProviderKey());
+    }
 
-  @Override
-  public Collection<Key<?>> visit(ProviderKeyBinding<?> binding) {
-    return ImmutableSet.<Key<?>>of(binding.getProviderKey());
-  }
-
-  /** @since 4.0 */
-  @Override
-  public Collection<Key<?>> visitOther(Binding<?> binding) {
-    return ImmutableSet.of();
-  }
+    /**
+     * @since 4.0
+     */
+    @Override
+    public Collection<Key<?>> visitOther(Binding<?> binding)
+    {
+        return ImmutableSet.of();
+    }
 }

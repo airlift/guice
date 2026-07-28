@@ -16,10 +16,11 @@
 
 package com.google.inject.internal;
 
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
 import com.google.inject.BindingAnnotation;
+
 import java.lang.annotation.Retention;
+
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * An internal binding annotation applied to each element in a multibinding. All elements are
@@ -30,18 +31,19 @@ import java.lang.annotation.Retention;
  */
 @Retention(RUNTIME)
 @BindingAnnotation
-@interface Element {
+@interface Element
+{
+    enum Type
+    {
+        MAPBINDER,
+        MULTIBINDER,
+    }
 
-  enum Type {
-    MAPBINDER,
-    MULTIBINDER;
-  }
+    String setName();
 
-  String setName();
+    int uniqueId();
 
-  int uniqueId();
+    Type type();
 
-  Type type();
-
-  String keyType();
+    String keyType();
 }

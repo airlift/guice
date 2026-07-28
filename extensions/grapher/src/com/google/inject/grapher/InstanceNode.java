@@ -25,54 +25,63 @@ import java.util.Objects;
  * @author bojand@google.com (Bojan Djordjevic)
  * @since 4.0
  */
-public class InstanceNode extends Node {
-  private final Object instance;
-  private final Iterable<Member> members;
+public class InstanceNode
+        extends Node
+{
+    private final Object instance;
+    private final Iterable<Member> members;
 
-  public InstanceNode(NodeId id, Object source, Object instance, Iterable<Member> members) {
-    super(id, source);
-    this.instance = instance;
-    this.members = members;
-  }
-
-  public Object getInstance() {
-    return instance;
-  }
-
-  public Iterable<Member> getMembers() {
-    return members;
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (!(obj instanceof InstanceNode other)) {
-      return false;
+    public InstanceNode(NodeId id, Object source, Object instance, Iterable<Member> members)
+    {
+        super(id, source);
+        this.instance = instance;
+        this.members = members;
     }
-    return super.equals(other)
-        && Objects.equals(instance, other.instance)
-        && Objects.equals(members, other.members);
-  }
 
-  @Override
-  public int hashCode() {
-    return 31 * super.hashCode() + Objects.hash(instance, members);
-  }
+    public Object getInstance()
+    {
+        return instance;
+    }
 
-  @Override
-  public String toString() {
-    return "InstanceNode{id="
-        + getId()
-        + " source="
-        + getSource()
-        + " instance="
-        + instance
-        + " members="
-        + members
-        + "}";
-  }
+    public Iterable<Member> getMembers()
+    {
+        return members;
+    }
 
-  @Override
-  public Node copy(NodeId id) {
-    return new InstanceNode(id, getSource(), getInstance(), getMembers());
-  }
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (!(obj instanceof InstanceNode other)) {
+            return false;
+        }
+        return super.equals(other)
+                && Objects.equals(instance, other.instance)
+                && Objects.equals(members, other.members);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return 31 * super.hashCode() + Objects.hash(instance, members);
+    }
+
+    @Override
+    public String toString()
+    {
+        return "InstanceNode{id="
+                + getId()
+                + " source="
+                + getSource()
+                + " instance="
+                + instance
+                + " members="
+                + members
+                + "}";
+    }
+
+    @Override
+    public Node copy(NodeId id)
+    {
+        return new InstanceNode(id, getSource(), getInstance(), getMembers());
+    }
 }

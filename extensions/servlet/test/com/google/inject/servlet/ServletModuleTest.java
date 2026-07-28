@@ -22,106 +22,125 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.spi.DefaultBindingTargetVisitor;
 import com.google.inject.spi.Elements;
+import org.junit.jupiter.api.Test;
+
 import java.util.ArrayList;
 import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
-import org.junit.jupiter.api.Test;
 
 /**
  * Tests for ServletModule, to ensure it captures bindings correctly.
  *
  * @author sameb@google.com (Sam Berlin)
  */
-public class ServletModuleTest {
-
-  @Test
-  public void testServletModuleCallOutsideConfigure() {
-    try {
-      new ServletModule() {
-        {
-          serve("/*").with(DummyServlet.class);
+public class ServletModuleTest
+{
+    @Test
+    public void testServletModuleCallOutsideConfigure()
+    {
+        try {
+            new ServletModule()
+            {
+                {
+                    serve("/*").with(DummyServlet.class);
+                }
+            };
+            fail();
         }
-      };
-      fail();
-    } catch (IllegalStateException e) {
-      // Expected.
-    }
-  }
-
-  @Test
-  public void testServletModuleReuse() {
-    Module module = new Module();
-    Elements.getElements(module); // use the module once (to, say, introspect bindings)
-    Injector injector = Guice.createInjector(module); // use it again.
-
-    Visitor visitor = new Visitor();
-    // Validate only a single servlet binding & a single filter binding exist.
-    for (Binding<?> binding : injector.getAllBindings().values()) {
-      binding.acceptTargetVisitor(visitor);
-    }
-    assertEquals(0, visitor.linkedServlets.size(), "wrong linked servlets: " + visitor.linkedServlets);
-    assertEquals(0, visitor.linkedFilters.size(), "wrong linked filters: " + visitor.linkedFilters);
-    assertEquals(1, visitor.instanceServlets.size(), "wrong instance servlets: " + visitor.instanceServlets);
-    assertEquals(1, visitor.instanceFilters.size(), "wrong instance filters: " + visitor.instanceFilters);
-  }
-
-  @Test
-  public void testServletModule_badPattern() {
-    try {
-      Guice.createInjector(
-          new ServletModule() {
-            @Override
-            protected void configureServlets() {
-              serve("/%2E/*").with(new DummyServlet());
-              serveRegex("/(foo|bar/").with(new DummyServlet());
-              filter("/%2E/*").through(new DummyFilterImpl());
-              filterRegex("/(foo|bar/").through(new DummyFilterImpl());
-            }
-          });
-      fail();
-    } catch (CreationException e) {
-      assertEquals(4, e.getErrorMessages().size());
-    }
-  }
-
-  private static class Module extends ServletModule {
-    @Override
-    protected void configureServlets() {
-      serve("/sam/*").with(new DummyServlet());
-      filter("/tara/*").through(new DummyFilterImpl());
-    }
-  }
-
-  private static class Visitor extends DefaultBindingTargetVisitor<Object, Void>
-      implements ServletModuleTargetVisitor<Object, Void> {
-    List<LinkedFilterBinding> linkedFilters = new ArrayList<>();
-    List<LinkedServletBinding> linkedServlets = new ArrayList<>();
-    List<InstanceFilterBinding> instanceFilters = new ArrayList<>();
-    List<InstanceServletBinding> instanceServlets = new ArrayList<>();
-
-    @Override
-    public Void visit(LinkedFilterBinding binding) {
-      linkedFilters.add(binding);
-      return null;
+        catch (IllegalStateException e) {
+            // Expected.
+        }
     }
 
-    @Override
-    public Void visit(InstanceFilterBinding binding) {
-      instanceFilters.add(binding);
-      return null;
+    @Test
+    public void testServletModuleReuse()
+    {
+        Module module = new Module();
+        Elements.getElements(module); // use the module once (to, say, introspect bindings)
+        Injector injector = Guice.createInjector(module); // use it again.
+
+        Visitor visitor = new Visitor();
+        // Validate only a single servlet binding & a single filter binding exist.
+        for (Binding<?> binding : injector.getAllBindings().values()) {
+            binding.acceptTargetVisitor(visitor);
+        }
+        assertEquals(0, visitor.linkedServlets.size(), "wrong linked servlets: " + visitor.linkedServlets);
+        assertEquals(0, visitor.linkedFilters.size(), "wrong linked filters: " + visitor.linkedFilters);
+        assertEquals(1, visitor.instanceServlets.size(), "wrong instance servlets: " + visitor.instanceServlets);
+        assertEquals(1, visitor.instanceFilters.size(), "wrong instance filters: " + visitor.instanceFilters);
     }
 
-    @Override
-    public Void visit(LinkedServletBinding binding) {
-      linkedServlets.add(binding);
-      return null;
+    @Test
+    public void testServletModule_badPattern()
+    {
+        try {
+            Guice.createInjector(
+                    new ServletModule()
+                    {
+                        @Override
+                        protected void configureServlets()
+                        {
+                            serve("/%2E/*").with(new DummyServlet());
+                            serveRegex("/(foo|bar/").with(new DummyServlet());
+                            filter("/%2E/*").through(new DummyFilterImpl());
+                            filterRegex("/(foo|bar/").through(new DummyFilterImpl());
+                        }
+                    });
+            fail();
+        }
+        catch (CreationException e) {
+            assertEquals(4, e.getErrorMessages().size());
+        }
     }
 
-    @Override
-    public Void visit(InstanceServletBinding binding) {
-      instanceServlets.add(binding);
-      return null;
+    private static class Module
+            extends ServletModule
+    {
+        @Override
+        protected void configureServlets()
+        {
+            serve("/sam/*").with(new DummyServlet());
+            filter("/tara/*").through(new DummyFilterImpl());
+        }
     }
-  }
+
+    private static class Visitor
+            extends DefaultBindingTargetVisitor<Object, Void>
+            implements ServletModuleTargetVisitor<Object, Void>
+    {
+        List<LinkedFilterBinding> linkedFilters = new ArrayList<>();
+        List<LinkedServletBinding> linkedServlets = new ArrayList<>();
+        List<InstanceFilterBinding> instanceFilters = new ArrayList<>();
+        List<InstanceServletBinding> instanceServlets = new ArrayList<>();
+
+        @Override
+        public Void visit(LinkedFilterBinding binding)
+        {
+            linkedFilters.add(binding);
+            return null;
+        }
+
+        @Override
+        public Void visit(InstanceFilterBinding binding)
+        {
+            instanceFilters.add(binding);
+            return null;
+        }
+
+        @Override
+        public Void visit(LinkedServletBinding binding)
+        {
+            linkedServlets.add(binding);
+            return null;
+        }
+
+        @Override
+        public Void visit(InstanceServletBinding binding)
+        {
+            instanceServlets.add(binding);
+            return null;
+        }
+    }
 }

@@ -16,12 +16,13 @@
 
 package com.google.inject.servlet;
 
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
 import com.google.inject.BindingAnnotation;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Apply this to field or parameters of type {@code Map<String, String[]>} when you want the HTTP

@@ -16,14 +16,15 @@
 
 package com.google.inject.multibindings;
 
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
 import com.google.errorprone.annotations.Keep;
 import com.google.inject.Module;
+
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Annotates methods of a {@link Module} to add items to a {@link Multibinder}. The method's return
@@ -49,16 +50,26 @@ import java.lang.annotation.Target;
 @Target(METHOD)
 @Retention(RUNTIME)
 @Keep
-public @interface ProvidesIntoOptional {
-  /** @since 4.0 */
-  enum Type {
-    /** Corresponds to {@link OptionalBinder#setBinding}. */
-    ACTUAL,
+public @interface ProvidesIntoOptional
+{
+    /**
+     * @since 4.0
+     */
+    enum Type
+    {
+        /**
+         * Corresponds to {@link OptionalBinder#setBinding}.
+         */
+        ACTUAL,
 
-    /** Corresponds to {@link OptionalBinder#setDefault}. */
-    DEFAULT
-  }
+        /**
+         * Corresponds to {@link OptionalBinder#setDefault}.
+         */
+        DEFAULT,
+    }
 
-  /** Specifies if the binding is for the actual or default value. */
-  Type value();
+    /**
+     * Specifies if the binding is for the actual or default value.
+     */
+    Type value();
 }

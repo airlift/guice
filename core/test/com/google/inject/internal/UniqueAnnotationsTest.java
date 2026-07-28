@@ -16,24 +16,29 @@
 
 package com.google.inject.internal;
 
-import java.lang.annotation.Annotation;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
 
-/** @author jessewilson@google.com (Jesse Wilson) */
-public class UniqueAnnotationsTest {
+import java.lang.annotation.Annotation;
 
-  @UniqueAnnotations.Internal(31)
-  public Void unused;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-  @Test
-  public void testEqualsHashCodeToString() {
-    Annotation actual = UniqueAnnotations.create(31);
+/**
+ * @author jessewilson@google.com (Jesse Wilson)
+ */
+public class UniqueAnnotationsTest
+{
+    @UniqueAnnotations.Internal(31)
+    public Void unused;
 
-    Annotation expected = getClass().getFields()[0].getAnnotations()[0];
+    @Test
+    public void testEqualsHashCodeToString()
+    {
+        Annotation actual = UniqueAnnotations.create(31);
 
-    assertEquals(expected.toString(), actual.toString());
-    assertEquals(expected.hashCode(), actual.hashCode());
-    assertEquals(expected, actual);
-  }
+        Annotation expected = getClass().getFields()[0].getAnnotations()[0];
+
+        assertEquals(expected.toString(), actual.toString());
+        assertEquals(expected.hashCode(), actual.hashCode());
+        assertEquals(expected, actual);
+    }
 }

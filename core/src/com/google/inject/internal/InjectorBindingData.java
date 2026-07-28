@@ -34,6 +34,7 @@ import com.google.inject.spi.ScopeBinding;
 import com.google.inject.spi.StaticInjectionRequest;
 import com.google.inject.spi.TypeConverterBinding;
 import com.google.inject.spi.TypeListenerBinding;
+
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -52,219 +53,256 @@ import java.util.Set;
  *
  * @author jessewilson@google.com (Jesse Wilson)
  */
-class InjectorBindingData {
+class InjectorBindingData
+{
+    // The parent injector's InjectorBindingData, if the parent injector exists.
+    private final Optional<InjectorBindingData> parent;
 
-  // The parent injector's InjectorBindingData, if the parent injector exists.
-  private final Optional<InjectorBindingData> parent;
+    // Must be a linked hashmap in order to preserve order of bindings in Modules.
+    private final Map<Key<?>, Binding<?>> explicitBindingsMutable = new LinkedHashMap<>();
+    private final Map<Key<?>, Binding<?>> explicitBindings =
+            Collections.unmodifiableMap(explicitBindingsMutable);
+    private final Map<Class<? extends Annotation>, ScopeBinding> scopes = new HashMap<>();
+    private final Set<ProviderLookup<?>> providerLookups = new LinkedHashSet<>();
+    private final Set<StaticInjectionRequest> staticInjectionRequests = new LinkedHashSet<>();
+    private final Set<MembersInjectorLookup<?>> membersInjectorLookups = new LinkedHashSet<>();
+    private final Set<InjectionRequest<?>> injectionRequests = new LinkedHashSet<>();
+    private final List<TypeConverterBinding> converters = new ArrayList<>();
+    private final List<InterceptorBinding> interceptorBindings = new ArrayList<>();
+    private final List<TypeListenerBinding> typeListenerBindings = new ArrayList<>();
+    private final List<ProvisionListenerBinding> provisionListenerBindings = new ArrayList<>();
+    private final List<ModuleAnnotatedMethodScannerBinding> scannerBindings = new ArrayList<>();
+    // The injector's explicit bindings, indexed by the binding's type.
+    private final ListMultimap<TypeLiteral<?>, Binding<?>> indexedExplicitBindings =
+            ArrayListMultimap.create();
 
-  // Must be a linked hashmap in order to preserve order of bindings in Modules.
-  private final Map<Key<?>, Binding<?>> explicitBindingsMutable = new LinkedHashMap<>();
-  private final Map<Key<?>, Binding<?>> explicitBindings =
-      Collections.unmodifiableMap(explicitBindingsMutable);
-  private final Map<Class<? extends Annotation>, ScopeBinding> scopes = new HashMap<>();
-  private final Set<ProviderLookup<?>> providerLookups = new LinkedHashSet<>();
-  private final Set<StaticInjectionRequest> staticInjectionRequests = new LinkedHashSet<>();
-  private final Set<MembersInjectorLookup<?>> membersInjectorLookups = new LinkedHashSet<>();
-  private final Set<InjectionRequest<?>> injectionRequests = new LinkedHashSet<>();
-  private final List<TypeConverterBinding> converters = new ArrayList<>();
-  private final List<InterceptorBinding> interceptorBindings = new ArrayList<>();
-  private final List<TypeListenerBinding> typeListenerBindings = new ArrayList<>();
-  private final List<ProvisionListenerBinding> provisionListenerBindings = new ArrayList<>();
-  private final List<ModuleAnnotatedMethodScannerBinding> scannerBindings = new ArrayList<>();
-  // The injector's explicit bindings, indexed by the binding's type.
-  private final ListMultimap<TypeLiteral<?>, Binding<?>> indexedExplicitBindings =
-      ArrayListMultimap.create();
-
-  InjectorBindingData(Optional<InjectorBindingData> parent) {
-    this.parent = parent;
-  }
-
-  public Optional<InjectorBindingData> parent() {
-    return parent;
-  }
-
-  @SuppressWarnings("unchecked") // we only put in BindingImpls that match their key types
-  public <T> BindingImpl<T> getExplicitBinding(Key<T> key) {
-    Binding<?> binding = explicitBindings.get(key);
-    if (binding == null && parent.isPresent()) {
-      return parent.orElseThrow().getExplicitBinding(key);
+    InjectorBindingData(Optional<InjectorBindingData> parent)
+    {
+        this.parent = parent;
     }
-    return (BindingImpl<T>) binding;
-  }
 
-  public Map<Key<?>, Binding<?>> getExplicitBindingsThisLevel() {
-    return explicitBindings;
-  }
-
-  public void putBinding(Key<?> key, BindingImpl<?> binding) {
-    explicitBindingsMutable.put(key, binding);
-  }
-
-  public void putProviderLookup(ProviderLookup<?> lookup) {
-    providerLookups.add(lookup);
-  }
-
-  public Set<ProviderLookup<?>> getProviderLookupsThisLevel() {
-    return providerLookups;
-  }
-
-  public void putStaticInjectionRequest(StaticInjectionRequest staticInjectionRequest) {
-    staticInjectionRequests.add(staticInjectionRequest);
-  }
-
-  public Set<StaticInjectionRequest> getStaticInjectionRequestsThisLevel() {
-    return staticInjectionRequests;
-  }
-
-  public void putInjectionRequest(InjectionRequest<?> injectionRequest) {
-    injectionRequests.add(injectionRequest);
-  }
-
-  public Set<InjectionRequest<?>> getInjectionRequestsThisLevel() {
-    return injectionRequests;
-  }
-
-  public void putMembersInjectorLookup(MembersInjectorLookup<?> membersInjectorLookup) {
-    membersInjectorLookups.add(membersInjectorLookup);
-  }
-
-  public Set<MembersInjectorLookup<?>> getMembersInjectorLookupsThisLevel() {
-    return membersInjectorLookups;
-  }
-
-  public ScopeBinding getScopeBinding(Class<? extends Annotation> annotationType) {
-    ScopeBinding scopeBinding = scopes.get(annotationType);
-    if (scopeBinding == null && parent.isPresent()) {
-      return parent.orElseThrow().getScopeBinding(annotationType);
+    public Optional<InjectorBindingData> parent()
+    {
+        return parent;
     }
-    return scopeBinding;
-  }
 
-  public void putScopeBinding(Class<? extends Annotation> annotationType, ScopeBinding scope) {
-    scopes.put(annotationType, scope);
-  }
-
-  public Collection<ScopeBinding> getScopeBindingsThisLevel() {
-    return scopes.values();
-  }
-
-  public Iterable<TypeConverterBinding> getConvertersThisLevel() {
-    return converters;
-  }
-
-  public void addConverter(TypeConverterBinding typeConverterBinding) {
-    converters.add(typeConverterBinding);
-  }
-
-  public TypeConverterBinding getConverter(
-      String stringValue, TypeLiteral<?> type, Errors errors, Object source) {
-    TypeConverterBinding matchingConverter = null;
-    InjectorBindingData b = this;
-    while (b != null) {
-      for (TypeConverterBinding converter : b.getConvertersThisLevel()) {
-        if (converter.getTypeMatcher().matches(type)) {
-          if (matchingConverter != null) {
-            errors.ambiguousTypeConversion(stringValue, source, type, matchingConverter, converter);
-          }
-          matchingConverter = converter;
+    @SuppressWarnings("unchecked") // we only put in BindingImpls that match their key types
+    public <T> BindingImpl<T> getExplicitBinding(Key<T> key)
+    {
+        Binding<?> binding = explicitBindings.get(key);
+        if (binding == null && parent.isPresent()) {
+            return parent.orElseThrow().getExplicitBinding(key);
         }
-      }
-      b = b.parent().orElse(null);
+        return (BindingImpl<T>) binding;
     }
-    return matchingConverter;
-  }
 
-  public void addInterceptorBinding(InterceptorBinding interceptorBinding) {
-    interceptorBindings.add(interceptorBinding);
-  }
-
-  public ImmutableList<InterceptorBinding> getInterceptorBindings() {
-    if (parent.isPresent()) {
-      return new ImmutableList.Builder<InterceptorBinding>()
-          .addAll(parent.orElseThrow().getInterceptorBindings())
-          .addAll(interceptorBindings)
-          .build();
+    public Map<Key<?>, Binding<?>> getExplicitBindingsThisLevel()
+    {
+        return explicitBindings;
     }
-    return ImmutableList.copyOf(interceptorBindings);
-  }
 
-  public ImmutableList<InterceptorBinding> getInterceptorBindingsThisLevel() {
-    return ImmutableList.copyOf(interceptorBindings);
-  }
-
-  public void addTypeListener(TypeListenerBinding listenerBinding) {
-    typeListenerBindings.add(listenerBinding);
-  }
-
-  public ImmutableList<TypeListenerBinding> getTypeListenerBindings() {
-    if (parent.isPresent()) {
-      return new ImmutableList.Builder<TypeListenerBinding>()
-          .addAll(parent.orElseThrow().getTypeListenerBindings())
-          .addAll(typeListenerBindings)
-          .build();
+    public void putBinding(Key<?> key, BindingImpl<?> binding)
+    {
+        explicitBindingsMutable.put(key, binding);
     }
-    return ImmutableList.copyOf(typeListenerBindings);
-  }
 
-  public ImmutableList<TypeListenerBinding> getTypeListenerBindingsThisLevel() {
-    return ImmutableList.copyOf(typeListenerBindings);
-  }
-
-  public void addProvisionListener(ProvisionListenerBinding listenerBinding) {
-    provisionListenerBindings.add(listenerBinding);
-  }
-
-  public ImmutableList<ProvisionListenerBinding> getProvisionListenerBindings() {
-    if (parent.isPresent()) {
-      return new ImmutableList.Builder<ProvisionListenerBinding>()
-          .addAll(parent.orElseThrow().getProvisionListenerBindings())
-          .addAll(provisionListenerBindings)
-          .build();
+    public void putProviderLookup(ProviderLookup<?> lookup)
+    {
+        providerLookups.add(lookup);
     }
-    return ImmutableList.copyOf(provisionListenerBindings);
-  }
 
-  public ImmutableList<ProvisionListenerBinding> getProvisionListenerBindingsThisLevel() {
-    return ImmutableList.copyOf(provisionListenerBindings);
-  }
-
-  public void addScanner(ModuleAnnotatedMethodScannerBinding scanner) {
-    scannerBindings.add(scanner);
-  }
-
-  public ImmutableList<ModuleAnnotatedMethodScannerBinding> getScannerBindings() {
-    if (parent.isPresent()) {
-      return new ImmutableList.Builder<ModuleAnnotatedMethodScannerBinding>()
-          .addAll(parent.orElseThrow().getScannerBindings())
-          .addAll(scannerBindings)
-          .build();
+    public Set<ProviderLookup<?>> getProviderLookupsThisLevel()
+    {
+        return providerLookups;
     }
-    return ImmutableList.copyOf(scannerBindings);
-  }
 
-  public ImmutableList<ModuleAnnotatedMethodScannerBinding> getScannerBindingsThisLevel() {
-    return ImmutableList.copyOf(scannerBindings);
-  }
-
-  public Map<Class<? extends Annotation>, Scope> getScopes() {
-    ImmutableMap.Builder<Class<? extends Annotation>, Scope> builder = ImmutableMap.builder();
-    for (Map.Entry<Class<? extends Annotation>, ScopeBinding> entry : scopes.entrySet()) {
-      builder.put(entry.getKey(), entry.getValue().getScope());
+    public void putStaticInjectionRequest(StaticInjectionRequest staticInjectionRequest)
+    {
+        staticInjectionRequests.add(staticInjectionRequest);
     }
-    return builder.buildOrThrow();
-  }
 
-  /**
-   * Once the injector's explicit bindings are finalized, this method is called to index all
-   * explicit bindings by their return type.
-   */
-  void indexBindingsByType() {
-    for (Binding<?> binding : getExplicitBindingsThisLevel().values()) {
-      indexedExplicitBindings.put(binding.getKey().getTypeLiteral(), binding);
+    public Set<StaticInjectionRequest> getStaticInjectionRequestsThisLevel()
+    {
+        return staticInjectionRequests;
     }
-  }
 
-  public ListMultimap<TypeLiteral<?>, Binding<?>> getIndexedExplicitBindings() {
-    return indexedExplicitBindings;
-  }
+    public void putInjectionRequest(InjectionRequest<?> injectionRequest)
+    {
+        injectionRequests.add(injectionRequest);
+    }
+
+    public Set<InjectionRequest<?>> getInjectionRequestsThisLevel()
+    {
+        return injectionRequests;
+    }
+
+    public void putMembersInjectorLookup(MembersInjectorLookup<?> membersInjectorLookup)
+    {
+        membersInjectorLookups.add(membersInjectorLookup);
+    }
+
+    public Set<MembersInjectorLookup<?>> getMembersInjectorLookupsThisLevel()
+    {
+        return membersInjectorLookups;
+    }
+
+    public ScopeBinding getScopeBinding(Class<? extends Annotation> annotationType)
+    {
+        ScopeBinding scopeBinding = scopes.get(annotationType);
+        if (scopeBinding == null && parent.isPresent()) {
+            return parent.orElseThrow().getScopeBinding(annotationType);
+        }
+        return scopeBinding;
+    }
+
+    public void putScopeBinding(Class<? extends Annotation> annotationType, ScopeBinding scope)
+    {
+        scopes.put(annotationType, scope);
+    }
+
+    public Collection<ScopeBinding> getScopeBindingsThisLevel()
+    {
+        return scopes.values();
+    }
+
+    public Iterable<TypeConverterBinding> getConvertersThisLevel()
+    {
+        return converters;
+    }
+
+    public void addConverter(TypeConverterBinding typeConverterBinding)
+    {
+        converters.add(typeConverterBinding);
+    }
+
+    public TypeConverterBinding getConverter(
+            String stringValue,
+            TypeLiteral<?> type,
+            Errors errors,
+            Object source)
+    {
+        TypeConverterBinding matchingConverter = null;
+        InjectorBindingData b = this;
+        while (b != null) {
+            for (TypeConverterBinding converter : b.getConvertersThisLevel()) {
+                if (converter.getTypeMatcher().matches(type)) {
+                    if (matchingConverter != null) {
+                        errors.ambiguousTypeConversion(stringValue, source, type, matchingConverter, converter);
+                    }
+                    matchingConverter = converter;
+                }
+            }
+            b = b.parent().orElse(null);
+        }
+        return matchingConverter;
+    }
+
+    public void addInterceptorBinding(InterceptorBinding interceptorBinding)
+    {
+        interceptorBindings.add(interceptorBinding);
+    }
+
+    public ImmutableList<InterceptorBinding> getInterceptorBindings()
+    {
+        if (parent.isPresent()) {
+            return new ImmutableList.Builder<InterceptorBinding>()
+                    .addAll(parent.orElseThrow().getInterceptorBindings())
+                    .addAll(interceptorBindings)
+                    .build();
+        }
+        return ImmutableList.copyOf(interceptorBindings);
+    }
+
+    public ImmutableList<InterceptorBinding> getInterceptorBindingsThisLevel()
+    {
+        return ImmutableList.copyOf(interceptorBindings);
+    }
+
+    public void addTypeListener(TypeListenerBinding listenerBinding)
+    {
+        typeListenerBindings.add(listenerBinding);
+    }
+
+    public ImmutableList<TypeListenerBinding> getTypeListenerBindings()
+    {
+        if (parent.isPresent()) {
+            return new ImmutableList.Builder<TypeListenerBinding>()
+                    .addAll(parent.orElseThrow().getTypeListenerBindings())
+                    .addAll(typeListenerBindings)
+                    .build();
+        }
+        return ImmutableList.copyOf(typeListenerBindings);
+    }
+
+    public ImmutableList<TypeListenerBinding> getTypeListenerBindingsThisLevel()
+    {
+        return ImmutableList.copyOf(typeListenerBindings);
+    }
+
+    public void addProvisionListener(ProvisionListenerBinding listenerBinding)
+    {
+        provisionListenerBindings.add(listenerBinding);
+    }
+
+    public ImmutableList<ProvisionListenerBinding> getProvisionListenerBindings()
+    {
+        if (parent.isPresent()) {
+            return new ImmutableList.Builder<ProvisionListenerBinding>()
+                    .addAll(parent.orElseThrow().getProvisionListenerBindings())
+                    .addAll(provisionListenerBindings)
+                    .build();
+        }
+        return ImmutableList.copyOf(provisionListenerBindings);
+    }
+
+    public ImmutableList<ProvisionListenerBinding> getProvisionListenerBindingsThisLevel()
+    {
+        return ImmutableList.copyOf(provisionListenerBindings);
+    }
+
+    public void addScanner(ModuleAnnotatedMethodScannerBinding scanner)
+    {
+        scannerBindings.add(scanner);
+    }
+
+    public ImmutableList<ModuleAnnotatedMethodScannerBinding> getScannerBindings()
+    {
+        if (parent.isPresent()) {
+            return new ImmutableList.Builder<ModuleAnnotatedMethodScannerBinding>()
+                    .addAll(parent.orElseThrow().getScannerBindings())
+                    .addAll(scannerBindings)
+                    .build();
+        }
+        return ImmutableList.copyOf(scannerBindings);
+    }
+
+    public ImmutableList<ModuleAnnotatedMethodScannerBinding> getScannerBindingsThisLevel()
+    {
+        return ImmutableList.copyOf(scannerBindings);
+    }
+
+    public Map<Class<? extends Annotation>, Scope> getScopes()
+    {
+        ImmutableMap.Builder<Class<? extends Annotation>, Scope> builder = ImmutableMap.builder();
+        for (Map.Entry<Class<? extends Annotation>, ScopeBinding> entry : scopes.entrySet()) {
+            builder.put(entry.getKey(), entry.getValue().getScope());
+        }
+        return builder.buildOrThrow();
+    }
+
+    /**
+     * Once the injector's explicit bindings are finalized, this method is called to index all
+     * explicit bindings by their return type.
+     */
+    void indexBindingsByType()
+    {
+        for (Binding<?> binding : getExplicitBindingsThisLevel().values()) {
+            indexedExplicitBindings.put(binding.getKey().getTypeLiteral(), binding);
+        }
+    }
+
+    public ListMultimap<TypeLiteral<?>, Binding<?>> getIndexedExplicitBindings()
+    {
+        return indexedExplicitBindings;
+    }
 }

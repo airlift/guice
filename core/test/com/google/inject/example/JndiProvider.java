@@ -18,32 +18,41 @@ package com.google.inject.example;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+
 import javax.naming.Context;
 import javax.naming.NamingException;
 
 @SuppressWarnings("BanJNDI")
-class JndiProvider<T> implements Provider<T> {
+class JndiProvider<T>
+        implements Provider<T>
+{
+    @Inject
+    Context context;
+    final String name;
+    final Class<T> type;
 
-  @Inject Context context;
-  final String name;
-  final Class<T> type;
-
-  JndiProvider(Class<T> type, String name) {
-    this.name = name;
-    this.type = type;
-  }
-
-  @Override
-  public T get() {
-    try {
-      return type.cast(context.lookup(name));
-    } catch (NamingException e) {
-      throw new RuntimeException(e);
+    JndiProvider(Class<T> type, String name)
+    {
+        this.name = name;
+        this.type = type;
     }
-  }
 
-  /** Creates a JNDI provider for the given type and name. */
-  static <T> Provider<T> fromJndi(Class<T> type, String name) {
-    return new JndiProvider<T>(type, name);
-  }
+    @Override
+    public T get()
+    {
+        try {
+            return type.cast(context.lookup(name));
+        }
+        catch (NamingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Creates a JNDI provider for the given type and name.
+     */
+    static <T> Provider<T> fromJndi(Class<T> type, String name)
+    {
+        return new JndiProvider<T>(type, name);
+    }
 }

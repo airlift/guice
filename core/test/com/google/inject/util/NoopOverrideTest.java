@@ -20,12 +20,16 @@ import com.google.inject.Module;
 import com.google.inject.spi.ElementVisitor;
 import com.google.inject.spi.ElementsTest;
 
-/** @author jessewilson@google.com (Jesse Wilson) */
-public class NoopOverrideTest extends ElementsTest {
-
-  @Override
-  protected void checkModule(Module module, ElementVisitor<?>... visitors) {
-    Module overridden = Modules.override(module).with(Modules.EMPTY_MODULE);
-    super.checkModule(overridden, visitors);
-  }
+/**
+ * @author jessewilson@google.com (Jesse Wilson)
+ */
+public class NoopOverrideTest
+        extends ElementsTest
+{
+    @Override
+    protected void checkModule(Module module, ElementVisitor<?>... visitors)
+    {
+        Module overridden = Modules.override(module).with(Modules.EMPTY_MODULE);
+        super.checkModule(overridden, visitors);
+    }
 }

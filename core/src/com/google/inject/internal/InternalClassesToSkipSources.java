@@ -18,17 +18,20 @@ package com.google.inject.internal;
 
 import com.google.common.collect.ImmutableSet;
 
-/** Returns internal classes that should be skipped when calculating sources. */
-public final class InternalClassesToSkipSources {
+/**
+ * Returns internal classes that should be skipped when calculating sources.
+ */
+public final class InternalClassesToSkipSources
+{
+    private InternalClassesToSkipSources() {}
 
-  private InternalClassesToSkipSources() {}
-
-  public static ImmutableSet<Class<?>> classesToSkipSources() {
-    return ImmutableSet.of(
-        RealMapBinder.class,
-        RealMapBinder.MultimapBinder.class,
-        RealMultibinder.class,
-        RealOptionalBinder.class,
-        ProviderMethodsModule.class);
-  }
+    public static ImmutableSet<Class<?>> classesToSkipSources()
+    {
+        return ImmutableSet.of(
+                RealMapBinder.class,
+                RealMapBinder.MultimapBinder.class,
+                RealMultibinder.class,
+                RealOptionalBinder.class,
+                ProviderMethodsModule.class);
+    }
 }

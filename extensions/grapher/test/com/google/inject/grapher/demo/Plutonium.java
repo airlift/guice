@@ -16,4 +16,5 @@
 
 package com.google.inject.grapher.demo;
 
-class Plutonium implements EnergySource {}
+class Plutonium
+        implements EnergySource {}

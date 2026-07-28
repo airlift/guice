@@ -14,5 +14,7 @@
  * limitations under the License.
  */
 
-/** Interfaces which make up {@link com.google.inject.Binder}'s expression language. */
+/**
+ * Interfaces which make up {@link com.google.inject.Binder}'s expression language.
+ */
 package com.google.inject.binder;

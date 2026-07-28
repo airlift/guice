@@ -15,8 +15,6 @@
  */
 package com.google.inject.internal;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Guice;
 import com.google.inject.Key;
@@ -29,6 +27,7 @@ import com.google.inject.internal.util.StackTraceElements;
 import com.google.inject.spi.Dependency;
 import com.google.inject.spi.InjectionListener;
 import com.google.inject.spi.Message;
+
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -38,6 +37,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * A checked exception for provisioning errors.
@@ -62,192 +63,223 @@ import java.util.logging.Logger;
  * #errorInUserCode} is called with an exception that holds multiple errors (like
  * ProvisionException).
  */
-public final class InternalProvisionException extends Exception {
-  private static final Logger logger = Logger.getLogger(Guice.class.getName());
-  private static final Set<Dependency<?>> warnedDependencies =
-      Collections.newSetFromMap(new ConcurrentHashMap<Dependency<?>, Boolean>());
+public final class InternalProvisionException
+        extends Exception
+{
+    private static final Logger logger = Logger.getLogger(Guice.class.getName());
+    private static final Set<Dependency<?>> warnedDependencies =
+            Collections.newSetFromMap(new ConcurrentHashMap<Dependency<?>, Boolean>());
 
-
-  public static InternalProvisionException circularDependenciesDisabled(Class<?> expectedType) {
-    return create(
-        ErrorId.CIRCULAR_PROXY_DISABLED,
-        "Found a circular dependency involving %s, and circular dependencies are disabled.",
-        expectedType);
-  }
-
-  public static InternalProvisionException cannotProxyClass(Class<?> expectedType) {
-    return create(
-        ErrorId.CAN_NOT_PROXY_CLASS,
-        "Tried proxying %s to support a circular dependency, but it is not an interface.",
-        expectedType);
-  }
-
-  public static InternalProvisionException create(
-      ErrorId errorId, String format, Object... arguments) {
-    return new InternalProvisionException(Messages.create(errorId, format, arguments));
-  }
-
-  public static InternalProvisionException errorInUserCode(
-      ErrorId errorId, Throwable cause, String messageFormat, Object... arguments) {
-    Collection<Message> messages = Errors.getMessagesFromThrowable(cause);
-    if (!messages.isEmpty()) {
-      // TODO(lukes): it seems like we are dropping some valuable context here..
-      // consider eliminating this special case
-      return new InternalProvisionException(messages);
-    } else {
-      return new InternalProvisionException(
-          Messages.create(errorId, cause, messageFormat, arguments));
+    public static InternalProvisionException circularDependenciesDisabled(Class<?> expectedType)
+    {
+        return create(
+                ErrorId.CIRCULAR_PROXY_DISABLED,
+                "Found a circular dependency involving %s, and circular dependencies are disabled.",
+                expectedType);
     }
-  }
 
-  public static InternalProvisionException subtypeNotProvided(
-      Class<? extends jakarta.inject.Provider<?>> providerType, Class<?> type) {
-    return create(
-        ErrorId.SUBTYPE_NOT_PROVIDED, "%s doesn't provide instances of %s.", providerType, type);
-  }
+    public static InternalProvisionException cannotProxyClass(Class<?> expectedType)
+    {
+        return create(
+                ErrorId.CAN_NOT_PROXY_CLASS,
+                "Tried proxying %s to support a circular dependency, but it is not an interface.",
+                expectedType);
+    }
 
-  public static InternalProvisionException errorInProvider(Throwable cause) {
-    return errorInUserCode(ErrorId.ERROR_IN_CUSTOM_PROVIDER, cause, "%s", cause);
-  }
+    public static InternalProvisionException create(
+            ErrorId errorId,
+            String format,
+            Object... arguments)
+    {
+        return new InternalProvisionException(Messages.create(errorId, format, arguments));
+    }
 
-  public static InternalProvisionException errorInjectingMethod(Throwable cause) {
-      return errorInUserCode(ErrorId.ERROR_INJECTING_METHOD, cause, "%s", cause);
-  }
-
-  public static InternalProvisionException errorInjectingConstructor(Throwable cause) {
-      return errorInUserCode(ErrorId.ERROR_INJECTING_CONSTRUCTOR, cause, "%s", cause);
-  }
-
-  public static InternalProvisionException errorInUserInjector(
-      MembersInjector<?> listener, TypeLiteral<?> type, RuntimeException cause) {
-    return errorInUserCode(
-        ErrorId.ERROR_IN_USER_INJECTOR,
-        cause,
-        "Error injecting %s using %s.\n Reason: %s",
-        type,
-        listener,
-        cause);
-  }
-
-  public static InternalProvisionException jitDisabled(Key<?> key) {
-    return create(
-        ErrorId.JIT_DISABLED,
-        "Explicit bindings are required and %s is not explicitly bound.",
-        key);
-  }
-
-  public static InternalProvisionException errorNotifyingInjectionListener(
-      InjectionListener<?> listener, TypeLiteral<?> type, RuntimeException cause) {
-    return errorInUserCode(
-        ErrorId.OTHER,
-        cause,
-        "Error notifying InjectionListener %s of %s.\n Reason: %s",
-        listener,
-        type,
-        cause);
-  }
-
-  /**
-   * Returns {@code value} if it is non-null or allowed to be null. Otherwise a message is added and
-   * an {@code InternalProvisionException} is thrown.
-   */
-  static void onNullInjectedIntoNonNullableDependency(Object source, Dependency<?> dependency)
-      throws InternalProvisionException {
-    // Hack to allow null parameters to @Provides methods, for backwards compatibility.
-    if (dependency.getInjectionPoint().getMember() instanceof Method annotated) {
-      if (annotated.isAnnotationPresent(Provides.class)) {
-        switch (InternalFlags.getNullableProvidesOption()) {
-          case ERROR -> {} // fall out & let the below exception happen
-          case IGNORE -> {
-            return; // user doesn't care about injecting nulls to non-@Nullables.
-          }
-          case WARN -> {
-            // Warn only once, otherwise we spam logs too much.
-            if (warnedDependencies.add(dependency)) {
-              logger.log(
-                  Level.WARNING,
-                  "Guice injected null into {0} (a {1}), please mark it @Nullable."
-                      + " Use -Dguice_check_nullable_provides_params=ERROR to turn this into an"
-                      + " error.",
-                  new Object[] {
-                    SourceFormatter.getParameterName(dependency),
-                    Messages.convert(dependency.getKey())
-                  });
-            }
-            return;
-          }
+    public static InternalProvisionException errorInUserCode(
+            ErrorId errorId,
+            Throwable cause,
+            String messageFormat,
+            Object... arguments)
+    {
+        Collection<Message> messages = Errors.getMessagesFromThrowable(cause);
+        if (!messages.isEmpty()) {
+            // TODO(lukes): it seems like we are dropping some valuable context here..
+            // consider eliminating this special case
+            return new InternalProvisionException(messages);
         }
-      }
+        else {
+            return new InternalProvisionException(
+                    Messages.create(errorId, cause, messageFormat, arguments));
+        }
     }
 
-    String parameterName =
-        (dependency.getParameterIndex() != -1) ? SourceFormatter.getParameterName(dependency) : "";
-    Object memberStackTraceElement =
-        StackTraceElements.forMember(dependency.getInjectionPoint().getMember());
-    Object formattedDependency =
-        parameterName.isEmpty()
-            ? memberStackTraceElement
-            : "the " + parameterName + " of " + memberStackTraceElement;
-    throw InternalProvisionException.create(
-            ErrorId.NULL_INJECTED_INTO_NON_NULLABLE,
-            "null returned by binding at %s\n but %s is not @Nullable",
-            source,
-            formattedDependency)
-        .addSource(source);
-  }
-
-  private final List<Object> sourcesToPrepend = new ArrayList<>();
-  private final ImmutableList<Message> errors;
-
-  InternalProvisionException(Message error) {
-    this(ImmutableList.of(error));
-  }
-
-  private InternalProvisionException(Iterable<Message> errors) {
-    this.errors = ImmutableList.copyOf(errors);
-    checkArgument(!this.errors.isEmpty(), "Can't create a provision exception with no errors");
-  }
-
-  /**
-   * Prepends the given {@code source} to the stack of binding sources for the errors reported in
-   * this exception.
-   *
-   * <p>See {@link Errors#withSource(Object)}
-   *
-   * <p>It is expected that this method is called as the exception propagates up the stack.
-   *
-   * @param source
-   * @return {@code this}
-   */
-  InternalProvisionException addSource(Object source) {
-    if (source == SourceProvider.UNKNOWN_SOURCE) {
-      return this;
+    public static InternalProvisionException subtypeNotProvided(
+            Class<? extends jakarta.inject.Provider<?>> providerType,
+            Class<?> type)
+    {
+        return create(
+                ErrorId.SUBTYPE_NOT_PROVIDED, "%s doesn't provide instances of %s.", providerType, type);
     }
-    int sz = sourcesToPrepend.size();
-    if (sz > 0 && sourcesToPrepend.get(sz - 1) == source) {
-      // This is for when there are two identical sources added in a row.  This behavior is copied
-      // from Errors.withSource where it can happen when an constructor/provider method throws an
-      // exception
-      return this;
-    }
-    sourcesToPrepend.add(source);
-    return this;
-  }
 
-  ImmutableList<Message> getErrors() {
-    ImmutableList.Builder<Message> builder = ImmutableList.builder();
-    // reverse them since sources are added as the exception propagates (so the first source is the
-    // last one added)
-    List<Object> newSources = sourcesToPrepend.reversed();
-    for (Message error : errors) {
-      builder.add(Messages.mergeSources(newSources, error));
+    public static InternalProvisionException errorInProvider(Throwable cause)
+    {
+        return errorInUserCode(ErrorId.ERROR_IN_CUSTOM_PROVIDER, cause, "%s", cause);
     }
-    return builder.build();
-  }
 
-  /** Returns this exception converted to a ProvisionException. */
-  public ProvisionException toProvisionException() {
-    ProvisionException exception = new ProvisionException(getErrors());
-    return exception;
-  }
+    public static InternalProvisionException errorInjectingMethod(Throwable cause)
+    {
+        return errorInUserCode(ErrorId.ERROR_INJECTING_METHOD, cause, "%s", cause);
+    }
+
+    public static InternalProvisionException errorInjectingConstructor(Throwable cause)
+    {
+        return errorInUserCode(ErrorId.ERROR_INJECTING_CONSTRUCTOR, cause, "%s", cause);
+    }
+
+    public static InternalProvisionException errorInUserInjector(
+            MembersInjector<?> listener,
+            TypeLiteral<?> type,
+            RuntimeException cause)
+    {
+        return errorInUserCode(
+                ErrorId.ERROR_IN_USER_INJECTOR,
+                cause,
+                "Error injecting %s using %s.\n Reason: %s",
+                type,
+                listener,
+                cause);
+    }
+
+    public static InternalProvisionException jitDisabled(Key<?> key)
+    {
+        return create(
+                ErrorId.JIT_DISABLED,
+                "Explicit bindings are required and %s is not explicitly bound.",
+                key);
+    }
+
+    public static InternalProvisionException errorNotifyingInjectionListener(
+            InjectionListener<?> listener,
+            TypeLiteral<?> type,
+            RuntimeException cause)
+    {
+        return errorInUserCode(
+                ErrorId.OTHER,
+                cause,
+                "Error notifying InjectionListener %s of %s.\n Reason: %s",
+                listener,
+                type,
+                cause);
+    }
+
+    /**
+     * Returns {@code value} if it is non-null or allowed to be null. Otherwise a message is added and
+     * an {@code InternalProvisionException} is thrown.
+     */
+    static void onNullInjectedIntoNonNullableDependency(Object source, Dependency<?> dependency)
+            throws InternalProvisionException
+    {
+        // Hack to allow null parameters to @Provides methods, for backwards compatibility.
+        if (dependency.getInjectionPoint().getMember() instanceof Method annotated) {
+            if (annotated.isAnnotationPresent(Provides.class)) {
+                switch (InternalFlags.getNullableProvidesOption()) {
+                    case ERROR -> {} // fall out & let the below exception happen
+                    case IGNORE -> {
+                        return; // user doesn't care about injecting nulls to non-@Nullables.
+                    }
+                    case WARN -> {
+                        // Warn only once, otherwise we spam logs too much.
+                        if (warnedDependencies.add(dependency)) {
+                            logger.log(
+                                    Level.WARNING,
+                                    "Guice injected null into {0} (a {1}), please mark it @Nullable."
+                                            + " Use -Dguice_check_nullable_provides_params=ERROR to turn this into an"
+                                            + " error.",
+                                    new Object[] {
+                                            SourceFormatter.getParameterName(dependency),
+                                            Messages.convert(dependency.getKey()),
+                                    });
+                        }
+                        return;
+                    }
+                }
+            }
+        }
+
+        String parameterName =
+                (dependency.getParameterIndex() != -1) ? SourceFormatter.getParameterName(dependency) : "";
+        Object memberStackTraceElement =
+                StackTraceElements.forMember(dependency.getInjectionPoint().getMember());
+        Object formattedDependency =
+                parameterName.isEmpty()
+                        ? memberStackTraceElement
+                        : "the " + parameterName + " of " + memberStackTraceElement;
+        throw InternalProvisionException.create(
+                        ErrorId.NULL_INJECTED_INTO_NON_NULLABLE,
+                        "null returned by binding at %s\n but %s is not @Nullable",
+                        source,
+                        formattedDependency)
+                .addSource(source);
+    }
+
+    private final List<Object> sourcesToPrepend = new ArrayList<>();
+    private final ImmutableList<Message> errors;
+
+    InternalProvisionException(Message error)
+    {
+        this(ImmutableList.of(error));
+    }
+
+    private InternalProvisionException(Iterable<Message> errors)
+    {
+        this.errors = ImmutableList.copyOf(errors);
+        checkArgument(!this.errors.isEmpty(), "Can't create a provision exception with no errors");
+    }
+
+    /**
+     * Prepends the given {@code source} to the stack of binding sources for the errors reported in
+     * this exception.
+     *
+     * <p>See {@link Errors#withSource(Object)}
+     *
+     * <p>It is expected that this method is called as the exception propagates up the stack.
+     *
+     * @param source
+     * @return {@code this}
+     */
+    InternalProvisionException addSource(Object source)
+    {
+        if (source == SourceProvider.UNKNOWN_SOURCE) {
+            return this;
+        }
+        int sz = sourcesToPrepend.size();
+        if (sz > 0 && sourcesToPrepend.get(sz - 1) == source) {
+            // This is for when there are two identical sources added in a row.  This behavior is copied
+            // from Errors.withSource where it can happen when an constructor/provider method throws an
+            // exception
+            return this;
+        }
+        sourcesToPrepend.add(source);
+        return this;
+    }
+
+    ImmutableList<Message> getErrors()
+    {
+        ImmutableList.Builder<Message> builder = ImmutableList.builder();
+        // reverse them since sources are added as the exception propagates (so the first source is the
+        // last one added)
+        List<Object> newSources = sourcesToPrepend.reversed();
+        for (Message error : errors) {
+            builder.add(Messages.mergeSources(newSources, error));
+        }
+        return builder.build();
+    }
+
+    /**
+     * Returns this exception converted to a ProvisionException.
+     */
+    public ProvisionException toProvisionException()
+    {
+        ProvisionException exception = new ProvisionException(getErrors());
+        return exception;
+    }
 }

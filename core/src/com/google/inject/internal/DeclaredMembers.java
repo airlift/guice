@@ -15,12 +15,12 @@
  */
 package com.google.inject.internal;
 
-import static com.google.common.collect.Comparators.lexicographical;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Comparator;
+
+import static com.google.common.collect.Comparators.lexicographical;
 
 /**
  * Utility class for retrieving declared fields or methods in a particular order, because the JVM
@@ -33,18 +33,18 @@ import java.util.Comparator;
  * <p>For method ordering, within a single class it is sufficient to compare the non-generic method
  * signature which consists of the name, return type and parameter types.
  */
-public final class DeclaredMembers {
+public final class DeclaredMembers
+{
+    private DeclaredMembers() {}
 
-  private DeclaredMembers() {}
+    public static final Comparator<Field> FIELD_COMPARATOR =
+            Comparator.comparing(Field::getName)
+                    .thenComparing(Field::getType, Comparator.comparing(Class::getName));
 
-  public static final Comparator<Field> FIELD_COMPARATOR =
-      Comparator.comparing(Field::getName)
-          .thenComparing(Field::getType, Comparator.comparing(Class::getName));
-
-  public static final Comparator<Method> METHOD_COMPARATOR =
-      Comparator.comparing(Method::getName)
-          .thenComparing(Method::getReturnType, Comparator.comparing(Class::getName))
-          .thenComparing(
-              method -> Arrays.asList(method.getParameterTypes()),
-              lexicographical(Comparator.comparing(Class::getName)));
+    public static final Comparator<Method> METHOD_COMPARATOR =
+            Comparator.comparing(Method::getName)
+                    .thenComparing(Method::getReturnType, Comparator.comparing(Class::getName))
+                    .thenComparing(
+                            method -> Arrays.asList(method.getParameterTypes()),
+                            lexicographical(Comparator.comparing(Class::getName)));
 }

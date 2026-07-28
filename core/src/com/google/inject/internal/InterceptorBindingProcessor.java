@@ -24,20 +24,24 @@ import com.google.inject.spi.InterceptorBinding;
  * @author crazybob@google.com (Bob Lee)
  * @author jessewilson@google.com (Jesse Wilson)
  */
-final class InterceptorBindingProcessor extends AbstractProcessor {
-
-  InterceptorBindingProcessor(Errors errors) {
-    super(errors);
-  }
-
-  @Override
-  public Boolean visit(InterceptorBinding command) {
-    if (InternalFlags.isBytecodeGenEnabled()) {
-      injector.getBindingData().addInterceptorBinding(command);
-    } else {
-      errors.aopDisabled(command);
+final class InterceptorBindingProcessor
+        extends AbstractProcessor
+{
+    InterceptorBindingProcessor(Errors errors)
+    {
+        super(errors);
     }
 
-    return true;
-  }
+    @Override
+    public Boolean visit(InterceptorBinding command)
+    {
+        if (InternalFlags.isBytecodeGenEnabled()) {
+            injector.getBindingData().addInterceptorBinding(command);
+        }
+        else {
+            errors.aopDisabled(command);
+        }
+
+        return true;
+    }
 }

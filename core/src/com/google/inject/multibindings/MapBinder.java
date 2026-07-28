@@ -16,15 +16,16 @@
 
 package com.google.inject.multibindings;
 
-import static com.google.inject.internal.RealMapBinder.newMapRealBinder;
-import static com.google.inject.internal.RealMapBinder.newRealMapBinder;
-
 import com.google.inject.Binder;
 import com.google.inject.TypeLiteral;
 import com.google.inject.binder.LinkedBindingBuilder;
 import com.google.inject.internal.RealMapBinder;
+
 import java.lang.annotation.Annotation;
 import java.util.Map;
+
+import static com.google.inject.internal.RealMapBinder.newMapRealBinder;
+import static com.google.inject.internal.RealMapBinder.newRealMapBinder;
 
 /**
  * An API to bind multiple map entries separately, only to later inject them as a complete map.
@@ -90,122 +91,144 @@ import java.util.Map;
  *
  * @author dpb@google.com (David P. Baker)
  */
-public class MapBinder<K, V> {
-  // This class is non-final due to users mocking this in tests :(
+public class MapBinder<K, V>
+{
+    // This class is non-final due to users mocking this in tests :(
 
-  /**
-   * Returns a new mapbinder that collects entries of {@code keyType}/{@code valueType} in a {@link
-   * Map} that is itself bound with no binding annotation.
-   */
-  public static <K, V> MapBinder<K, V> newMapBinder(
-      Binder binder, TypeLiteral<K> keyType, TypeLiteral<V> valueType) {
-    return new MapBinder<K, V>(newMapRealBinder(binder, keyType, valueType));
-  }
-
-  /**
-   * Returns a new mapbinder that collects entries of {@code keyType}/{@code valueType} in a {@link
-   * Map} that is itself bound with no binding annotation.
-   */
-  public static <K, V> MapBinder<K, V> newMapBinder(
-      Binder binder, Class<K> keyType, Class<V> valueType) {
-    return newMapBinder(binder, TypeLiteral.get(keyType), TypeLiteral.get(valueType));
-  }
-
-  /**
-   * Returns a new mapbinder that collects entries of {@code keyType}/{@code valueType} in a {@link
-   * Map} that is itself bound with {@code annotation}.
-   */
-  public static <K, V> MapBinder<K, V> newMapBinder(
-      Binder binder, TypeLiteral<K> keyType, TypeLiteral<V> valueType, Annotation annotation) {
-    return new MapBinder<K, V>(newRealMapBinder(binder, keyType, valueType, annotation));
-  }
-
-  /**
-   * Returns a new mapbinder that collects entries of {@code keyType}/{@code valueType} in a {@link
-   * Map} that is itself bound with {@code annotation}.
-   */
-  public static <K, V> MapBinder<K, V> newMapBinder(
-      Binder binder, Class<K> keyType, Class<V> valueType, Annotation annotation) {
-    return newMapBinder(binder, TypeLiteral.get(keyType), TypeLiteral.get(valueType), annotation);
-  }
-
-  /**
-   * Returns a new mapbinder that collects entries of {@code keyType}/{@code valueType} in a {@link
-   * Map} that is itself bound with {@code annotationType}.
-   */
-  public static <K, V> MapBinder<K, V> newMapBinder(
-      Binder binder,
-      TypeLiteral<K> keyType,
-      TypeLiteral<V> valueType,
-      Class<? extends Annotation> annotationType) {
-    return new MapBinder<K, V>(newRealMapBinder(binder, keyType, valueType, annotationType));
-  }
-
-  /**
-   * Returns a new mapbinder that collects entries of {@code keyType}/{@code valueType} in a {@link
-   * Map} that is itself bound with {@code annotationType}.
-   */
-  public static <K, V> MapBinder<K, V> newMapBinder(
-      Binder binder,
-      Class<K> keyType,
-      Class<V> valueType,
-      Class<? extends Annotation> annotationType) {
-    return newMapBinder(
-        binder, TypeLiteral.get(keyType), TypeLiteral.get(valueType), annotationType);
-  }
-
-  private final RealMapBinder<K, V> delegate;
-
-  private MapBinder(RealMapBinder<K, V> delegate) {
-    this.delegate = delegate;
-  }
-
-  /**
-   * Configures the {@code MapBinder} to handle duplicate entries.
-   *
-   * <p>When multiple equal keys are bound, the value that gets included in the map is arbitrary.
-   *
-   * <p>In addition to the {@code Map<K, V>} and {@code Map<K, Provider<V>>} maps that are normally
-   * bound, a {@code Map<K, Set<V>>} and {@code Map<K, Set<Provider<V>>>} are <em>also</em> bound,
-   * which contain all values bound to each key.
-   *
-   * <p>When multiple modules contribute elements to the map, this configuration option impacts all
-   * of them.
-   *
-   * @return this map binder
-   * @since 3.0
-   */
-  public MapBinder<K, V> permitDuplicates() {
-    delegate.permitDuplicates();
-    return this;
-  }
-
-  /**
-   * Returns a binding builder used to add a new entry in the map. Each key must be distinct (and
-   * non-null). Bound providers will be evaluated each time the map is injected.
-   *
-   * <p>It is an error to call this method without also calling one of the {@code to} methods on the
-   * returned binding builder.
-   *
-   * <p>Scoping elements independently is supported. Use the {@code in} method to specify a binding
-   * scope.
-   */
-  public LinkedBindingBuilder<V> addBinding(K key) {
-    return delegate.addBinding(key);
-  }
-
-  // Some tests rely on MapBinder implementing equals/hashCode
-
-  @Override
-  public boolean equals(Object obj) {
-    if (obj instanceof MapBinder) {
-      return delegate.equals(((MapBinder<?, ?>) obj).delegate);
+    /**
+     * Returns a new mapbinder that collects entries of {@code keyType}/{@code valueType} in a {@link
+     * Map} that is itself bound with no binding annotation.
+     */
+    public static <K, V> MapBinder<K, V> newMapBinder(
+            Binder binder,
+            TypeLiteral<K> keyType,
+            TypeLiteral<V> valueType)
+    {
+        return new MapBinder<K, V>(newMapRealBinder(binder, keyType, valueType));
     }
-    return false;
-  }
 
-  @Override
-  public int hashCode() {
-    return delegate.hashCode();
-  }
+    /**
+     * Returns a new mapbinder that collects entries of {@code keyType}/{@code valueType} in a {@link
+     * Map} that is itself bound with no binding annotation.
+     */
+    public static <K, V> MapBinder<K, V> newMapBinder(
+            Binder binder,
+            Class<K> keyType,
+            Class<V> valueType)
+    {
+        return newMapBinder(binder, TypeLiteral.get(keyType), TypeLiteral.get(valueType));
+    }
+
+    /**
+     * Returns a new mapbinder that collects entries of {@code keyType}/{@code valueType} in a {@link
+     * Map} that is itself bound with {@code annotation}.
+     */
+    public static <K, V> MapBinder<K, V> newMapBinder(
+            Binder binder,
+            TypeLiteral<K> keyType,
+            TypeLiteral<V> valueType,
+            Annotation annotation)
+    {
+        return new MapBinder<K, V>(newRealMapBinder(binder, keyType, valueType, annotation));
+    }
+
+    /**
+     * Returns a new mapbinder that collects entries of {@code keyType}/{@code valueType} in a {@link
+     * Map} that is itself bound with {@code annotation}.
+     */
+    public static <K, V> MapBinder<K, V> newMapBinder(
+            Binder binder,
+            Class<K> keyType,
+            Class<V> valueType,
+            Annotation annotation)
+    {
+        return newMapBinder(binder, TypeLiteral.get(keyType), TypeLiteral.get(valueType), annotation);
+    }
+
+    /**
+     * Returns a new mapbinder that collects entries of {@code keyType}/{@code valueType} in a {@link
+     * Map} that is itself bound with {@code annotationType}.
+     */
+    public static <K, V> MapBinder<K, V> newMapBinder(
+            Binder binder,
+            TypeLiteral<K> keyType,
+            TypeLiteral<V> valueType,
+            Class<? extends Annotation> annotationType)
+    {
+        return new MapBinder<K, V>(newRealMapBinder(binder, keyType, valueType, annotationType));
+    }
+
+    /**
+     * Returns a new mapbinder that collects entries of {@code keyType}/{@code valueType} in a {@link
+     * Map} that is itself bound with {@code annotationType}.
+     */
+    public static <K, V> MapBinder<K, V> newMapBinder(
+            Binder binder,
+            Class<K> keyType,
+            Class<V> valueType,
+            Class<? extends Annotation> annotationType)
+    {
+        return newMapBinder(
+                binder, TypeLiteral.get(keyType), TypeLiteral.get(valueType), annotationType);
+    }
+
+    private final RealMapBinder<K, V> delegate;
+
+    private MapBinder(RealMapBinder<K, V> delegate)
+    {
+        this.delegate = delegate;
+    }
+
+    /**
+     * Configures the {@code MapBinder} to handle duplicate entries.
+     *
+     * <p>When multiple equal keys are bound, the value that gets included in the map is arbitrary.
+     *
+     * <p>In addition to the {@code Map<K, V>} and {@code Map<K, Provider<V>>} maps that are normally
+     * bound, a {@code Map<K, Set<V>>} and {@code Map<K, Set<Provider<V>>>} are <em>also</em> bound,
+     * which contain all values bound to each key.
+     *
+     * <p>When multiple modules contribute elements to the map, this configuration option impacts all
+     * of them.
+     *
+     * @return this map binder
+     * @since 3.0
+     */
+    public MapBinder<K, V> permitDuplicates()
+    {
+        delegate.permitDuplicates();
+        return this;
+    }
+
+    /**
+     * Returns a binding builder used to add a new entry in the map. Each key must be distinct (and
+     * non-null). Bound providers will be evaluated each time the map is injected.
+     *
+     * <p>It is an error to call this method without also calling one of the {@code to} methods on the
+     * returned binding builder.
+     *
+     * <p>Scoping elements independently is supported. Use the {@code in} method to specify a binding
+     * scope.
+     */
+    public LinkedBindingBuilder<V> addBinding(K key)
+    {
+        return delegate.addBinding(key);
+    }
+
+    // Some tests rely on MapBinder implementing equals/hashCode
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (obj instanceof MapBinder) {
+            return delegate.equals(((MapBinder<?, ?>) obj).delegate);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return delegate.hashCode();
+    }
 }

@@ -17,6 +17,7 @@
 package com.google.inject.grapher;
 
 import com.google.inject.Key;
+
 import java.util.Objects;
 
 /**
@@ -28,57 +29,69 @@ import java.util.Objects;
  * @author bojand@google.com (Bojan Djordjevic)
  * @since 4.0
  */
-public final class NodeId {
+public final class NodeId
+{
+    /**
+     * Type of node.
+     *
+     * @since 4.0
+     */
+    public enum NodeType
+    {
+        /**
+         * Type or class node.
+         */
+        TYPE,
 
-  /**
-   * Type of node.
-   *
-   * @since 4.0
-   */
-  public enum NodeType {
-    /** Type or class node. */
-    TYPE,
-
-    /** Instance node, used when something is bound to an instance. */
-    INSTANCE
-  }
-
-  private final Key<?> key;
-  private final NodeType nodeType;
-
-  private NodeId(Key<?> key, NodeType nodeType) {
-    this.key = key;
-    this.nodeType = nodeType;
-  }
-
-  public static NodeId newTypeId(Key<?> key) {
-    return new NodeId(key, NodeType.TYPE);
-  }
-
-  public static NodeId newInstanceId(Key<?> key) {
-    return new NodeId(key, NodeType.INSTANCE);
-  }
-
-  public Key<?> getKey() {
-    return key;
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(key, nodeType);
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (obj == null || !(obj.getClass().equals(NodeId.class))) {
-      return false;
+        /**
+         * Instance node, used when something is bound to an instance.
+         */
+        INSTANCE,
     }
-    NodeId other = (NodeId) obj;
-    return Objects.equals(key, other.key) && Objects.equals(nodeType, other.nodeType);
-  }
 
-  @Override
-  public String toString() {
-    return "NodeId{nodeType=" + nodeType + " key=" + key + "}";
-  }
+    private final Key<?> key;
+    private final NodeType nodeType;
+
+    private NodeId(Key<?> key, NodeType nodeType)
+    {
+        this.key = key;
+        this.nodeType = nodeType;
+    }
+
+    public static NodeId newTypeId(Key<?> key)
+    {
+        return new NodeId(key, NodeType.TYPE);
+    }
+
+    public static NodeId newInstanceId(Key<?> key)
+    {
+        return new NodeId(key, NodeType.INSTANCE);
+    }
+
+    public Key<?> getKey()
+    {
+        return key;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(key, nodeType);
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (obj == null || !(obj.getClass().equals(NodeId.class))) {
+            return false;
+        }
+        NodeId other = (NodeId) obj;
+        return Objects.equals(key, other.key) && Objects.equals(nodeType, other.nodeType);
+    }
+
+    @Override
+    public String toString()
+    {
+        return "NodeId{nodeType=" + nodeType + " key=" + key + "}";
+    }
 }

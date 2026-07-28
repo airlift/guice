@@ -25,8 +25,11 @@ import jakarta.servlet.Filter;
  * @author sameb@google.com
  * @since 3.0
  */
-public interface LinkedFilterBinding extends ServletModuleBinding {
-
-  /** Returns the key used to lookup the filter instance. */
-  Key<? extends Filter> getLinkedKey();
+public interface LinkedFilterBinding
+        extends ServletModuleBinding
+{
+    /**
+     * Returns the key used to lookup the filter instance.
+     */
+    Key<? extends Filter> getLinkedKey();
 }

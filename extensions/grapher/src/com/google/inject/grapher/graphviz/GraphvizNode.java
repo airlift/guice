@@ -19,6 +19,7 @@ package com.google.inject.grapher.graphviz;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.grapher.NodeId;
+
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,96 +30,125 @@ import java.util.TreeMap;
  *
  * @author phopkins@gmail.com (Pete Hopkins)
  */
-public class GraphvizNode {
-  private final NodeId nodeId;
+public class GraphvizNode
+{
+    private final NodeId nodeId;
 
-  private NodeStyle style = NodeStyle.SOLID;
-  private NodeShape shape = NodeShape.BOX;
+    private NodeStyle style = NodeStyle.SOLID;
+    private NodeShape shape = NodeShape.BOX;
 
-  private String title = "";
-  private Map<Integer, String> subtitles = new TreeMap<>();
+    private String title = "";
+    private Map<Integer, String> subtitles = new TreeMap<>();
 
-  private String headerTextColor = "#000000";
-  private String headerBackgroundColor = "#ffffff";
+    private String headerTextColor = "#000000";
+    private String headerBackgroundColor = "#ffffff";
 
-  private String identifier;
+    private String identifier;
 
-  /** {@link Map} from port ID to field title */
-  private Map<String, String> fields = new LinkedHashMap<>();
+    /**
+     * {@link Map} from port ID to field title
+     */
+    private Map<String, String> fields = new LinkedHashMap<>();
 
-  /** @since 4.0 */
-  public GraphvizNode(NodeId nodeId) {
-    this.nodeId = nodeId;
-  }
+    /**
+     * @since 4.0
+     */
+    public GraphvizNode(NodeId nodeId)
+    {
+        this.nodeId = nodeId;
+    }
 
-  /** @since 4.0 */
-  public NodeId getNodeId() {
-    return nodeId;
-  }
+    /**
+     * @since 4.0
+     */
+    public NodeId getNodeId()
+    {
+        return nodeId;
+    }
 
-  public NodeShape getShape() {
-    return shape;
-  }
+    public NodeShape getShape()
+    {
+        return shape;
+    }
 
-  public void setShape(NodeShape shape) {
-    this.shape = shape;
-  }
+    public void setShape(NodeShape shape)
+    {
+        this.shape = shape;
+    }
 
-  public NodeStyle getStyle() {
-    return style;
-  }
+    public NodeStyle getStyle()
+    {
+        return style;
+    }
 
-  public void setStyle(NodeStyle style) {
-    this.style = style;
-  }
+    public void setStyle(NodeStyle style)
+    {
+        this.style = style;
+    }
 
-  public String getTitle() {
-    return title;
-  }
+    public String getTitle()
+    {
+        return title;
+    }
 
-  public void setTitle(String title) {
-    this.title = title;
-  }
+    public void setTitle(String title)
+    {
+        this.title = title;
+    }
 
-  public List<String> getSubtitles() {
-    return ImmutableList.copyOf(subtitles.values());
-  }
+    public List<String> getSubtitles()
+    {
+        return ImmutableList.copyOf(subtitles.values());
+    }
 
-  public void addSubtitle(int position, String subtitle) {
-    this.subtitles.put(position, subtitle);
-  }
+    public void addSubtitle(int position, String subtitle)
+    {
+        this.subtitles.put(position, subtitle);
+    }
 
-  public String getHeaderTextColor() {
-    return headerTextColor;
-  }
+    public String getHeaderTextColor()
+    {
+        return headerTextColor;
+    }
 
-  public void setHeaderTextColor(String headerTextColor) {
-    this.headerTextColor = headerTextColor;
-  }
+    public void setHeaderTextColor(String headerTextColor)
+    {
+        this.headerTextColor = headerTextColor;
+    }
 
-  public String getHeaderBackgroundColor() {
-    return headerBackgroundColor;
-  }
+    public String getHeaderBackgroundColor()
+    {
+        return headerBackgroundColor;
+    }
 
-  public void setHeaderBackgroundColor(String headerBackgroundColor) {
-    this.headerBackgroundColor = headerBackgroundColor;
-  }
+    public void setHeaderBackgroundColor(String headerBackgroundColor)
+    {
+        this.headerBackgroundColor = headerBackgroundColor;
+    }
 
-  public void addField(String portId, String title) {
-    fields.put(portId, title);
-  }
+    public void addField(String portId, String title)
+    {
+        fields.put(portId, title);
+    }
 
-  public Map<String, String> getFields() {
-    return ImmutableMap.copyOf(fields);
-  }
+    public Map<String, String> getFields()
+    {
+        return ImmutableMap.copyOf(fields);
+    }
 
-  /** @since 4.0 */
-  public String getIdentifier() {
-    return identifier;
-  }
+    /**
+     * @since 4.0
+     */
+    public String getIdentifier()
+    {
+        return identifier;
+    }
 
-  /** @since 4.0 */
-  public void setIdentifier(String identifier) {
-    this.identifier = identifier;
-  }
+    /**
+     * @since 4.0
+     */
+    public void setIdentifier(String identifier)
+    {
+        this.identifier = identifier;
+    }
 }

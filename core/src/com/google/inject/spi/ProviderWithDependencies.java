@@ -24,4 +24,5 @@ import com.google.inject.Provider;
  *
  * @since 2.0
  */
-public interface ProviderWithDependencies<T> extends Provider<T>, HasDependencies {}
+public interface ProviderWithDependencies<T>
+        extends HasDependencies, Provider<T> {}

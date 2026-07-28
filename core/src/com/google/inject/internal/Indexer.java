@@ -32,6 +32,7 @@ import com.google.inject.spi.ProviderBinding;
 import com.google.inject.spi.ProviderInstanceBinding;
 import com.google.inject.spi.ProviderKeyBinding;
 import com.google.inject.spi.UntargettedBinding;
+
 import java.lang.annotation.Annotation;
 import java.util.Objects;
 
@@ -44,146 +45,169 @@ import java.util.Objects;
  * {@link Element#uniqueId()}. A better solution might be to introduce the idea of an 'anonymous'
  * binding to guice, that might support this usecase directly.
  */
-class Indexer extends DefaultBindingTargetVisitor<Object, Indexer.IndexedBinding>
-    implements BindingScopingVisitor<Object> {
-  enum BindingType {
-    INSTANCE,
-    PROVIDER_INSTANCE,
-    PROVIDER_KEY,
-    LINKED_KEY,
-    UNTARGETTED,
-    CONSTRUCTOR,
-    CONSTANT,
-    EXPOSED,
-    PROVIDED_BY,
-  }
+class Indexer
+        extends DefaultBindingTargetVisitor<Object, Indexer.IndexedBinding>
+        implements BindingScopingVisitor<Object>
+{
+    enum BindingType
+    {
+        INSTANCE,
+        PROVIDER_INSTANCE,
+        PROVIDER_KEY,
+        LINKED_KEY,
+        UNTARGETTED,
+        CONSTRUCTOR,
+        CONSTANT,
+        EXPOSED,
+        PROVIDED_BY,
+    }
 
-  static class IndexedBinding {
-    final String annotationName;
-    final Element.Type annotationType;
-    final TypeLiteral<?> typeLiteral;
-    final Object scope;
-    final BindingType type;
-    final Object extraEquality;
+    static class IndexedBinding
+    {
+        final String annotationName;
+        final Element.Type annotationType;
+        final TypeLiteral<?> typeLiteral;
+        final Object scope;
+        final BindingType type;
+        final Object extraEquality;
 
-    IndexedBinding(Binding<?> binding, BindingType type, Object scope, Object extraEquality) {
-      this.scope = scope;
-      this.type = type;
-      this.extraEquality = extraEquality;
-      this.typeLiteral = binding.getKey().getTypeLiteral();
-      Element annotation = (Element) binding.getKey().getAnnotation();
-      this.annotationName = annotation.setName();
-      this.annotationType = annotation.type();
+        IndexedBinding(Binding<?> binding, BindingType type, Object scope, Object extraEquality)
+        {
+            this.scope = scope;
+            this.type = type;
+            this.extraEquality = extraEquality;
+            this.typeLiteral = binding.getKey().getTypeLiteral();
+            Element annotation = (Element) binding.getKey().getAnnotation();
+            this.annotationName = annotation.setName();
+            this.annotationType = annotation.type();
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (!(obj instanceof IndexedBinding o)) {
+                return false;
+            }
+            return type == o.type
+                    && Objects.equals(scope, o.scope)
+                    && typeLiteral.equals(o.typeLiteral)
+                    && annotationType == o.annotationType
+                    && annotationName.equals(o.annotationName)
+                    && Objects.equals(extraEquality, o.extraEquality);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return Objects.hash(
+                    type, scope, typeLiteral, annotationType, annotationName, extraEquality);
+        }
+    }
+
+    final Injector injector;
+
+    Indexer(Injector injector)
+    {
+        this.injector = injector;
+    }
+
+    boolean isIndexable(Binding<?> binding)
+    {
+        return binding.getKey().getAnnotation() instanceof Element;
+    }
+
+    private Object scope(Binding<?> binding)
+    {
+        return binding.acceptScopingVisitor(this);
     }
 
     @Override
-    public boolean equals(Object obj) {
-      if (!(obj instanceof IndexedBinding o)) {
-        return false;
-      }
-      return type == o.type
-          && Objects.equals(scope, o.scope)
-          && typeLiteral.equals(o.typeLiteral)
-          && annotationType == o.annotationType
-          && annotationName.equals(o.annotationName)
-          && Objects.equals(extraEquality, o.extraEquality);
+    public Indexer.IndexedBinding visit(ConstructorBinding<? extends Object> binding)
+    {
+        return new Indexer.IndexedBinding(
+                binding, BindingType.CONSTRUCTOR, scope(binding), binding.getConstructor());
     }
 
     @Override
-    public int hashCode() {
-      return Objects.hash(
-          type, scope, typeLiteral, annotationType, annotationName, extraEquality);
+    public Indexer.IndexedBinding visit(ConvertedConstantBinding<? extends Object> binding)
+    {
+        return new Indexer.IndexedBinding(
+                binding, BindingType.CONSTANT, scope(binding), binding.getValue());
     }
-  }
 
-  final Injector injector;
+    @Override
+    public Indexer.IndexedBinding visit(ExposedBinding<? extends Object> binding)
+    {
+        return new Indexer.IndexedBinding(binding, BindingType.EXPOSED, scope(binding), binding);
+    }
 
-  Indexer(Injector injector) {
-    this.injector = injector;
-  }
+    @Override
+    public Indexer.IndexedBinding visit(InstanceBinding<? extends Object> binding)
+    {
+        return new Indexer.IndexedBinding(
+                binding, BindingType.INSTANCE, scope(binding), binding.getInstance());
+    }
 
-  boolean isIndexable(Binding<?> binding) {
-    return binding.getKey().getAnnotation() instanceof Element;
-  }
+    @Override
+    public Indexer.IndexedBinding visit(LinkedKeyBinding<? extends Object> binding)
+    {
+        return new Indexer.IndexedBinding(
+                binding, BindingType.LINKED_KEY, scope(binding), binding.getLinkedKey());
+    }
 
-  private Object scope(Binding<?> binding) {
-    return binding.acceptScopingVisitor(this);
-  }
+    @Override
+    public Indexer.IndexedBinding visit(ProviderBinding<? extends Object> binding)
+    {
+        return new Indexer.IndexedBinding(
+                binding,
+                BindingType.PROVIDED_BY,
+                scope(binding),
+                injector.getBinding(binding.getProvidedKey()));
+    }
 
-  @Override
-  public Indexer.IndexedBinding visit(ConstructorBinding<? extends Object> binding) {
-    return new Indexer.IndexedBinding(
-        binding, BindingType.CONSTRUCTOR, scope(binding), binding.getConstructor());
-  }
+    @Override
+    public Indexer.IndexedBinding visit(ProviderInstanceBinding<? extends Object> binding)
+    {
+        return new Indexer.IndexedBinding(
+                binding, BindingType.PROVIDER_INSTANCE, scope(binding), binding.getUserSuppliedProvider());
+    }
 
-  @Override
-  public Indexer.IndexedBinding visit(ConvertedConstantBinding<? extends Object> binding) {
-    return new Indexer.IndexedBinding(
-        binding, BindingType.CONSTANT, scope(binding), binding.getValue());
-  }
+    @Override
+    public Indexer.IndexedBinding visit(ProviderKeyBinding<? extends Object> binding)
+    {
+        return new Indexer.IndexedBinding(
+                binding, BindingType.PROVIDER_KEY, scope(binding), binding.getProviderKey());
+    }
 
-  @Override
-  public Indexer.IndexedBinding visit(ExposedBinding<? extends Object> binding) {
-    return new Indexer.IndexedBinding(binding, BindingType.EXPOSED, scope(binding), binding);
-  }
+    @Override
+    public Indexer.IndexedBinding visit(UntargettedBinding<? extends Object> binding)
+    {
+        return new Indexer.IndexedBinding(binding, BindingType.UNTARGETTED, scope(binding), null);
+    }
 
-  @Override
-  public Indexer.IndexedBinding visit(InstanceBinding<? extends Object> binding) {
-    return new Indexer.IndexedBinding(
-        binding, BindingType.INSTANCE, scope(binding), binding.getInstance());
-  }
+    private static final Object EAGER_SINGLETON = new Object();
 
-  @Override
-  public Indexer.IndexedBinding visit(LinkedKeyBinding<? extends Object> binding) {
-    return new Indexer.IndexedBinding(
-        binding, BindingType.LINKED_KEY, scope(binding), binding.getLinkedKey());
-  }
+    @Override
+    public Object visitEagerSingleton()
+    {
+        return EAGER_SINGLETON;
+    }
 
-  @Override
-  public Indexer.IndexedBinding visit(ProviderBinding<? extends Object> binding) {
-    return new Indexer.IndexedBinding(
-        binding,
-        BindingType.PROVIDED_BY,
-        scope(binding),
-        injector.getBinding(binding.getProvidedKey()));
-  }
+    @Override
+    public Object visitNoScoping()
+    {
+        return Scopes.NO_SCOPE;
+    }
 
-  @Override
-  public Indexer.IndexedBinding visit(ProviderInstanceBinding<? extends Object> binding) {
-    return new Indexer.IndexedBinding(
-        binding, BindingType.PROVIDER_INSTANCE, scope(binding), binding.getUserSuppliedProvider());
-  }
+    @Override
+    public Object visitScope(Scope scope)
+    {
+        return scope;
+    }
 
-  @Override
-  public Indexer.IndexedBinding visit(ProviderKeyBinding<? extends Object> binding) {
-    return new Indexer.IndexedBinding(
-        binding, BindingType.PROVIDER_KEY, scope(binding), binding.getProviderKey());
-  }
-
-  @Override
-  public Indexer.IndexedBinding visit(UntargettedBinding<? extends Object> binding) {
-    return new Indexer.IndexedBinding(binding, BindingType.UNTARGETTED, scope(binding), null);
-  }
-
-  private static final Object EAGER_SINGLETON = new Object();
-
-  @Override
-  public Object visitEagerSingleton() {
-    return EAGER_SINGLETON;
-  }
-
-  @Override
-  public Object visitNoScoping() {
-    return Scopes.NO_SCOPE;
-  }
-
-  @Override
-  public Object visitScope(Scope scope) {
-    return scope;
-  }
-
-  @Override
-  public Object visitScopeAnnotation(Class<? extends Annotation> scopeAnnotation) {
-    return scopeAnnotation;
-  }
+    @Override
+    public Object visitScopeAnnotation(Class<? extends Annotation> scopeAnnotation)
+    {
+        return scopeAnnotation;
+    }
 }

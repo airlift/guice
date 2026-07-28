@@ -24,11 +24,14 @@ import com.google.inject.multibindings.Multibinder;
  *
  * @author phopkins@gmail.com (Pete Hopkins)
  */
-public class MultibinderModule extends AbstractModule {
-  @Override
-  protected void configure() {
-    Multibinder<Person> charactersBinder = Multibinder.newSetBinder(binder(), Person.class);
-    charactersBinder.addBinding().to(MartyMcFly.class);
-    charactersBinder.addBinding().to(DocBrown.class);
-  }
+public class MultibinderModule
+        extends AbstractModule
+{
+    @Override
+    protected void configure()
+    {
+        Multibinder<Person> charactersBinder = Multibinder.newSetBinder(binder(), Person.class);
+        charactersBinder.addBinding().to(MartyMcFly.class);
+        charactersBinder.addBinding().to(DocBrown.class);
+    }
 }

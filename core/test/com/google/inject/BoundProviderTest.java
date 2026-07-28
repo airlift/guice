@@ -16,135 +16,156 @@
 
 package com.google.inject;
 
+import org.junit.jupiter.api.Test;
+
 import static com.google.inject.name.Names.named;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
+/**
+ * @author crazybob@google.com (Bob Lee)
+ */
+public class BoundProviderTest
+{
+    @Test
+    public void testFooProvider()
+            throws CreationException
+    {
+        Injector injector =
+                Guice.createInjector(
+                        new AbstractModule()
+                        {
+                            @Override
+                            protected void configure()
+                            {
+                                bind(Foo.class).toProvider(FooProvider.class);
+                            }
+                        });
 
-/** @author crazybob@google.com (Bob Lee) */
-public class BoundProviderTest {
+        Foo a = injector.getInstance(Foo.class);
+        Foo b = injector.getInstance(Foo.class);
 
-  @Test
-  public void testFooProvider() throws CreationException {
-    Injector injector =
-        Guice.createInjector(
-            new AbstractModule() {
-              @Override
-              protected void configure() {
-                bind(Foo.class).toProvider(FooProvider.class);
-              }
-            });
-
-    Foo a = injector.getInstance(Foo.class);
-    Foo b = injector.getInstance(Foo.class);
-
-    assertEquals(0, a.i);
-    assertEquals(0, b.i);
-    assertNotNull(a.bar);
-    assertNotNull(b.bar);
-    assertNotSame(a.bar, b.bar);
-  }
-
-  @Test
-  public void testSingletonFooProvider() throws CreationException {
-    Injector injector =
-        Guice.createInjector(
-            new AbstractModule() {
-              @Override
-              protected void configure() {
-                bind(Foo.class).toProvider(SingletonFooProvider.class);
-                bind(Foo.class)
-                    .annotatedWith(named("javax"))
-                    .toProvider(JavaxInjectSingletonFooProvider.class);
-              }
-            });
-
-    Foo a = injector.getInstance(Foo.class);
-    Foo b = injector.getInstance(Foo.class);
-
-    assertEquals(0, a.i);
-    assertEquals(1, b.i);
-    assertNotNull(a.bar);
-    assertNotNull(b.bar);
-    assertSame(a.bar, b.bar);
-
-    var javaxKey = Key.get(Foo.class, named("javax"));
-    a = injector.getInstance(javaxKey);
-    b = injector.getInstance(javaxKey);
-
-    assertEquals(0, a.i);
-    assertEquals(1, b.i);
-    assertNotNull(a.bar);
-    assertNotNull(b.bar);
-    assertSame(a.bar, b.bar);
-  }
-
-  static class Bar {}
-
-  static class Foo {
-    final Bar bar;
-    final int i;
-
-    Foo(Bar bar, int i) {
-      this.bar = bar;
-      this.i = i;
-    }
-  }
-
-  static class FooProvider implements Provider<Foo> {
-
-    final Bar bar;
-    int count = 0;
-
-    @Inject
-    public FooProvider(Bar bar) {
-      this.bar = bar;
+        assertEquals(0, a.i);
+        assertEquals(0, b.i);
+        assertNotNull(a.bar);
+        assertNotNull(b.bar);
+        assertNotSame(a.bar, b.bar);
     }
 
-    @Override
-    public Foo get() {
-      return new Foo(this.bar, count++);
+    @Test
+    public void testSingletonFooProvider()
+            throws CreationException
+    {
+        Injector injector =
+                Guice.createInjector(
+                        new AbstractModule()
+                        {
+                            @Override
+                            protected void configure()
+                            {
+                                bind(Foo.class).toProvider(SingletonFooProvider.class);
+                                bind(Foo.class)
+                                        .annotatedWith(named("javax"))
+                                        .toProvider(JavaxInjectSingletonFooProvider.class);
+                            }
+                        });
+
+        Foo a = injector.getInstance(Foo.class);
+        Foo b = injector.getInstance(Foo.class);
+
+        assertEquals(0, a.i);
+        assertEquals(1, b.i);
+        assertNotNull(a.bar);
+        assertNotNull(b.bar);
+        assertSame(a.bar, b.bar);
+
+        var javaxKey = Key.get(Foo.class, named("javax"));
+        a = injector.getInstance(javaxKey);
+        b = injector.getInstance(javaxKey);
+
+        assertEquals(0, a.i);
+        assertEquals(1, b.i);
+        assertNotNull(a.bar);
+        assertNotNull(b.bar);
+        assertSame(a.bar, b.bar);
     }
-  }
 
-  @Singleton
-  static class SingletonFooProvider implements Provider<Foo> {
+    static class Bar {}
 
-    final Bar bar;
-    int count = 0;
+    static class Foo
+    {
+        final Bar bar;
+        final int i;
 
-    @Inject
-    public SingletonFooProvider(Bar bar) {
-      this.bar = bar;
+        Foo(Bar bar, int i)
+        {
+            this.bar = bar;
+            this.i = i;
+        }
     }
 
-    @Override
-    public Foo get() {
-      return new Foo(this.bar, count++);
-    }
-  }
+    static class FooProvider
+            implements Provider<Foo>
+    {
+        final Bar bar;
+        int count;
 
-  // Use a jakarta.inject.Provider as well.  Dependency.get() always canonicalizes the jakarta.inject
-  // provider to the Guice provider, which at one point caused a bug in the MethodHandle
-  // implementation which attempted to enforce types derived from the
-  // Dependency objects
-  @Singleton
-  static class JavaxInjectSingletonFooProvider implements jakarta.inject.Provider<Foo> {
+        @Inject
+        public FooProvider(Bar bar)
+        {
+            this.bar = bar;
+        }
 
-    final Bar bar;
-    int count = 0;
-
-    @Inject
-    JavaxInjectSingletonFooProvider(Bar bar) {
-      this.bar = bar;
+        @Override
+        public Foo get()
+        {
+            return new Foo(this.bar, count++);
+        }
     }
 
-    @Override
-    public Foo get() {
-      return new Foo(this.bar, count++);
+    @Singleton
+    static class SingletonFooProvider
+            implements Provider<Foo>
+    {
+        final Bar bar;
+        int count;
+
+        @Inject
+        public SingletonFooProvider(Bar bar)
+        {
+            this.bar = bar;
+        }
+
+        @Override
+        public Foo get()
+        {
+            return new Foo(this.bar, count++);
+        }
     }
-  }
+
+    // Use a jakarta.inject.Provider as well.  Dependency.get() always canonicalizes the jakarta.inject
+    // provider to the Guice provider, which at one point caused a bug in the MethodHandle
+    // implementation which attempted to enforce types derived from the
+    // Dependency objects
+    @Singleton
+    static class JavaxInjectSingletonFooProvider
+            implements jakarta.inject.Provider<Foo>
+    {
+        final Bar bar;
+        int count;
+
+        @Inject
+        JavaxInjectSingletonFooProvider(Bar bar)
+        {
+            this.bar = bar;
+        }
+
+        @Override
+        public Foo get()
+        {
+            return new Foo(this.bar, count++);
+        }
+    }
 }

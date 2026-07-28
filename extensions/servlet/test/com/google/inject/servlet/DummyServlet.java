@@ -24,4 +24,5 @@ import jakarta.servlet.http.HttpServlet;
  * @author Dhanji R. Prasanna (dhanji@gmail com)
  */
 @Singleton
-public class DummyServlet extends HttpServlet {}
+public class DummyServlet
+        extends HttpServlet {}

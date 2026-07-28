@@ -16,10 +16,9 @@
 
 package com.google.inject.spi;
 
+import com.google.inject.Binder;
 
 import static java.util.Objects.requireNonNull;
-
-import com.google.inject.Binder;
 
 /**
  * A request to require exact binding annotations.
@@ -27,25 +26,31 @@ import com.google.inject.Binder;
  * @author sameb@google.com (Sam Berlin)
  * @since 4.0
  */
-public final class RequireExactBindingAnnotationsOption implements Element {
-  private final Object source;
+public final class RequireExactBindingAnnotationsOption
+        implements Element
+{
+    private final Object source;
 
-  RequireExactBindingAnnotationsOption(Object source) {
-    this.source = requireNonNull(source, "source");
-  }
+    RequireExactBindingAnnotationsOption(Object source)
+    {
+        this.source = requireNonNull(source, "source");
+    }
 
-  @Override
-  public Object getSource() {
-    return source;
-  }
+    @Override
+    public Object getSource()
+    {
+        return source;
+    }
 
-  @Override
-  public void applyTo(Binder binder) {
-    binder.withSource(getSource()).requireExactBindingAnnotations();
-  }
+    @Override
+    public void applyTo(Binder binder)
+    {
+        binder.withSource(getSource()).requireExactBindingAnnotations();
+    }
 
-  @Override
-  public <T> T acceptVisitor(ElementVisitor<T> visitor) {
-    return visitor.visit(this);
-  }
+    @Override
+    public <T> T acceptVisitor(ElementVisitor<T> visitor)
+    {
+        return visitor.visit(this);
+    }
 }

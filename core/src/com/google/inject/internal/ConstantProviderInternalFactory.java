@@ -16,39 +16,47 @@
 
 package com.google.inject.internal;
 
+import com.google.inject.spi.Dependency;
+import jakarta.inject.Provider;
+
+import javax.annotation.Nullable;
 
 import static java.util.Objects.requireNonNull;
 
-import com.google.inject.spi.Dependency;
-import javax.annotation.Nullable;
-import jakarta.inject.Provider;
+/**
+ * An InternalFactory that delegates to a constant provider.
+ */
+final class ConstantProviderInternalFactory<T>
+        extends ProviderInternalFactory<T>
+{
+    private final Provider<T> provider;
+    @Nullable
+    private final ProvisionListenerStackCallback<T> provisionCallback;
 
-/** An InternalFactory that delegates to a constant provider. */
-final class ConstantProviderInternalFactory<T> extends ProviderInternalFactory<T> {
-  private final Provider<T> provider;
-  @Nullable private final ProvisionListenerStackCallback<T> provisionCallback;
+    ConstantProviderInternalFactory(
+            Class<? super T> rawType,
+            Provider<T> provider,
+            Object source,
+            @Nullable ProvisionListenerStackCallback<T> provisionCallback,
+            int circularFactoryId)
+    {
+        super(rawType, source, circularFactoryId);
+        this.provider = requireNonNull(provider);
+        this.provisionCallback = provisionCallback;
+    }
 
-  ConstantProviderInternalFactory(
-      Class<? super T> rawType,
-      Provider<T> provider,
-      Object source,
-      @Nullable ProvisionListenerStackCallback<T> provisionCallback,
-      int circularFactoryId) {
-    super(rawType, source, circularFactoryId);
-    this.provider = requireNonNull(provider);
-    this.provisionCallback = provisionCallback;
-  }
+    @Override
+    public T get(InternalContext context, Dependency<?> dependency, boolean linked)
+            throws InternalProvisionException
+    {
+        return circularGet(provider, context, dependency, provisionCallback);
+    }
 
-  @Override
-  public T get(InternalContext context, Dependency<?> dependency, boolean linked)
-      throws InternalProvisionException {
-    return circularGet(provider, context, dependency, provisionCallback);
-  }
-
-  @Override
-  MethodHandleResult makeHandle(LinkageContext context, boolean linked) {
-    return makeCachable(
-        circularGetHandleImmediate(
-            InternalMethodHandles.constantFactoryGetHandle(provider), provisionCallback));
-  }
+    @Override
+    MethodHandleResult makeHandle(LinkageContext context, boolean linked)
+    {
+        return makeCachable(
+                circularGetHandleImmediate(
+                        InternalMethodHandles.constantFactoryGetHandle(provider), provisionCallback));
+    }
 }

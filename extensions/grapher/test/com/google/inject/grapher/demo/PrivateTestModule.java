@@ -23,14 +23,18 @@ import com.google.inject.PrivateModule;
  *
  * @author bojand@google.com (Bojan Djordjevic)
  */
-public class PrivateTestModule extends PrivateModule {
-  interface Exposed {}
+public class PrivateTestModule
+        extends PrivateModule
+{
+    interface Exposed {}
 
-  static class Hidden implements Exposed {}
+    static class Hidden
+            implements Exposed {}
 
-  @Override
-  protected void configure() {
-    bind(Exposed.class).to(Hidden.class);
-    expose(Exposed.class);
-  }
+    @Override
+    protected void configure()
+    {
+        bind(Exposed.class).to(Hidden.class);
+        expose(Exposed.class);
+    }
 }
