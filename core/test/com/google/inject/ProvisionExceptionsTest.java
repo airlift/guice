@@ -18,8 +18,8 @@ package com.google.inject;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.inject.name.Names.named;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.google.common.collect.Iterables;
 import com.google.inject.internal.Messages;
@@ -28,9 +28,7 @@ import com.google.inject.name.Names;
 import com.google.inject.spi.Dependency;
 import com.google.inject.spi.HasDependencies;
 import java.io.IOException;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests that ProvisionExceptions are readable and clearly indicate to the user what went wrong with
@@ -39,7 +37,6 @@ import org.junit.runners.JUnit4;
  * @author sameb@google.com (Sam Berlin)
  */
 
-@RunWith(JUnit4.class)
 public class ProvisionExceptionsTest {
 
   @Test

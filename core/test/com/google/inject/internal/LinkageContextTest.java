@@ -18,7 +18,7 @@ package com.google.inject.internal;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.inject.internal.InternalMethodHandles.castReturnToObject;
 import static java.lang.invoke.MethodType.methodType;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.google.errorprone.annotations.Keep;
 import com.google.inject.Key;
@@ -27,11 +27,8 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.Test;
 
-@RunWith(JUnit4.class)
 public final class LinkageContextTest {
   private static final Dependency<?> DEP = Dependency.get(Key.get(String.class));
 

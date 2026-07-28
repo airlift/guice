@@ -21,13 +21,13 @@ import static com.google.inject.Asserts.assertContains;
 import static com.google.inject.name.Names.named;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static junit.framework.Assert.assertSame;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ArrayListMultimap;
@@ -60,15 +60,12 @@ import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author crazybob@google.com (Bob Lee)
  */
-@RunWith(JUnit4.class)
 public class ScopesTest {
 
   static final long DEADLOCK_TIMEOUT_SECONDS = 1;
@@ -89,7 +86,7 @@ public class ScopesTest {
         }
       };
 
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {
     AnnotatedSingleton.nextInstanceId = 0;
     BoundAsSingleton.nextInstanceId = 0;
@@ -1380,15 +1377,9 @@ public class ScopesTest {
         errorMessage,
         "Encountered circular dependency spanning several threads. Tried proxying "
             + this.getClass().getName());
-    assertFalse(
-        "Both I0 and J0 can not be a part of a dependency cycle",
-        errorMessage.contains(I0.class.getName()) && errorMessage.contains(J0.class.getName()));
-    assertFalse(
-        "Both J0 and K0 can not be a part of a dependency cycle",
-        errorMessage.contains(J0.class.getName()) && errorMessage.contains(K0.class.getName()));
-    assertFalse(
-        "Both K0 and I0 can not be a part of a dependency cycle",
-        errorMessage.contains(K0.class.getName()) && errorMessage.contains(I0.class.getName()));
+    assertFalse(errorMessage.contains(I0.class.getName()) && errorMessage.contains(J0.class.getName()), "Both I0 and J0 can not be a part of a dependency cycle");
+    assertFalse(errorMessage.contains(J0.class.getName()) && errorMessage.contains(K0.class.getName()), "Both J0 and K0 can not be a part of a dependency cycle");
+    assertFalse(errorMessage.contains(K0.class.getName()) && errorMessage.contains(I0.class.getName()), "Both K0 and I0 can not be a part of a dependency cycle");
 
     ListMultimap<String, String> threadToSingletons = ArrayListMultimap.create();
     boolean inSingletonsList = false;
@@ -1408,7 +1399,7 @@ public class ScopesTest {
       }
     }
 
-    assertEquals("All threads should be in the cycle", 3, threadToSingletons.keySet().size());
+    assertEquals(3, threadToSingletons.keySet().size(), "All threads should be in the cycle");
 
     // NOTE:  J0,K0,I0 are not reported because their locks are not part of the cycle.
     assertEquals(

@@ -9,11 +9,8 @@ import com.google.inject.TypeLiteral;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.Test;
 
-@RunWith(JUnit4.class)
 public final class SimilarLookingTypesTest {
 
   private static class Wrapper {
