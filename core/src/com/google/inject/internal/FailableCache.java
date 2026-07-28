@@ -19,7 +19,6 @@ package com.google.inject.internal;
 import com.google.common.collect.ImmutableMap;
 
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -39,12 +38,44 @@ import java.util.concurrent.ConcurrentHashMap;
 public abstract class FailableCache<K, V>
 {
     /**
-     * Marks a key whose value is being computed; other threads wait on {@link #result}.
+     * Returned to waiters when the loader died with an unchecked exception.
+     */
+    private static final Object FAILED = new Object();
+
+    /**
+     * Marks a key whose value is being computed; other threads wait on the marker itself. Plain
+     * wait/notify instead of a CompletableFuture: a marker is allocated for every load on the
+     * injector-creation hot path, while a waiting second thread is the rare case, so the marker
+     * must be as cheap as possible.
      */
     private static final class InFlight
     {
         final Thread owner = Thread.currentThread();
-        final CompletableFuture<Object> result = new CompletableFuture<>();
+        private Object result;
+
+        synchronized void complete(Object value)
+        {
+            result = value;
+            notifyAll();
+        }
+
+        synchronized Object await()
+        {
+            boolean interrupted = false;
+            while (result == null) {
+                try {
+                    wait();
+                }
+                catch (InterruptedException e) {
+                    // uninterruptible, like the CompletableFuture.join it replaces
+                    interrupted = true;
+                }
+            }
+            if (interrupted) {
+                Thread.currentThread().interrupt();
+            }
+            return result;
+        }
     }
 
     private final ConcurrentHashMap<K, Object> map = new ConcurrentHashMap<>();
@@ -69,7 +100,10 @@ public abstract class FailableCache<K, V>
             if (otherInFlight.owner == Thread.currentThread()) {
                 throw new IllegalStateException("Recursive load of " + key);
             }
-            value = otherInFlight.result.join();
+            value = otherInFlight.await();
+            if (value == FAILED) {
+                throw new IllegalStateException("Creation failed for " + key);
+            }
         }
         if (value instanceof Errors cachedErrors) {
             errors.merge(cachedErrors);
@@ -98,14 +132,13 @@ public abstract class FailableCache<K, V>
         finally {
             if (computed != null) {
                 map.put(key, computed);
-                inFlight.result.complete(computed);
+                inFlight.complete(computed);
             }
             else {
                 // create threw an unchecked exception; drop the entry so waiters fail rather than
                 // hang, and a later get can retry, matching the previous LoadingCache behaviour
                 map.remove(key, inFlight);
-                inFlight.result.completeExceptionally(
-                        new IllegalStateException("Creation failed for " + key));
+                inFlight.complete(FAILED);
             }
         }
     }
