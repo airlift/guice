@@ -104,19 +104,11 @@ abstract class InternalFactory<T> {
     return new MethodHandleResult(methodHandle, MethodHandleResult.Cachability.NEVER);
   }
 
-  static final class MethodHandleResult {
-    static enum Cachability {
+  record MethodHandleResult(MethodHandle methodHandle, Cachability cachability) {
+    enum Cachability {
       ALWAYS,
       ON_LINKED_SETTING,
       NEVER,
-    }
-
-    final MethodHandle methodHandle;
-    final Cachability cachability;
-
-    private MethodHandleResult(MethodHandle methodHandle, Cachability cachability) {
-      this.methodHandle = methodHandle;
-      this.cachability = cachability;
     }
   }
 
@@ -242,8 +234,8 @@ abstract class InternalFactory<T> {
 
     static MethodHandle getHandleAndMaybeUpdateCache(
         InternalFactory<?> factory, boolean linked, MethodHandleResult result) {
-      if (result.cachability == MethodHandleResult.Cachability.NEVER) {
-        return result.methodHandle;
+      if (result.cachability() == MethodHandleResult.Cachability.NEVER) {
+        return result.methodHandle();
       }
 
       // Update the cache under the factory lock to ensure that we pick a consistent winner.
@@ -280,10 +272,10 @@ abstract class InternalFactory<T> {
 
       @Override
       HandleCache updateCache(boolean linked, MethodHandleResult result) {
-        return switch (result.cachability) {
+        return switch (result.cachability()) {
           case NEVER -> throw new IllegalArgumentException("Caller should have handled NEVER");
-          case ON_LINKED_SETTING -> new PartialLinkedCache(linked, result.methodHandle);
-          case ALWAYS -> new AlwaysCache(result.methodHandle);
+          case ON_LINKED_SETTING -> new PartialLinkedCache(linked, result.methodHandle());
+          case ALWAYS -> new AlwaysCache(result.methodHandle());
         };
       }
     }
@@ -310,18 +302,18 @@ abstract class InternalFactory<T> {
       @Override
       HandleCache updateCache(boolean linked, MethodHandleResult result) {
         checkArgument(
-            result.cachability == MethodHandleResult.Cachability.ON_LINKED_SETTING,
+            result.cachability() == MethodHandleResult.Cachability.ON_LINKED_SETTING,
             "Once a cache has transitioned to ON_LINKED_SETTING racy updates shouldn't have a"
                 + " different setting, got %s",
-            result.cachability);
+            result.cachability());
         var thisLinked = this.linked;
         if (linked == thisLinked) {
           return this; // caller lost a race condition
         }
         if (thisLinked) {
-          return new FullLinkedCache(handle, result.methodHandle);
+          return new FullLinkedCache(handle, result.methodHandle());
         }
-        return new FullLinkedCache(result.methodHandle, handle);
+        return new FullLinkedCache(result.methodHandle(), handle);
       }
     }
 
@@ -343,10 +335,10 @@ abstract class InternalFactory<T> {
       @Override
       HandleCache updateCache(boolean linked, MethodHandleResult result) {
         checkArgument(
-            result.cachability == MethodHandleResult.Cachability.ON_LINKED_SETTING,
+            result.cachability() == MethodHandleResult.Cachability.ON_LINKED_SETTING,
             "Once a cache has transitioned to ON_LINKED_SETTING racy updates shouldn't have a"
                 + " different setting, got %s",
-            result.cachability);
+            result.cachability());
         // Ignore the result since we are always cachable and already cached.
         return this;
       }
@@ -368,10 +360,10 @@ abstract class InternalFactory<T> {
       @Override
       HandleCache updateCache(boolean linked, MethodHandleResult result) {
         checkArgument(
-            result.cachability == MethodHandleResult.Cachability.ALWAYS,
+            result.cachability() == MethodHandleResult.Cachability.ALWAYS,
             "Once a cache has transitioned to ALWAYS racy updatee shouldn't have a different"
                 + " setting, got %s",
-            result.cachability);
+            result.cachability());
         // Ignore the result since we are always cachable and already cached.
         return this;
       }

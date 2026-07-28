@@ -1146,17 +1146,10 @@ public final class RealMapBinder<K, V> implements Module {
        *
        * <p>Arrays are used for performance.
        */
-      private static final class PerKeyData<K, V> {
-        private final K key;
-        private final Binding<V>[] bindings;
-        private final SingleParameterInjector<V>[] injectors;
-
-        private PerKeyData(K key, Binding<V>[] bindings, SingleParameterInjector<V>[] injectors) {
+      private record PerKeyData<K, V>(
+          K key, Binding<V>[] bindings, SingleParameterInjector<V>[] injectors) {
+        PerKeyData {
           Preconditions.checkArgument(bindings.length == injectors.length);
-
-          this.key = key;
-          this.bindings = bindings;
-          this.injectors = injectors;
         }
       }
 
@@ -1220,19 +1213,19 @@ public final class RealMapBinder<K, V> implements Module {
 
         for (PerKeyData<K, V> perKeyData : perKeyDatas) {
           ImmutableSet.Builder<V> bindingsBuilder = ImmutableSet.builder();
-          SingleParameterInjector<V>[] injectors = perKeyData.injectors;
+          SingleParameterInjector<V>[] injectors = perKeyData.injectors();
           for (int i = 0; i < injectors.length; i++) {
             SingleParameterInjector<V> injector = injectors[i];
             V value = injector.inject(context);
 
             if (value == null) {
-              throw createNullValueException(perKeyData.key, perKeyData.bindings[i].getSource());
+              throw createNullValueException(perKeyData.key(), perKeyData.bindings()[i].getSource());
             }
 
             bindingsBuilder.add(value);
           }
 
-          resultBuilder.put(perKeyData.key, bindingsBuilder.build());
+          resultBuilder.put(perKeyData.key(), bindingsBuilder.build());
         }
 
         return resultBuilder.buildOrThrow();
@@ -1254,9 +1247,9 @@ public final class RealMapBinder<K, V> implements Module {
         List<Map.Entry<K, MethodHandle>> entries = new ArrayList<>(perKeyDatas.length);
         for (PerKeyData<K, V> perKeyData : perKeyDatas) {
           // Accumulate the elements for each key.
-          List<MethodHandle> elementHandles = new ArrayList<>(perKeyData.injectors.length);
-          for (int j = 0; j < perKeyData.injectors.length; j++) {
-            SingleParameterInjector<V> injector = perKeyData.injectors[j];
+          List<MethodHandle> elementHandles = new ArrayList<>(perKeyData.injectors().length);
+          for (int j = 0; j < perKeyData.injectors().length; j++) {
+            SingleParameterInjector<V> injector = perKeyData.injectors()[j];
             MethodHandle elementHandle = injector.getInjectHandle(context);
             // Null check each element.
             elementHandle =
@@ -1265,14 +1258,14 @@ public final class RealMapBinder<K, V> implements Module {
                     MethodHandles.insertArguments(
                         MAYBE_THROW_NULL_VALUE_EXCEPTION_MH,
                         1,
-                        perKeyData.key,
-                        perKeyData.bindings[j].getSource()));
+                        perKeyData.key(),
+                        perKeyData.bindings()[j].getSource()));
             elementHandles.add(elementHandle);
           }
           // Construct the set of the values and add it to the map.
           entries.add(
               Map.entry(
-                  perKeyData.key, InternalMethodHandles.buildImmutableSetFactory(elementHandles)));
+                  perKeyData.key(), InternalMethodHandles.buildImmutableSetFactory(elementHandles)));
         }
 
         return MethodHandles.dropArguments(buildImmutableMapFactory(entries), 1, Dependency.class);
