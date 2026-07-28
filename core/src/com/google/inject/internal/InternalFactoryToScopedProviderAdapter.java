@@ -160,8 +160,8 @@ class InternalFactoryToScopedProviderAdapter<T> extends InternalFactory<T> {
       }
       // Otherwise we bind to a callsite that will patch itself once it is initialized.
       var result = super.makeHandle(context, linked);
-      checkState(result.cachability == MethodHandleResult.Cachability.ALWAYS);
-      return makeCachable(new SingletonCallSite(result.methodHandle, source).dynamicInvoker());
+      checkState(result.cachability() == MethodHandleResult.Cachability.ALWAYS);
+      return makeCachable(new SingletonCallSite(result.methodHandle(), source).dynamicInvoker());
     }
 
     private static MethodHandle getHandleForConstant(Object source, Object value) {

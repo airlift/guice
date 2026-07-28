@@ -80,12 +80,12 @@ final class LinkageContext {
       checkState(previous == null, "Unexpected previous value: %s", previous);
     }
     MethodHandleResult result = factory.makeHandle(this, linked);
-    InternalMethodHandles.checkHasFactoryType(result.methodHandle);
+    InternalMethodHandles.checkHasFactoryType(result.methodHandle());
     previous = linkingFactories.remove(factory);
     checkState(previous != null, "construction state was cleared already?");
     if (previous != CONSTRUCTING) {
       var callSite = (MutableCallSite) previous;
-      callSite.setTarget(result.methodHandle);
+      callSite.setTarget(result.methodHandle());
       MutableCallSite.syncAll(new MutableCallSite[] {callSite});
     }
     return result;

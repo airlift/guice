@@ -238,10 +238,10 @@ public abstract class ProviderMethod<T> extends InternalProviderInstanceBindingI
   @Override
   MethodHandleResult makeHandle(LinkageContext context, boolean linked) {
     MethodHandleResult result = super.makeHandle(context, linked);
-    checkState(result.cachability == MethodHandleResult.Cachability.ALWAYS);
+    checkState(result.cachability() == MethodHandleResult.Cachability.ALWAYS);
     // Handle circular proxies.
     return makeCachable(
-        InternalMethodHandles.tryStartConstruction(result.methodHandle, circularFactoryId));
+        InternalMethodHandles.tryStartConstruction(result.methodHandle(), circularFactoryId));
   }
 
   /** Creates a method handle that constructs the object to be injected. */
