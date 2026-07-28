@@ -4,22 +4,16 @@ import static com.google.common.truth.ExpectFailure.assertThat;
 import static com.google.inject.testing.throwingproviders.CheckedProviderSubject.assertThat;
 
 import com.google.common.truth.ExpectFailure;
-import com.google.common.truth.SimpleSubjectBuilder;
 import com.google.inject.throwingproviders.CheckedProvider;
 import com.google.inject.throwingproviders.CheckedProviders;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link CheckedProviderSubject}.
  *
  * @author eatnumber1@google.com (Russ Harmon)
  */
-@RunWith(JUnit4.class)
 public class CheckedProviderSubjectTest {
-  public @Rule ExpectFailure expect = new ExpectFailure();
 
   private interface StringCheckedProvider extends CheckedProvider<String> {}
 
@@ -44,8 +38,9 @@ public class CheckedProviderSubjectTest {
                 + "checkedProvider was: %s",
             expected, unexpected, getReturningProviderName(unexpected));
 
-    expectWhenTesting().that(provider).providedValue().isEqualTo(expected);
-    assertThat(expect.getFailure()).hasMessageThat().isEqualTo(message);
+    AssertionError failure =
+        expectFailure(whenTesting -> whenTesting.that(provider).providedValue().isEqualTo(expected));
+    assertThat(failure).hasMessageThat().isEqualTo(message);
   }
 
   private static final class SummerException extends RuntimeException {}
@@ -61,8 +56,7 @@ public class CheckedProviderSubjectTest {
                 + "checkedProvider was: %s",
             getThrowingProviderName(SummerException.class.getName()));
 
-    expectWhenTesting().that(provider).providedValue();
-    AssertionError expected = expect.getFailure();
+    AssertionError expected = expectFailure(whenTesting -> whenTesting.that(provider).providedValue());
     assertThat(expected).hasCauseThat().isInstanceOf(SummerException.class);
     assertThat(expected).hasMessageThat().isEqualTo(message);
   }
@@ -81,8 +75,9 @@ public class CheckedProviderSubjectTest {
     Class<? extends Throwable> unexpected = UnsupportedOperationException.class;
     CheckedProvider<String> provider =
         CheckedProviders.throwing(StringCheckedProvider.class, unexpected);
-    expectWhenTesting().that(provider).thrownException().isInstanceOf(expected);
-    AssertionError e = expect.getFailure();
+    AssertionError e =
+        expectFailure(
+            whenTesting -> whenTesting.that(provider).thrownException().isInstanceOf(expected));
     assertThat(e)
         .factKeys()
         .containsExactly(
@@ -112,16 +107,21 @@ public class CheckedProviderSubjectTest {
     CheckedProvider<String> provider = CheckedProviders.of(StringCheckedProvider.class, getValue);
     String message = String.format("expected to throw\nbut provided: %s", getValue);
 
-    expectWhenTesting().that(provider).thrownException();
-    assertThat(expect.getFailure()).hasMessageThat().isEqualTo(message);
+    AssertionError failure =
+        expectFailure(whenTesting -> whenTesting.that(provider).thrownException());
+    assertThat(failure).hasMessageThat().isEqualTo(message);
   }
 
-  private SimpleSubjectBuilder<
-          CheckedProviderSubject<String, CheckedProvider<String>>, CheckedProvider<String>>
-      expectWhenTesting() {
-    return expect
-        .whenTesting()
-        .about(CheckedProviderSubject.<String, CheckedProvider<String>>checkedProviders());
+  /**
+   * Truth's ExpectFailure was used here as a JUnit 4 @Rule, which JUnit 5 does not support. Its
+   * static form does the same job without one.
+   */
+  private static AssertionError expectFailure(
+      ExpectFailure.SimpleSubjectBuilderCallback<
+              CheckedProviderSubject<String, CheckedProvider<String>>, CheckedProvider<String>>
+          callback) {
+    return ExpectFailure.expectFailureAbout(
+        CheckedProviderSubject.<String, CheckedProvider<String>>checkedProviders(), callback);
   }
 
   private String getReturningProviderName(String providing) {

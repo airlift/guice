@@ -16,17 +16,14 @@
 package com.google.inject.internal;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.google.inject.Key;
 import com.google.inject.spi.Dependency;
 import java.util.Random;
 import java.util.stream.IntStream;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.Test;
 
-@RunWith(JUnit4.class)
 public final class InternalContextTest {
   private static final Dependency<String> DEP = Dependency.get(Key.get(String.class));
   private static final Dependency<Runnable> PROXYABLE_DEP = Dependency.get(Key.get(Runnable.class));

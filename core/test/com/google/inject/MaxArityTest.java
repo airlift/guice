@@ -18,12 +18,9 @@ package com.google.inject;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.Test;
 
 /** Tests for injection points with the maximum number of parameters */
-@RunWith(JUnit4.class)
 public final class MaxArityTest {
 
   // Regression test for a bug where the methodhandle path would fail for such large methods.

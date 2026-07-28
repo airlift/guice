@@ -22,11 +22,8 @@ import com.google.inject.spi.Dependency;
 import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.Test;
 
-@RunWith(JUnit4.class)
 public class InternalFactoryTest {
 
   @Test

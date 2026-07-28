@@ -1,7 +1,7 @@
 package com.google.inject.util;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -11,11 +11,8 @@ import com.google.inject.matcher.Matchers;
 import java.util.Optional;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.Test;
 
-@RunWith(JUnit4.class)
 public final class EnhancedTest {
   @Test
   public void isEnhanced() {
