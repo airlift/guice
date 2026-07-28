@@ -42,6 +42,9 @@ public final class InternalFlags {
   private static final UseMethodHandlesOption USE_METHOD_HANDLES =
       getSystemOption("guice_use_method_handles", UseMethodHandlesOption.NO);
 
+  private static final UseMethodHandlesOption USE_METHOD_HANDLES_FOR_MEMBER_INJECTION =
+      getSystemOption("guice_use_method_handles_for_member_injection", UseMethodHandlesOption.YES);
+
   /**
    * The options for using `MethodHandles`.
    *
@@ -179,9 +182,24 @@ public final class InternalFlags {
     return COLORIZE_OPTION.enabled();
   }
 
+  /** Whether to construct instances through MethodHandle chains rather than reflection. */
   public static boolean getUseMethodHandlesOption() {
     return USE_METHOD_HANDLES
             == UseMethodHandlesOption.YES
+        && isBytecodeGenEnabled();
+  }
+
+  /**
+   * Whether to inject members through MethodHandles.
+   *
+   * <p>This is separate from {@link #getUseMethodHandlesOption} because the two paths behave very
+   * differently. Handles do not scale for construction: the composed chains outgrow the JIT's
+   * inlining budget, so cost grows with the size of the graph. Member injection composes a handle
+   * per member instead, which stays small, and measures about twice as fast as reflection.
+   */
+  public static boolean getUseMethodHandlesForMemberInjectionOption() {
+    return (USE_METHOD_HANDLES == UseMethodHandlesOption.YES
+            || USE_METHOD_HANDLES_FOR_MEMBER_INJECTION == UseMethodHandlesOption.YES)
         && isBytecodeGenEnabled();
   }
 
