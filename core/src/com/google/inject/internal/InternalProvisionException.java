@@ -158,11 +158,11 @@ public final class InternalProvisionException extends Exception {
     if (dependency.getInjectionPoint().getMember() instanceof Method annotated) {
       if (annotated.isAnnotationPresent(Provides.class)) {
         switch (InternalFlags.getNullableProvidesOption()) {
-          case ERROR:
-            break; // break out & let the below exception happen
-          case IGNORE:
+          case ERROR -> {} // fall out & let the below exception happen
+          case IGNORE -> {
             return; // user doesn't care about injecting nulls to non-@Nullables.
-          case WARN:
+          }
+          case WARN -> {
             // Warn only once, otherwise we spam logs too much.
             if (warnedDependencies.add(dependency)) {
               logger.log(
@@ -176,6 +176,7 @@ public final class InternalProvisionException extends Exception {
                   });
             }
             return;
+          }
         }
       }
     }

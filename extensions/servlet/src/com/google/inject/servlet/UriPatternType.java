@@ -29,14 +29,10 @@ public enum UriPatternType {
   REGEX;
 
   static UriPatternMatcher get(UriPatternType type, String pattern) {
-    switch (type) {
-      case SERVLET:
-        return new ServletStyleUriPatternMatcher(pattern);
-      case REGEX:
-        return new RegexUriPatternMatcher(pattern);
-      default:
-        return null;
-    }
+    return switch (type) {
+      case SERVLET -> new ServletStyleUriPatternMatcher(pattern);
+      case REGEX -> new RegexUriPatternMatcher(pattern);
+    };
   }
 
   private static String getUri(String uri) {

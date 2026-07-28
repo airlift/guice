@@ -246,20 +246,15 @@ final class Initializer {
       try {
         // lock acquired, current thread owns this instance initialization
         switch (state) {
-          case READY:
-            return instance;
             // When instance depends on itself in the same thread potential dead lock
             // is not detected. We have to prevent a stack overflow and we use
             // an "injecting" stage to short-circuit a call.
-          case INJECTING:
+          case READY, INJECTING -> {
             return instance;
-          case VALIDATED:
-            state = InjectableReferenceState.INJECTING;
-            break;
-          case NEW:
-            throw new IllegalStateException("InjectableReference is not validated yet");
-          default:
-            throw new IllegalStateException("Unknown state: " + state);
+          }
+          case VALIDATED -> state = InjectableReferenceState.INJECTING;
+          case NEW -> throw new IllegalStateException("InjectableReference is not validated yet");
+          default -> throw new IllegalStateException("Unknown state: " + state);
         }
         // if in Stage.TOOL, we only want to inject & notify toolable injection points.
         // (otherwise we'll inject all of them)

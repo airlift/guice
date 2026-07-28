@@ -154,16 +154,12 @@ final class SourceFormatter {
       return "th";
     } else {
       // could use a lookup table? any better?
-      switch (ordinal % 10) {
-        case 1:
-          return "st";
-        case 2:
-          return "nd";
-        case 3:
-          return "rd";
-        default:
-          return "th";
-      }
+      return switch (ordinal % 10) {
+        case 1 -> "st";
+        case 2 -> "nd";
+        case 3 -> "rd";
+        default -> "th";
+      };
     }
   }
 }

@@ -280,15 +280,11 @@ abstract class InternalFactory<T> {
 
       @Override
       HandleCache updateCache(boolean linked, MethodHandleResult result) {
-        switch (result.cachability) {
-          case NEVER:
-            throw new IllegalArgumentException("Caller should have handled NEVER");
-          case ON_LINKED_SETTING:
-            return new PartialLinkedCache(linked, result.methodHandle);
-          case ALWAYS:
-            return new AlwaysCache(result.methodHandle);
-        }
-        throw new AssertionError("Unsupported cachability: " + result.cachability);
+        return switch (result.cachability) {
+          case NEVER -> throw new IllegalArgumentException("Caller should have handled NEVER");
+          case ON_LINKED_SETTING -> new PartialLinkedCache(linked, result.methodHandle);
+          case ALWAYS -> new AlwaysCache(result.methodHandle);
+        };
       }
     }
 
