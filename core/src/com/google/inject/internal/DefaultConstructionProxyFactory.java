@@ -82,7 +82,7 @@ final class DefaultConstructionProxyFactory<T> implements ConstructionProxyFacto
     return new ReflectiveProxy<T>(injectionPoint, constructor);
   }
 
-  private abstract static class DefaultConstructorProxy<T> implements ConstructionProxy<T> {
+  private abstract static sealed class DefaultConstructorProxy<T> implements ConstructionProxy<T> {
     final InjectionPoint injectionPoint;
     final Constructor<T> constructor;
 

@@ -40,7 +40,7 @@ import java.util.Set;
  *
  * @author jessewilson@google.com (Jesse Wilson)
  */
-public class BindingBuilder<T> extends AbstractBindingBuilder<T>
+public final class BindingBuilder<T> extends AbstractBindingBuilder<T>
     implements AnnotatedBindingBuilder<T> {
 
   public BindingBuilder(Binder binder, List<Element> elements, Object source, Key<T> key) {

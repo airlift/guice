@@ -614,7 +614,7 @@ public final class RealOptionalBinder<T> implements Module {
   }
 
   /** A base class for ProviderWithDependencies that need equality based on a specific object. */
-  private abstract static class RealOptionalBinderProviderWithDependencies<T, P>
+  private abstract static sealed class RealOptionalBinderProviderWithDependencies<T, P>
       extends InternalProviderInstanceBindingImpl.Factory<P> {
     protected final BindingSelection<T> bindingSelection;
     private boolean initialized = false;

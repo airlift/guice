@@ -34,7 +34,8 @@ import java.util.List;
  *
  * @author jessewilson@google.com (Jesse Wilson)
  */
-public abstract class AbstractBindingBuilder<T> {
+public abstract sealed class AbstractBindingBuilder<T>
+    permits BindingBuilder, ConstantBindingBuilderImpl {
 
   public static final String IMPLEMENTATION_ALREADY_SET = "Implementation is set more than once.";
   public static final String SINGLE_INSTANCE_AND_SCOPE =
