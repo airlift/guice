@@ -169,7 +169,7 @@ final class Initializer
         try (InternalContext context = pendingInjections.get(0).injector.enterContext()) {
             for (InjectableReference<?> reference : pendingInjections) {
                 try {
-                    Object unused = reference.get(context);
+                    reference.get(context);
                 }
                 catch (InternalProvisionException ipe) {
                     errors.merge(ipe);

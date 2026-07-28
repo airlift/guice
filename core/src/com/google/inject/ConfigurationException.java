@@ -34,14 +34,20 @@ public final class ConfigurationException
         extends RuntimeException
 {
     private final com.google.common.collect.ImmutableSet<Message> messages;
-    private Object partialValue;
+    private final Object partialValue;
 
     /**
      * Creates a ConfigurationException containing {@code messages}.
      */
     public ConfigurationException(Iterable<Message> messages)
     {
+        this(messages, null);
+    }
+
+    private ConfigurationException(Iterable<Message> messages, Object partialValue)
+    {
         this.messages = com.google.common.collect.ImmutableSet.copyOf(messages);
+        this.partialValue = partialValue;
         initCause(Messages.getOnlyCause(this.messages));
     }
 
@@ -54,9 +60,7 @@ public final class ConfigurationException
                 "Can't clobber existing partial value %s with %s",
                 this.partialValue,
                 partialValue);
-        ConfigurationException result = new ConfigurationException(messages);
-        result.partialValue = partialValue;
-        return result;
+        return new ConfigurationException(messages, partialValue);
     }
 
     /**

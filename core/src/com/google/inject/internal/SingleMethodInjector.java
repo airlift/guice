@@ -239,7 +239,7 @@ final class SingleMethodInjector
         Object[] parameters = SingleParameterInjector.getAll(context, parameterInjectors);
 
         try {
-            var unused = methodInvoker.invoke(o, parameters);
+            methodInvoker.invoke(o, parameters);
         }
         catch (IllegalAccessException e) {
             throw new AssertionError(e); // a security manager is blocking us, we're hosed

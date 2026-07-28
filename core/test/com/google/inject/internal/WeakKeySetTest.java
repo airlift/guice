@@ -140,7 +140,11 @@ public class WeakKeySetTest
         WeakReference<Object> weakSource1Ref = new WeakReference<>(source1);
         WeakReference<Object> weakSource2Ref = new WeakReference<>(source2);
 
-        Key<Integer> key = key1 = key2 = Key.get(Integer.class);
+        Key<Integer> key = Key.get(Integer.class);
+
+        key1 = key;
+
+        key2 = key;
         bindingData1 = null;
 
         awaitFullGc();
@@ -149,7 +153,8 @@ public class WeakKeySetTest
         assertInSet(set, key, 1, source2);
 
         // Clear source1 and source2 fields so the objects can be GCed.
-        Object unused = source1 = source2 = null;
+        source1 = null;
+        source2 = source1;
 
         awaitClear(weakSource1Ref);
         // Key1 will be referenced as the key in the sources backingSet and won't be
@@ -189,7 +194,11 @@ public class WeakKeySetTest
         WeakReference<Key<Integer>> weakKey1Ref = new WeakReference<>(key1);
         WeakReference<Key<Integer>> weakKey2Ref = new WeakReference<>(key2);
 
-        Key<Integer> key = key1 = key2 = Key.get(Integer.class);
+        Key<Integer> key = Key.get(Integer.class);
+
+        key1 = key;
+
+        key2 = key;
 
         awaitFullGc();
         assertInSet(set, key, 2, source1, source2);
@@ -222,7 +231,11 @@ public class WeakKeySetTest
         WeakReference<Key<Integer>> weakKey2Ref = new WeakReference<>(key2);
         WeakReference<Object> weakSourceRef = new WeakReference<>(source);
 
-        Key<Integer> key = key1 = key2 = Key.get(Integer.class);
+        Key<Integer> key = Key.get(Integer.class);
+
+        key1 = key;
+
+        key2 = key;
         bindingData1 = null;
 
         awaitFullGc();
@@ -266,7 +279,11 @@ public class WeakKeySetTest
         WeakReference<Key<Integer>> weakKey2Ref = new WeakReference<>(key2);
         WeakReference<Object> weakSourceRef = new WeakReference<>(source);
 
-        Key<Integer> key = key1 = key2 = Key.get(Integer.class);
+        Key<Integer> key = Key.get(Integer.class);
+
+        key1 = key;
+
+        key2 = key;
         bindingData1 = null;
 
         awaitFullGc();
@@ -323,7 +340,13 @@ public class WeakKeySetTest
         WeakReference<Object> weakSource2Ref = new WeakReference<>(source2);
         WeakReference<Object> weakSource3Ref = new WeakReference<>(source3);
 
-        Key<Integer> key = key1 = key2 = key3 = Key.get(Integer.class);
+        Key<Integer> key = Key.get(Integer.class);
+
+        key1 = key;
+
+        key2 = key;
+
+        key3 = key;
         bindingData1 = null;
 
         awaitFullGc();

@@ -453,8 +453,7 @@ public class FactoryModuleBuilderTest
 
         Foo.Factory<String> factory =
                 injector.getInstance(Key.get(new TypeLiteral<Foo.Factory<String>>() {}));
-        @SuppressWarnings("unused")
-        Foo<String> foo = factory.create(new Bar());
+        factory.create(new Bar());
     }
 
     @Test

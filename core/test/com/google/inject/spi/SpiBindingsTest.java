@@ -571,7 +571,7 @@ public class SpiBindingsTest
 
         List<Binding<?>> bindings = Lists.newArrayList(injector.getBindings().values());
         for (Iterator<Binding<?>> i = bindings.iterator(); i.hasNext(); ) {
-            if (BUILT_IN_BINDINGS.contains(i.next().getKey())) {
+            if (builtInBindings.contains(i.next().getKey())) {
                 i.remove();
             }
         }
@@ -587,7 +587,7 @@ public class SpiBindingsTest
         }
     }
 
-    private final ImmutableSet<Key<?>> BUILT_IN_BINDINGS =
+    private final ImmutableSet<Key<?>> builtInBindings =
             ImmutableSet.of(Key.get(Injector.class), Key.get(Stage.class), Key.get(Logger.class));
 
     private final Comparator<Binding<?>> orderByKey = comparing(arg -> arg.getKey().toString());

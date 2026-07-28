@@ -252,14 +252,9 @@ public class ProvidesIntoTest
     {
         Field field;
         switch (number) {
-            case 1:
-                field = ProvidesIntoTest.class.getDeclaredField("wrappedKey1Holder");
-                break;
-            case 2:
-                field = ProvidesIntoTest.class.getDeclaredField("wrappedKey2Holder");
-                break;
-            default:
-                throw new IllegalArgumentException("only 1 or 2 supported");
+            case 1 -> field = ProvidesIntoTest.class.getDeclaredField("wrappedKey1Holder");
+            case 2 -> field = ProvidesIntoTest.class.getDeclaredField("wrappedKey2Holder");
+            default -> throw new IllegalArgumentException("only 1 or 2 supported");
         }
         return field.getAnnotation(WrappedKey.class);
     }
@@ -336,14 +331,9 @@ public class ProvidesIntoTest
     {
         Field field;
         switch (number) {
-            case 12:
-                field = ProvidesIntoTest.class.getDeclaredField("arrayWrappedKeyHolder12");
-                break;
-            case 34:
-                field = ProvidesIntoTest.class.getDeclaredField("arrayWrappedKeyHolder34");
-                break;
-            default:
-                throw new IllegalArgumentException("only 1 or 2 supported");
+            case 12 -> field = ProvidesIntoTest.class.getDeclaredField("arrayWrappedKeyHolder12");
+            case 34 -> field = ProvidesIntoTest.class.getDeclaredField("arrayWrappedKeyHolder34");
+            default -> throw new IllegalArgumentException("only 1 or 2 supported");
         }
         return field.getAnnotation(ArrayWrappedKey.class);
     }

@@ -29,6 +29,8 @@ import static java.util.Objects.requireNonNull;
  */
 public final class Classes
 {
+    private Classes() {}
+
     public static boolean isInnerClass(Class<?> clazz)
     {
         return !Modifier.isStatic(clazz.getModifiers()) && clazz.getEnclosingClass() != null;

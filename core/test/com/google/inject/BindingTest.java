@@ -439,8 +439,8 @@ public class BindingTest
                         });
 
         D d = (D) injector.getInstance(Object.class);
-        int unused = d.hashCode();
-        int unused2 = d.hashCode();
+        d.hashCode();
+        d.hashCode();
         assertEquals(2, count.get());
     }
 

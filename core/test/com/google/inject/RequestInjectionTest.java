@@ -276,48 +276,47 @@ public class RequestInjectionTest
     @Test
     public void testEarlyInjectableReferencesWithSameIdentity()
     {
-        Injector injector =
-                Guice.createInjector(
-                        new AbstractModule()
-                        {
-                            @Override
-                            protected void configure()
-                            {
-                                // Add a listener to trigger all toInstance bindings to get an Initializable.
-                                bindListener(
-                                        Matchers.any(),
-                                        new TypeListener()
-                                        {
-                                            @Override
-                                            public <I> void hear(TypeLiteral<I> type, TypeEncounter<I> encounter) {}
-                                        });
+        Guice.createInjector(
+                new AbstractModule()
+                {
+                    @Override
+                    protected void configure()
+                    {
+                        // Add a listener to trigger all toInstance bindings to get an Initializable.
+                        bindListener(
+                                Matchers.any(),
+                                new TypeListener()
+                                {
+                                    @Override
+                                    public <I> void hear(TypeLiteral<I> type, TypeEncounter<I> encounter) {}
+                                });
 
-                                // Bind two different Keys to the IDENTITICAL object
-                                // ORDER MATTERS! We want the String binding to push out the Object one
-                                String fail = new String("better not fail!");
-                                bind(Object.class).toInstance(fail);
-                                bind(String.class).toInstance(fail);
+                        // Bind two different Keys to the IDENTITICAL object
+                        // ORDER MATTERS! We want the String binding to push out the Object one
+                        String fail = new String("better not fail!");
+                        bind(Object.class).toInstance(fail);
+                        bind(String.class).toInstance(fail);
 
-                                // Then try to inject those objects in a requestInjection,
-                                // letting us get into InjectableReference.get before it has
-                                // finished running through all its injections.
-                                // Each of these technically has its own InjectableReference internally.
-                                // ORDER MATTERS!.. because Object is injected first, that InjectableReference
-                                // attempts to process its members injector, but it wasn't initialized,
-                                // because String pushed it out of the queue!
-                                requestInjection(
-                                        new Object()
-                                        {
-                                            @SuppressWarnings("unused")
-                                            @Inject
-                                            Object obj;
+                        // Then try to inject those objects in a requestInjection,
+                        // letting us get into InjectableReference.get before it has
+                        // finished running through all its injections.
+                        // Each of these technically has its own InjectableReference internally.
+                        // ORDER MATTERS!.. because Object is injected first, that InjectableReference
+                        // attempts to process its members injector, but it wasn't initialized,
+                        // because String pushed it out of the queue!
+                        requestInjection(
+                                new Object()
+                                {
+                                    @SuppressWarnings("unused")
+                                    @Inject
+                                    Object obj;
 
-                                            @SuppressWarnings("unused")
-                                            @Inject
-                                            String str;
-                                        });
-                            }
-                        });
+                                    @SuppressWarnings("unused")
+                                    @Inject
+                                    String str;
+                                });
+                    }
+                });
     }
 
     static class NeedsThing<T>

@@ -617,7 +617,8 @@ public final class RealMapBinder<K, V>
         {
             Key<Map<K, Provider<V>>> local = providerMapKey;
             if (local == null) {
-                local = providerMapKey = mapKey.ofType(mapOfProviderOf(keyType, valueType));
+                local = mapKey.ofType(mapOfProviderOf(keyType, valueType));
+                providerMapKey = local;
             }
             return local;
         }
@@ -626,7 +627,8 @@ public final class RealMapBinder<K, V>
         {
             Key<Map<K, jakarta.inject.Provider<V>>> local = jakartaProviderMapKey;
             if (local == null) {
-                local = jakartaProviderMapKey = mapKey.ofType(mapOfJakartaProviderOf(keyType, valueType));
+                local = mapKey.ofType(mapOfJakartaProviderOf(keyType, valueType));
+                jakartaProviderMapKey = local;
             }
             return local;
         }
@@ -635,7 +637,8 @@ public final class RealMapBinder<K, V>
         {
             Key<Map<K, Set<V>>> local = multimapKey;
             if (local == null) {
-                local = multimapKey = mapKey.ofType(mapOf(keyType, setOf(valueType)));
+                local = mapKey.ofType(mapOf(keyType, setOf(valueType)));
+                multimapKey = local;
             }
             return local;
         }
@@ -644,7 +647,8 @@ public final class RealMapBinder<K, V>
         {
             Key<Map<K, Set<Provider<V>>>> local = providerSetMultimapKey;
             if (local == null) {
-                local = providerSetMultimapKey = mapKey.ofType(mapOfSetOfProviderOf(keyType, valueType));
+                local = mapKey.ofType(mapOfSetOfProviderOf(keyType, valueType));
+                providerSetMultimapKey = local;
             }
             return local;
         }
@@ -653,9 +657,8 @@ public final class RealMapBinder<K, V>
         {
             Key<Map<K, Set<jakarta.inject.Provider<V>>>> local = jakartaProviderSetMultimapKey;
             if (local == null) {
-                local =
-                        jakartaProviderSetMultimapKey =
-                                mapKey.ofType(mapOfSetOfJakartaProviderOf(keyType, valueType));
+                local = mapKey.ofType(mapOfSetOfJakartaProviderOf(keyType, valueType));
+                jakartaProviderSetMultimapKey = local;
             }
             return local;
         }
@@ -664,9 +667,8 @@ public final class RealMapBinder<K, V>
         {
             Key<Map<K, Collection<Provider<V>>>> local = providerCollectionMultimapKey;
             if (local == null) {
-                local =
-                        providerCollectionMultimapKey =
-                                mapKey.ofType(mapOfCollectionOfProviderOf(keyType, valueType));
+                local = mapKey.ofType(mapOfCollectionOfProviderOf(keyType, valueType));
+                providerCollectionMultimapKey = local;
             }
             return local;
         }
@@ -677,9 +679,8 @@ public final class RealMapBinder<K, V>
             Key<Map<K, Collection<jakarta.inject.Provider<V>>>> local =
                     jakartaProviderCollectionMultimapKey;
             if (local == null) {
-                local =
-                        jakartaProviderCollectionMultimapKey =
-                                mapKey.ofType(mapOfCollectionOfJakartaProviderOf(keyType, valueType));
+                local = mapKey.ofType(mapOfCollectionOfJakartaProviderOf(keyType, valueType));
+                jakartaProviderCollectionMultimapKey = local;
             }
             return local;
         }
@@ -688,9 +689,8 @@ public final class RealMapBinder<K, V>
         {
             Key<Set<Map.Entry<K, jakarta.inject.Provider<V>>>> local = entrySetJakartaProviderKey;
             if (local == null) {
-                local =
-                        entrySetJakartaProviderKey =
-                                mapKey.ofType(setOfEntryOfJakartaProviderOf(keyType, valueType));
+                local = mapKey.ofType(setOfEntryOfJakartaProviderOf(keyType, valueType));
+                entrySetJakartaProviderKey = local;
             }
             return local;
         }
@@ -702,9 +702,8 @@ public final class RealMapBinder<K, V>
             if (local == null) {
                 Type extendsValue = Types.subtypeOf(valueType.getType());
                 Type mapOfKeyAndExtendsValue = Types.mapOf(keyType.getType(), extendsValue);
-                local =
-                        mapOfKeyExtendsValueKey =
-                                (Key<Map<K, ? extends V>>) mapKey.ofType(mapOfKeyAndExtendsValue);
+                local = (Key<Map<K, ? extends V>>) mapKey.ofType(mapOfKeyAndExtendsValue);
+                mapOfKeyExtendsValueKey = local;
             }
             return local;
         }

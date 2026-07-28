@@ -40,17 +40,16 @@ public class BoundInstanceInjectionTest
     {
         final O o = new O();
 
-        Injector injector =
-                Guice.createInjector(
-                        new AbstractModule()
-                        {
-                            @Override
-                            protected void configure()
-                            {
-                                bind(O.class).toInstance(o);
-                                bind(int.class).toInstance(5);
-                            }
-                        });
+        Guice.createInjector(
+                new AbstractModule()
+                {
+                    @Override
+                    protected void configure()
+                    {
+                        bind(O.class).toInstance(o);
+                        bind(int.class).toInstance(5);
+                    }
+                });
 
         assertEquals(5, o.fromMethod);
     }

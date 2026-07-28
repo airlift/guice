@@ -161,7 +161,7 @@ public class ShortNameFactoryTest
             throws Exception
     {
         Member method = Obj.class.getDeclaredMethod("method", String.class);
-        assertEquals("ShortNameFactoryTest.java:57", nameFactory.getSourceName(method), "Method should be identified by its file name and line number");
+        assertEquals("ShortNameFactoryTest.java:61", nameFactory.getSourceName(method), "Method should be identified by its file name and line number");
     }
 
     @Test
@@ -170,7 +170,7 @@ public class ShortNameFactoryTest
     {
         StackTraceElement element =
                 (StackTraceElement) StackTraceElements.forMember(Obj.class.getField("field"));
-        assertEquals("ShortNameFactoryTest.java:55", nameFactory.getSourceName(element), "Stack trace element should be identified by its file name and line number");
+        assertEquals("ShortNameFactoryTest.java:59", nameFactory.getSourceName(element), "Stack trace element should be identified by its file name and line number");
     }
 
     @Test

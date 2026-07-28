@@ -51,6 +51,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 public class Annotations
 {
+    private Annotations() {}
+
     /**
      * Returns {@code true} if the given annotation type has no attributes.
      */

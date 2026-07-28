@@ -335,7 +335,7 @@ public class ProvisionExceptionsTest
         Injector injector = Guice.createInjector(module);
         var provideFailingValue = injector.getBinding(String.class).getSource();
         var providesDependsOnFailingProvider = injector.getBinding(Object.class).getSource();
-        var providesDependensOnFailingProvider_failing =
+        var providesDependsOnFailingProviderFailing =
                 ((HasDependencies) injector.getBinding(Object.class)).getDependencies().stream().collect(onlyElement());
         var pe = assertThrows(ProvisionException.class, () -> injector.getInstance(Object.class));
         var message = pe.getErrorMessages().stream().collect(onlyElement()).getErrorDetail();
@@ -344,10 +344,10 @@ public class ProvisionExceptionsTest
                 .containsExactly(
                         Dependency.get(Key.get(Object.class)), // what we asked for
                         providesDependsOnFailingProvider, // the provider method
-                        providesDependensOnFailingProvider_failing, // the dependency of the provider method
+                        providesDependsOnFailingProviderFailing, // the dependency of the provider method
                         provideFailingValue); // the thing that failed
 
-        var dependsOnFailingProvider_failing =
+        var dependsOnFailingProviderFailing =
                 ((HasDependencies) injector.getBinding(DependsOnFailingProvider.class))
                         .getDependencies().stream().collect(onlyElement());
         pe =
@@ -358,7 +358,7 @@ public class ProvisionExceptionsTest
         assertThat(message.getSources())
                 .containsExactly(
                         Dependency.get(Key.get(DependsOnFailingProvider.class)), // what we asked for
-                        dependsOnFailingProvider_failing, // the dependency of the constructor
+                        dependsOnFailingProviderFailing, // the dependency of the constructor
                         provideFailingValue); // the thing that failed.
     }
 

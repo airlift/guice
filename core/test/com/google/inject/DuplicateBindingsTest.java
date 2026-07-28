@@ -33,7 +33,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.logging.Logger;
 
-import static com.google.inject.Asserts.*;
+import static com.google.inject.Asserts.assertContains;
+import static com.google.inject.Asserts.isIncludeStackTraceOff;
 import static com.google.inject.name.Names.named;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;

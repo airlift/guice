@@ -47,7 +47,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @author jmourits@google.com (Jerome Mourits)
  * @author jessewilson@google.com (Jesse Wilson)
  */
-@Target({CONSTRUCTOR})
+@Target(CONSTRUCTOR)
 @Retention(RUNTIME)
 @Keep
 public @interface AssistedInject {}

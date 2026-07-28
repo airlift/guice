@@ -162,7 +162,7 @@ interface CycleDetectingLock<ID>
             {
                 final Thread currentThread = Thread.currentThread();
                 synchronized (CycleDetectingLockFactory.class) {
-                    checkState();
+                    checkInvariants();
                     // Only do work if this thread doesn't already own the lock.
                     // If we're attempting to re-enter our own lock, then we're not going to wait to lock.
                     // Otherwise, if we add ourselves to `lockThreadIsWaitingOn`, another thread attempting to
@@ -191,7 +191,7 @@ interface CycleDetectingLock<ID>
                 synchronized (CycleDetectingLockFactory.class) {
                     // current thread is no longer waiting on this lock
                     lockThreadIsWaitingOn.remove(currentThread);
-                    checkState();
+                    checkInvariants();
 
                     // mark it as owned by us
                     lockOwnerThread = currentThread;
@@ -208,7 +208,7 @@ interface CycleDetectingLock<ID>
             {
                 final Thread currentThread = Thread.currentThread();
                 synchronized (CycleDetectingLockFactory.class) {
-                    checkState();
+                    checkInvariants();
                     checkState(
                             lockOwnerThread != null, "Thread is trying to unlock a lock that is not locked");
                     checkState(
@@ -237,7 +237,7 @@ interface CycleDetectingLock<ID>
             /**
              * Check consistency of an internal state.
              */
-            void checkState()
+            void checkInvariants()
                     throws IllegalStateException
             {
                 final Thread currentThread = Thread.currentThread();

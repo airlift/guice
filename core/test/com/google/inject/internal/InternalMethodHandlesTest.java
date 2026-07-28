@@ -106,8 +106,9 @@ public final class InternalMethodHandlesTest
         var depRef = new WeakReference<>(dep);
         var factoryRef = new WeakReference<>(factory);
 
-        var unused = InternalMethodHandles.makeProvider(factory, injector, dep);
-        unused = null;
+        Object provider = InternalMethodHandles.makeProvider(factory, injector, dep);
+        assertThat(provider).isNotNull();
+        provider = null;
         factory = null;
         injector = null;
         dep = null;
@@ -219,14 +220,14 @@ public final class InternalMethodHandlesTest
         assertThrows(
                 InternalProvisionException.class,
                 () -> {
-                    var unused = (Object) handle.invokeExact((InternalContext) null, (Dependency<?>) null);
+                    var _ = (Object) handle.invokeExact((InternalContext) null, (Dependency<?>) null);
                 });
         assertThat(callCount.get()).isEqualTo(1);
 
         assertThrows(
                 InternalProvisionException.class,
                 () -> {
-                    var unused = (Object) handle.invokeExact((InternalContext) null, (Dependency<?>) null);
+                    var _ = (Object) handle.invokeExact((InternalContext) null, (Dependency<?>) null);
                 });
         assertThat(callCount.get()).isEqualTo(2);
         assertThat((Object) handle.invokeExact((InternalContext) null, (Dependency<?>) null))
@@ -259,13 +260,11 @@ public final class InternalMethodHandlesTest
         var nullHandle =
                 InternalMethodHandles.nullCheckResult(
                         InternalMethodHandles.constantFactoryGetHandle(null), "source");
-        var e =
-                assertThrows(
-                        InternalProvisionException.class,
-                        () -> {
-                            var unused =
-                                    (Object) nullHandle.invokeExact((InternalContext) null, nonNullStringDep);
-                        });
+        assertThrows(
+                InternalProvisionException.class,
+                () -> {
+                    var _ = (Object) nullHandle.invokeExact((InternalContext) null, nonNullStringDep);
+                });
     }
 
     @Test

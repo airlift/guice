@@ -130,7 +130,7 @@ public final class LinkageContextTest
             throws InternalProvisionException
     {
         callCount[0]++;
-        var unused = ctx.tryStartConstruction(1, DEP);
+        ctx.tryStartConstruction(1, DEP);
         return "Hello World";
     }
 
@@ -161,18 +161,16 @@ public final class LinkageContextTest
                         });
         factoryReference.set(factory);
         MethodHandle handle = context.makeHandle(factory, false).methodHandle();
-        var ipe =
-                assertThrows(
-                        InternalProvisionException.class,
-                        () -> {
-                            var unused =
-                                    (Object)
-                                            handle.invokeExact(
-                                                    InternalContext.create(
-                                                            /* disableCircularProxies= */ true,
-                                                            new Object[] {null}),
-                                                    (Dependency<?>) null);
-                        });
+        assertThrows(
+                InternalProvisionException.class,
+                () -> {
+                    var _ = (Object)
+                            handle.invokeExact(
+                                    InternalContext.create(
+                                            /* disableCircularProxies= */ true,
+                                            new Object[] {null}),
+                                    (Dependency<?>) null);
+                });
         // It throws on the second call, so we should have called it twice.
         assertThat(callCount[0]).isEqualTo(2);
     }

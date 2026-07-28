@@ -698,8 +698,8 @@ public final class RealMultibinder<T>
         {
             Key<Boolean> local = permitDuplicatesKey;
             if (local == null) {
-                local =
-                        permitDuplicatesKey = Key.get(Boolean.class, named(toString() + " permits duplicates"));
+                local = Key.get(Boolean.class, named(toString() + " permits duplicates"));
+                permitDuplicatesKey = local;
             }
             return local;
         }
@@ -708,7 +708,8 @@ public final class RealMultibinder<T>
         {
             Key<Collection<Provider<T>>> local = collectionOfProvidersKey;
             if (local == null) {
-                local = collectionOfProvidersKey = setKey.ofType(collectionOfProvidersOf(elementType));
+                local = setKey.ofType(collectionOfProvidersOf(elementType));
+                collectionOfProvidersKey = local;
             }
             return local;
         }
@@ -717,9 +718,8 @@ public final class RealMultibinder<T>
         {
             Key<Collection<jakarta.inject.Provider<T>>> local = collectionOfJakartaProvidersKey;
             if (local == null) {
-                local =
-                        collectionOfJakartaProvidersKey =
-                                setKey.ofType(collectionOfJakartaProvidersOf(elementType));
+                local = setKey.ofType(collectionOfJakartaProvidersOf(elementType));
+                collectionOfJakartaProvidersKey = local;
             }
             return local;
         }
@@ -728,7 +728,8 @@ public final class RealMultibinder<T>
         {
             Key<Set<? extends T>> local = setOfExtendsKey;
             if (local == null) {
-                local = setOfExtendsKey = setKey.ofType(setOfExtendsOf(elementType));
+                local = setKey.ofType(setOfExtendsOf(elementType));
+                setOfExtendsKey = local;
             }
             return local;
         }
