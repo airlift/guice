@@ -315,17 +315,11 @@ public class GraphvizGrapher extends AbstractInjectorGrapher {
     GraphvizEdge gedge = new GraphvizEdge(edge.getFromId(), edge.getToId());
     gedge.setStyle(EdgeStyle.DASHED);
     switch (edge.getType()) {
-      case NORMAL:
-        gedge.setArrowHead(ImmutableList.of(ArrowType.NORMAL_OPEN));
-        break;
-
-      case PROVIDER:
-        gedge.setArrowHead(ImmutableList.of(ArrowType.NORMAL_OPEN, ArrowType.NORMAL_OPEN));
-        break;
-
-      case CONVERTED_CONSTANT:
-        gedge.setArrowHead(ImmutableList.of(ArrowType.NORMAL_OPEN, ArrowType.DOT_OPEN));
-        break;
+      case NORMAL -> gedge.setArrowHead(ImmutableList.of(ArrowType.NORMAL_OPEN));
+      case PROVIDER ->
+          gedge.setArrowHead(ImmutableList.of(ArrowType.NORMAL_OPEN, ArrowType.NORMAL_OPEN));
+      case CONVERTED_CONSTANT ->
+          gedge.setArrowHead(ImmutableList.of(ArrowType.NORMAL_OPEN, ArrowType.DOT_OPEN));
     }
 
     edges.add(gedge);

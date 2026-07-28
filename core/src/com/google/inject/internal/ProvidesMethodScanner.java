@@ -87,12 +87,12 @@ final class ProvidesMethodScanner extends ModuleAnnotatedMethodScanner {
       if (mapKey.annotation != null) {
         binder.addError("Found a MapKey annotation on non map binding at %s.", method);
       }
-      switch (((ProvidesIntoOptional) annotation).value()) {
-        case DEFAULT:
-          return RealOptionalBinder.newRealOptionalBinder(binder, key).getKeyForDefaultBinding();
-        case ACTUAL:
-          return RealOptionalBinder.newRealOptionalBinder(binder, key).getKeyForActualBinding();
-      }
+      return switch (((ProvidesIntoOptional) annotation).value()) {
+        case DEFAULT ->
+            RealOptionalBinder.newRealOptionalBinder(binder, key).getKeyForDefaultBinding();
+        case ACTUAL ->
+            RealOptionalBinder.newRealOptionalBinder(binder, key).getKeyForActualBinding();
+      };
     }
     throw new IllegalStateException("Invalid annotation: " + annotation);
   }

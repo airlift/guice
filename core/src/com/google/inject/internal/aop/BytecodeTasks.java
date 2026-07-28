@@ -106,40 +106,41 @@ final class BytecodeTasks {
     String descriptor;
 
     switch (primitiveType.getSort()) {
-      case Type.BOOLEAN:
+      case Type.BOOLEAN -> {
         wrapper = "java/lang/Boolean";
         descriptor = "(Z)Ljava/lang/Boolean;";
-        break;
-      case Type.CHAR:
+      }
+      case Type.CHAR -> {
         wrapper = "java/lang/Character";
         descriptor = "(C)Ljava/lang/Character;";
-        break;
-      case Type.BYTE:
+      }
+      case Type.BYTE -> {
         wrapper = "java/lang/Byte";
         descriptor = "(B)Ljava/lang/Byte;";
-        break;
-      case Type.SHORT:
+      }
+      case Type.SHORT -> {
         wrapper = "java/lang/Short";
         descriptor = "(S)Ljava/lang/Short;";
-        break;
-      case Type.INT:
+      }
+      case Type.INT -> {
         wrapper = "java/lang/Integer";
         descriptor = "(I)Ljava/lang/Integer;";
-        break;
-      case Type.FLOAT:
+      }
+      case Type.FLOAT -> {
         wrapper = "java/lang/Float";
         descriptor = "(F)Ljava/lang/Float;";
-        break;
-      case Type.LONG:
+      }
+      case Type.LONG -> {
         wrapper = "java/lang/Long";
         descriptor = "(J)Ljava/lang/Long;";
-        break;
-      case Type.DOUBLE:
+      }
+      case Type.DOUBLE -> {
         wrapper = "java/lang/Double";
         descriptor = "(D)Ljava/lang/Double;";
-        break;
-      default:
+      }
+      default -> {
         return;
+      }
     }
 
     mv.visitMethodInsn(INVOKESTATIC, wrapper, "valueOf", descriptor, false);
@@ -152,48 +153,49 @@ final class BytecodeTasks {
     String descriptor;
 
     switch (primitiveType.getSort()) {
-      case Type.BOOLEAN:
+      case Type.BOOLEAN -> {
         wrapper = "java/lang/Boolean";
         method = "booleanValue";
         descriptor = "()Z";
-        break;
-      case Type.CHAR:
+      }
+      case Type.CHAR -> {
         wrapper = "java/lang/Character";
         method = "charValue";
         descriptor = "()C";
-        break;
-      case Type.BYTE:
+      }
+      case Type.BYTE -> {
         wrapper = "java/lang/Byte";
         method = "byteValue";
         descriptor = "()B";
-        break;
-      case Type.SHORT:
+      }
+      case Type.SHORT -> {
         wrapper = "java/lang/Short";
         method = "shortValue";
         descriptor = "()S";
-        break;
-      case Type.INT:
+      }
+      case Type.INT -> {
         wrapper = "java/lang/Integer";
         method = "intValue";
         descriptor = "()I";
-        break;
-      case Type.FLOAT:
+      }
+      case Type.FLOAT -> {
         wrapper = "java/lang/Float";
         method = "floatValue";
         descriptor = "()F";
-        break;
-      case Type.LONG:
+      }
+      case Type.LONG -> {
         wrapper = "java/lang/Long";
         method = "longValue";
         descriptor = "()J";
-        break;
-      case Type.DOUBLE:
+      }
+      case Type.DOUBLE -> {
         wrapper = "java/lang/Double";
         method = "doubleValue";
         descriptor = "()D";
-        break;
-      default:
+      }
+      default -> {
         return;
+      }
     }
 
     mv.visitTypeInsn(CHECKCAST, wrapper);
