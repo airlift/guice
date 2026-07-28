@@ -230,7 +230,7 @@ abstract class InternalFactory<T> {
    *
    * <p>Each cache object is immutable and updates require creating new cache objects.
    */
-  private abstract static class HandleCache {
+  private abstract static sealed class HandleCache {
 
     static MethodHandle getHandleAndMaybeUpdateCache(
         InternalFactory<?> factory, boolean linked, MethodHandleResult result) {

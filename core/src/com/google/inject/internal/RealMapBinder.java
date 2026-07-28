@@ -1339,7 +1339,7 @@ public final class RealMapBinder<K, V> implements Module {
   }
 
   /** A base class for ProviderWithDependencies that need equality based on a specific object. */
-  private abstract static class RealMapBinderProviderWithDependencies<K, V, P>
+  private abstract static sealed class RealMapBinderProviderWithDependencies<K, V, P>
       extends InternalProviderInstanceBindingImpl.Factory<P> {
     final BindingSelection<K, V> bindingSelection;
     private boolean initialized = false;
@@ -1406,7 +1406,7 @@ public final class RealMapBinder<K, V> implements Module {
    * This is done to allow all the providers to operate on the same instance of the {@link
    * BindingSelection}.
    */
-  private abstract static class RealMultimapBinderProviderWithDependencies<K, V, P>
+  private abstract static sealed class RealMultimapBinderProviderWithDependencies<K, V, P>
       extends InternalProviderInstanceBindingImpl.Factory<P> {
     final Key<Map<K, V>> mapKey;
     BindingSelection<K, V> bindingSelection;
