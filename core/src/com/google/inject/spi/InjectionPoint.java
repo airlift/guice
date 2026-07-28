@@ -430,6 +430,26 @@ public final class InjectionPoint {
    *     the valid injection points.
    */
   public static Set<InjectionPoint> forInstanceMethodsAndFields(TypeLiteral<?> type) {
+    // Injection points derive only from the class's own metadata and are immutable, so for raw
+    // classes they are computed once per JVM instead of once per injector. Every injector used to
+    // recompute them, which made reflection the dominant allocation source when many injectors are
+    // created, e.g. one per catalog. Failures are not cached: a throwing computeValue installs
+    // nothing, so the error path recomputes and throws consistently.
+    if (type.getType() instanceof Class<?> rawType) {
+      return INSTANCE_INJECTION_POINTS.get(rawType);
+    }
+    return computeInstanceMethodsAndFields(type);
+  }
+
+  private static final ClassValue<Set<InjectionPoint>> INSTANCE_INJECTION_POINTS =
+      new ClassValue<>() {
+        @Override
+        protected Set<InjectionPoint> computeValue(Class<?> type) {
+          return computeInstanceMethodsAndFields(TypeLiteral.get(type));
+        }
+      };
+
+  private static Set<InjectionPoint> computeInstanceMethodsAndFields(TypeLiteral<?> type) {
     Errors errors = new Errors();
     Set<InjectionPoint> result = getInjectionPoints(type, false, errors);
     if (errors.hasErrors()) {
