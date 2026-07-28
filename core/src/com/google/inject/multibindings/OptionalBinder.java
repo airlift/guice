@@ -34,9 +34,10 @@ import com.google.inject.internal.RealOptionalBinder;
  * </ol>
  *
  * <p>When an OptionalBinder is added, it will always supply the bindings: {@code Optional<T>} and
- * {@code Optional<Provider<T>>}. Both {@link java.util.Optional java.util.Optional} and {@link
- * com.google.common.base.Optional com.google.common.base.Optional} are bound for compatibility. If
- * {@link #setBinding} or {@link #setDefault} are called, it will also bind {@code T}.
+ * {@code Optional<Provider<T>>}, where {@code Optional} is {@link java.util.Optional
+ * java.util.Optional}. This fork no longer binds Guava's {@code Optional} ({@code
+ * com.google.common.base}); injecting it now fails at injector creation with a missing-binding
+ * error. If {@link #setBinding} or {@link #setDefault} are called, it will also bind {@code T}.
  *
  * <p>{@code setDefault} is intended for use by frameworks that need a default value. User code can
  * call {@code setBinding} to override the default. <b>Warning: Even if setBinding is called, the

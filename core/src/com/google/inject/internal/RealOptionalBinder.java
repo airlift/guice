@@ -24,7 +24,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static java.lang.invoke.MethodType.methodType;
 import static java.util.Objects.requireNonNull;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Binder;
 import com.google.inject.Binding;
@@ -66,25 +65,9 @@ public final class RealOptionalBinder<T> implements Module {
   }
 
   @SuppressWarnings("unchecked")
-  static <T> TypeLiteral<Optional<T>> optionalOf(TypeLiteral<T> type) {
-    return (TypeLiteral<Optional<T>>)
-        TypeLiteral.get(Types.newParameterizedType(Optional.class, type.getType()));
-  }
-
-  @SuppressWarnings("unchecked")
   static <T> TypeLiteral<java.util.Optional<T>> javaOptionalOf(TypeLiteral<T> type) {
     return (TypeLiteral<java.util.Optional<T>>)
         TypeLiteral.get(Types.newParameterizedType(java.util.Optional.class, type.getType()));
-  }
-
-  @SuppressWarnings("unchecked")
-  static <T> TypeLiteral<Optional<jakarta.inject.Provider<T>>> optionalOfJakartaProvider(
-      TypeLiteral<T> type) {
-    return (TypeLiteral<Optional<jakarta.inject.Provider<T>>>)
-        TypeLiteral.get(
-            Types.newParameterizedType(
-                Optional.class,
-                newParameterizedType(jakarta.inject.Provider.class, type.getType())));
   }
 
   @SuppressWarnings("unchecked")
@@ -96,14 +79,6 @@ public final class RealOptionalBinder<T> implements Module {
             Types.newParameterizedType(
                 java.util.Optional.class,
                 newParameterizedType(jakarta.inject.Provider.class, type.getType())));
-  }
-
-  @SuppressWarnings("unchecked")
-  static <T> TypeLiteral<Optional<Provider<T>>> optionalOfProvider(TypeLiteral<T> type) {
-    return (TypeLiteral<Optional<Provider<T>>>)
-        TypeLiteral.get(
-            Types.newParameterizedType(
-                Optional.class, newParameterizedType(Provider.class, type.getType())));
   }
 
   @SuppressWarnings("unchecked")
@@ -195,17 +170,12 @@ public final class RealOptionalBinder<T> implements Module {
     Key<T> key = bindingSelection.getDirectKey();
     TypeLiteral<T> typeLiteral = key.getTypeLiteral();
     // Every OptionalBinder gets the following types bound
-    // * {cgcb,ju}.Optional<Provider<T>>
-    // * {cgcb,ju}.Optional<jakarta.inject.Provider<T>>
-    // * {cgcb,ju}.Optional<T>
+    // * ju.Optional<Provider<T>>
+    // * ju.Optional<jakarta.inject.Provider<T>>
+    // * ju.Optional<T>
     // If setDefault() or setBinding() is called then also
     // * T is bound
 
-    // cgcb.Optional<c.g.i.Provider<T>>
-    Key<Optional<Provider<T>>> guavaOptProviderKey = key.ofType(optionalOfProvider(typeLiteral));
-    binder
-        .bind(guavaOptProviderKey)
-        .toProvider(new RealOptionalProviderProvider<>(bindingSelection));
     // ju.Optional<c.g.i.Provider<T>>
     Key<java.util.Optional<Provider<T>>> javaOptProviderKey =
         key.ofType(javaOptionalOfProvider(typeLiteral));
@@ -215,18 +185,11 @@ public final class RealOptionalBinder<T> implements Module {
 
     // Provider is assignable to jakarta.inject.Provider and the provider that the factory contains
     // cannot be modified so we can use some rawtypes hackery to share the same implementation.
-    // cgcb.Optional<jakarta.inject.Provider<T>>
-    binder.bind(key.ofType(optionalOfJakartaProvider(typeLiteral))).to((Key) guavaOptProviderKey);
     // ju.Optional<jakarta.inject.Provider<T>>
     binder
         .bind(key.ofType(javaOptionalOfJakartaProvider(typeLiteral)))
         .to((Key) javaOptProviderKey);
 
-    // cgcb.Optional<T>
-    Key<Optional<T>> guavaOptKey = key.ofType(optionalOf(typeLiteral));
-    binder
-        .bind(guavaOptKey)
-        .toProvider(new RealOptionalKeyProvider<>(bindingSelection, guavaOptKey));
     // ju.Optional<T>
     Key<java.util.Optional<T>> javaOptKey = key.ofType(javaOptionalOf(typeLiteral));
     binder.bind(javaOptKey).toProvider(new JavaOptionalProvider<>(bindingSelection, javaOptKey));
@@ -269,8 +232,10 @@ public final class RealOptionalBinder<T> implements Module {
       T result;
 
       try {
-        // See comments in RealOptionalKeyProvider, about how localDependency may be more specific
-        // than what we actually need.
+        // currentDependency is Optional<? super T>, so we really just need to set the target
+        // dependency to ? super T, but we are currently setting it to T.  We could hypothetically
+        // make it easier for our delegate to generate proxies by modifying the dependency, but that
+        // would also require us to rewrite the key on each call.  So for now we don't do it.
         result = local.get(context, localDependency, false);
       } catch (InternalProvisionException ipe) {
         throw ipe.addSource(localDependency);
@@ -441,168 +406,6 @@ public final class RealOptionalBinder<T> implements Module {
     @Override
     public Set<Dependency<?>> getDependencies() {
       return bindingSelection.dependencies;
-    }
-  }
-
-  /** Provides the binding for {@code Optional<Provider<T>>}. */
-  private static final class RealOptionalProviderProvider<T>
-      extends RealOptionalBinderProviderWithDependencies<T, Optional<Provider<T>>> {
-    private Optional<Provider<T>> value;
-
-    RealOptionalProviderProvider(BindingSelection<T> bindingSelection) {
-      super(bindingSelection);
-    }
-
-    @Override
-    void doInitialize() {
-      if (bindingSelection.getBinding() == null) {
-        value = Optional.absent();
-      } else {
-        value = Optional.of(bindingSelection.getBinding().getProvider());
-      }
-    }
-
-    @Override
-    protected Optional<Provider<T>> doProvision(InternalContext context, Dependency<?> dependency) {
-      return value;
-    }
-
-    @Override
-    protected Provider<Optional<Provider<T>>> doMakeProvider(
-        InjectorImpl injector, Dependency<?> dependency) {
-      return InternalFactory.makeProviderFor(value, this);
-    }
-
-    @Override
-    protected MethodHandle doGetHandle(LinkageContext context) {
-      return InternalMethodHandles.constantFactoryGetHandle(value);
-    }
-
-    @Override
-    public Set<Dependency<?>> getDependencies() {
-      return bindingSelection.providerDependencies();
-    }
-  }
-
-  /** Provides the binding for {@code Optional<T>}. */
-  private static final class RealOptionalKeyProvider<T>
-      extends RealOptionalBinderProviderWithDependencies<T, Optional<T>>
-      implements ProviderWithExtensionVisitor<Optional<T>>, OptionalBinderBinding<Optional<T>> {
-
-    private final Key<Optional<T>> optionalKey;
-
-    // These are assigned to non-null values during initialization if and only if we have a binding
-    // to delegate to.
-    private Dependency<?> targetDependency;
-    private InternalFactory<? extends T> delegate;
-
-    RealOptionalKeyProvider(BindingSelection<T> bindingSelection, Key<Optional<T>> optionalKey) {
-      super(bindingSelection);
-      this.optionalKey = optionalKey;
-    }
-
-    @Override
-    void doInitialize() {
-      if (bindingSelection.getBinding() != null) {
-        delegate = bindingSelection.getBinding().getInternalFactory();
-        targetDependency = bindingSelection.getDependency();
-      }
-    }
-
-    @Override
-    protected Optional<T> doProvision(InternalContext context, Dependency<?> currentDependency)
-        throws InternalProvisionException {
-      InternalFactory<? extends T> local = delegate;
-      if (local == null) {
-        return Optional.absent();
-      }
-      Dependency<?> localDependency = targetDependency;
-      T result;
-      try {
-        // currentDependency is Optional<? super T>, so we really just need to set the target
-        // dependency to ? super T, but we are currently setting it to T.  We could hypothetically
-        // make it easier for our delegate to generate proxies by modifying the dependency, but that
-        // would also require us to rewrite the key on each call.  So for now we don't do it.
-        result = local.get(context, localDependency, false);
-      } catch (InternalProvisionException ipe) {
-        throw ipe.addSource(localDependency);
-      }
-      return Optional.fromNullable(result);
-    }
-
-    @Override
-    protected Provider<Optional<T>> doMakeProvider(
-        InjectorImpl injector, Dependency<?> dependency) {
-      if (delegate == null) {
-        return InternalFactory.makeProviderFor(Optional.absent(), this);
-      }
-      return InternalFactory.makeDefaultProvider(this, injector, dependency);
-    }
-
-    @Override
-    protected MethodHandle doGetHandle(LinkageContext context) {
-      if (delegate == null) {
-        return InternalMethodHandles.constantFactoryGetHandle(Optional.absent());
-      }
-      var handle =
-          MethodHandles.insertArguments(
-              delegate.getHandle(context, /* linked= */ false), 1, targetDependency);
-      handle =
-          InternalMethodHandles.catchInternalProvisionExceptionAndRethrowWithSource(
-              handle, targetDependency);
-      return MethodHandles.dropArguments(
-          castReturnToObject(MethodHandles.filterReturnValue(handle, OPTIONAL_FROM_NULLABLE_MH)),
-          1,
-          Dependency.class);
-    }
-
-    private static final MethodHandle OPTIONAL_FROM_NULLABLE_MH =
-        InternalMethodHandles.findStaticOrDie(
-            Optional.class, "fromNullable", methodType(Optional.class, Object.class));
-
-    @Override
-    public Set<Dependency<?>> getDependencies() {
-      return bindingSelection.dependencies();
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public <B, R> R acceptExtensionVisitor(
-        BindingTargetVisitor<B, R> visitor, ProviderInstanceBinding<? extends B> binding) {
-      if (visitor instanceof MultibindingsTargetVisitor) {
-        return ((MultibindingsTargetVisitor<Optional<T>, R>) visitor).visit(this);
-      } else {
-        return visitor.visit(binding);
-      }
-    }
-
-    @Override
-    public Key<Optional<T>> getKey() {
-      return optionalKey;
-    }
-
-    @Override
-    public Set<Key<?>> getAlternateKeys() {
-      Key<?> key = bindingSelection.getDirectKey();
-      TypeLiteral<?> typeLiteral = key.getTypeLiteral();
-      return ImmutableSet.of(
-          (Key<?>) key.ofType(optionalOfProvider(typeLiteral)),
-          (Key<?>) key.ofType(optionalOfJakartaProvider(typeLiteral)));
-    }
-
-    @Override
-    public Binding<?> getActualBinding() {
-      return bindingSelection.getActualBinding();
-    }
-
-    @Override
-    public Binding<?> getDefaultBinding() {
-      return bindingSelection.getDefaultBinding();
-    }
-
-    @Override
-    public boolean containsElement(Element element) {
-      return bindingSelection.containsElement(element);
     }
   }
 
@@ -780,11 +583,10 @@ public final class RealOptionalBinder<T> implements Module {
         TypeLiteral<?> typeLiteral = key.getTypeLiteral();
         Key<?> elementKey = ((Binding) element).getKey();
         // if it isn't one of the things we bound directly it might be an actual or default key,
-        // or the javax or jakarta aliases of the optional provider.
+        // or the jakarta alias of the optional provider.
         return elementKey.equals(getKeyForActualBinding())
             || elementKey.equals(getKeyForDefaultBinding())
-            || elementKey.equals(key.ofType(javaOptionalOfJakartaProvider(typeLiteral)))
-            || elementKey.equals(key.ofType(optionalOfJakartaProvider(typeLiteral)));
+            || elementKey.equals(key.ofType(javaOptionalOfJakartaProvider(typeLiteral)));
       }
       return false; // cannot match;
     }

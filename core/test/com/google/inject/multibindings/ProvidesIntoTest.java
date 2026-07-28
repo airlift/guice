@@ -20,7 +20,6 @@ import static com.google.inject.Asserts.assertContains;
 import static com.google.inject.name.Names.named;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
@@ -34,6 +33,7 @@ import com.google.inject.name.Named;
 import java.lang.annotation.Retention;
 import java.lang.reflect.Field;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -189,13 +189,13 @@ public class ProvidesIntoTest {
     assertEquals(ImmutableMap.of(wrappedKeyFor(1), 11, wrappedKeyFor(2), 22), wrappedMap);
 
     Optional<String> fooOptional = injector.getInstance(new Key<Optional<String>>(named("foo")) {});
-    assertEquals("foo2", fooOptional.get());
+    assertEquals("foo2", fooOptional.orElseThrow());
 
     Optional<String> barOptional = injector.getInstance(new Key<Optional<String>>(named("bar")) {});
-    assertEquals("bar", barOptional.get());
+    assertEquals("bar", barOptional.orElseThrow());
 
     Optional<String> noAnnotationOptional = injector.getInstance(new Key<Optional<String>>() {});
-    assertEquals("na2", noAnnotationOptional.get());
+    assertEquals("na2", noAnnotationOptional.orElseThrow());
   }
 
   enum TestEnum {

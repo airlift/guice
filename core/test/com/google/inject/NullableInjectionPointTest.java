@@ -4,7 +4,6 @@ import static com.google.inject.Asserts.assertContains;
 import static java.lang.annotation.ElementType.TYPE_USE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-import com.google.common.base.Optional;
 import com.google.inject.multibindings.OptionalBinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
@@ -14,6 +13,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.fail;
 import org.junit.jupiter.api.Test;
@@ -237,7 +237,7 @@ public class NullableInjectionPointTest {
               @Provides
               @Named("throughProvidesMethod")
               Foo provideFoo(Optional<Foo> foo) {
-                return foo.orNull();
+                return foo.orElse(null);
               }
             });
     assertNull(injector.getInstance(Key.get(Foo.class, Names.named("throughProvidesMethod"))));
