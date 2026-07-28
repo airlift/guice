@@ -402,12 +402,12 @@ public class BinderSuiteTest {
     }
 
     private Builder creationException(String message, Object... args) {
-      this.creationException = message.formatted(args);
+      this.creationException = String.format(message, args);
       return this;
     }
 
     private Builder configurationException(String message, Object... args) {
-      configurationException = message.formatted(args);
+      configurationException = String.format(message, args);
       return this;
     }
 

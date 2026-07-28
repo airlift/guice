@@ -16,7 +16,7 @@
 
 package com.google.inject.spi;
 
-import static com.google.common.collect.MoreCollectors.onlyElement;
+import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.inject.Asserts.assertContains;
 import static com.google.inject.Asserts.getDeclaringSourcePart;
@@ -1300,11 +1300,11 @@ public class ElementsTest {
                     assertEquals(bConstructor, constructorBinding.getConstructor().getMember());
                     assertEquals(
                         Key.get(Integer.class),
-                        constructorBinding.getConstructor().getDependencies().stream().collect(onlyElement())
+                        getOnlyElement(constructorBinding.getConstructor().getDependencies())
                             .getKey());
                     assertEquals(
                         field,
-                        constructorBinding.getInjectableMembers().stream().collect(onlyElement()).getMember());
+                        getOnlyElement(constructorBinding.getInjectableMembers()).getMember());
                     assertEquals(2, constructorBinding.getDependencies().size());
                     assertEquals(ImmutableMap.of(), constructorBinding.getMethodInterceptors());
                     return null;

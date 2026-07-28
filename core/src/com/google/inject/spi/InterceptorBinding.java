@@ -16,8 +16,7 @@
 
 package com.google.inject.spi;
 
-
-import static java.util.Objects.requireNonNull;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Binder;
@@ -53,9 +52,9 @@ public final class InterceptorBinding implements Element {
       Matcher<? super Class<?>> classMatcher,
       Matcher<? super Method> methodMatcher,
       MethodInterceptor[] interceptors) {
-    this.source = requireNonNull(source, "source");
-    this.classMatcher = requireNonNull(classMatcher, "classMatcher");
-    this.methodMatcher = requireNonNull(methodMatcher, "methodMatcher");
+    this.source = checkNotNull(source, "source");
+    this.classMatcher = checkNotNull(classMatcher, "classMatcher");
+    this.methodMatcher = checkNotNull(methodMatcher, "methodMatcher");
     this.interceptors = ImmutableList.copyOf(interceptors);
   }
 

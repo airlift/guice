@@ -1,7 +1,5 @@
 package com.google.inject.internal;
 
-import static java.util.Objects.requireNonNull;
-
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.LinkedHashMultimap;
@@ -136,9 +134,9 @@ interface CycleDetectingLock<ID> {
       ReentrantCycleDetectingLock(
           CycleDetectingLockFactory<ID> lockFactory, ID userLockId, Lock lockImplementation) {
         this.lockFactory = lockFactory;
-        this.userLockId = requireNonNull(userLockId, "userLockId");
+        this.userLockId = Preconditions.checkNotNull(userLockId, "userLockId");
         this.lockImplementation =
-            requireNonNull(lockImplementation, "lockImplementation");
+            Preconditions.checkNotNull(lockImplementation, "lockImplementation");
       }
 
       @Override
@@ -287,7 +285,7 @@ interface CycleDetectingLock<ID> {
           ListMultimap<Thread, ID> potentialLocksCycle) {
         boolean found = false;
         Collection<ReentrantCycleDetectingLock<?>> ownedLocks = locksOwnedByThread.get(thread);
-        requireNonNull(
+        Preconditions.checkNotNull(
             ownedLocks, "Internal error: No locks were found taken by a thread");
         for (ReentrantCycleDetectingLock<?> ownedLock : ownedLocks) {
           if (ownedLock == lock) {
@@ -321,9 +319,9 @@ interface CycleDetectingLock<ID> {
         // no synchronization is used, potentially stale data, should be good enough
         Thread thread = this.lockOwnerThread;
         if (thread != null) {
-          return "%s[%s][locked by %s]".formatted(super.toString(), userLockId, thread);
+          return String.format("%s[%s][locked by %s]", super.toString(), userLockId, thread);
         } else {
-          return "%s[%s][unlocked]".formatted(super.toString(), userLockId);
+          return String.format("%s[%s][unlocked]", super.toString(), userLockId);
         }
       }
     }

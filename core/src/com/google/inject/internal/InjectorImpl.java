@@ -16,8 +16,8 @@
 
 package com.google.inject.internal;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.inject.internal.Annotations.findScopeAnnotation;
-import static java.util.Objects.requireNonNull;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
@@ -152,14 +152,14 @@ final class InjectorImpl implements Injector, Lookups {
     @SuppressWarnings("unchecked") // safe because we only put matching entries into the map
     var list =
         (List<Binding<T>>)
-            (List) bindingData.getIndexedExplicitBindings().get(requireNonNull(type, "type"));
+            (List) bindingData.getIndexedExplicitBindings().get(checkNotNull(type, "type"));
     return Collections.unmodifiableList(list);
   }
 
   /** Returns the binding for {@code key} */
   @Override
   public <T> BindingImpl<T> getBinding(Key<T> key) {
-    Errors errors = new Errors(requireNonNull(key, "key"));
+    Errors errors = new Errors(checkNotNull(key, "key"));
     try {
       var result = getBindingOrThrow(key, errors, JitLimitation.EXISTING_JIT);
       errors.throwConfigurationExceptionIfErrorsExist();
@@ -175,7 +175,7 @@ final class InjectorImpl implements Injector, Lookups {
   @Override
   public <T> BindingImpl<T> getExistingBinding(Key<T> key) {
     // Check explicit bindings, i.e. bindings created by modules.
-    var explicitBinding = bindingData.getExplicitBinding(requireNonNull(key, "key"));
+    var explicitBinding = bindingData.getExplicitBinding(checkNotNull(key, "key"));
     if (explicitBinding != null) {
       return explicitBinding;
     }
@@ -229,7 +229,7 @@ final class InjectorImpl implements Injector, Lookups {
 
   @Override
   public <T> Binding<T> getBinding(Class<T> type) {
-    return getBinding(Key.get(requireNonNull(type, "type")));
+    return getBinding(Key.get(checkNotNull(type, "type")));
   }
 
   @Override
@@ -1129,7 +1129,7 @@ final class InjectorImpl implements Injector, Lookups {
 
   @Override
   public <T> MembersInjector<T> getMembersInjector(TypeLiteral<T> typeLiteral) {
-    requireNonNull(typeLiteral, "typeLiteral");
+    checkNotNull(typeLiteral, "typeLiteral");
     userRequestedMembersInjectorTypes.add(typeLiteral);
 
     Errors errors = new Errors(typeLiteral);
@@ -1149,12 +1149,12 @@ final class InjectorImpl implements Injector, Lookups {
 
   @Override
   public <T> Provider<T> getProvider(Class<T> type) {
-    return getProvider(Key.get(requireNonNull(type, "type")));
+    return getProvider(Key.get(checkNotNull(type, "type")));
   }
 
   @Override
   public <T> Provider<T> getProvider(final Key<T> key) {
-    requireNonNull(key, "key");
+    checkNotNull(key, "key");
     Errors errors = new Errors(key);
     try {
       // Access off the BindingImpl to leverage the cached provider.

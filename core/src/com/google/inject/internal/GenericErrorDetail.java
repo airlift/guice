@@ -1,7 +1,6 @@
 package com.google.inject.internal;
 
-
-import static java.util.Objects.requireNonNull;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.spi.ErrorDetail;
@@ -14,7 +13,7 @@ public final class GenericErrorDetail extends InternalErrorDetail<GenericErrorDe
     implements Serializable {
   public GenericErrorDetail(
       ErrorId errorId, String message, List<Object> sources, Throwable cause) {
-    super(errorId, requireNonNull(message, "message"), sources, cause);
+    super(errorId, checkNotNull(message, "message"), sources, cause);
   }
 
   @Override

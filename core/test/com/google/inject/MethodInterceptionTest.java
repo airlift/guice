@@ -16,7 +16,6 @@
 
 package com.google.inject;
 
-import static com.google.common.collect.MoreCollectors.onlyElement;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.inject.matcher.Matchers.only;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -31,6 +30,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.internal.InternalFlags;
 import com.google.inject.matcher.AbstractMatcher;
@@ -191,7 +191,7 @@ public class MethodInterceptionTest {
     } catch (ConfigurationException ce) {
       assertEquals(
           "Unable to method intercept: " + NotInterceptable.class.getName(),
-          ce.getErrorMessages().stream().collect(onlyElement()).getMessage().toString());
+          Iterables.getOnlyElement(ce.getErrorMessages()).getMessage().toString());
       assertEquals(
           "Cannot subclass final class " + NotInterceptable.class.getName(),
           ce.getCause().getMessage());

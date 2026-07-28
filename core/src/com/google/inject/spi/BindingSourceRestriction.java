@@ -1,6 +1,6 @@
 package com.google.inject.spi;
 
-import static java.util.Objects.requireNonNull;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.stream.Collectors.toList;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -62,15 +62,16 @@ public final class BindingSourceRestriction {
   /** Returns a suggestion for how a restricted binding should be created in case it's missing. */
   public static Optional<String> getMissingImplementationSuggestion(
       GuiceInternal guiceInternal, Key<?> key) {
-    requireNonNull(guiceInternal);
+    checkNotNull(guiceInternal);
     RestrictedBindingSource restriction = getRestriction(key);
     if (restriction == null) {
       return Optional.empty();
     }
     return Optional.of(
-        ("\nHint: This key is restricted and cannot be bound directly. Restriction explanation:"
-             + " %s")
-            .formatted(restriction.explanation()));
+        String.format(
+            "\nHint: This key is restricted and cannot be bound directly. Restriction explanation:"
+                + " %s",
+            restriction.explanation()));
   }
 
   /**
@@ -89,7 +90,7 @@ public final class BindingSourceRestriction {
    * </ul>
    */
   public static ImmutableList<Message> check(GuiceInternal guiceInternal, List<Element> elements) {
-    requireNonNull(guiceInternal);
+    checkNotNull(guiceInternal);
     ImmutableList<Message> errorMessages = check(elements);
     // Clear all the permit maps after the checks are done.
     elements.forEach(BindingSourceRestriction::clear);
@@ -163,14 +164,14 @@ public final class BindingSourceRestriction {
       String explanation,
       ImmutableSet<Class<? extends Annotation>> acceptablePermits,
       boolean annotationRestricted) {
-    return ("Unable to bind key: %s. One of the modules that created this binding has to be"
-            + " annotated with one of %s, because the key's %s is annotated with"
-            + " @RestrictedBindingSource. %s")
-        .formatted(
-            key,
-            acceptablePermits.stream().map(a -> "@" + a.getName()).collect(toList()),
-            annotationRestricted ? "annotation" : "type",
-            explanation);
+    return String.format(
+        "Unable to bind key: %s. One of the modules that created this binding has to be annotated"
+            + " with one of %s, because the key's %s is annotated with @RestrictedBindingSource."
+            + " %s",
+        key,
+        acceptablePermits.stream().map(a -> "@" + a.getName()).collect(toList()),
+        annotationRestricted ? "annotation" : "type",
+        explanation);
   }
 
   /** Get all permits on the element source chain. */

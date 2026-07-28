@@ -17,9 +17,9 @@
 package com.google.inject;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.inject.internal.Annotations.generateAnnotation;
 import static com.google.inject.internal.Annotations.isAllDefaultMethods;
-import static java.util.Objects.requireNonNull;
 
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.inject.internal.Annotations;
@@ -346,7 +346,7 @@ public class Key<T> {
 
   /** Gets the strategy for an annotation. */
   static AnnotationStrategy strategyFor(Annotation annotation) {
-    requireNonNull(annotation, "annotation");
+    checkNotNull(annotation, "annotation");
     Class<? extends Annotation> annotationType = annotation.annotationType();
     ensureRetainedAtRuntime(annotationType);
     ensureIsBindingAnnotation(annotationType);
@@ -365,7 +365,7 @@ public class Key<T> {
       return strategyFor(generateAnnotation(annotationType));
     }
 
-    requireNonNull(annotationType, "annotation type");
+    checkNotNull(annotationType, "annotation type");
     ensureRetainedAtRuntime(annotationType);
     ensureIsBindingAnnotation(annotationType);
     return new AnnotationTypeStrategy(annotationType, null);
@@ -420,7 +420,7 @@ public class Key<T> {
     final Annotation annotation;
 
     AnnotationInstanceStrategy(Annotation annotation) {
-      this.annotation = requireNonNull(annotation, "annotation");
+      this.annotation = checkNotNull(annotation, "annotation");
     }
 
     @Override
@@ -471,7 +471,7 @@ public class Key<T> {
     final Annotation annotation;
 
     AnnotationTypeStrategy(Class<? extends Annotation> annotationType, Annotation annotation) {
-      this.annotationType = requireNonNull(annotationType, "annotation type");
+      this.annotationType = checkNotNull(annotationType, "annotation type");
       this.annotation = annotation;
     }
 

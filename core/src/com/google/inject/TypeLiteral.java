@@ -17,8 +17,8 @@
 package com.google.inject;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.inject.internal.MoreTypes.canonicalize;
-import static java.util.Objects.requireNonNull;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.internal.MoreTypes;
@@ -80,7 +80,7 @@ public class TypeLiteral<T> {
   /** Unsafe. Constructs a type literal manually. */
   @SuppressWarnings("unchecked")
   TypeLiteral(Type type) {
-    this.type = canonicalize(requireNonNull(type, "type"));
+    this.type = canonicalize(checkNotNull(type, "type"));
     this.rawType = (Class<? super T>) MoreTypes.getRawType(this.type);
     this.hashCode = this.type.hashCode();
   }

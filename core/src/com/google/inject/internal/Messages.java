@@ -64,7 +64,7 @@ public final class Messages {
     for (int i = 0; i < arguments.length; i++) {
       arguments[i] = convert(arguments[i]);
     }
-    return messageFormat.formatted(arguments);
+    return String.format(messageFormat, arguments);
   }
 
   /** Returns the formatted message for an exception with the specified messages. */
@@ -291,11 +291,11 @@ public final class Messages {
     if (!InternalFlags.enableColorizeErrorMessages()) {
       return text;
     }
-    return "%s%s%s"
-        .formatted(
-            Arrays.stream(options).map(option -> option.ansiCode).collect(joining()),
-            text,
-            FormatOptions.RESET.ansiCode);
+    return String.format(
+        "%s%s%s",
+        Arrays.stream(options).map(option -> option.ansiCode).collect(joining()),
+        text,
+        FormatOptions.RESET.ansiCode);
   }
 
   public static final String bold(String text) {

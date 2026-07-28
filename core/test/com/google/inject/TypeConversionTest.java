@@ -16,10 +16,10 @@
 
 package com.google.inject;
 
-import static com.google.common.collect.MoreCollectors.onlyElement;
 import static com.google.inject.Asserts.assertContains;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+import com.google.common.collect.Iterables;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.spi.ConvertedConstantBinding;
 import com.google.inject.spi.TypeConverter;
@@ -322,7 +322,7 @@ public class TypeConversionTest {
       Guice.createInjector(module);
       fail();
     } catch (CreationException expected) {
-      Throwable cause = expected.getErrorMessages().stream().collect(onlyElement()).getCause();
+      Throwable cause = Iterables.getOnlyElement(expected.getErrorMessages()).getCause();
       assertTrue(cause instanceof UnsupportedOperationException);
       assertContains(
           expected.getMessage(),

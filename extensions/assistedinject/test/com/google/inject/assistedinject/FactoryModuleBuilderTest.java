@@ -16,11 +16,11 @@
 
 package com.google.inject.assistedinject;
 
-import static com.google.common.collect.MoreCollectors.onlyElement;
 import static com.google.inject.Asserts.assertContains;
 import static com.google.inject.name.Names.named;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.inject.AbstractModule;
 import com.google.inject.Binding;
 import com.google.inject.CreationException;
@@ -420,7 +420,7 @@ public class FactoryModuleBuilderTest {
       Collection<Message> messages = ce.getErrorMessages();
       assertEquals(
           Foo.Factory.class.getName() + " cannot be used as a key; It is not fully specified.",
-          messages.stream().collect(onlyElement()).getMessage());
+          Iterables.getOnlyElement(messages).getMessage());
     }
   }
 
@@ -616,7 +616,7 @@ public class FactoryModuleBuilderTest {
               + Hidden.class.getName()
               + ". Due to limitations with java.lang.reflect.Proxy, this is not allowed. "
               + "Please either make the factory non-public or the return type public.",
-          ce.getErrorMessages().stream().collect(onlyElement()).getMessage());
+          Iterables.getOnlyElement(ce.getErrorMessages()).getMessage());
     }
   }
 
@@ -652,7 +652,7 @@ public class FactoryModuleBuilderTest {
               + SingletonFactory.class.getName()
               + "]."
               + "\nThis is not allowed, please remove the scope annotation.",
-          ce.getErrorMessages().stream().collect(onlyElement()).getMessage());
+          Iterables.getOnlyElement(ce.getErrorMessages()).getMessage());
     }
   }
 

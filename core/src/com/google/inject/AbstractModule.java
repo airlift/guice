@@ -16,8 +16,8 @@
 
 package com.google.inject;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static java.util.Objects.requireNonNull;
 
 import com.google.inject.binder.AnnotatedBindingBuilder;
 import com.google.inject.binder.AnnotatedConstantBindingBuilder;
@@ -59,7 +59,7 @@ public abstract class AbstractModule implements Module {
   public final synchronized void configure(Binder builder) {
     checkState(this.binder == null, "Re-entry is not allowed.");
 
-    this.binder = requireNonNull(builder, "builder");
+    this.binder = checkNotNull(builder, "builder");
     try {
       configure();
     } finally {

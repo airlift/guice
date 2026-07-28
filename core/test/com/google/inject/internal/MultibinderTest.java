@@ -485,7 +485,7 @@ public class MultibinderTest {
 
       @Override
       public String toString() {
-        return "ValueType(%d,%d)".formatted(a, b);
+        return String.format("ValueType(%d,%d)", a, b);
       }
     }
 

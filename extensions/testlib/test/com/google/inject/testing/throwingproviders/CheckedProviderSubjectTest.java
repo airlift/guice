@@ -31,11 +31,12 @@ public class CheckedProviderSubjectTest {
     String unexpected = "Summer is unsafe";
     CheckedProvider<String> provider = CheckedProviders.of(StringCheckedProvider.class, unexpected);
     String message =
-        ("value of           : checkedProvider.get()\n"
-             + "expected           : %s\n"
-             + "but was            : %s\n"
-             + "checkedProvider was: %s")
-            .formatted(expected, unexpected, getReturningProviderName(unexpected));
+        String.format(
+            "value of           : checkedProvider.get()\n"
+                + "expected           : %s\n"
+                + "but was            : %s\n"
+                + "checkedProvider was: %s",
+            expected, unexpected, getReturningProviderName(unexpected));
 
     AssertionError failure =
         expectFailure(whenTesting -> whenTesting.that(provider).providedValue().isEqualTo(expected));
@@ -49,10 +50,11 @@ public class CheckedProviderSubjectTest {
     CheckedProvider<String> provider =
         CheckedProviders.throwing(StringCheckedProvider.class, SummerException.class);
     String message =
-        ("value of           : checkedProvider.get()\n"
-             + "checked provider was not expected to throw an exception\n"
-             + "checkedProvider was: %s")
-            .formatted(getThrowingProviderName(SummerException.class.getName()));
+        String.format(
+            "value of           : checkedProvider.get()\n"
+                + "checked provider was not expected to throw an exception\n"
+                + "checkedProvider was: %s",
+            getThrowingProviderName(SummerException.class.getName()));
 
     AssertionError expected = expectFailure(whenTesting -> whenTesting.that(provider).providedValue());
     assertThat(expected).hasCauseThat().isInstanceOf(SummerException.class);
@@ -103,7 +105,7 @@ public class CheckedProviderSubjectTest {
   public void thrownException_gets_expectFailure() {
     String getValue = "keep WINTER IS COMING safe";
     CheckedProvider<String> provider = CheckedProviders.of(StringCheckedProvider.class, getValue);
-    String message = "expected to throw\nbut provided: %s".formatted(getValue);
+    String message = String.format("expected to throw\nbut provided: %s", getValue);
 
     AssertionError failure =
         expectFailure(whenTesting -> whenTesting.that(provider).thrownException());
@@ -123,10 +125,10 @@ public class CheckedProviderSubjectTest {
   }
 
   private String getReturningProviderName(String providing) {
-    return "generated CheckedProvider returning <%s>".formatted(providing);
+    return String.format("generated CheckedProvider returning <%s>", providing);
   }
 
   private String getThrowingProviderName(String throwing) {
-    return "generated CheckedProvider throwing <%s>".formatted(throwing);
+    return String.format("generated CheckedProvider throwing <%s>", throwing);
   }
 }

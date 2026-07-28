@@ -18,7 +18,6 @@ package com.google.inject.throwingproviders;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
-import static com.google.common.collect.MoreCollectors.onlyElement;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.inject.Asserts.assertContains;
 import static java.lang.annotation.ElementType.METHOD;
@@ -27,6 +26,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.inject.AbstractModule;
 import com.google.inject.Asserts;
 import com.google.inject.BindingAnnotation;
@@ -472,7 +472,7 @@ public class CheckedProviderTest {
     } catch (CreationException expected) {
       assertEquals(
           MockRemoteProvider.class.getName() + " must be an interface",
-          expected.getErrorMessages().stream().collect(onlyElement()).getMessage());
+          Iterables.getOnlyElement(expected.getErrorMessages()).getMessage());
     }
   }
 
@@ -496,7 +496,7 @@ public class CheckedProviderTest {
     } catch (CreationException expected) {
       assertEquals(
           MockRemoteProvider.class.getName() + " must be an interface",
-          expected.getErrorMessages().stream().collect(onlyElement()).getMessage());
+          Iterables.getOnlyElement(expected.getErrorMessages()).getMessage());
     }
   }
 
@@ -516,7 +516,7 @@ public class CheckedProviderTest {
       assertEquals(
           SubRemoteProvider.class.getName()
               + " must extend CheckedProvider (and only CheckedProvider)",
-          expected.getErrorMessages().stream().collect(onlyElement()).getMessage());
+          Iterables.getOnlyElement(expected.getErrorMessages()).getMessage());
     }
   }
 
@@ -541,7 +541,7 @@ public class CheckedProviderTest {
       assertEquals(
           SubRemoteProvider.class.getName()
               + " must extend CheckedProvider (and only CheckedProvider)",
-          expected.getErrorMessages().stream().collect(onlyElement()).getMessage());
+          Iterables.getOnlyElement(expected.getErrorMessages()).getMessage());
     }
   }
 
@@ -565,7 +565,7 @@ public class CheckedProviderTest {
           RemoteProviderWithExtraMethod.class.getName()
               + " may not declare any new methods, but declared "
               + RemoteProviderWithExtraMethod.class.getDeclaredMethods()[0].toGenericString(),
-          expected.getErrorMessages().stream().collect(onlyElement()).getMessage());
+          Iterables.getOnlyElement(expected.getErrorMessages()).getMessage());
     }
   }
 
@@ -591,7 +591,7 @@ public class CheckedProviderTest {
           RemoteProviderWithExtraMethod.class.getName()
               + " may not declare any new methods, but declared "
               + RemoteProviderWithExtraMethod.class.getDeclaredMethods()[0].toGenericString(),
-          expected.getErrorMessages().stream().collect(onlyElement()).getMessage());
+          Iterables.getOnlyElement(expected.getErrorMessages()).getMessage());
     }
   }
 
@@ -617,11 +617,11 @@ public class CheckedProviderTest {
     hasDependencies =
         (HasDependencies)
             bindInjector.getBinding(
-                hasDependencies.getDependencies().stream().collect(onlyElement()).getKey());
+                Iterables.getOnlyElement(hasDependencies.getDependencies()).getKey());
     // Make sure that that is dependent on DependentRemoteProvider.
     assertEquals(
         Dependency.get(Key.get(DependentRemoteProvider.class)),
-        hasDependencies.getDependencies().stream().collect(onlyElement()));
+        Iterables.getOnlyElement(hasDependencies.getDependencies()));
     // And make sure DependentRemoteProvider has the proper dependencies.
     hasDependencies = (HasDependencies) bindInjector.getBinding(DependentRemoteProvider.class);
     Set<Key<?>> dependencyKeys =
@@ -664,12 +664,12 @@ public class CheckedProviderTest {
     hasDependencies =
         (HasDependencies)
             providesInjector.getBinding(
-                hasDependencies.getDependencies().stream().collect(onlyElement()).getKey());
+                Iterables.getOnlyElement(hasDependencies.getDependencies()).getKey());
     // And the provider method has our real dependencies..
     hasDependencies =
         (HasDependencies)
             providesInjector.getBinding(
-                hasDependencies.getDependencies().stream().collect(onlyElement()).getKey());
+                Iterables.getOnlyElement(hasDependencies.getDependencies()).getKey());
     Set<Key<?>> dependencyKeys =
         hasDependencies.getDependencies().stream()
             .map(Dependency::getKey)
@@ -704,17 +704,17 @@ public class CheckedProviderTest {
 
     // RemoteProvider<String> is dependent on Result.
     HasDependencies hasDependencies = (HasDependencies) cxtorInjector.getBinding(key);
-    key = hasDependencies.getDependencies().stream().collect(onlyElement()).getKey();
+    key = Iterables.getOnlyElement(hasDependencies.getDependencies()).getKey();
     assertEquals(Result.class, key.getTypeLiteral().getRawType());
 
     // Result is dependent on the fake CheckedProvider impl
     hasDependencies = (HasDependencies) cxtorInjector.getBinding(key);
-    key = hasDependencies.getDependencies().stream().collect(onlyElement()).getKey();
+    key = Iterables.getOnlyElement(hasDependencies.getDependencies()).getKey();
     assertTrue(CheckedProvider.class.isAssignableFrom(key.getTypeLiteral().getRawType()));
 
     // And the CheckedProvider is dependent on DependentMockFoo...
     hasDependencies = (HasDependencies) cxtorInjector.getBinding(key);
-    key = hasDependencies.getDependencies().stream().collect(onlyElement()).getKey();
+    key = Iterables.getOnlyElement(hasDependencies.getDependencies()).getKey();
     assertEquals(DependentMockFoo.class, key.getTypeLiteral().getRawType());
 
     // And DependentMockFoo is dependent on the goods.
@@ -1050,7 +1050,7 @@ public class CheckedProviderTest {
               + "]) declared in the CheckedProvider interface ("
               + RemoteProvider.class.getName()
               + ")",
-          ce.getErrorMessages().stream().collect(onlyElement()).getMessage());
+          Iterables.getOnlyElement(ce.getErrorMessages()).getMessage());
     }
   }
 
@@ -1077,7 +1077,7 @@ public class CheckedProviderTest {
               + "]) declared in the CheckedProvider interface ("
               + RemoteProvider.class.getName()
               + ")",
-          ce.getErrorMessages().stream().collect(onlyElement()).getMessage());
+          Iterables.getOnlyElement(ce.getErrorMessages()).getMessage());
     }
   }
 
@@ -1183,7 +1183,7 @@ public class CheckedProviderTest {
               + "]) declared in the CheckedProvider interface ("
               + RemoteProvider.class.getName()
               + ")",
-          ce.getErrorMessages().stream().collect(onlyElement()).getMessage());
+          Iterables.getOnlyElement(ce.getErrorMessages()).getMessage());
     }
   }
 
@@ -1210,7 +1210,7 @@ public class CheckedProviderTest {
               + "]) declared in the CheckedProvider interface ("
               + RemoteProvider.class.getName()
               + ")",
-          ce.getErrorMessages().stream().collect(onlyElement()).getMessage());
+          Iterables.getOnlyElement(ce.getErrorMessages()).getMessage());
     }
   }
 
@@ -1409,7 +1409,7 @@ public class CheckedProviderTest {
       assertEquals(
           TooManyTypeParameters.class.getName()
               + " has more than one generic type parameter: [T, P]",
-          ce.getErrorMessages().stream().collect(onlyElement()).getMessage());
+          Iterables.getOnlyElement(ce.getErrorMessages()).getMessage());
     }
   }
 
@@ -1435,7 +1435,7 @@ public class CheckedProviderTest {
           WrongThrowingProviderType.class.getName()
               + " does not properly extend CheckedProvider, the first type parameter of"
               + " CheckedProvider (java.lang.String) is not a generic type",
-          ce.getErrorMessages().stream().collect(onlyElement()).getMessage());
+          Iterables.getOnlyElement(ce.getErrorMessages()).getMessage());
     }
   }
 
@@ -1461,7 +1461,7 @@ public class CheckedProviderTest {
           OneNoneGetMethod.class.getName()
               + " may not declare any new methods, but declared "
               + Classes.toString(OneNoneGetMethod.class.getDeclaredMethods()[0]),
-          ce.getErrorMessages().stream().collect(onlyElement()).getMessage());
+          Iterables.getOnlyElement(ce.getErrorMessages()).getMessage());
     }
   }
 
@@ -1487,7 +1487,7 @@ public class CheckedProviderTest {
           ManyMethods.class.getName()
               + " may not declare any new methods, but declared "
               + Arrays.asList(ManyMethods.class.getDeclaredMethods()),
-          ce.getErrorMessages().stream().collect(onlyElement()).getMessage());
+          Iterables.getOnlyElement(ce.getErrorMessages()).getMessage());
     }
   }
 
@@ -1514,7 +1514,7 @@ public class CheckedProviderTest {
       assertEquals(
           StringRemoteProvider.class.getName()
               + " expects the value type to be java.lang.String, but it was java.lang.Integer",
-          ce.getErrorMessages().stream().collect(onlyElement()).getMessage());
+          Iterables.getOnlyElement(ce.getErrorMessages()).getMessage());
     }
   }
 
@@ -1539,7 +1539,7 @@ public class CheckedProviderTest {
       assertEquals(
           StringRemoteProvider.class.getName()
               + " expects the value type to be java.lang.String, but it was java.lang.Integer",
-          ce.getErrorMessages().stream().collect(onlyElement()).getMessage());
+          Iterables.getOnlyElement(ce.getErrorMessages()).getMessage());
     }
   }
 
@@ -1626,7 +1626,7 @@ public class CheckedProviderTest {
               + InvalidFoo.class.getName()
               + ". Classes must have either one (and only one) constructor annotated with "
               + "@ThrowingInject.",
-          ce.getErrorMessages().stream().collect(onlyElement()).getMessage());
+          Iterables.getOnlyElement(ce.getErrorMessages()).getMessage());
     }
   }
 
@@ -1658,7 +1658,7 @@ public class CheckedProviderTest {
               + NormalInjectableFoo.class.getName()
               + ". Classes must have either one (and only one) constructor annotated with "
               + "@ThrowingInject.",
-          ce.getErrorMessages().stream().collect(onlyElement()).getMessage());
+          Iterables.getOnlyElement(ce.getErrorMessages()).getMessage());
     }
   }
 
@@ -1702,7 +1702,7 @@ public class CheckedProviderTest {
       injector.getInstance(Key.get(remoteProviderOfFoo)).get();
       fail();
     } catch (ProvisionException pe) {
-      Message message = pe.getErrorMessages().stream().collect(onlyElement());
+      Message message = Iterables.getOnlyElement(pe.getErrorMessages());
       assertEquals(
           "com.google.inject.OutOfScopeException: failure: " + Key.get(Unscoped1.class),
           message.getMessage());

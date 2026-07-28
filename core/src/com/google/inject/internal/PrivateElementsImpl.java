@@ -17,8 +17,8 @@
 package com.google.inject.internal;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static java.util.Objects.requireNonNull;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
@@ -59,7 +59,7 @@ public final class PrivateElementsImpl implements PrivateElements {
   private Injector injector;
 
   public PrivateElementsImpl(Object source) {
-    this.source = requireNonNull(source, "source");
+    this.source = checkNotNull(source, "source");
   }
 
   @Override
@@ -84,7 +84,7 @@ public final class PrivateElementsImpl implements PrivateElements {
 
   public void initInjector(Injector injector) {
     checkState(this.injector == null, "injector already initialized");
-    this.injector = requireNonNull(injector, "injector");
+    this.injector = checkNotNull(injector, "injector");
   }
 
   @Override

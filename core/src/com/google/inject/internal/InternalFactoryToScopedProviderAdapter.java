@@ -16,10 +16,10 @@
 
 package com.google.inject.internal;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.inject.internal.InternalMethodHandles.findVirtualOrDie;
 import static java.lang.invoke.MethodType.methodType;
-import static java.util.Objects.requireNonNull;
 
 import com.google.errorprone.annotations.Keep;
 import com.google.errorprone.annotations.concurrent.LazyInit;
@@ -49,8 +49,8 @@ class InternalFactoryToScopedProviderAdapter<T> extends InternalFactory<T> {
   final Object source;
 
   private InternalFactoryToScopedProviderAdapter(Provider<? extends T> provider, Object source) {
-    this.provider = requireNonNull(provider, "provider");
-    this.source = requireNonNull(source, "source");
+    this.provider = checkNotNull(provider, "provider");
+    this.source = checkNotNull(source, "source");
   }
 
   @Override

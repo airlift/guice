@@ -16,8 +16,7 @@
 
 package com.google.inject.spi;
 
-
-import static java.util.Objects.requireNonNull;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.inject.Binder;
 import com.google.inject.internal.Errors;
@@ -33,8 +32,8 @@ public final class ModuleAnnotatedMethodScannerBinding implements Element {
   private final ModuleAnnotatedMethodScanner scanner;
 
   public ModuleAnnotatedMethodScannerBinding(Object source, ModuleAnnotatedMethodScanner scanner) {
-    this.source = requireNonNull(source, "source");
-    this.scanner = requireNonNull(scanner, "scanner");
+    this.source = checkNotNull(source, "source");
+    this.scanner = checkNotNull(scanner, "scanner");
   }
 
   @Override

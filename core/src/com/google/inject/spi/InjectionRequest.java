@@ -16,8 +16,7 @@
 
 package com.google.inject.spi;
 
-
-import static java.util.Objects.requireNonNull;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.inject.Binder;
 import com.google.inject.ConfigurationException;
@@ -43,8 +42,8 @@ public final class InjectionRequest<T> implements Element {
   private final T instance;
 
   public InjectionRequest(Object source, TypeLiteral<T> type, T instance) {
-    this.source = requireNonNull(source, "source");
-    this.type = requireNonNull(type, "type");
+    this.source = checkNotNull(source, "source");
+    this.type = checkNotNull(type, "type");
     this.instance = instance;
   }
 

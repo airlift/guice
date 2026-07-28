@@ -16,8 +16,7 @@
 
 package com.google.inject.internal;
 
-
-import static java.util.Objects.requireNonNull;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.inject.matcher.Matcher;
 import com.google.inject.spi.InterceptorBinding;
@@ -53,9 +52,9 @@ final class MethodAspect {
       Matcher<? super Class<?>> classMatcher,
       Matcher<? super Method> methodMatcher,
       List<MethodInterceptor> interceptors) {
-    this.classMatcher = requireNonNull(classMatcher, "class matcher");
-    this.methodMatcher = requireNonNull(methodMatcher, "method matcher");
-    this.interceptors = requireNonNull(interceptors, "interceptors");
+    this.classMatcher = checkNotNull(classMatcher, "class matcher");
+    this.methodMatcher = checkNotNull(methodMatcher, "method matcher");
+    this.interceptors = checkNotNull(interceptors, "interceptors");
   }
 
   MethodAspect(

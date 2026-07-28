@@ -16,8 +16,7 @@
 
 package com.google.inject.throwingproviders;
 
-
-import static java.util.Objects.requireNonNull;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -145,8 +144,8 @@ public class ThrowingProviderBinder {
     private boolean scopeExceptions = true;
 
     public SecondaryBinder(Class<P> interfaceType, Type valueType) {
-      this.interfaceType = requireNonNull(interfaceType, "interfaceType");
-      this.valueType = requireNonNull(valueType, "valueType");
+      this.interfaceType = checkNotNull(interfaceType, "interfaceType");
+      this.valueType = checkNotNull(valueType, "valueType");
       if (checkInterface()) {
         this.exceptionTypes = getExceptionType(interfaceType);
         valid = true;
@@ -275,7 +274,7 @@ public class ThrowingProviderBinder {
 
     @SuppressWarnings("unchecked") // P only extends the raw type of CheckedProvider
     public ScopedBindingBuilder to(Key<? extends P> targetKey) {
-      requireNonNull(targetKey, "targetKey");
+      checkNotNull(targetKey, "targetKey");
       return toInternal((Key<? extends CheckedProvider<?>>) targetKey);
     }
 

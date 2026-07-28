@@ -16,8 +16,7 @@
 
 package com.google.inject.spi;
 
-
-import static java.util.Objects.requireNonNull;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -51,7 +50,7 @@ public final class Message implements Serializable, Element {
 
   /** @since 5.0 */
   public Message(GuiceInternal internalOnly, ErrorId errorId, ErrorDetail<?> errorDetail) {
-    requireNonNull(internalOnly);
+    checkNotNull(internalOnly);
     this.errorId = errorId;
     this.errorDetail = errorDetail;
   }

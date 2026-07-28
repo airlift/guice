@@ -60,10 +60,11 @@ final class DuplicateMapKeyError<K, V> extends InternalErrorDetail<DuplicateMapK
     String mapBinderKey = Messages.convert(mapKey).toString();
     String firstDuplicateKey = duplicateKeys.iterator().next().toString();
     if (duplicateKeys.size() == 1) {
-      return "Duplicate key \"%s\" found in %s.".formatted(firstDuplicateKey, mapBinderKey);
+      return String.format("Duplicate key \"%s\" found in %s.", firstDuplicateKey, mapBinderKey);
     } else {
-      return "\"%s\" and %s other duplicate keys found in %s."
-          .formatted(firstDuplicateKey, duplicateKeys.size() - 1, mapBinderKey);
+      return String.format(
+          "\"%s\" and %s other duplicate keys found in %s.",
+          firstDuplicateKey, duplicateKeys.size() - 1, mapBinderKey);
     }
   }
 }

@@ -16,8 +16,7 @@
 
 package com.google.inject.spi;
 
-
-import static java.util.Objects.requireNonNull;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.inject.Binder;
 import com.google.inject.TypeLiteral;
@@ -44,9 +43,9 @@ public final class TypeConverterBinding implements Element {
   /** @since 3.0 */
   public TypeConverterBinding(
       Object source, Matcher<? super TypeLiteral<?>> typeMatcher, TypeConverter typeConverter) {
-    this.source = requireNonNull(source, "source");
-    this.typeMatcher = requireNonNull(typeMatcher, "typeMatcher");
-    this.typeConverter = requireNonNull(typeConverter, "typeConverter");
+    this.source = checkNotNull(source, "source");
+    this.typeMatcher = checkNotNull(typeMatcher, "typeMatcher");
+    this.typeConverter = checkNotNull(typeConverter, "typeConverter");
   }
 
   @Override
