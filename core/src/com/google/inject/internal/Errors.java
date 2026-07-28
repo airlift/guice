@@ -36,7 +36,6 @@ import com.google.inject.spi.ScopeBinding;
 import com.google.inject.spi.TypeConverterBinding;
 import com.google.inject.spi.TypeListenerBinding;
 
-import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -66,7 +65,6 @@ import java.util.Set;
  * @author jessewilson@google.com (Jesse Wilson)
  */
 public final class Errors
-        implements Serializable
 {
     /**
      * Throws a ConfigurationException with an NullPointerExceptions as the cause if the given
