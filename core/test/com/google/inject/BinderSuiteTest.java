@@ -21,6 +21,8 @@ import static com.google.inject.name.Names.named;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -30,18 +32,19 @@ import com.google.inject.name.Named;
 import com.google.inject.util.Providers;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.jupiter.api.DynamicTest;
+import org.junit.jupiter.api.TestFactory;
 
 /** @author jessewilson@google.com (Jesse Wilson) */
-public class BinderSuiteTest extends TestCase {
+public class BinderSuiteTest {
 
-  public static Test suite() {
-    TestSuite suite = new TestSuite();
+  @TestFactory
+  public List<DynamicTest> binderTests() {
+    List<DynamicTest> tests = new ArrayList<>();
 
     new Builder()
         .name("bind A")
@@ -53,7 +56,7 @@ public class BinderSuiteTest extends TestCase {
               }
             })
         .creationException("No implementation for BinderSuiteTest$A was bound.")
-        .addToSuite(suite);
+        .addTo(tests);
 
     new Builder()
         .name("bind PlainA named apple")
@@ -68,7 +71,7 @@ public class BinderSuiteTest extends TestCase {
             "No implementation for BinderSuiteTest$PlainA annotated with "
                 + shortNamed(named("apple"))
                 + " was bound")
-        .addToSuite(suite);
+        .addTo(tests);
 
     new Builder()
         .name("bind A to new PlainA(1)")
@@ -81,23 +84,23 @@ public class BinderSuiteTest extends TestCase {
             })
         .creationTime(CreationTime.NONE)
         .expectedValues(new PlainA(1), new PlainA(1), new PlainA(1))
-        .addToSuite(suite);
+        .addTo(tests);
 
     new Builder()
         .name("no binding, AWithProvidedBy")
         .key(Key.get(AWithProvidedBy.class), InjectsAWithProvidedBy.class)
-        .addToSuite(suite);
+        .addTo(tests);
 
     new Builder()
         .name("no binding, AWithImplementedBy")
         .key(Key.get(AWithImplementedBy.class), InjectsAWithImplementedBy.class)
-        .addToSuite(suite);
+        .addTo(tests);
 
     new Builder()
         .name("no binding, ScopedA")
         .key(Key.get(ScopedA.class), InjectsScopedA.class)
         .expectedValues(new PlainA(201), new PlainA(201), new PlainA(202), new PlainA(202))
-        .addToSuite(suite);
+        .addTo(tests);
 
     new Builder()
         .name("no binding, AWithProvidedBy named apple")
@@ -106,7 +109,7 @@ public class BinderSuiteTest extends TestCase {
             "No implementation for BinderSuiteTest$AWithProvidedBy annotated with "
                 + shortNamed(named("apple"))
                 + " was bound")
-        .addToSuite(suite);
+        .addTo(tests);
 
     new Builder()
         .name("no binding, AWithImplementedBy named apple")
@@ -117,7 +120,7 @@ public class BinderSuiteTest extends TestCase {
             "No implementation for BinderSuiteTest$AWithImplementedBy annotated with "
                 + shortNamed(named("apple"))
                 + " was bound")
-        .addToSuite(suite);
+        .addTo(tests);
 
     new Builder()
         .name("no binding, ScopedA named apple")
@@ -126,7 +129,7 @@ public class BinderSuiteTest extends TestCase {
             "No implementation for BinderSuiteTest$ScopedA annotated with "
                 + shortNamed(named("apple"))
                 + " was bound")
-        .addToSuite(suite);
+        .addTo(tests);
 
     for (final Scoper scoper : Scoper.values()) {
       new Builder()
@@ -141,7 +144,7 @@ public class BinderSuiteTest extends TestCase {
                 }
               })
           .scoper(scoper)
-          .addToSuite(suite);
+          .addTo(tests);
 
       new Builder()
           .name("bind A to PlainA")
@@ -154,7 +157,7 @@ public class BinderSuiteTest extends TestCase {
                 }
               })
           .scoper(scoper)
-          .addToSuite(suite);
+          .addTo(tests);
 
       new Builder()
           .name("bind A to PlainAProvider.class")
@@ -167,7 +170,7 @@ public class BinderSuiteTest extends TestCase {
                 }
               })
           .scoper(scoper)
-          .addToSuite(suite);
+          .addTo(tests);
 
       new Builder()
           .name("bind A to new PlainAProvider()")
@@ -180,7 +183,7 @@ public class BinderSuiteTest extends TestCase {
                 }
               })
           .scoper(scoper)
-          .addToSuite(suite);
+          .addTo(tests);
 
       new Builder()
           .name("bind AWithProvidedBy")
@@ -194,7 +197,7 @@ public class BinderSuiteTest extends TestCase {
                 }
               })
           .scoper(scoper)
-          .addToSuite(suite);
+          .addTo(tests);
 
       new Builder()
           .name("bind AWithImplementedBy")
@@ -208,7 +211,7 @@ public class BinderSuiteTest extends TestCase {
                 }
               })
           .scoper(scoper)
-          .addToSuite(suite);
+          .addTo(tests);
 
       new Builder()
           .name("bind ScopedA")
@@ -223,7 +226,7 @@ public class BinderSuiteTest extends TestCase {
               })
           .expectedValues(new PlainA(201), new PlainA(201), new PlainA(202), new PlainA(202))
           .scoper(scoper)
-          .addToSuite(suite);
+          .addTo(tests);
 
       new Builder()
           .name("bind AWithProvidedBy named apple")
@@ -239,7 +242,7 @@ public class BinderSuiteTest extends TestCase {
                   + shortNamed(named("apple"))
                   + " was bound")
           .scoper(scoper)
-          .addToSuite(suite);
+          .addTo(tests);
 
       new Builder()
           .name("bind AWithImplementedBy named apple")
@@ -255,7 +258,7 @@ public class BinderSuiteTest extends TestCase {
                   + shortNamed(named("apple"))
                   + " was bound")
           .scoper(scoper)
-          .addToSuite(suite);
+          .addTo(tests);
 
       new Builder()
           .name("bind ScopedA named apple")
@@ -271,10 +274,10 @@ public class BinderSuiteTest extends TestCase {
                   + shortNamed(named("apple"))
                   + " was bound")
           .scoper(scoper)
-          .addToSuite(suite);
+          .addTo(tests);
     }
 
-    return suite;
+    return tests;
   }
 
   enum Scoper {
@@ -420,23 +423,37 @@ public class BinderSuiteTest extends TestCase {
       return this;
     }
 
-    public void addToSuite(TestSuite suite) {
+    public void addTo(List<DynamicTest> tests) {
       if (creationException != null) {
-        suite.addTest(new CreationExceptionTest(this));
+        tests.add(toDynamicTest(new CreationExceptionTest(this)));
 
       } else if (configurationException != null) {
-        suite.addTest(new ConfigurationExceptionTest(this));
+        tests.add(toDynamicTest(new ConfigurationExceptionTest(this)));
 
       } else {
-        suite.addTest(new SuccessTest(this));
+        tests.add(toDynamicTest(new SuccessTest(this)));
         if (creationTime != CreationTime.NONE) {
-          suite.addTest(new UserExceptionsTest(this));
+          tests.add(toDynamicTest(new UserExceptionsTest(this)));
         }
       }
     }
   }
 
-  public static class SuccessTest extends TestCase {
+  /**
+   * One generated test case. Each instance becomes a single {@link DynamicTest} contributed by
+   * {@link #binderTests()}.
+   */
+  interface Case {
+    String getName();
+
+    void test() throws Exception;
+  }
+
+  private static DynamicTest toDynamicTest(Case testCase) {
+    return DynamicTest.dynamicTest(testCase.getName(), testCase::test);
+  }
+
+  public static class SuccessTest implements Case {
     final String name;
     final Key<?> key;
     final Class<? extends Injectable> injectsKey;
@@ -444,7 +461,6 @@ public class BinderSuiteTest extends TestCase {
     final ImmutableList<Object> expectedValues;
 
     public SuccessTest(Builder builder) {
-      super("test");
       name = builder.name;
       key = builder.key;
       injectsKey = builder.injectsKey;
@@ -462,6 +478,7 @@ public class BinderSuiteTest extends TestCase {
       return Guice.createInjector(modules);
     }
 
+    @Override
     public void test() throws IllegalAccessException, InstantiationException {
       Injector injector = newInjector();
       nextId.set(201);
@@ -507,14 +524,13 @@ public class BinderSuiteTest extends TestCase {
     }
   }
 
-  public static class CreationExceptionTest extends TestCase {
+  public static class CreationExceptionTest implements Case {
     final String name;
     final Key<?> key;
     final ImmutableList<Module> modules;
     final String creationException;
 
     public CreationExceptionTest(Builder builder) {
-      super("test");
       name = builder.name;
       key = builder.key;
       modules = ImmutableList.copyOf(builder.modules);
@@ -526,6 +542,7 @@ public class BinderSuiteTest extends TestCase {
       return "creation errors:" + name;
     }
 
+    @Override
     public void test() {
       try {
         Guice.createInjector(modules);
@@ -536,7 +553,7 @@ public class BinderSuiteTest extends TestCase {
     }
   }
 
-  public static class ConfigurationExceptionTest extends TestCase {
+  public static class ConfigurationExceptionTest implements Case {
     final String name;
     final Key<?> key;
     final Class<? extends Injectable> injectsKey;
@@ -544,7 +561,6 @@ public class BinderSuiteTest extends TestCase {
     final String configurationException;
 
     public ConfigurationExceptionTest(Builder builder) {
-      super("test");
       name = builder.name;
       key = builder.key;
       injectsKey = builder.injectsKey;
@@ -561,6 +577,7 @@ public class BinderSuiteTest extends TestCase {
       return Guice.createInjector(modules);
     }
 
+    @Override
     public void test() throws IllegalAccessException, InstantiationException {
       try {
         newInjector().getProvider(key);
@@ -610,7 +627,7 @@ public class BinderSuiteTest extends TestCase {
     }
   }
 
-  public static class UserExceptionsTest extends TestCase {
+  public static class UserExceptionsTest implements Case {
     final String name;
     final Key<?> key;
     final Class<? extends Injectable> injectsKey;
@@ -619,7 +636,6 @@ public class BinderSuiteTest extends TestCase {
     final CreationTime creationTime;
 
     public UserExceptionsTest(Builder builder) {
-      super("test");
       name = builder.name;
       key = builder.key;
       injectsKey = builder.injectsKey;
@@ -637,6 +653,7 @@ public class BinderSuiteTest extends TestCase {
       return Guice.createInjector(modules);
     }
 
+    @Override
     public void test() throws IllegalAccessException, InstantiationException {
       nextId.set(-1);
       try {
