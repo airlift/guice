@@ -16,7 +16,7 @@
 
 package com.google.inject.example;
 
-import static junit.framework.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.CreationException;
@@ -24,6 +24,7 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Scopes;
+import org.junit.jupiter.api.Test;
 
 /** @author crazybob@google.com (Bob Lee) */
 public class ClientServiceWithGuice {
@@ -62,6 +63,7 @@ public class ClientServiceWithGuice {
     }
   }
 
+  @Test
   public void testClient() {
     MockService mock = new MockService();
     Client client = new Client(mock);

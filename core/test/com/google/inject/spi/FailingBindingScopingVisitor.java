@@ -18,7 +18,7 @@ package com.google.inject.spi;
 
 import com.google.inject.Scope;
 import java.lang.annotation.Annotation;
-import junit.framework.AssertionFailedError;
+import org.opentest4j.AssertionFailedError;
 
 public class FailingBindingScopingVisitor implements BindingScopingVisitor<Void> {
 

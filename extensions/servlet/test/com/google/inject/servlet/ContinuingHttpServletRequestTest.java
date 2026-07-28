@@ -20,15 +20,18 @@ import static org.mockito.Mockito.when;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
-import junit.framework.AssertionFailedError;
-import junit.framework.TestCase;
+import org.opentest4j.AssertionFailedError;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import org.junit.jupiter.api.Test;
 
-public class ContinuingHttpServletRequestTest extends TestCase {
+public class ContinuingHttpServletRequestTest {
 
   private static final String TEST_VALUE_1 = "testValue1";
   private static final String TEST_VALUE_2 = "testValue2";
   private static final int DEFAULT_MAX_AGE = new Cookie("dummy", "").getMaxAge();
 
+  @Test
   public void testReturnNullCookiesIfDelegateHasNoNull() {
     HttpServletRequest delegate = mock(HttpServletRequest.class);
     when(delegate.getCookies()).thenReturn(null);
@@ -36,6 +39,7 @@ public class ContinuingHttpServletRequestTest extends TestCase {
     assertNull(new ContinuingHttpServletRequest(delegate).getCookies());
   }
 
+  @Test
   public void testReturnDelegateCookies() {
     Cookie[] cookies =
         new Cookie[] {new Cookie("testName1", TEST_VALUE_1), new Cookie("testName2", "testValue2")};

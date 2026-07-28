@@ -16,7 +16,7 @@
 
 package com.google.inject.spi;
 
-import junit.framework.AssertionFailedError;
+import org.opentest4j.AssertionFailedError;
 
 class FailingElementVisitor extends DefaultElementVisitor<Void> {
   @Override

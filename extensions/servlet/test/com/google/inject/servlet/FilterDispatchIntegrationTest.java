@@ -40,7 +40,11 @@ import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 
 /**
  * This tests that filter stage of the pipeline dispatches correctly to guice-managed filters.
@@ -49,10 +53,10 @@ import junit.framework.TestCase;
  *
  * @author dhanji@gmail.com (Dhanji R. Prasanna)
  */
-public class FilterDispatchIntegrationTest extends TestCase {
+public class FilterDispatchIntegrationTest {
   private static int inits, doFilters, destroys;
 
-  @Override
+  @BeforeEach
   public final void setUp() {
     inits = 0;
     doFilters = 0;
@@ -60,6 +64,7 @@ public class FilterDispatchIntegrationTest extends TestCase {
     GuiceFilter.reset();
   }
 
+  @Test
   public final void testDispatchRequestToManagedPipeline() throws ServletException, IOException {
     final Injector injector =
         Guice.createInjector(
@@ -108,17 +113,16 @@ public class FilterDispatchIntegrationTest extends TestCase {
     assertTrue(servlet.processedUris.contains("/index.html"));
     assertTrue(servlet.processedUris.contains(TestServlet.FORWARD_TO));
 
-    assertTrue(
-        "lifecycle states did not"
+    assertTrue(inits == 1 && doFilters == 3 && destroys == 1, "lifecycle states did not"
             + " fire correct number of times-- inits: "
             + inits
             + "; dos: "
             + doFilters
             + "; destroys: "
-            + destroys,
-        inits == 1 && doFilters == 3 && destroys == 1);
+            + destroys);
   }
 
+  @Test
   public final void testDispatchThatNoFiltersFire() throws ServletException, IOException {
     final Injector injector =
         Guice.createInjector(
@@ -152,17 +156,16 @@ public class FilterDispatchIntegrationTest extends TestCase {
     pipeline.dispatch(requestMock, null, filterChain);
     pipeline.destroyPipeline();
 
-    assertTrue(
-        "lifecycle states did not "
+    assertTrue(inits == 1 && doFilters == 0 && destroys == 1, "lifecycle states did not "
             + "fire correct number of times-- inits: "
             + inits
             + "; dos: "
             + doFilters
             + "; destroys: "
-            + destroys,
-        inits == 1 && doFilters == 0 && destroys == 1);
+            + destroys);
   }
 
+  @Test
   public final void testDispatchFilterPipelineWithRegexMatching()
       throws ServletException, IOException {
 
@@ -195,15 +198,13 @@ public class FilterDispatchIntegrationTest extends TestCase {
     pipeline.dispatch(requestMock, null, filterChain);
     pipeline.destroyPipeline();
 
-    assertTrue(
-        "lifecycle states did not fire "
+    assertTrue(inits == 1 && doFilters == 2 && destroys == 1, "lifecycle states did not fire "
             + "correct number of times-- inits: "
             + inits
             + "; dos: "
             + doFilters
             + "; destroys: "
-            + destroys,
-        inits == 1 && doFilters == 2 && destroys == 1);
+            + destroys);
   }
 
   @Singleton
@@ -227,6 +228,7 @@ public class FilterDispatchIntegrationTest extends TestCase {
     }
   }
 
+  @Test
   public final void testFilterBypass() throws ServletException, IOException {
 
     final Injector injector =
@@ -264,10 +266,10 @@ public class FilterDispatchIntegrationTest extends TestCase {
     verify(filterChain).doFilter(requestMock, null);
 
     if (matches) {
-      assertEquals("filter was not run", 1, doFilters);
+      assertEquals(1, doFilters, "filter was not run");
       doFilters = 0;
     } else {
-      assertEquals("filter was run", 0, doFilters);
+      assertEquals(0, doFilters, "filter was run");
     }
   }
 
@@ -299,6 +301,7 @@ public class FilterDispatchIntegrationTest extends TestCase {
     }
   }
 
+  @Test
   public void testFilterOrder() throws Exception {
     AtomicInteger counter = new AtomicInteger();
     final CountFilter f1 = new CountFilter(counter);
@@ -354,6 +357,7 @@ public class FilterDispatchIntegrationTest extends TestCase {
     public void init(FilterConfig filterConfig) {}
   }
 
+  @Test
   public final void testFilterExceptionPrunesStack() throws Exception {
     Injector injector =
         Guice.createInjector(
@@ -375,14 +379,13 @@ public class FilterDispatchIntegrationTest extends TestCase {
     } catch (ServletException ex) {
       for (StackTraceElement element : ex.getStackTrace()) {
         String className = element.getClassName();
-        assertTrue(
-            "was: " + element,
-            !className.equals(FilterChainInvocation.class.getName())
-                && !className.equals(FilterDefinition.class.getName()));
+        assertTrue(!className.equals(FilterChainInvocation.class.getName())
+                && !className.equals(FilterDefinition.class.getName()), "was: " + element);
       }
     }
   }
 
+  @Test
   public final void testServletExceptionPrunesStack() throws Exception {
     Injector injector =
         Guice.createInjector(
@@ -404,10 +407,8 @@ public class FilterDispatchIntegrationTest extends TestCase {
     } catch (ServletException ex) {
       for (StackTraceElement element : ex.getStackTrace()) {
         String className = element.getClassName();
-        assertTrue(
-            "was: " + element,
-            !className.equals(FilterChainInvocation.class.getName())
-                && !className.equals(FilterDefinition.class.getName()));
+        assertTrue(!className.equals(FilterChainInvocation.class.getName())
+                && !className.equals(FilterDefinition.class.getName()), "was: " + element);
       }
     }
   }

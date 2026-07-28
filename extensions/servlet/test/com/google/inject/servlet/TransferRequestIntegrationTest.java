@@ -29,13 +29,18 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.fail;
+import org.junit.jupiter.api.Test;
 
 // TODO: Add test for HTTP transferring.
 /** Tests transferring of entire request scope. */
 
-public class TransferRequestIntegrationTest extends TestCase {
+public class TransferRequestIntegrationTest {
 
+  @Test
   public void testTransferHttp_outOfScope() {
     try {
       ServletScopes.transferRequest(() -> false);
@@ -44,6 +49,7 @@ public class TransferRequestIntegrationTest extends TestCase {
     }
   }
 
+  @Test
   public void testTransferNonHttp_outOfScope() {
     try {
       ServletScopes.transferRequest(() -> false);
@@ -52,6 +58,7 @@ public class TransferRequestIntegrationTest extends TestCase {
     }
   }
 
+  @Test
   public void testTransferNonHttp_outOfScope_closeable() {
     try {
       ServletScopes.transferRequest();
@@ -60,6 +67,7 @@ public class TransferRequestIntegrationTest extends TestCase {
     }
   }
 
+  @Test
   public void testTransferNonHttpRequest() throws Exception {
     final Injector injector =
         Guice.createInjector(
@@ -91,6 +99,7 @@ public class TransferRequestIntegrationTest extends TestCase {
     executor.shutdownNow();
   }
 
+  @Test
   public void testTransferNonHttpRequest_closeable() throws Exception {
     final Injector injector =
         Guice.createInjector(
@@ -133,6 +142,7 @@ public class TransferRequestIntegrationTest extends TestCase {
     }
   }
 
+  @Test
   public void testTransferNonHttpRequest_concurrentUseBlocks() throws Exception {
     Callable<Boolean> callable =
         () -> {
@@ -153,6 +163,7 @@ public class TransferRequestIntegrationTest extends TestCase {
     assertTrue(ServletScopes.scopeRequest(callable, seedMap).call());
   }
 
+  @Test
   public void testTransferNonHttpRequest_concurrentUseBlocks_closeable() throws Exception {
     Callable<Boolean> callable =
         () -> {
@@ -183,6 +194,7 @@ public class TransferRequestIntegrationTest extends TestCase {
     assertTrue(ServletScopes.scopeRequest(callable, seedMap).call());
   }
 
+  @Test
   public void testTransferNonHttpRequest_concurrentUseSameThreadOk() throws Exception {
     Callable<Boolean> callable = () -> ServletScopes.transferRequest(() -> false).call();
 
@@ -190,6 +202,7 @@ public class TransferRequestIntegrationTest extends TestCase {
     assertFalse(ServletScopes.scopeRequest(callable, seedMap).call());
   }
 
+  @Test
   public void testTransferNonHttpRequest_concurrentUseSameThreadOk_closeable() throws Exception {
     Callable<Boolean> callable =
         () -> {

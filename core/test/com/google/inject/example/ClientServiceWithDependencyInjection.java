@@ -16,7 +16,8 @@
 
 package com.google.inject.example;
 
-import static junit.framework.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
 
 /** @author crazybob@google.com (Bob Lee) */
 public class ClientServiceWithDependencyInjection {
@@ -68,6 +69,7 @@ public class ClientServiceWithDependencyInjection {
     }
   }
 
+  @Test
   public void testClient() {
     MockService mock = new MockService();
     Client client = new Client(mock);

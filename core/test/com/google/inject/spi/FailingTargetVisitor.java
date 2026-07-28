@@ -17,7 +17,7 @@
 package com.google.inject.spi;
 
 import com.google.inject.Binding;
-import junit.framework.AssertionFailedError;
+import org.opentest4j.AssertionFailedError;
 
 public class FailingTargetVisitor<T> extends DefaultBindingTargetVisitor<T, Void> {
   @Override

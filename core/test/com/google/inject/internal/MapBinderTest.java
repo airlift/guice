@@ -25,7 +25,7 @@ import static com.google.inject.internal.SpiUtils.instance;
 import static com.google.inject.internal.SpiUtils.providerInstance;
 import static com.google.inject.name.Names.named;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -80,12 +80,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author dpb@google.com (David P. Baker)
  */
-public class MapBinderTest extends TestCase {
+public class MapBinderTest {
 
   private static final ImmutableSet<Key<?>> FRAMEWORK_KEYS =
       ImmutableSet.of(
@@ -113,6 +118,7 @@ public class MapBinderTest extends TestCase {
     return Types.newParameterizedType(Collection.class, type);
   }
 
+  @Test
   public void testAllBindings() {
     Module module =
         new AbstractModule() {
@@ -184,13 +190,11 @@ public class MapBinderTest extends TestCase {
     Set<Key<?>> missingBindings = Sets.difference(expectedBindings, bindings.keySet());
     Set<Key<?>> extraBindings = Sets.difference(bindings.keySet(), expectedBindings);
 
-    assertTrue(
-        "There should be no missing bindings. Missing: " + missingBindings,
-        missingBindings.isEmpty());
-    assertTrue(
-        "There should be no extra bindings. Extra: " + extraBindings, extraBindings.isEmpty());
+    assertTrue(missingBindings.isEmpty(), "There should be no missing bindings. Missing: " + missingBindings);
+    assertTrue(extraBindings.isEmpty(), "There should be no extra bindings. Extra: " + extraBindings);
   }
 
+  @Test
   public void testMapBinderAggregatesMultipleModules() {
     Module abc =
         new AbstractModule() {
@@ -237,6 +241,7 @@ public class MapBinderTest extends TestCase {
     injector.getInstance(Key.get(mapOfStringJakartaProvider));
   }
 
+  @Test
   public void testMapBinderAggregationForAnnotationInstance() {
     Module module =
         new AbstractModule() {
@@ -274,6 +279,7 @@ public class MapBinderTest extends TestCase {
     injector.getInstance(Key.get(mapOfStringJakartaProvider, Names.named("abc")));
   }
 
+  @Test
   public void testMapBinderAggregationForAnnotationType() {
     Module module =
         new AbstractModule() {
@@ -310,6 +316,7 @@ public class MapBinderTest extends TestCase {
     injector.getInstance(Key.get(mapOfStringJakartaProvider, Abc.class));
   }
 
+  @Test
   public void testMapBinderWithMultipleAnnotationValueSets() {
     Module module =
         new AbstractModule() {
@@ -364,6 +371,7 @@ public class MapBinderTest extends TestCase {
     injector.getInstance(Key.get(mapOfStringJakartaProvider, named("de")));
   }
 
+  @Test
   public void testMapBinderWithMultipleAnnotationTypeSets() {
     Module module =
         new AbstractModule() {
@@ -418,6 +426,7 @@ public class MapBinderTest extends TestCase {
     injector.getInstance(Key.get(mapOfStringJakartaProvider, De.class));
   }
 
+  @Test
   public void testMapBinderWithMultipleTypes() {
     Module module =
         new AbstractModule() {
@@ -455,6 +464,7 @@ public class MapBinderTest extends TestCase {
         instance("1", 1));
   }
 
+  @Test
   public void testMapBinderWithEmptyMap() {
     Module module =
         new AbstractModule() {
@@ -470,6 +480,7 @@ public class MapBinderTest extends TestCase {
     assertMapVisitor(Key.get(mapOfString), stringType, stringType, setOf(module), BOTH, false, 0);
   }
 
+  @Test
   public void testMapBinderMapIsUnmodifiable() {
     Injector injector =
         Guice.createInjector(
@@ -490,6 +501,7 @@ public class MapBinderTest extends TestCase {
     }
   }
 
+  @Test
   public void testMapBinderMapIsLazy() {
     Module module =
         new AbstractModule() {
@@ -524,6 +536,7 @@ public class MapBinderTest extends TestCase {
         providerInstance("num", 1));
   }
 
+  @Test
   public void testMapBinderMapForbidsDuplicateKeys() {
     Module module =
         new AbstractModule() {
@@ -554,6 +567,7 @@ public class MapBinderTest extends TestCase {
         instance("a", "B"));
   }
 
+  @Test
   public void testExhaustiveDuplicateErrorMessage() throws Exception {
     class Module1 extends AbstractModule {
       @Override
@@ -618,6 +632,7 @@ public class MapBinderTest extends TestCase {
     }
   }
 
+  @Test
   public void testMapBinderMapPermitDuplicateElements() {
     Module ab =
         new AbstractModule() {
@@ -657,6 +672,7 @@ public class MapBinderTest extends TestCase {
         instance("c", "C"));
   }
 
+  @Test
   public void testMapBinderMapDoesNotDedupeDuplicateValues() {
     class ValueType {
       int keyPart;
@@ -702,6 +718,7 @@ public class MapBinderTest extends TestCase {
     assertEquals(3, map.get("b").dataPart);
   }
 
+  @Test
   public void testMapBinderMultimap() {
     AbstractModule ab1c =
         new AbstractModule() {
@@ -744,6 +761,7 @@ public class MapBinderTest extends TestCase {
         instance("c", "C"));
   }
 
+  @Test
   public void testMapBinderMultimapWithAnotation() {
     AbstractModule ab1 =
         new AbstractModule() {
@@ -791,6 +809,7 @@ public class MapBinderTest extends TestCase {
         instance("c", "C"));
   }
 
+  @Test
   public void testMapBinderMultimapIsUnmodifiable() {
     Injector injector =
         Guice.createInjector(
@@ -817,6 +836,7 @@ public class MapBinderTest extends TestCase {
     }
   }
 
+  @Test
   public void testMapBinderMapForbidsNullKeys() {
     try {
       Guice.createInjector(
@@ -831,6 +851,7 @@ public class MapBinderTest extends TestCase {
     }
   }
 
+  @Test
   public void testMapBinderMapForbidsNullValues() {
     class NullValueModule extends AbstractModule {
       @Override
@@ -855,6 +876,7 @@ public class MapBinderTest extends TestCase {
     }
   }
 
+  @Test
   public void testMapBinderProviderIsScoped() {
     final Provider<Integer> counter =
         new Provider<Integer>() {
@@ -882,6 +904,7 @@ public class MapBinderTest extends TestCase {
     assertEquals(1, (int) injector.getInstance(Key.get(mapOfInteger)).get("one"));
   }
 
+  @Test
   public void testSourceLinesInMapBindings() {
     class SimpleBinding extends AbstractModule {
       @Override
@@ -901,6 +924,7 @@ public class MapBinderTest extends TestCase {
   }
 
   /** Check that the dependencies are correct. */
+  @Test
   public void testMultibinderDependencies() {
     Injector injector =
         Guice.createInjector(
@@ -955,6 +979,7 @@ public class MapBinderTest extends TestCase {
   }
 
   /** Check that the dependencies are correct in the Tool Stage. */
+  @Test
   public void testMultibinderDependenciesInToolStage() {
     Injector injector =
         Guice.createInjector(
@@ -993,6 +1018,7 @@ public class MapBinderTest extends TestCase {
 
   /** Our implementation maintains order, but doesn't guarantee it in the API spec. */
   // TODO: specify the iteration order
+  @Test
   public void testBindOrderEqualsIterationOrder() {
     Injector injector =
         Guice.createInjector(
@@ -1032,6 +1058,7 @@ public class MapBinderTest extends TestCase {
   }
 
   /** With overrides, we should get the union of all map bindings. */
+  @Test
   public void testModuleOverrideAndMapBindings() {
     Module ab =
         new AbstractModule() {
@@ -1085,6 +1112,7 @@ public class MapBinderTest extends TestCase {
         instance("f", "F"));
   }
 
+  @Test
   public void testDeduplicateMapBindings() {
     Module module =
         new AbstractModule() {
@@ -1113,6 +1141,7 @@ public class MapBinderTest extends TestCase {
   }
 
   /** With overrides, we should get the union of all map bindings. */
+  @Test
   public void testModuleOverrideAndMapBindingsWithPermitDuplicates() {
     Module abc =
         new AbstractModule() {
@@ -1171,6 +1200,7 @@ public class MapBinderTest extends TestCase {
   }
 
   /** Ensure there are no initialization race conditions in basic map injection. */
+  @Test
   public void testBasicMapDependencyInjection() {
     final AtomicReference<Map<String, String>> injectedMap =
         new AtomicReference<Map<String, String>>();
@@ -1198,6 +1228,7 @@ public class MapBinderTest extends TestCase {
   }
 
   /** Ensure there are no initialization race conditions in provider multimap injection. */
+  @Test
   public void testProviderMultimapDependencyInjection() {
     final AtomicReference<Map<String, Set<Provider<String>>>> injectedMultimap =
         new AtomicReference<Map<String, Set<Provider<String>>>>();
@@ -1256,6 +1287,7 @@ public class MapBinderTest extends TestCase {
   private static @interface Marker {}
 
   @Marker
+  @Test
   public void testMapBinderMatching() throws Exception {
     Method m = MapBinderTest.class.getDeclaredMethod("testMapBinderMatching");
     assertNotNull(m);
@@ -1296,6 +1328,7 @@ public class MapBinderTest extends TestCase {
     assertEquals(expected, s1);
   }
 
+  @Test
   public void testTwoMapBindersAreDistinct() {
     Injector injector =
         Guice.createInjector(
@@ -1323,7 +1356,7 @@ public class MapBinderTest extends TestCase {
     MapBinderBinding<?> map2Binding = collector.mapbinding;
 
     List<Binding<String>> bindings = injector.findBindingsByType(stringType);
-    assertEquals("should have two elements: " + bindings, 2, bindings.size());
+    assertEquals(2, bindings.size(), "should have two elements: " + bindings);
     Binding<String> a = bindings.get(0);
     Binding<String> b = bindings.get(1);
     assertEquals("a", ((InstanceBinding<String>) a).getInstance());
@@ -1338,6 +1371,7 @@ public class MapBinderTest extends TestCase {
   }
 
   // Tests for com.google.inject.internal.WeakKeySet not leaking memory.
+  @Test
   public void testWeakKeySet_integration_mapbinder() {
     Key<Map<String, String>> mapKey = Key.get(new TypeLiteral<Map<String, String>>() {});
 
@@ -1372,6 +1406,7 @@ public class MapBinderTest extends TestCase {
   }
 
   @SuppressWarnings("rawtypes")
+  @Test
   public void testGetEntries() {
     List<com.google.inject.spi.Element> elements =
         Elements.getElements(new MapBinderWithTwoEntriesModule());
@@ -1395,6 +1430,7 @@ public class MapBinderTest extends TestCase {
   }
 
   @SuppressWarnings("rawtypes")
+  @Test
   public void testGetEntriesWithDuplicateKeys() {
     // Set up the module
     Module module =
@@ -1429,6 +1465,7 @@ public class MapBinderTest extends TestCase {
   }
 
   @SuppressWarnings("rawtypes")
+  @Test
   public void testGetEntriesWithDuplicateValues() {
     // Set up the module
     Module module =
@@ -1461,6 +1498,7 @@ public class MapBinderTest extends TestCase {
     assertEquals("a", ((InstanceBinding) secondBinding).getInstance());
   }
 
+  @Test
   public void testGetEntriesMissingProviderMapEntry() {
     List<com.google.inject.spi.Element> elements =
         Lists.newArrayList(Elements.getElements(new MapBinderWithTwoEntriesModule()));
@@ -1514,6 +1552,7 @@ public class MapBinderTest extends TestCase {
     return null;
   }
 
+  @Test
   public void testGetEntriesMissingBindingForValue() {
     List<com.google.inject.spi.Element> elements =
         Lists.newArrayList(Elements.getElements(new MapBinderWithTwoEntriesModule()));
@@ -1541,6 +1580,7 @@ public class MapBinderTest extends TestCase {
     }
   }
 
+  @Test
   public void testMapBinderWildcardsAlias() {
     Module module =
         new AbstractModule() {
@@ -1564,6 +1604,7 @@ public class MapBinderTest extends TestCase {
    * applications already have a binding to that type. If they do, confirm that Guice fails fast
    * with a duplicate binding error.
    */
+  @Test
   public void testMapBinderConflictsWithExistingWildcard() {
     Module module =
         new AbstractModule() {
@@ -1595,6 +1636,7 @@ public class MapBinderTest extends TestCase {
    * rather than through a regular binding. It's unlikely that application developers would do this
    * in practice, but if they do we want to make sure it is detected and fails fast.
    */
+  @Test
   public void testMapBinderConflictsWithExistingMapBinder() {
     Module module =
         new AbstractModule() {
@@ -1627,6 +1669,7 @@ public class MapBinderTest extends TestCase {
     }
   }
 
+  @Test
   public void testMapBinderConflicDoesntCauseErrorDuringLookupProcessor() {
     Module module =
         new AbstractModule() {
@@ -1646,6 +1689,7 @@ public class MapBinderTest extends TestCase {
   // Test a large map to ensure we don't create bad methodhandles that are too big or have too many
   // parameters or are too recursive.
 
+  @Test
   public void testLargeMapBinder() {
     for (boolean permmitDuplicates : new boolean[] {true, false}) {
       final int size = 100_000;

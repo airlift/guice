@@ -20,15 +20,19 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 import com.google.inject.spi.ElementSource;
 import java.lang.annotation.Retention;
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import org.junit.jupiter.api.Test;
 
 /** @author crazybob@google.com (Bob Lee) */
-public class ReflectionTest extends TestCase {
+public class ReflectionTest {
 
   @Retention(RUNTIME)
   @BindingAnnotation
   @interface I {}
 
+  @Test
   public void testNormalBinding() throws CreationException {
     final Foo foo = new Foo();
 
@@ -48,6 +52,7 @@ public class ReflectionTest extends TestCase {
     assertEquals(Key.get(Foo.class), fooBinding.getKey());
   }
 
+  @Test
   public void testConstantBinding() throws CreationException {
     Injector injector =
         Guice.createInjector(
@@ -65,6 +70,7 @@ public class ReflectionTest extends TestCase {
     assertEquals(Key.get(int.class, I.class), i.getKey());
   }
 
+  @Test
   public void testLinkedBinding() throws CreationException {
     final Bar bar = new Bar();
 

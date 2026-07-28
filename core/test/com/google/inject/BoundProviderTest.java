@@ -17,12 +17,17 @@
 package com.google.inject;
 
 import static com.google.inject.name.Names.named;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import org.junit.jupiter.api.Test;
 
-import junit.framework.TestCase;
 
 /** @author crazybob@google.com (Bob Lee) */
-public class BoundProviderTest extends TestCase {
+public class BoundProviderTest {
 
+  @Test
   public void testFooProvider() throws CreationException {
     Injector injector =
         Guice.createInjector(
@@ -43,6 +48,7 @@ public class BoundProviderTest extends TestCase {
     assertNotSame(a.bar, b.bar);
   }
 
+  @Test
   public void testSingletonFooProvider() throws CreationException {
     Injector injector =
         Guice.createInjector(

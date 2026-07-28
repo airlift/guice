@@ -25,12 +25,14 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Provider;
 import java.util.Set;
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
 
 /** @author jessewilson@google.com (Jesse Wilson) */
-public class HasDependenciesTest extends TestCase {
+public class HasDependenciesTest {
 
   /** When an instance implements HasDependencies, the injected dependencies aren't used. */
+  @Test
   public void testInstanceWithDependencies() {
     Injector injector =
         Guice.createInjector(
@@ -47,6 +49,7 @@ public class HasDependenciesTest extends TestCase {
         binding.getDependencies());
   }
 
+  @Test
   public void testInstanceWithoutDependencies() {
     Injector injector =
         Guice.createInjector(
@@ -62,6 +65,7 @@ public class HasDependenciesTest extends TestCase {
     assertEquals(Key.get(String.class), onlyDependency.getKey());
   }
 
+  @Test
   public void testProvider() {
     Injector injector =
         Guice.createInjector(

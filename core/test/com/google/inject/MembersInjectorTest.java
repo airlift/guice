@@ -26,11 +26,15 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import jakarta.inject.Inject;
-import junit.framework.AssertionFailedError;
-import junit.framework.TestCase;
+import org.opentest4j.AssertionFailedError;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.fail;
+import org.junit.jupiter.api.Test;
 
 /** @author jessewilson@google.com (Jesse Wilson) */
-public class MembersInjectorTest extends TestCase {
+public class MembersInjectorTest {
 
   private static final long DEADLOCK_TIMEOUT_SECONDS = 1;
 
@@ -54,6 +58,7 @@ public class MembersInjectorTest extends TestCase {
 
   private static final C myFavouriteC = new C();
 
+  @Test
   public void testMembersInjectorFromBinder() {
     final AtomicReference<MembersInjector<A<C>>> aMembersInjectorReference =
         new AtomicReference<MembersInjector<A<C>>>();
@@ -108,6 +113,7 @@ public class MembersInjectorTest extends TestCase {
     assertSame(myFavouriteC, anotherInjectableB.c);
   }
 
+  @Test
   public void testMembersInjectorFromInjector() {
     Injector injector =
         Guice.createInjector(
@@ -139,6 +145,7 @@ public class MembersInjectorTest extends TestCase {
         "MembersInjector<java.lang.String>", injector.getMembersInjector(String.class).toString());
   }
 
+  @Test
   public void testMembersInjectorWithNonInjectedTypes() {
     Injector injector = Guice.createInjector();
 
@@ -149,6 +156,7 @@ public class MembersInjectorTest extends TestCase {
     membersInjector.injectMembers(new NoInjectedMembers());
   }
 
+  @Test
   public void testInjectionFailure() {
     Injector injector = Guice.createInjector();
 
@@ -163,6 +171,7 @@ public class MembersInjectorTest extends TestCase {
     }
   }
 
+  @Test
   public void testInjectionAppliesToSpecifiedType() {
     Injector injector = Guice.createInjector();
 
@@ -170,6 +179,7 @@ public class MembersInjectorTest extends TestCase {
     membersInjector.injectMembers(new InjectionFailure());
   }
 
+  @Test
   public void testInjectingMembersInjector() {
     InjectsMembersInjector injectsMembersInjector =
         Guice.createInjector(
@@ -187,6 +197,7 @@ public class MembersInjectorTest extends TestCase {
     assertSame(myFavouriteC, a.b.c);
   }
 
+  @Test
   public void testCannotBindMembersInjector() {
     try {
       Guice.createInjector(
@@ -220,6 +231,7 @@ public class MembersInjectorTest extends TestCase {
     }
   }
 
+  @Test
   public void testInjectingMembersInjectorWithErrorsInDependencies() {
     try {
       Guice.createInjector().getInstance(InjectsBrokenMembersInjector.class);
@@ -237,6 +249,7 @@ public class MembersInjectorTest extends TestCase {
     }
   }
 
+  @Test
   public void testLookupMembersInjectorBinding() {
     Injector injector =
         Guice.createInjector(
@@ -259,6 +272,7 @@ public class MembersInjectorTest extends TestCase {
         injector.getInstance(new Key<MembersInjector<String>>() {}).toString());
   }
 
+  @Test
   public void testGettingRawMembersInjector() {
     Injector injector = Guice.createInjector();
     try {
@@ -270,6 +284,7 @@ public class MembersInjectorTest extends TestCase {
     }
   }
 
+  @Test
   public void testGettingAnnotatedMembersInjector() {
     Injector injector = Guice.createInjector();
     try {
@@ -347,6 +362,7 @@ public class MembersInjectorTest extends TestCase {
    * to provide proper resolution order semantics.
    */
 
+  @Test
   public void testMemberInjectorParallelization() throws Exception {
     final ParallelMemberInjectionCallback1 c1 = new ParallelMemberInjectionCallback1();
     final ParallelMemberInjectionCallback2 c2 = new ParallelMemberInjectionCallback2();
@@ -376,6 +392,7 @@ public class MembersInjectorTest extends TestCase {
   }
 
   /** Verifies that member injection injecting itself would get a non initialized instance. */
+  @Test
   public void testRecursiveMemberInjector() throws Exception {
     final RecursiveMemberInjection rmi = new RecursiveMemberInjection();
     Guice.createInjector(
@@ -385,7 +402,7 @@ public class MembersInjectorTest extends TestCase {
             bind(RecursiveMemberInjection.class).toInstance(rmi);
           }
         });
-    assertTrue("Member injection should happen", rmi.called);
+    assertTrue(rmi.called, "Member injection should happen");
   }
 
   static class A<T> {

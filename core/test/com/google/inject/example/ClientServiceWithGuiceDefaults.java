@@ -23,6 +23,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import junit.framework.Assert;
+import org.junit.jupiter.api.Test;
 
 /** @author crazybob@google.com (Bob Lee) */
 public class ClientServiceWithGuiceDefaults {
@@ -56,6 +57,7 @@ public class ClientServiceWithGuiceDefaults {
     }
   }
 
+  @Test
   public void testClient() {
     MockService mock = new MockService();
     Client client = new Client(mock);

@@ -38,7 +38,7 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 /** @author jessewilson@google.com (Jesse Wilson) */
-public class BinderTestSuite extends TestCase {
+public class BinderSuiteTest extends TestCase {
 
   public static Test suite() {
     TestSuite suite = new TestSuite();
@@ -52,7 +52,7 @@ public class BinderTestSuite extends TestCase {
                 bind(A.class);
               }
             })
-        .creationException("No implementation for BinderTestSuite$A was bound.")
+        .creationException("No implementation for BinderSuiteTest$A was bound.")
         .addToSuite(suite);
 
     new Builder()
@@ -65,7 +65,7 @@ public class BinderTestSuite extends TestCase {
               }
             })
         .creationException(
-            "No implementation for BinderTestSuite$PlainA annotated with "
+            "No implementation for BinderSuiteTest$PlainA annotated with "
                 + shortNamed(named("apple"))
                 + " was bound")
         .addToSuite(suite);
@@ -103,7 +103,7 @@ public class BinderTestSuite extends TestCase {
         .name("no binding, AWithProvidedBy named apple")
         .key(Key.get(AWithProvidedBy.class, named("apple")), InjectsAWithProvidedByNamedApple.class)
         .configurationException(
-            "No implementation for BinderTestSuite$AWithProvidedBy annotated with "
+            "No implementation for BinderSuiteTest$AWithProvidedBy annotated with "
                 + shortNamed(named("apple"))
                 + " was bound")
         .addToSuite(suite);
@@ -114,7 +114,7 @@ public class BinderTestSuite extends TestCase {
             Key.get(AWithImplementedBy.class, named("apple")),
             InjectsAWithImplementedByNamedApple.class)
         .configurationException(
-            "No implementation for BinderTestSuite$AWithImplementedBy annotated with "
+            "No implementation for BinderSuiteTest$AWithImplementedBy annotated with "
                 + shortNamed(named("apple"))
                 + " was bound")
         .addToSuite(suite);
@@ -123,7 +123,7 @@ public class BinderTestSuite extends TestCase {
         .name("no binding, ScopedA named apple")
         .key(Key.get(ScopedA.class, named("apple")), InjectsScopedANamedApple.class)
         .configurationException(
-            "No implementation for BinderTestSuite$ScopedA annotated with "
+            "No implementation for BinderSuiteTest$ScopedA annotated with "
                 + shortNamed(named("apple"))
                 + " was bound")
         .addToSuite(suite);
@@ -235,7 +235,7 @@ public class BinderTestSuite extends TestCase {
                 }
               })
           .creationException(
-              "No implementation for BinderTestSuite$AWithProvidedBy annotated with "
+              "No implementation for BinderSuiteTest$AWithProvidedBy annotated with "
                   + shortNamed(named("apple"))
                   + " was bound")
           .scoper(scoper)
@@ -251,7 +251,7 @@ public class BinderTestSuite extends TestCase {
                 }
               })
           .creationException(
-              "No implementation for BinderTestSuite$AWithImplementedBy annotated with "
+              "No implementation for BinderSuiteTest$AWithImplementedBy annotated with "
                   + shortNamed(named("apple"))
                   + " was bound")
           .scoper(scoper)
@@ -267,7 +267,7 @@ public class BinderTestSuite extends TestCase {
                 }
               })
           .creationException(
-              "No implementation for BinderTestSuite$ScopedA annotated with "
+              "No implementation for BinderSuiteTest$ScopedA annotated with "
                   + shortNamed(named("apple"))
                   + " was bound")
           .scoper(scoper)
