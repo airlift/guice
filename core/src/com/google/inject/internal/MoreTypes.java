@@ -125,18 +125,12 @@ public class MoreTypes {
 
   /** Returns true if {@code type} is free from type variables. */
   private static boolean isFullySpecified(Type type) {
-    if (type instanceof Class) {
-      return true;
-
-    } else if (type instanceof CompositeType) {
-      return ((CompositeType) type).isFullySpecified();
-
-    } else if (type instanceof TypeVariable) {
-      return false;
-
-    } else {
-      return ((CompositeType) canonicalize(type)).isFullySpecified();
-    }
+    return switch (type) {
+      case Class<?> c -> true;
+      case CompositeType composite -> composite.isFullySpecified();
+      case TypeVariable<?> v -> false;
+      default -> ((CompositeType) canonicalize(type)).isFullySpecified();
+    };
   }
 
   /**
@@ -144,62 +138,58 @@ public class MoreTypes {
    * Object#equals(Object) Object.equals()}. The returned type is {@link Serializable}.
    */
   public static Type canonicalize(Type type) {
-    if (type instanceof Class) {
-      Class<?> c = (Class<?>) type;
-      return c.isArray() ? new GenericArrayTypeImpl(canonicalize(c.getComponentType())) : c;
-
-    } else if (type instanceof CompositeType) {
-      return type;
-
-    } else if (type instanceof ParameterizedType p) {
-      return new ParameterizedTypeImpl(p.getOwnerType(), p.getRawType(), getSharedTypeArguments(p));
-
-    } else if (type instanceof GenericArrayType g) {
-      return new GenericArrayTypeImpl(g.getGenericComponentType());
-
-    } else if (type instanceof WildcardType w) {
-      return new WildcardTypeImpl(w.getUpperBounds(), w.getLowerBounds());
-
-    } else {
+    // Note: CompositeType must stay ahead of ParameterizedType and friends -- Guice's own
+    // implementations are both, and must be returned as-is.
+    return switch (type) {
+      case Class<?> c ->
+          c.isArray() ? new GenericArrayTypeImpl(canonicalize(c.getComponentType())) : c;
+      case CompositeType composite -> type;
+      case ParameterizedType p ->
+          new ParameterizedTypeImpl(p.getOwnerType(), p.getRawType(), getSharedTypeArguments(p));
+      case GenericArrayType g -> new GenericArrayTypeImpl(g.getGenericComponentType());
+      case WildcardType w -> new WildcardTypeImpl(w.getUpperBounds(), w.getLowerBounds());
       // type is either serializable as-is or unsupported
-      return type;
-    }
+      default -> type;
+    };
   }
 
   public static Class<?> getRawType(Type type) {
-    if (type instanceof Class<?>) {
-      // type is a normal class.
-      return (Class<?>) type;
-
-    } else if (type instanceof ParameterizedType parameterizedType) {
-
-      // I'm not exactly sure why getRawType() returns Type instead of Class.
-      // Neal isn't either but suspects some pathological case related
-      // to nested classes exists.
-      Type rawType = parameterizedType.getRawType();
-      checkArgument(
-          rawType instanceof Class,
-          "Expected a Class, but <%s> is of type %s",
-          type,
-          type.getClass().getName());
-      return (Class<?>) rawType;
-
-    } else if (type instanceof GenericArrayType) {
-      Type componentType = ((GenericArrayType) type).getGenericComponentType();
-      return Array.newInstance(getRawType(componentType), 0).getClass();
-
-    } else if (type instanceof TypeVariable || type instanceof WildcardType) {
+    switch (type) {
+      case Class<?> c -> {
+        // type is a normal class.
+        return c;
+      }
+      case ParameterizedType parameterizedType -> {
+        // I'm not exactly sure why getRawType() returns Type instead of Class.
+        // Neal isn't either but suspects some pathological case related
+        // to nested classes exists.
+        Type rawType = parameterizedType.getRawType();
+        checkArgument(
+            rawType instanceof Class,
+            "Expected a Class, but <%s> is of type %s",
+            type,
+            type.getClass().getName());
+        return (Class<?>) rawType;
+      }
+      case GenericArrayType genericArrayType -> {
+        Type componentType = genericArrayType.getGenericComponentType();
+        return Array.newInstance(getRawType(componentType), 0).getClass();
+      }
       // we could use the variable's bounds, but that'll won't work if there are multiple.
       // having a raw type that's more general than necessary is okay
-      return Object.class;
-
-    } else {
-      throw new IllegalArgumentException(
-          "Expected a Class, ParameterizedType, or "
-              + "GenericArrayType, but <"
-              + type
-              + "> is of type "
-              + type.getClass().getName());
+      case TypeVariable<?> v -> {
+        return Object.class;
+      }
+      case WildcardType w -> {
+        return Object.class;
+      }
+      default ->
+          throw new IllegalArgumentException(
+              "Expected a Class, ParameterizedType, or "
+                  + "GenericArrayType, but <"
+                  + type
+                  + "> is of type "
+                  + type.getClass().getName());
     }
   }
 
