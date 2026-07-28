@@ -22,7 +22,6 @@ import static com.google.inject.internal.InternalMethodHandles.castReturnTo;
 import static com.google.inject.internal.InternalMethodHandles.castReturnToObject;
 import static java.lang.invoke.MethodType.methodType;
 
-import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Binder;
 import com.google.inject.Exposed;
@@ -44,6 +43,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiFunction;
 
@@ -301,7 +301,7 @@ public abstract class ProviderMethod<T> extends InternalProviderInstanceBindingI
     if (obj instanceof ProviderMethod) {
       ProviderMethod<?> o = (ProviderMethod<?>) obj;
       return method.equals(o.method)
-          && Objects.equal(instance, o.instance)
+          && Objects.equals(instance, o.instance)
           && annotation.equals(o.annotation);
     } else {
       return false;
@@ -313,7 +313,7 @@ public abstract class ProviderMethod<T> extends InternalProviderInstanceBindingI
     // Avoid calling hashCode on 'instance', which is a user-object
     // that might not be expecting it.
     // (We need to call equals, so we do.  But we can avoid hashCode.)
-    return Objects.hashCode(method, annotation);
+    return Objects.hash(method, annotation);
   }
 
   /**

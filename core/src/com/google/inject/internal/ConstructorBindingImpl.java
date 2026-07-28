@@ -23,7 +23,6 @@ import static com.google.inject.spi.Elements.withTrustedSource;
 import static java.lang.invoke.MethodType.methodType;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Binder;
 import com.google.inject.ConfigurationException;
@@ -42,6 +41,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import org.aopalliance.intercept.MethodInterceptor;
 
@@ -268,7 +268,7 @@ final class ConstructorBindingImpl<T> extends BindingImpl<T>
       ConstructorBindingImpl<?> o = (ConstructorBindingImpl<?>) obj;
       return getKey().equals(o.getKey())
           && getScoping().equals(o.getScoping())
-          && Objects.equal(constructorInjectionPoint, o.constructorInjectionPoint);
+          && Objects.equals(constructorInjectionPoint, o.constructorInjectionPoint);
     } else {
       return false;
     }
@@ -276,7 +276,7 @@ final class ConstructorBindingImpl<T> extends BindingImpl<T>
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(getKey(), getScoping(), constructorInjectionPoint);
+    return Objects.hash(getKey(), getScoping(), constructorInjectionPoint);
   }
 
   private static class Factory<T> extends InternalFactory<T> {

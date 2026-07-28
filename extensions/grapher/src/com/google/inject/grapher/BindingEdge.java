@@ -16,7 +16,7 @@
 
 package com.google.inject.grapher;
 
-import com.google.common.base.Objects;
+import java.util.Objects;
 
 /**
  * Edge that connects an interface to the type or instance that is bound to implement it.
@@ -51,12 +51,12 @@ public class BindingEdge extends Edge {
     if (!(obj instanceof BindingEdge other)) {
       return false;
     }
-    return super.equals(other) && Objects.equal(type, other.type);
+    return super.equals(other) && Objects.equals(type, other.type);
   }
 
   @Override
   public int hashCode() {
-    return 31 * super.hashCode() + Objects.hashCode(type);
+    return 31 * super.hashCode() + Objects.hash(type);
   }
 
   @Override
