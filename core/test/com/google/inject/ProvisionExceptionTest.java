@@ -453,8 +453,8 @@ public class ProvisionExceptionTest
             assertNull(ce.getCause());
             assertEquals(4, ce.getErrorMessages().size());
 
-            String e1 = Throwables.getStackTraceAsString(exception1);
-            String e2 = Throwables.getStackTraceAsString(exception2);
+            Throwables.getStackTraceAsString(exception1);
+            Throwables.getStackTraceAsString(exception2);
             assertContains(
                     ce.getMessage(),
                     "\n1) ",

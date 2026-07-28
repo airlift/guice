@@ -89,6 +89,8 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 public class SpiUtils
 {
+    private SpiUtils() {}
+
     /**
      * The kind of test we should perform. A live Injector, a raw Elements (Module) test, or both.
      */
@@ -1157,12 +1159,13 @@ public class SpiUtils
     private static boolean isSourceEntry(Binding<?> b, RealOptionalBinder.Source type)
     {
         switch (type) {
-            case ACTUAL:
+            case ACTUAL -> {
                 return b.getKey().getAnnotation() instanceof RealOptionalBinder.Actual;
-            case DEFAULT:
+            }
+            case DEFAULT -> {
                 return b.getKey().getAnnotation() instanceof RealOptionalBinder.Default;
-            default:
-                throw new IllegalStateException("invalid type: " + type);
+            }
+            default -> throw new IllegalStateException("invalid type: " + type);
         }
     }
 
@@ -1221,32 +1224,32 @@ public class SpiUtils
     private static boolean matches(Binding<?> item, BindResult<?> result)
     {
         switch (result.type) {
-            case INSTANCE:
+            case INSTANCE -> {
                 if (item instanceof InstanceBinding
                         && ((InstanceBinding) item).getInstance().equals(result.instance)) {
                     return true;
                 }
-                break;
-            case LINKED:
+            }
+            case LINKED -> {
                 if (item instanceof LinkedKeyBinding
                         && ((LinkedKeyBinding) item).getLinkedKey().equals(result.key)) {
                     return true;
                 }
-                break;
-            case PROVIDER_INSTANCE:
+            }
+            case PROVIDER_INSTANCE -> {
                 if (item instanceof ProviderInstanceBinding
                         && Objects.equals(
                         ((ProviderInstanceBinding) item).getUserSuppliedProvider().get(),
                         result.instance)) {
                     return true;
                 }
-                break;
-            case PROVIDER_KEY:
+            }
+            case PROVIDER_KEY -> {
                 if (item instanceof ProviderKeyBinding
                         && ((ProviderKeyBinding) item).getProviderKey().equals(result.key)) {
                     return true;
                 }
-                break;
+            }
         }
         return false;
     }
@@ -1307,14 +1310,18 @@ public class SpiUtils
         public String toString()
         {
             switch (type) {
-                case INSTANCE:
+                case INSTANCE -> {
                     return "instance[" + instance + "]";
-                case LINKED:
+                }
+                case LINKED -> {
                     return "linkedKey[" + key + "]";
-                case PROVIDER_INSTANCE:
+                }
+                case PROVIDER_INSTANCE -> {
                     return "providerInstance[" + instance + "]";
-                case PROVIDER_KEY:
+                }
+                case PROVIDER_KEY -> {
                     return "providerKey[" + key + "]";
+                }
             }
             return null;
         }

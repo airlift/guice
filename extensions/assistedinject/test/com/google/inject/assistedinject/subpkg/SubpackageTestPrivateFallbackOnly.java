@@ -165,9 +165,9 @@ public final class SubpackageTestPrivateFallbackOnly
 
         ConcreteAssistedWithOverride.Factory factory =
                 injector.getInstance(ConcreteAssistedWithOverride.Factory.class);
-        ConcreteAssistedWithOverride unused = factory.create("foo");
+        factory.create("foo");
         AbstractAssisted.Factory<ConcreteAssistedWithOverride, String> factoryAbstract = factory;
-        unused = factoryAbstract.create("foo");
+        factoryAbstract.create("foo");
     }
 
     private static void setAllowPrivateLookupFallback(boolean allowed)

@@ -38,7 +38,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @author sberlin@gmail.com (Sam Berlin)
  * @since 3.0
  */
-@Target({METHOD})
+@Target(METHOD)
 @Retention(RUNTIME)
 @Documented
 public @interface Toolable {}

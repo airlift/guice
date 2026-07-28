@@ -97,7 +97,8 @@ final class WeakKeySet
         if (state.parent().isPresent()) {
             Set<KeyAndSource> keyAndSources = evictionCache.getIfPresent(state);
             if (keyAndSources == null) {
-                evictionCache.put(state, keyAndSources = new HashSet<>());
+                keyAndSources = new HashSet<>();
+                evictionCache.put(state, keyAndSources);
             }
             keyAndSources.add(new KeyAndSource(key, convertedSource));
         }

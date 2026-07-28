@@ -52,14 +52,14 @@ public class RestrictedBindingSourceTest
     @Qualifier
     @RestrictedBindingSource(
             explanation = USE_NETWORK_MODULE,
-            permits = {NetworkLibrary.class})
+            permits = NetworkLibrary.class)
     @Retention(RetentionPolicy.RUNTIME)
     @interface GatewayIpAdress {}
 
     @Qualifier
     @RestrictedBindingSource(
             explanation = USE_NETWORK_MODULE,
-            permits = {NetworkLibrary.class})
+            permits = NetworkLibrary.class)
     @Retention(RetentionPolicy.RUNTIME)
     @interface Hostname {}
 
@@ -89,7 +89,7 @@ public class RestrictedBindingSourceTest
 
     @RestrictedBindingSource(
             explanation = USE_ROUTING_MODULE,
-            permits = {NetworkLibrary.class})
+            permits = NetworkLibrary.class)
     @ImplementedBy(RoutingTableImpl.class) // For testing untargetted bindings.
     interface RoutingTable
     {
@@ -274,7 +274,7 @@ public class RestrictedBindingSourceTest
     @Qualifier
     @RestrictedBindingSource(
             explanation = "Only modules with FooPermit can bind @Foo bindings.",
-            permits = {FooPermit.class})
+            permits = FooPermit.class)
     @Retention(RetentionPolicy.RUNTIME)
     @interface Foo {}
 
@@ -296,7 +296,7 @@ public class RestrictedBindingSourceTest
     @Qualifier
     @RestrictedBindingSource(
             explanation = USE_NETWORK_MODULE,
-            permits = {NetworkLibrary.class},
+            permits = NetworkLibrary.class,
             restrictionLevel = RestrictionLevel.WARNING)
     @Retention(RetentionPolicy.RUNTIME)
     @interface HostIp {}
@@ -336,7 +336,7 @@ public class RestrictedBindingSourceTest
     @Qualifier
     @RestrictedBindingSource(
             explanation = USE_DNS_MODULE,
-            permits = {NetworkLibrary.class},
+            permits = NetworkLibrary.class,
             exemptModules =
                     "com.google.inject.RestrictedBindingSourceTest\\$FooRogueDnsModule"
                             + "|com.google.inject.RestrictedBindingSourceTest\\$BarRogueDnsModule"
@@ -532,7 +532,7 @@ public class RestrictedBindingSourceTest
     @Qualifier
     @RestrictedBindingSource(
             explanation = NETWORK_ANNOTATION_IS_RESTRICTED,
-            permits = {NetworkLibrary.class})
+            permits = NetworkLibrary.class)
     @Retention(RetentionPolicy.RUNTIME)
     @interface Network {}
 

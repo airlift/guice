@@ -1142,17 +1142,16 @@ public final class MaxArityTest
     @Test
     public void testMaxArityStaticMethod()
     {
-        Injector injector =
-                Guice.createInjector(
-                        new AbstractModule()
-                        {
-                            @Override
-                            protected void configure()
-                            {
-                                bind(int.class).toInstance(1);
-                                requestStaticInjection(StaticMethodWithTooManyParams.class);
-                            }
-                        });
+        Guice.createInjector(
+                new AbstractModule()
+                {
+                    @Override
+                    protected void configure()
+                    {
+                        bind(int.class).toInstance(1);
+                        requestStaticInjection(StaticMethodWithTooManyParams.class);
+                    }
+                });
         assertThat(StaticMethodWithTooManyParams.injected).isTrue();
     }
 }

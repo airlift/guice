@@ -38,7 +38,7 @@ final class LookupBindingProcessor
         // Members injector lookups are resolved by the lookup processor but may require jit bindings to
         // be created, do that now, so that other phases can see them.
         try {
-            var unused = injector.membersInjectorStore.get(lookup.getType(), errors);
+            injector.membersInjectorStore.get(lookup.getType(), errors);
         }
         catch (ErrorsException e) {
             errors.merge(e.getErrors());
@@ -53,7 +53,7 @@ final class LookupBindingProcessor
         // Provider lookups are resolved by the lookup processor but may require jit bindings to be
         // created, do that now, so that other phases can see them.
         try {
-            var unused = injector.getBindingOrThrow(lookup.getKey(), errors, JitLimitation.NO_JIT);
+            injector.getBindingOrThrow(lookup.getKey(), errors, JitLimitation.NO_JIT);
             // ProviderLookups need a Provider but we cannot create it yet since it is too early in the
             // processing.
         }

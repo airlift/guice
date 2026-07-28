@@ -56,8 +56,8 @@ public class InjectorTest
     public void testToStringDoesNotInfinitelyRecurse()
     {
         Injector injector = Guice.createInjector(Stage.TOOL);
-        String unused = injector.toString();
-        String unused2 = injector.getBinding(Injector.class).toString();
+        injector.toString();
+        injector.getBinding(Injector.class).toString();
     }
 
     @Test

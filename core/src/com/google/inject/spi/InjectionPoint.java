@@ -631,7 +631,8 @@ public final class InjectionPoint
         void add(InjectableMember member)
         {
             if (head == null) {
-                head = tail = member;
+                head = member;
+                tail = member;
             }
             else {
                 member.previous = tail;
@@ -733,7 +734,8 @@ public final class InjectionPoint
             }
 
             lastMethod = method;
-            Signature signature = lastSignature = new Signature(method);
+            Signature signature = new Signature(method);
+            lastSignature = signature;
             List<InjectableMethod> methods = bySignature.get(signature);
             boolean removed = false;
             if (methods != null) {

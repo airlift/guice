@@ -82,6 +82,8 @@ import static java.util.Objects.requireNonNull;
  */
 public final class Elements
 {
+    private Elements() {}
+
     private static final BindingTargetVisitor<Object, Object> GET_INSTANCE_VISITOR =
             new DefaultBindingTargetVisitor<Object, Object>()
             {

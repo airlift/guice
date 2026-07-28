@@ -1361,15 +1361,9 @@ public class ProviderMethodsTest
     private void runNullableTest(Injector injector, Dependency<?> dependency, Module module)
     {
         switch (InternalFlags.getNullableProvidesOption()) {
-            case ERROR:
-                validateNullableFails(injector, module);
-                break;
-            case IGNORE:
-                validateNullableIgnored(injector);
-                break;
-            case WARN:
-                validateNullableWarns(injector, dependency);
-                break;
+            case ERROR -> validateNullableFails(injector, module);
+            case IGNORE -> validateNullableIgnored(injector);
+            case WARN -> validateNullableWarns(injector, dependency);
         }
     }
 

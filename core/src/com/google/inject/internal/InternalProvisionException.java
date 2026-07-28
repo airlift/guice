@@ -243,7 +243,7 @@ public final class InternalProvisionException
      *
      * <p>It is expected that this method is called as the exception propagates up the stack.
      *
-     * @param source
+     * @param source the source to attribute the errors to
      * @return {@code this}
      */
     InternalProvisionException addSource(Object source)

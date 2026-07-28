@@ -1414,7 +1414,8 @@ final class InjectorImpl
             // Construction depends on the `disableCircularProxies` option which means that every factory
             // that shares the context will also share the same value for `disableCircularProxies`
             // regardless of the options of the injector that created the factory.
-            reference[0] = ctx = InternalContext.create(options.disableCircularProxies, reference);
+            ctx = InternalContext.create(options.disableCircularProxies, reference);
+            reference[0] = ctx;
         }
         else {
             ctx.enter();

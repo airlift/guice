@@ -96,6 +96,6 @@ public class ClientServiceWithGuiceDefaults
     {
         new ClientServiceWithGuiceDefaults().testClient();
         Injector injector = Guice.createInjector();
-        Client client = injector.getProvider(Client.class).get();
+        injector.getProvider(Client.class).get();
     }
 }
