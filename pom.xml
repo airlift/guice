@@ -105,7 +105,7 @@ See the Apache License Version 2.0 for the specific language governing permissio
      | is Guice's own public API, and RealOptionalBinder supports Guava's Optional alongside
      | java.util.Optional on purpose.
     -->
-        <air.check.skip-modernizer>false</air.check.skip-modernizer>
+        <air.check.skip-modernizer>${air.check.skip-all}</air.check.skip-modernizer>
         <air.check.fail-modernizer>false</air.check.fail-modernizer>
     </properties>
 
