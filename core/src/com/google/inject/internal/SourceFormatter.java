@@ -30,8 +30,7 @@ final class SourceFormatter {
   private final String moduleStack;
 
   SourceFormatter(Object source, Formatter formatter, boolean omitPreposition) {
-    if (source instanceof ElementSource) {
-      ElementSource elementSource = (ElementSource) source;
+    if (source instanceof ElementSource elementSource) {
       this.source = elementSource.getDeclaringSource();
       this.moduleStack = getModuleStack(elementSource);
     } else {

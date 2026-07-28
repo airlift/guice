@@ -399,8 +399,7 @@ public final class Elements {
       Class<?> newModuleClass = null;
       RecordingBinder binder = this;
       // Update the module source for the new module
-      if (module instanceof ProviderMethodsModule) {
-        ProviderMethodsModule providerMethodsModule = (ProviderMethodsModule) module;
+      if (module instanceof ProviderMethodsModule providerMethodsModule) {
         if (!providerMethodsModule.isScanningBuiltInProvidesMethods()) {
           scannerSource = providerMethodsModule.getScanner();
           customScanner = true;

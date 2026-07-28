@@ -43,10 +43,9 @@ public class ImplementationNode extends Node {
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof ImplementationNode)) {
+    if (!(obj instanceof ImplementationNode other)) {
       return false;
     }
-    ImplementationNode other = (ImplementationNode) obj;
     return super.equals(other) && Objects.equal(members, other.members);
   }
 

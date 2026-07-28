@@ -627,10 +627,9 @@ public final class InjectionPoint {
         for (InjectableMember member = injectableMembers.head;
             member != null;
             member = member.next) {
-          if (!(member instanceof InjectableMethod)) {
+          if (!(member instanceof InjectableMethod im)) {
             continue;
           }
-          InjectableMethod im = (InjectableMethod) member;
           if (im.isFinal()) {
             continue;
           }
@@ -941,11 +940,10 @@ public final class InjectionPoint {
 
     @Override
     public boolean equals(Object o) {
-      if (!(o instanceof Signature)) {
+      if (!(o instanceof Signature other)) {
         return false;
       }
 
-      Signature other = (Signature) o;
       if (!name.equals(other.name)) {
         return false;
       }

@@ -45,10 +45,9 @@ public class InstanceNode extends Node {
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof InstanceNode)) {
+    if (!(obj instanceof InstanceNode other)) {
       return false;
     }
-    InstanceNode other = (InstanceNode) obj;
     return super.equals(other)
         && Objects.equal(instance, other.instance)
         && Objects.equal(members, other.members);

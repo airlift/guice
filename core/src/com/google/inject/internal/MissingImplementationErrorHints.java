@@ -188,17 +188,14 @@ final class MissingImplementationErrorHints {
   }
 
   private static boolean wasBoundInKotlin(Binding<?> binding) {
-    if (binding.getSource() instanceof ElementSource) {
-      ElementSource elementSource = (ElementSource) binding.getSource();
+    if (binding.getSource() instanceof ElementSource elementSource) {
       Object declaringSource = elementSource.getDeclaringSource();
-      if (declaringSource instanceof Member) {
-        Member member = (Member) declaringSource;
+      if (declaringSource instanceof Member member) {
         if (KotlinSupport.getInstance().isKotlinClass(member.getDeclaringClass())) {
           return true;
         }
       }
-      if (declaringSource instanceof StackTraceElement) {
-        StackTraceElement stackTraceElement = (StackTraceElement) declaringSource;
+      if (declaringSource instanceof StackTraceElement stackTraceElement) {
         if (stackTraceElement.getFileName() != null
             && stackTraceElement.getFileName().endsWith(".kt")) {
           return true;

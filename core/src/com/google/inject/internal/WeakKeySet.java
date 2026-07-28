@@ -129,11 +129,10 @@ final class WeakKeySet {
         return true;
       }
 
-      if (!(obj instanceof KeyAndSource)) {
+      if (!(obj instanceof KeyAndSource other)) {
         return false;
       }
 
-      KeyAndSource other = (KeyAndSource) obj;
       return Objects.equal(key, other.key) && Objects.equal(source, other.source);
     }
   }

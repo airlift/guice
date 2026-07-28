@@ -273,8 +273,7 @@ public final class ProviderMethodsModule implements Module {
 
     @Override
     public boolean equals(Object obj) {
-      if (obj instanceof Signature) {
-        Signature other = (Signature) obj;
+      if (obj instanceof Signature other) {
         return other.name.equals(name) && Arrays.equals(parameters, other.parameters);
       }
       return false;

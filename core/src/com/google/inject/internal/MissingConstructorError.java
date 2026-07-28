@@ -27,8 +27,7 @@ final class MissingConstructorError extends InternalErrorDetail<MissingConstruct
 
   @Override
   public boolean isMergeable(ErrorDetail<?> other) {
-    if (other instanceof MissingConstructorError) {
-      MissingConstructorError otherMissing = (MissingConstructorError) other;
+    if (other instanceof MissingConstructorError otherMissing) {
       return Objects.equal(type, otherMissing.type)
           && Objects.equal(atInjectRequired, otherMissing.atInjectRequired);
     }

@@ -48,10 +48,9 @@ public class BindingEdge extends Edge {
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof BindingEdge)) {
+    if (!(obj instanceof BindingEdge other)) {
       return false;
     }
-    BindingEdge other = (BindingEdge) obj;
     return super.equals(other) && Objects.equal(type, other.type);
   }
 

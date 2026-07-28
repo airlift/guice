@@ -223,8 +223,7 @@ public final class Modules {
       // and binder.
       if (baseElements.size() == 1) {
         Element element = Iterables.getOnlyElement(baseElements);
-        if (element instanceof PrivateElements) {
-          PrivateElements privateElements = (PrivateElements) element;
+        if (element instanceof PrivateElements privateElements) {
           PrivateBinder privateBinder =
               baseBinder.newPrivateBinder().withSource(privateElements.getSource());
           for (Key<?> exposed : privateElements.getExposedKeys()) {

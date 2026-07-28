@@ -44,10 +44,9 @@ public class DependencyEdge extends Edge {
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof DependencyEdge)) {
+    if (!(obj instanceof DependencyEdge other)) {
       return false;
     }
-    DependencyEdge other = (DependencyEdge) obj;
     return super.equals(other) && Objects.equal(injectionPoint, other.injectionPoint);
   }
 

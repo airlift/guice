@@ -49,10 +49,9 @@ public abstract class Node {
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof Node)) {
+    if (!(obj instanceof Node other)) {
       return false;
     }
-    Node other = (Node) obj;
     return Objects.equal(id, other.id)
         && (ignoreSourceInComparisons || Objects.equal(source, other.source));
   }

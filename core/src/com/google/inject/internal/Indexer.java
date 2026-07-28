@@ -78,10 +78,9 @@ class Indexer extends DefaultBindingTargetVisitor<Object, Indexer.IndexedBinding
 
     @Override
     public boolean equals(Object obj) {
-      if (!(obj instanceof IndexedBinding)) {
+      if (!(obj instanceof IndexedBinding o)) {
         return false;
       }
-      IndexedBinding o = (IndexedBinding) obj;
       return type == o.type
           && Objects.equal(scope, o.scope)
           && typeLiteral.equals(o.typeLiteral)
