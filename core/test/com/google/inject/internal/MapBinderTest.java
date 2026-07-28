@@ -30,7 +30,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.AbstractModule;
@@ -70,9 +69,9 @@ import java.lang.annotation.Target;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -476,7 +475,7 @@ public class MapBinderTest {
     Injector injector = Guice.createInjector(module);
 
     Map<String, String> map = injector.getInstance(Key.get(mapOfString));
-    assertEquals(Collections.emptyMap(), map);
+    assertEquals(Map.of(), map);
     assertMapVisitor(Key.get(mapOfString), stringType, stringType, setOf(module), BOTH, false, 0);
   }
 
@@ -959,13 +958,13 @@ public class MapBinderTest {
       assertEquals("java.lang.Integer", element.keyType());
     }
 
-    Set<String> elements = Sets.newHashSet();
+    Set<String> elements = new HashSet<>();
     elements.addAll(recurseForDependencies(injector, withDependencies));
     assertEquals(ImmutableSet.of("A", "B"), elements);
   }
 
   private Set<String> recurseForDependencies(Injector injector, HasDependencies hasDependencies) {
-    Set<String> elements = Sets.newHashSet();
+    Set<String> elements = new HashSet<>();
     for (Dependency<?> dependency : hasDependencies.getDependencies()) {
       Binding<?> binding = injector.getBinding(dependency.getKey());
       HasDependencies deps = (HasDependencies) binding;
@@ -1051,10 +1050,10 @@ public class MapBinderTest {
 
     Map<String, String> map = injector.getInstance(new Key<Map<String, String>>() {});
     Iterator<Map.Entry<String, String>> iterator = map.entrySet().iterator();
-    assertEquals(Maps.immutableEntry("leonardo", "blue"), iterator.next());
-    assertEquals(Maps.immutableEntry("donatello", "purple"), iterator.next());
-    assertEquals(Maps.immutableEntry("michaelangelo", "orange"), iterator.next());
-    assertEquals(Maps.immutableEntry("raphael", "red"), iterator.next());
+    assertEquals(Map.entry("leonardo", "blue"), iterator.next());
+    assertEquals(Map.entry("donatello", "purple"), iterator.next());
+    assertEquals(Map.entry("michaelangelo", "orange"), iterator.next());
+    assertEquals(Map.entry("raphael", "red"), iterator.next());
   }
 
   /** With overrides, we should get the union of all map bindings. */
@@ -1501,7 +1500,7 @@ public class MapBinderTest {
   @Test
   public void testGetEntriesMissingProviderMapEntry() {
     List<com.google.inject.spi.Element> elements =
-        Lists.newArrayList(Elements.getElements(new MapBinderWithTwoEntriesModule()));
+        new ArrayList<>(Elements.getElements(new MapBinderWithTwoEntriesModule()));
 
     // Get the MapBinderBinding
     MapBinderBinding<?> mapBinderBinding = getMapBinderBinding(elements);
@@ -1555,7 +1554,7 @@ public class MapBinderTest {
   @Test
   public void testGetEntriesMissingBindingForValue() {
     List<com.google.inject.spi.Element> elements =
-        Lists.newArrayList(Elements.getElements(new MapBinderWithTwoEntriesModule()));
+        new ArrayList<>(Elements.getElements(new MapBinderWithTwoEntriesModule()));
 
     // Get the MapBinderBinding
     MapBinderBinding<?> mapBinderBinding = getMapBinderBinding(elements);

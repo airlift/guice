@@ -122,7 +122,7 @@ public final class CheckedProviders {
     if (!value.isPresent()) {
       return Optional.empty();
     }
-    return Optional.<Class<?>>of(value.get().getClass());
+    return Optional.<Class<?>>of(value.orElseThrow().getClass());
   }
 
   /**

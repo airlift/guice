@@ -18,7 +18,7 @@ package com.google.inject;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.util.Collections;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -133,7 +133,7 @@ public class Java8LanguageFeatureBindingTest {
 
     @Override
     public String get() {
-      return Collections.singleton(uuid).stream().map(UUID::toString).findFirst().get();
+      return Set.of(uuid).stream().map(UUID::toString).findFirst().orElseThrow();
     }
   }
 

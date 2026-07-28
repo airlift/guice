@@ -22,13 +22,13 @@ import static com.google.inject.name.Names.named;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.google.common.collect.Maps;
 import com.google.inject.name.Named;
 import com.google.inject.spi.ProviderInstanceBinding;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
@@ -742,7 +742,7 @@ public class CircularDependencyTest {
   public @interface SimpleSingleton {}
 
   public static class BasicSingleton implements Scope {
-    private static Map<Key<?>, Object> cache = Maps.newHashMap();
+    private static Map<Key<?>, Object> cache = new HashMap<>();
 
     @Override
     public <T> Provider<T> scope(final Key<T> key, final Provider<T> unscoped) {

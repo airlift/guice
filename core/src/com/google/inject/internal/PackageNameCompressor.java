@@ -18,15 +18,13 @@ package com.google.inject.internal;
 
 import static java.util.Comparator.comparing;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Ordering;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -53,7 +51,6 @@ final class PackageNameCompressor {
 
   private static final Splitter PACKAGE_SPLITTER = Splitter.on('.');
 
-  private static final Joiner PACKAGE_JOINER = Joiner.on('.');
 
   // TODO(erichang): Consider validating this regex by also passing in all of the known types from
   // keys, module names, component names, etc and checking against that list. This may have some
@@ -131,7 +128,7 @@ final class PackageNameCompressor {
     // will not be collected as one of the replacedShortNames.
     List<String> shortNames =
         replacementMap.keySet().stream()
-            .sorted(Ordering.natural().reverse())
+            .sorted(Comparator.reverseOrder())
             .collect(Collectors.toList());
     Matcher matcher = QUOTED_PATTERN.matcher(input);
     while (matcher.find()) {
@@ -177,7 +174,7 @@ final class PackageNameCompressor {
           .append(shortName)
           .append(": ")
           // Add enough spaces to adjust the columns
-          .append(Strings.repeat(" ", longestKey - shortName.length()))
+          .append(" ".repeat(longestKey - shortName.length()))
           // Surround the full class name with quotes to avoid them getting compressed again if
           // the error is wrapped inside another Guice error.
           .append('"')
@@ -244,7 +241,7 @@ final class PackageNameCompressor {
         : shortNameToPartsMap.asMap().entrySet()) {
       replacementMap.put(
           entry.getKey(),
-          PACKAGE_JOINER.join(Iterables.getOnlyElement(entry.getValue())) + "." + entry.getKey());
+          String.join(".", Iterables.getOnlyElement(entry.getValue())) + "." + entry.getKey());
     }
     return replacementMap;
   }

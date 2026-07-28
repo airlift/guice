@@ -42,7 +42,6 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -770,7 +769,7 @@ public final class InjectionPoint {
     }
 
     if (injectableMembers.isEmpty()) {
-      return Collections.emptySet();
+      return Set.of();
     }
 
     ImmutableSet.Builder<InjectionPoint> builder = ImmutableSet.builder();

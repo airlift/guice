@@ -16,7 +16,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
@@ -464,7 +463,7 @@ public final class RealMapBinder<K, V> implements Module {
           // uniqueId.
           if (index.put(key, valueBinding.acceptTargetVisitor(indexer))) {
 
-            entriesBuilder.add(Maps.immutableEntry(key, valueBinding));
+            entriesBuilder.add(Map.entry(key, valueBinding));
 
             Binding<V> previous = bindingMapMutable.put(key, valueBinding);
             // Check if this is a duplicate binding
@@ -1013,7 +1012,7 @@ public final class RealMapBinder<K, V> implements Module {
 
         @SuppressWarnings({"unchecked", "rawtypes"})
         Map.Entry<?, Binding<?>> newEntry =
-            (Map.Entry) Maps.immutableEntry(entry.getKey(), binding);
+            (Map.Entry) Map.entry(entry.getKey(), binding);
         resultBuilder.add(newEntry);
       }
       return resultBuilder.build();
@@ -1272,7 +1271,7 @@ public final class RealMapBinder<K, V> implements Module {
           }
           // Construct the set of the values and add it to the map.
           entries.add(
-              Maps.immutableEntry(
+              Map.entry(
                   perKeyData.key, InternalMethodHandles.buildImmutableSetFactory(elementHandles)));
         }
 
@@ -1304,7 +1303,7 @@ public final class RealMapBinder<K, V> implements Module {
     @Override
     void initialize(InjectorImpl injector, Errors errors) {
       Binding<V> valueBinding = injector.getExistingBinding(valueKey);
-      entry = Maps.immutableEntry(key, valueBinding.getProvider());
+      entry = Map.entry(key, valueBinding.getProvider());
     }
 
     @Override

@@ -21,8 +21,6 @@ import static com.google.inject.name.Names.named;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.inject.AbstractModule;
 import com.google.inject.Binding;
 import com.google.inject.Guice;
@@ -35,6 +33,8 @@ import com.google.inject.spi.DefaultBindingTargetVisitor;
 import com.google.inject.spi.Dependency;
 import com.google.inject.spi.Element;
 import com.google.inject.spi.Elements;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -77,7 +77,7 @@ public class ExtensionSpiTest {
   private void validateVisitor(AssistedInjectSpiVisitor visitor) throws Exception {
     assertEquals(1, visitor.assistedBindingCount);
     List<AssistedMethod> assistedMethods =
-        Lists.newArrayList(
+        new ArrayList<>(
             Iterables.getOnlyElement(visitor.assistedInjectBindings).getAssistedMethods());
     assertEquals(7, assistedMethods.size());
     assertEquals(1, visitor.assistedBindingCount);
@@ -85,7 +85,7 @@ public class ExtensionSpiTest {
 
     // Validate for each of the methods in AnimalFactory
 
-    Set<String> names = Sets.newHashSet();
+    Set<String> names = new HashSet<>();
     for (AssistedMethod method : assistedMethods) {
       String name = method.getFactoryMethod().getName();
       names.add(name);
@@ -219,7 +219,7 @@ public class ExtensionSpiTest {
 
     private int assistedBindingCount = 0;
     private int currentCount = 0;
-    private List<AssistedInjectBinding<?>> assistedInjectBindings = Lists.newArrayList();
+    private List<AssistedInjectBinding<?>> assistedInjectBindings = new ArrayList<>();
 
     @Override
     public Integer visit(AssistedInjectBinding<?> assistedInjectBinding) {

@@ -36,7 +36,6 @@ import com.google.inject.Singleton;
 import com.google.inject.Stage;
 import com.google.inject.name.Names;
 import java.lang.reflect.Constructor;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -480,7 +479,7 @@ public class SpiBindingsTest {
       }
     }
 
-    Collections.sort(bindings, orderByKey);
+    bindings.sort(orderByKey);
 
     assertEquals(bindings.size(), visitors.length);
 

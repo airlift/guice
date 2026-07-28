@@ -16,7 +16,8 @@
 
 package com.google.inject.grapher.graphviz;
 
-import com.google.common.base.Joiner;
+import static java.util.stream.Collectors.joining;
+
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Key;
@@ -141,7 +142,7 @@ public class GraphvizGrapher extends AbstractInjectorGrapher {
     html.append("<tr>").append("<td align=\"left\" port=\"header\" ");
     html.append("bgcolor=\"" + node.getHeaderBackgroundColor() + "\">");
 
-    String subtitle = Joiner.on("<br align=\"left\"/>").join(node.getSubtitles());
+    String subtitle = String.join("<br align=\"left\"/>", node.getSubtitles());
     if (subtitle.length() != 0) {
       html.append("<font color=\"").append(node.getHeaderTextColor());
       html.append("\" point-size=\"10\">");
@@ -203,7 +204,7 @@ public class GraphvizGrapher extends AbstractInjectorGrapher {
       }
     }
 
-    return "[" + Joiner.on(", ").join(attrList) + "]";
+    return "[" + String.join(", ", attrList) + "]";
   }
 
   /**
@@ -211,7 +212,7 @@ public class GraphvizGrapher extends AbstractInjectorGrapher {
    * them. With Graphviz, that just means concatenating them.
    */
   protected String getArrowString(List<ArrowType> arrows) {
-    return Joiner.on("").join(arrows);
+    return arrows.stream().map(Object::toString).collect(joining());
   }
 
   protected String getEdgeEndPoint(String nodeId, String portId, CompassPoint compassPoint) {
@@ -226,7 +227,7 @@ public class GraphvizGrapher extends AbstractInjectorGrapher {
       portStrings.add(compassPoint.toString());
     }
 
-    return Joiner.on(":").join(portStrings);
+    return String.join(":", portStrings);
   }
 
   protected String htmlEscape(String str) {

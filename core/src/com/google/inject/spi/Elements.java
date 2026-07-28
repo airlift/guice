@@ -18,11 +18,11 @@ package com.google.inject.spi;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.inject.internal.InternalFlags.getIncludeStackTraceOption;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.inject.AbstractModule;
 import com.google.inject.Binder;
 import com.google.inject.Binding;
@@ -68,6 +68,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import org.aopalliance.intercept.MethodInterceptor;
 
 /**
@@ -482,7 +484,10 @@ public final class Elements {
         return scanners;
       }
       // Private binders have their own set of scanners and they inherit from their parent.
-      return Iterables.concat(scanners, parent.getAllScanners());
+      return Stream.concat(
+              scanners.stream(),
+              StreamSupport.stream(parent.getAllScanners().spliterator(), false))
+          .collect(toImmutableList());
     }
 
     @Override

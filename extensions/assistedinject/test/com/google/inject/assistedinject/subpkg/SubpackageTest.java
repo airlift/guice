@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.google.common.base.StandardSystemProperty;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.inject.AbstractModule;
 import com.google.inject.CreationException;
 import com.google.inject.Guice;
@@ -17,6 +16,7 @@ import com.google.inject.assistedinject.AssistedInject;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
@@ -40,7 +40,7 @@ public final class SubpackageTest {
 
   private final Logger loggerToWatch = Logger.getLogger(AssistedInject.class.getName());
 
-  private final List<LogRecord> logRecords = Lists.newArrayList();
+  private final List<LogRecord> logRecords = new ArrayList<>();
   private final Handler fakeHandler =
       new Handler() {
         @Override

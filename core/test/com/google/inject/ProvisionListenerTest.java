@@ -24,7 +24,6 @@ import static com.google.inject.name.Names.named;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
@@ -32,6 +31,7 @@ import com.google.inject.name.Named;
 import com.google.inject.spi.InstanceBinding;
 import com.google.inject.spi.ProvisionListener;
 import com.google.inject.util.Providers;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -578,7 +578,7 @@ public class ProvisionListenerTest {
   }
 
   private static class Capturer implements ProvisionListener {
-    List<Key<?>> keys = Lists.newArrayList();
+    List<Key<?>> keys = new ArrayList<>();
 
     @Override
     public <T> void onProvision(ProvisionInvocation<T> provision) {
@@ -672,8 +672,8 @@ public class ProvisionListenerTest {
   @SuppressWarnings("unchecked")
   @Test
   public void testDependencyChain() {
-    final List<Class<?>> pList = Lists.newArrayList();
-    final List<Class<?>> totalList = Lists.newArrayList();
+    final List<Class<?>> pList = new ArrayList<>();
+    final List<Class<?>> totalList = new ArrayList<>();
     Injector injector =
         Guice.createInjector(
             new AbstractModule() {

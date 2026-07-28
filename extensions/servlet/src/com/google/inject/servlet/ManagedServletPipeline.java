@@ -196,6 +196,9 @@ class ManagedServletPipeline {
 
     @Override
     public StringBuffer getRequestURL() {
+      // The servlet API requires this method to return a StringBuffer. Modernizer flags every
+      // StringBuffer constructor; the whole wrapper class is exempted via ignoreClassNamePatterns
+      // in the modernizer configuration.
       StringBuffer url = new StringBuffer();
       String scheme = getScheme();
       int port = getServerPort();

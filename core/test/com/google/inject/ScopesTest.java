@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.inject.Asserts.assertContains;
 import static com.google.inject.name.Names.named;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import static java.util.stream.Collectors.joining;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -29,12 +30,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Maps;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Named;
 import com.google.inject.spi.DefaultBindingScopingVisitor;
@@ -50,6 +49,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -511,7 +511,7 @@ public class ScopesTest {
   }
 
   class RememberProviderScope implements Scope {
-    final Map<Key<?>, Provider<?>> providers = Maps.newHashMap();
+    final Map<Key<?>, Provider<?>> providers = new HashMap<>();
 
     @Override
     public <T> Provider<T> scope(Key<T> key, Provider<T> unscoped) {
@@ -1369,7 +1369,7 @@ public class ScopesTest {
     if (spanningError == null) {
       fail(
           "Couldn't find multi thread circular dependency error: "
-              + Joiner.on("\n\n").join(errors));
+              + errors.stream().map(Object::toString).collect(joining("\n\n")));
     }
 
     String errorMessage = spanningError.getMessage();

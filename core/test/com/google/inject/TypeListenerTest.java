@@ -28,7 +28,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.inject.internal.InternalFlags;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
@@ -36,6 +35,7 @@ import com.google.inject.spi.InjectionListener;
 import com.google.inject.spi.Message;
 import com.google.inject.spi.TypeEncounter;
 import com.google.inject.spi.TypeListener;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -124,7 +124,7 @@ public class TypeListenerTest {
 
   @Test
   public void testInstallingInjectionListener() {
-    final List<Object> injectees = Lists.newArrayList();
+    final List<Object> injectees = new ArrayList<>();
     final InjectionListener<Object> injectionListener =
         new InjectionListener<Object>() {
           @Override

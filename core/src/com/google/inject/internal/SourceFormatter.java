@@ -2,7 +2,6 @@ package com.google.inject.internal;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-import com.google.common.base.Strings;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
 import com.google.inject.internal.util.Classes;
@@ -21,7 +20,7 @@ import java.util.List;
 
 /** Formatting a single source in Guice error message. */
 final class SourceFormatter {
-  static final String INDENT = Strings.repeat(" ", 5);
+  static final String INDENT = " ".repeat(5);
 
   private final Object source;
   private final Formatter formatter;

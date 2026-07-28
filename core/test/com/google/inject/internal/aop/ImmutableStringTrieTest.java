@@ -17,7 +17,6 @@
 package com.google.inject.internal.aop;
 
 import static java.util.Arrays.stream;
-import static java.util.Collections.sort;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -27,6 +26,7 @@ import com.google.inject.Binder;
 import java.lang.reflect.Method;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
@@ -52,7 +52,7 @@ public class ImmutableStringTrieTest {
     List<String> table =
         stream(Binder.class.getDeclaredMethods()).map(Method::toString).collect(toList());
 
-    sort(table);
+    table.sort(Comparator.naturalOrder());
 
     ToIntFunction<String> trie = ImmutableStringTrie.buildTrie(table);
 

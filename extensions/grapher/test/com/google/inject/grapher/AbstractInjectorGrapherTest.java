@@ -18,7 +18,6 @@ package com.google.inject.grapher;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import com.google.inject.AbstractModule;
 import com.google.inject.BindingAnnotation;
 import com.google.inject.Guice;
@@ -29,6 +28,7 @@ import com.google.inject.spi.InjectionPoint;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Member;
+import java.util.HashSet;
 import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -46,8 +46,8 @@ public class AbstractInjectorGrapherTest {
   private static final String TEST_STRING = "test";
 
   private static class FakeGrapher extends AbstractInjectorGrapher {
-    final Set<Node> nodes = Sets.newHashSet();
-    final Set<Edge> edges = Sets.newHashSet();
+    final Set<Node> nodes = new HashSet<>();
+    final Set<Edge> edges = new HashSet<>();
 
     @Override
     protected void reset() {
