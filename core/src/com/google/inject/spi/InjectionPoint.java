@@ -313,6 +313,41 @@ public final class InjectionPoint
      */
     public static InjectionPoint forConstructorOf(TypeLiteral<?> type, boolean atInjectRequired)
     {
+        // Raw types resolve the same injection point for every caller, and InjectionPoint (and
+        // everything it references) is immutable with final fields, so instances can be shared
+        // JVM-wide the way instance-method injection points already are. Failures are not cached:
+        // they throw, they are rare, and they abort injector creation anyway. Racy writes at worst
+        // recompute the same value.
+        if (type.getType() instanceof Class) {
+            InjectionPoint[] cache = CONSTRUCTOR_INJECTION_POINTS.get((Class<?>) type.getType());
+            int slot = atInjectRequired ? 1 : 0;
+            InjectionPoint cached = cache[slot];
+            if (cached == null) {
+                cached = computeConstructorInjectionPoint(type, atInjectRequired);
+                cache[slot] = cached;
+            }
+            return cached;
+        }
+        return computeConstructorInjectionPoint(type, atInjectRequired);
+    }
+
+    /**
+     * One slot per {@code atInjectRequired} variant.
+     */
+    private static final ClassValue<InjectionPoint[]> CONSTRUCTOR_INJECTION_POINTS =
+            new ClassValue<>()
+            {
+                @Override
+                protected InjectionPoint[] computeValue(Class<?> type)
+                {
+                    return new InjectionPoint[2];
+                }
+            };
+
+    private static InjectionPoint computeConstructorInjectionPoint(
+            TypeLiteral<?> type,
+            boolean atInjectRequired)
+    {
         Class<?> rawType = getRawType(type.getType());
         Errors errors = new Errors(rawType);
 
