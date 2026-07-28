@@ -14,5 +14,7 @@
  * limitations under the License.
  */
 
-/** <i>Guice</i> (sounds like "juice") */
+/**
+ * <i>Guice</i> (sounds like "juice")
+ */
 package com.google.inject.internal;

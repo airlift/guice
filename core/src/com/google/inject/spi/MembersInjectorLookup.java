@@ -16,15 +16,16 @@
 
 package com.google.inject.spi;
 
-import static com.google.common.base.Preconditions.checkState;
-import static java.util.Objects.requireNonNull;
-
 import com.google.inject.Binder;
 import com.google.inject.ConfigurationException;
 import com.google.inject.MembersInjector;
 import com.google.inject.TypeLiteral;
+
 import java.util.Objects;
 import java.util.Set;
+
+import static com.google.common.base.Preconditions.checkState;
+import static java.util.Objects.requireNonNull;
 
 /**
  * A lookup of the members injector for a type. Lookups are created explicitly in a module using
@@ -37,105 +38,123 @@ import java.util.Set;
  * @author crazybob@google.com (Bob Lee)
  * @since 2.0
  */
-public final class MembersInjectorLookup<T> implements Element {
+public final class MembersInjectorLookup<T>
+        implements Element
+{
+    private final Object source;
+    private final TypeLiteral<T> type;
+    private MembersInjector<T> delegate;
 
-  private final Object source;
-  private final TypeLiteral<T> type;
-  private MembersInjector<T> delegate;
+    public MembersInjectorLookup(Object source, TypeLiteral<T> type)
+    {
+        this.source = requireNonNull(source, "source");
+        this.type = requireNonNull(type, "type");
+    }
 
-  public MembersInjectorLookup(Object source, TypeLiteral<T> type) {
-    this.source = requireNonNull(source, "source");
-    this.type = requireNonNull(type, "type");
-  }
+    @Override
+    public Object getSource()
+    {
+        return source;
+    }
 
-  @Override
-  public Object getSource() {
-    return source;
-  }
+    /**
+     * Gets the type containing the members to be injected.
+     */
+    public TypeLiteral<T> getType()
+    {
+        return type;
+    }
 
-  /** Gets the type containing the members to be injected. */
-  public TypeLiteral<T> getType() {
-    return type;
-  }
+    @Override
+    public <T> T acceptVisitor(ElementVisitor<T> visitor)
+    {
+        return visitor.visit(this);
+    }
 
-  @Override
-  public <T> T acceptVisitor(ElementVisitor<T> visitor) {
-    return visitor.visit(this);
-  }
+    /**
+     * Sets the actual members injector.
+     *
+     * @throws IllegalStateException if the delegate is already set
+     */
+    public void initializeDelegate(MembersInjector<T> delegate)
+    {
+        checkState(this.delegate == null, "delegate already initialized");
+        this.delegate = requireNonNull(delegate, "delegate");
+    }
 
-  /**
-   * Sets the actual members injector.
-   *
-   * @throws IllegalStateException if the delegate is already set
-   */
-  public void initializeDelegate(MembersInjector<T> delegate) {
-    checkState(this.delegate == null, "delegate already initialized");
-    this.delegate = requireNonNull(delegate, "delegate");
-  }
+    @Override
+    public void applyTo(Binder binder)
+    {
+        initializeDelegate(binder.withSource(getSource()).getMembersInjector(type));
+    }
 
-  @Override
-  public void applyTo(Binder binder) {
-    initializeDelegate(binder.withSource(getSource()).getMembersInjector(type));
-  }
+    /**
+     * Returns the delegate members injector, or {@code null} if it has not yet been initialized. The
+     * delegate will be initialized when this element is processed, or otherwise used to create an
+     * injector.
+     */
+    public MembersInjector<T> getDelegate()
+    {
+        return delegate;
+    }
 
-  /**
-   * Returns the delegate members injector, or {@code null} if it has not yet been initialized. The
-   * delegate will be initialized when this element is processed, or otherwise used to create an
-   * injector.
-   */
-  public MembersInjector<T> getDelegate() {
-    return delegate;
-  }
+    /**
+     * Returns the instance methods and fields that will be injected to fulfill this request.
+     *
+     * @since 4.2.3
+     * @return a possibly empty set of injection points. The set has a specified iteration order. All
+     *         fields are returned and then all methods. Within the fields, supertype fields are returned
+     *         before subtype fields. Similarly, supertype methods are returned before subtype methods.
+     * @throws ConfigurationException if there is a malformed injection point on the class of {@code
+     *         instance}, such as a field with multiple binding annotations. The exception's {@link
+     *         ConfigurationException#getPartialValue() partial value} is a {@code Set<InjectionPoint>} of
+     *         the valid injection points.
+     */
+    public Set<InjectionPoint> getInjectionPoints()
+            throws ConfigurationException
+    {
+        return InjectionPoint.forInstanceMethodsAndFields(type);
+    }
 
-  /**
-   * Returns the instance methods and fields that will be injected to fulfill this request.
-   *
-   * @since 4.2.3
-   * @return a possibly empty set of injection points. The set has a specified iteration order. All
-   *     fields are returned and then all methods. Within the fields, supertype fields are returned
-   *     before subtype fields. Similarly, supertype methods are returned before subtype methods.
-   * @throws ConfigurationException if there is a malformed injection point on the class of {@code
-   *     instance}, such as a field with multiple binding annotations. The exception's {@link
-   *     ConfigurationException#getPartialValue() partial value} is a {@code Set<InjectionPoint>} of
-   *     the valid injection points.
-   */
-  public Set<InjectionPoint> getInjectionPoints() throws ConfigurationException {
-    return InjectionPoint.forInstanceMethodsAndFields(type);
-  }
+    /**
+     * Returns the looked up members injector. The result is not valid until this lookup has been
+     * initialized, which usually happens when the injector is created. The members injector will
+     * throw an {@code IllegalStateException} if you try to use it beforehand.
+     */
+    public MembersInjector<T> getMembersInjector()
+    {
+        return new MembersInjector<T>()
+        {
+            @Override
+            public void injectMembers(T instance)
+            {
+                MembersInjector<T> local = delegate;
+                if (local == null) {
+                    throw new IllegalStateException(
+                            "This MembersInjector cannot be used until the Injector has been created.");
+                }
+                local.injectMembers(instance);
+            }
 
-  /**
-   * Returns the looked up members injector. The result is not valid until this lookup has been
-   * initialized, which usually happens when the injector is created. The members injector will
-   * throw an {@code IllegalStateException} if you try to use it beforehand.
-   */
-  public MembersInjector<T> getMembersInjector() {
-    return new MembersInjector<T>() {
-      @Override
-      public void injectMembers(T instance) {
-        MembersInjector<T> local = delegate;
-        if (local == null) {
-          throw new IllegalStateException(
-              "This MembersInjector cannot be used until the Injector has been created.");
-        }
-        local.injectMembers(instance);
-      }
+            @Override
+            public String toString()
+            {
+                return "MembersInjector<" + type + ">";
+            }
+        };
+    }
 
-      @Override
-      public String toString() {
-        return "MembersInjector<" + type + ">";
-      }
-    };
-  }
+    @Override
+    public boolean equals(Object obj)
+    {
+        return obj instanceof MembersInjectorLookup
+                && ((MembersInjectorLookup<?>) obj).type.equals(type)
+                && ((MembersInjectorLookup<?>) obj).source.equals(source);
+    }
 
-  @Override
-  public boolean equals(Object obj) {
-    return obj instanceof MembersInjectorLookup
-        && ((MembersInjectorLookup<?>) obj).type.equals(type)
-        && ((MembersInjectorLookup<?>) obj).source.equals(source);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(type, source);
-  }
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(type, source);
+    }
 }

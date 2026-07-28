@@ -19,7 +19,9 @@ package com.google.inject.grapher.demo;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
-class DancePartyImpl implements DanceParty {
-  @Inject
-  public DancePartyImpl(@Assisted String thatNewSound, MartyMcFly guitarist) {}
+class DancePartyImpl
+        implements DanceParty
+{
+    @Inject
+    public DancePartyImpl(@Assisted String thatNewSound, MartyMcFly guitarist) {}
 }

@@ -29,37 +29,38 @@ import jakarta.servlet.http.HttpServlet;
  * @since 3.0
  * @author sameb@google.com (Sam Berlin)
  */
-public interface ServletModuleTargetVisitor<T, V> extends BindingTargetVisitor<T, V> {
+public interface ServletModuleTargetVisitor<T, V>
+        extends BindingTargetVisitor<T, V>
+{
+    /**
+     * Visits a filter binding created by {@link ServletModule#filter}, where {@link
+     * FilterKeyBindingBuilder#through} is called with a Class or Key.
+     *
+     * <p>If multiple patterns were specified, this will be called multiple times.
+     */
+    V visit(LinkedFilterBinding binding);
 
-  /**
-   * Visits a filter binding created by {@link ServletModule#filter}, where {@link
-   * FilterKeyBindingBuilder#through} is called with a Class or Key.
-   *
-   * <p>If multiple patterns were specified, this will be called multiple times.
-   */
-  V visit(LinkedFilterBinding binding);
+    /**
+     * Visits a filter binding created by {@link ServletModule#filter} where {@link
+     * FilterKeyBindingBuilder#through} is called with a {@link Filter}.
+     *
+     * <p>If multiple patterns were specified, this will be called multiple times.
+     */
+    V visit(InstanceFilterBinding binding);
 
-  /**
-   * Visits a filter binding created by {@link ServletModule#filter} where {@link
-   * FilterKeyBindingBuilder#through} is called with a {@link Filter}.
-   *
-   * <p>If multiple patterns were specified, this will be called multiple times.
-   */
-  V visit(InstanceFilterBinding binding);
+    /**
+     * Visits a servlet binding created by {@link ServletModule#serve} where {@link
+     * ServletKeyBindingBuilder#with}, is called with a Class or Key.
+     *
+     * <p>If multiple patterns were specified, this will be called multiple times.
+     */
+    V visit(LinkedServletBinding binding);
 
-  /**
-   * Visits a servlet binding created by {@link ServletModule#serve} where {@link
-   * ServletKeyBindingBuilder#with}, is called with a Class or Key.
-   *
-   * <p>If multiple patterns were specified, this will be called multiple times.
-   */
-  V visit(LinkedServletBinding binding);
-
-  /**
-   * Visits a servlet binding created by {@link ServletModule#serve} where {@link
-   * ServletKeyBindingBuilder#with}, is called with an {@link HttpServlet}.
-   *
-   * <p>If multiple patterns were specified, this will be called multiple times.
-   */
-  V visit(InstanceServletBinding binding);
+    /**
+     * Visits a servlet binding created by {@link ServletModule#serve} where {@link
+     * ServletKeyBindingBuilder#with}, is called with an {@link HttpServlet}.
+     *
+     * <p>If multiple patterns were specified, this will be called multiple times.
+     */
+    V visit(InstanceServletBinding binding);
 }

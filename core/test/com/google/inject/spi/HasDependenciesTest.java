@@ -23,91 +23,117 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Provider;
-import java.util.Set;
-import static com.google.common.collect.MoreCollectors.onlyElement;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
 
-/** @author jessewilson@google.com (Jesse Wilson) */
-public class HasDependenciesTest {
+import java.util.Set;
 
-  /** When an instance implements HasDependencies, the injected dependencies aren't used. */
-  @Test
-  public void testInstanceWithDependencies() {
-    Injector injector =
-        Guice.createInjector(
-            new AbstractModule() {
-              @Override
-              protected void configure() {
-                bind(A.class).toInstance(new AWithDependencies());
-              }
-            });
+import static com.google.common.collect.MoreCollectors.onlyElement;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-    InstanceBinding<?> binding = (InstanceBinding<?>) injector.getBinding(A.class);
-    assertEquals(
-        ImmutableSet.<Dependency<?>>of(Dependency.get(Key.get(Integer.class))),
-        binding.getDependencies());
-  }
+/**
+ * @author jessewilson@google.com (Jesse Wilson)
+ */
+public class HasDependenciesTest
+{
+    /**
+     * When an instance implements HasDependencies, the injected dependencies aren't used.
+     */
+    @Test
+    public void testInstanceWithDependencies()
+    {
+        Injector injector =
+                Guice.createInjector(
+                        new AbstractModule()
+                        {
+                            @Override
+                            protected void configure()
+                            {
+                                bind(A.class).toInstance(new AWithDependencies());
+                            }
+                        });
 
-  @Test
-  public void testInstanceWithoutDependencies() {
-    Injector injector =
-        Guice.createInjector(
-            new AbstractModule() {
-              @Override
-              protected void configure() {
-                bind(A.class).toInstance(new A());
-              }
-            });
-
-    InstanceBinding<?> binding = (InstanceBinding<?>) injector.getBinding(A.class);
-    Dependency<?> onlyDependency = binding.getDependencies().stream().collect(onlyElement());
-    assertEquals(Key.get(String.class), onlyDependency.getKey());
-  }
-
-  @Test
-  public void testProvider() {
-    Injector injector =
-        Guice.createInjector(
-            new AbstractModule() {
-              @Override
-              protected void configure() {
-                bind(A.class).toProvider(new ProviderOfA());
-              }
-            });
-
-    ProviderInstanceBinding<?> binding = (ProviderInstanceBinding<?>) injector.getBinding(A.class);
-    Dependency<?> onlyDependency = binding.getDependencies().stream().collect(onlyElement());
-    assertEquals(Key.get(String.class), onlyDependency.getKey());
-  }
-
-  static class A {
-    @Inject
-    void injectUnusedDependencies(String unused) {}
-  }
-
-  static class ProviderOfA implements Provider<A> {
-    @Inject
-    void injectUnusedDependencies(String unused) {}
-
-    @Override
-    public A get() {
-      throw new UnsupportedOperationException();
+        InstanceBinding<?> binding = (InstanceBinding<?>) injector.getBinding(A.class);
+        assertEquals(
+                ImmutableSet.<Dependency<?>>of(Dependency.get(Key.get(Integer.class))),
+                binding.getDependencies());
     }
-  }
 
-  static class AWithDependencies extends A implements HasDependencies {
-    @Override
-    public Set<Dependency<?>> getDependencies() {
-      return ImmutableSet.<Dependency<?>>of(Dependency.get(Key.get(Integer.class)));
-    }
-  }
+    @Test
+    public void testInstanceWithoutDependencies()
+    {
+        Injector injector =
+                Guice.createInjector(
+                        new AbstractModule()
+                        {
+                            @Override
+                            protected void configure()
+                            {
+                                bind(A.class).toInstance(new A());
+                            }
+                        });
 
-  static class ProviderOfAWithDependencies extends ProviderOfA
-      implements ProviderWithDependencies<A> {
-    @Override
-    public Set<Dependency<?>> getDependencies() {
-      return ImmutableSet.<Dependency<?>>of(Dependency.get(Key.get(Integer.class)));
+        InstanceBinding<?> binding = (InstanceBinding<?>) injector.getBinding(A.class);
+        Dependency<?> onlyDependency = binding.getDependencies().stream().collect(onlyElement());
+        assertEquals(Key.get(String.class), onlyDependency.getKey());
     }
-  }
+
+    @Test
+    public void testProvider()
+    {
+        Injector injector =
+                Guice.createInjector(
+                        new AbstractModule()
+                        {
+                            @Override
+                            protected void configure()
+                            {
+                                bind(A.class).toProvider(new ProviderOfA());
+                            }
+                        });
+
+        ProviderInstanceBinding<?> binding = (ProviderInstanceBinding<?>) injector.getBinding(A.class);
+        Dependency<?> onlyDependency = binding.getDependencies().stream().collect(onlyElement());
+        assertEquals(Key.get(String.class), onlyDependency.getKey());
+    }
+
+    static class A
+    {
+        @Inject
+        void injectUnusedDependencies(String unused) {}
+    }
+
+    static class ProviderOfA
+            implements Provider<A>
+    {
+        @Inject
+        void injectUnusedDependencies(String unused) {}
+
+        @Override
+        public A get()
+        {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    static class AWithDependencies
+            extends A
+            implements HasDependencies
+    {
+        @Override
+        public Set<Dependency<?>> getDependencies()
+        {
+            return ImmutableSet.<Dependency<?>>of(Dependency.get(Key.get(Integer.class)));
+        }
+    }
+
+    static class ProviderOfAWithDependencies
+            extends ProviderOfA
+            implements ProviderWithDependencies<A>
+    {
+        @Override
+        public Set<Dependency<?>> getDependencies()
+        {
+            return ImmutableSet.<Dependency<?>>of(Dependency.get(Key.get(Integer.class)));
+        }
+    }
 }

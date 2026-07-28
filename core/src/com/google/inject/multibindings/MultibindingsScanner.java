@@ -23,6 +23,7 @@ import com.google.inject.Module;
 import com.google.inject.spi.InjectionPoint;
 import com.google.inject.spi.ModuleAnnotatedMethodScanner;
 import com.google.inject.util.Modules;
+
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
@@ -31,45 +32,54 @@ import java.util.Set;
  *
  * @since 4.0
  * @deprecated This functionality is installed by default. All references to this can be safely
- *     removed. This class will be removed in Guice 4.4
+ *         removed. This class will be removed in Guice 4.4
  */
 @Deprecated
-public class MultibindingsScanner {
-  private MultibindingsScanner() {}
+public class MultibindingsScanner
+{
+    private MultibindingsScanner() {}
 
-  /**
-   * Returns a module that, when installed, will scan all modules for methods with the annotations
-   * {@literal @}{@link ProvidesIntoMap}, {@literal @}{@link ProvidesIntoSet}, and
-   * {@literal @}{@link ProvidesIntoOptional}.
-   *
-   * <p>This is a convenience method, equivalent to doing {@code
-   * binder().scanModulesForAnnotatedMethods(MultibindingsScanner.scanner())}.
-   *
-   * @deprecated This functionality is now installed by default. All references/installations can be
-   *     eliminated.
-   */
-  @Deprecated
-  public static Module asModule() {
-    return Modules.EMPTY_MODULE;
-  }
+    /**
+     * Returns a module that, when installed, will scan all modules for methods with the annotations
+     * {@literal @}{@link ProvidesIntoMap}, {@literal @}{@link ProvidesIntoSet}, and
+     * {@literal @}{@link ProvidesIntoOptional}.
+     *
+     * <p>This is a convenience method, equivalent to doing {@code
+     * binder().scanModulesForAnnotatedMethods(MultibindingsScanner.scanner())}.
+     *
+     * @deprecated This functionality is now installed by default. All references/installations can be
+     *         eliminated.
+     */
+    @Deprecated
+    public static Module asModule()
+    {
+        return Modules.EMPTY_MODULE;
+    }
 
-  /**
-   * @deprecated This method returns an empty scanner since the preexisting functionality is
-   *     installed by default.
-   */
-  @Deprecated
-  public static ModuleAnnotatedMethodScanner scanner() {
-    return new ModuleAnnotatedMethodScanner() {
-      @Override
-      public Set<? extends Class<? extends Annotation>> annotationClasses() {
-        return ImmutableSet.of();
-      }
+    /**
+     * @deprecated This method returns an empty scanner since the preexisting functionality is
+     *         installed by default.
+     */
+    @Deprecated
+    public static ModuleAnnotatedMethodScanner scanner()
+    {
+        return new ModuleAnnotatedMethodScanner()
+        {
+            @Override
+            public Set<? extends Class<? extends Annotation>> annotationClasses()
+            {
+                return ImmutableSet.of();
+            }
 
-      @Override
-      public <T> Key<T> prepareMethod(
-          Binder binder, Annotation annotation, Key<T> key, InjectionPoint injectionPoint) {
-        throw new IllegalStateException("Unexpected annotation: " + annotation);
-      }
-    };
-  }
+            @Override
+            public <T> Key<T> prepareMethod(
+                    Binder binder,
+                    Annotation annotation,
+                    Key<T> key,
+                    InjectionPoint injectionPoint)
+            {
+                throw new IllegalStateException("Unexpected annotation: " + annotation);
+            }
+        };
+    }
 }

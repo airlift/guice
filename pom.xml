@@ -86,26 +86,11 @@ See the Apache License Version 2.0 for the specific language governing permissio
         <guice.api.version>1.4</guice.api.version>
         <project.build.targetJdk>25</project.build.targetJdk>
         <!--
-     | Use "-Dguice.with.jarjar=false" to build without jarjar
-    -->
-        <guice.with.jarjar>true</guice.with.jarjar>
-        <!--
      | The last stable release version id, used for generating API diffs between released versions
     -->
         <guice.lastStableRelease>7.0.0</guice.lastStableRelease>
-        <!--
-     | This is vendored upstream code that does not follow the airlift conventions,
-     | so the airbase style and static analysis checks are not applicable.
-    -->
-        <air.check.skip-extended>true</air.check.skip-extended>
-        <!--
-     | Modernizer is the exception: it flags legacy APIs, which we do want to know about.
-     | Rules that do not apply to this tree are excluded (with rationale) in the
-     | modernizer-maven-plugin configuration below; everything else is fixed, so violations fail
-     | the build.
-    -->
-        <air.check.skip-modernizer>${air.check.skip-all}</air.check.skip-modernizer>
         <air.check.fail-modernizer>true</air.check.fail-modernizer>
+        <air.check.skip-license>true</air.check.skip-license>
     </properties>
 
     <dependencyManagement>

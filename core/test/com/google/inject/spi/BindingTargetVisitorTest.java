@@ -25,12 +25,15 @@ import org.junit.jupiter.api.Test;
  *
  * @author phopkins@gmail.com
  */
-public class BindingTargetVisitorTest {
-  @Test
-  public void testBindingTargetVisitorTypeTest() throws Exception {
-    Injector injector = Guice.createInjector();
-    for (Binding<?> binding : injector.getBindings().values()) {
-      binding.acceptTargetVisitor(new DefaultBindingTargetVisitor<Object, Object>() {});
+public class BindingTargetVisitorTest
+{
+    @Test
+    public void testBindingTargetVisitorTypeTest()
+            throws Exception
+    {
+        Injector injector = Guice.createInjector();
+        for (Binding<?> binding : injector.getBindings().values()) {
+            binding.acceptTargetVisitor(new DefaultBindingTargetVisitor<Object, Object>() {});
+        }
     }
-  }
 }

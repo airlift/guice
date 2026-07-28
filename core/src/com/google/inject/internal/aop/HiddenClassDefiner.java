@@ -28,11 +28,14 @@ import java.lang.invoke.MethodHandles.Lookup.ClassOption;
  *
  * @author mcculls@gmail.com (Stuart McCulloch)
  */
-final class HiddenClassDefiner implements ClassDefiner {
-
-  @Override
-  public Class<?> define(Class<?> hostClass, byte[] bytecode) throws Exception {
-    Lookup hostLookup = MethodHandles.privateLookupIn(hostClass, MethodHandles.lookup());
-    return hostLookup.defineHiddenClass(bytecode, false, ClassOption.NESTMATE).lookupClass();
-  }
+final class HiddenClassDefiner
+        implements ClassDefiner
+{
+    @Override
+    public Class<?> define(Class<?> hostClass, byte[] bytecode)
+            throws Exception
+    {
+        Lookup hostLookup = MethodHandles.privateLookupIn(hostClass, MethodHandles.lookup());
+        return hostLookup.defineHiddenClass(bytecode, false, ClassOption.NESTMATE).lookupClass();
+    }
 }

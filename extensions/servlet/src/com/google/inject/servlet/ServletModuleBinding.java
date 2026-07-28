@@ -24,17 +24,25 @@ import java.util.Map;
  * @author sameb@google.com (Sam Berlin)
  * @since 3.0
  */
-public interface ServletModuleBinding {
+public interface ServletModuleBinding
+{
+    /**
+     * Returns the pattern type that this binding was created with.
+     */
+    UriPatternType getUriPatternType();
 
-  /** Returns the pattern type that this binding was created with. */
-  UriPatternType getUriPatternType();
+    /**
+     * Returns the pattern used to match against the binding.
+     */
+    String getPattern();
 
-  /** Returns the pattern used to match against the binding. */
-  String getPattern();
+    /**
+     * Returns any context params supplied when creating the binding.
+     */
+    Map<String, String> getInitParams();
 
-  /** Returns any context params supplied when creating the binding. */
-  Map<String, String> getInitParams();
-
-  /** Returns true if the given URI will match this binding. */
-  boolean matchesUri(String uri);
+    /**
+     * Returns true if the given URI will match this binding.
+     */
+    boolean matchesUri(String uri);
 }

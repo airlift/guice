@@ -24,12 +24,15 @@ import com.google.inject.assistedinject.FactoryModuleBuilder;
  *
  * @author phopkins@gmail.com (Pete Hopkins)
  */
-public class AssistedInjectModule extends AbstractModule {
-  @Override
-  protected void configure() {
-    install(
-        new FactoryModuleBuilder()
-            .implement(DanceParty.class, DancePartyImpl.class)
-            .build(DancePartyFactory.class));
-  }
+public class AssistedInjectModule
+        extends AbstractModule
+{
+    @Override
+    protected void configure()
+    {
+        install(
+                new FactoryModuleBuilder()
+                        .implement(DanceParty.class, DancePartyImpl.class)
+                        .build(DancePartyFactory.class));
+    }
 }

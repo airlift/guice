@@ -16,82 +16,97 @@
 
 package com.google.inject.internal;
 
-import static com.google.inject.internal.GuiceInternal.GUICE_INTERNAL;
-import static com.google.inject.spi.Elements.withTrustedSource;
-
-import com.google.common.base.MoreObjects;
 import com.google.inject.Binder;
 import com.google.inject.Key;
 import com.google.inject.spi.BindingTargetVisitor;
 import com.google.inject.spi.Dependency;
 import com.google.inject.spi.UntargettedBinding;
+
 import java.util.Objects;
 
-final class UntargettedBindingImpl<T> extends BindingImpl<T> implements UntargettedBinding<T> {
+import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.inject.internal.GuiceInternal.GUICE_INTERNAL;
+import static com.google.inject.spi.Elements.withTrustedSource;
 
-  UntargettedBindingImpl(InjectorImpl injector, Key<T> key, Object source) {
-    super(
-        injector,
-        key,
-        source,
-        new InternalFactory<T>() {
-          @Override
-          public T get(InternalContext context, Dependency<?> dependency, boolean linked) {
-            throw new AssertionError();
-          }
+final class UntargettedBindingImpl<T>
+        extends BindingImpl<T>
+        implements UntargettedBinding<T>
+{
+    UntargettedBindingImpl(InjectorImpl injector, Key<T> key, Object source)
+    {
+        super(injector,
+                key,
+                source,
+                new InternalFactory<T>()
+                {
+                    @Override
+                    public T get(InternalContext context, Dependency<?> dependency, boolean linked)
+                    {
+                        throw new AssertionError();
+                    }
 
-          @Override
-          MethodHandleResult makeHandle(LinkageContext context, boolean linked) {
-            throw new AssertionError();
-          }
-        },
-        Scoping.UNSCOPED);
-  }
-
-  public UntargettedBindingImpl(Object source, Key<T> key, Scoping scoping) {
-    super(source, key, scoping);
-  }
-
-  @Override
-  public <V> V acceptTargetVisitor(BindingTargetVisitor<? super T, V> visitor) {
-    return visitor.visit(this);
-  }
-
-  @Override
-  public BindingImpl<T> withScoping(Scoping scoping) {
-    return new UntargettedBindingImpl<T>(getSource(), getKey(), scoping);
-  }
-
-  @Override
-  public BindingImpl<T> withKey(Key<T> key) {
-    return new UntargettedBindingImpl<T>(getSource(), key, getScoping());
-  }
-
-  @Override
-  public void applyTo(Binder binder) {
-    getScoping().applyTo(withTrustedSource(GUICE_INTERNAL, binder, getSource()).bind(getKey()));
-  }
-
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(UntargettedBinding.class)
-        .add("key", getKey())
-        .add("source", getSource())
-        .toString();
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (obj instanceof UntargettedBindingImpl) {
-      UntargettedBindingImpl<?> o = (UntargettedBindingImpl<?>) obj;
-      return getKey().equals(o.getKey()) && getScoping().equals(o.getScoping());
-    } else {
-      return false;
+                    @Override
+                    MethodHandleResult makeHandle(LinkageContext context, boolean linked)
+                    {
+                        throw new AssertionError();
+                    }
+                },
+                Scoping.UNSCOPED);
     }
-  }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(getKey(), getScoping());
-  }
+    public UntargettedBindingImpl(Object source, Key<T> key, Scoping scoping)
+    {
+        super(source, key, scoping);
+    }
+
+    @Override
+    public <V> V acceptTargetVisitor(BindingTargetVisitor<? super T, V> visitor)
+    {
+        return visitor.visit(this);
+    }
+
+    @Override
+    public BindingImpl<T> withScoping(Scoping scoping)
+    {
+        return new UntargettedBindingImpl<T>(getSource(), getKey(), scoping);
+    }
+
+    @Override
+    public BindingImpl<T> withKey(Key<T> key)
+    {
+        return new UntargettedBindingImpl<T>(getSource(), key, getScoping());
+    }
+
+    @Override
+    public void applyTo(Binder binder)
+    {
+        getScoping().applyTo(withTrustedSource(GUICE_INTERNAL, binder, getSource()).bind(getKey()));
+    }
+
+    @Override
+    public String toString()
+    {
+        return toStringHelper(UntargettedBinding.class)
+                .add("key", getKey())
+                .add("source", getSource())
+                .toString();
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (obj instanceof UntargettedBindingImpl) {
+            UntargettedBindingImpl<?> o = (UntargettedBindingImpl<?>) obj;
+            return getKey().equals(o.getKey()) && getScoping().equals(o.getScoping());
+        }
+        else {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(getKey(), getScoping());
+    }
 }

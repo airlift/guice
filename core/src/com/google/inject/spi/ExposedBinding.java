@@ -25,12 +25,17 @@ import com.google.inject.Binding;
  * @author jessewilson@google.com (Jesse Wilson)
  * @since 2.0
  */
-public interface ExposedBinding<T> extends Binding<T>, HasDependencies {
+public interface ExposedBinding<T>
+        extends Binding<T>, HasDependencies
+{
+    /**
+     * Returns the enclosed environment that holds the original binding.
+     */
+    PrivateElements getPrivateElements();
 
-  /** Returns the enclosed environment that holds the original binding. */
-  PrivateElements getPrivateElements();
-
-  /** Unsupported. Always throws {@link UnsupportedOperationException}. */
-  @Override
-  void applyTo(Binder binder);
+    /**
+     * Unsupported. Always throws {@link UnsupportedOperationException}.
+     */
+    @Override
+    void applyTo(Binder binder);
 }

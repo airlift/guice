@@ -16,8 +16,6 @@
 
 package com.google.inject.internal;
 
-import static com.google.common.base.Preconditions.checkState;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Key;
@@ -29,118 +27,139 @@ import com.google.inject.matcher.Matchers;
 import com.google.inject.spi.InjectionListener;
 import com.google.inject.spi.Message;
 import com.google.inject.spi.TypeEncounter;
+
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
-/** @author jessewilson@google.com (Jesse Wilson) */
-final class EncounterImpl<T> implements TypeEncounter<T> {
+import static com.google.common.base.Preconditions.checkState;
 
-  private final Errors errors;
-  private final Lookups lookups;
-  private List<MembersInjector<? super T>> membersInjectors; // lazy
-  private List<InjectionListener<? super T>> injectionListeners; // lazy
-  private List<MethodAspect> aspects; // lazy
-  private boolean valid = true;
+/**
+ * @author jessewilson@google.com (Jesse Wilson)
+ */
+final class EncounterImpl<T>
+        implements TypeEncounter<T>
+{
+    private final Errors errors;
+    private final Lookups lookups;
+    private List<MembersInjector<? super T>> membersInjectors; // lazy
+    private List<InjectionListener<? super T>> injectionListeners; // lazy
+    private List<MethodAspect> aspects; // lazy
+    private boolean valid = true;
 
-  EncounterImpl(Errors errors, Lookups lookups) {
-    this.errors = errors;
-    this.lookups = lookups;
-  }
-
-  void invalidate() {
-    valid = false;
-  }
-
-  ImmutableList<MethodAspect> getAspects() {
-    return aspects == null ? ImmutableList.<MethodAspect>of() : ImmutableList.copyOf(aspects);
-  }
-
-  @Override
-  public void bindInterceptor(
-      Matcher<? super Method> methodMatcher,
-      org.aopalliance.intercept.MethodInterceptor... interceptors) {
-    checkState(valid, "Encounters may not be used after hear() returns.");
-
-    // make sure the applicable aspects is mutable
-    if (aspects == null) {
-      aspects = new ArrayList<>();
+    EncounterImpl(Errors errors, Lookups lookups)
+    {
+        this.errors = errors;
+        this.lookups = lookups;
     }
 
-    aspects.add(new MethodAspect(Matchers.any(), methodMatcher, interceptors));
-  }
-
-  ImmutableSet<MembersInjector<? super T>> getMembersInjectors() {
-    return membersInjectors == null
-        ? ImmutableSet.<MembersInjector<? super T>>of()
-        : ImmutableSet.copyOf(membersInjectors);
-  }
-
-  ImmutableSet<InjectionListener<? super T>> getInjectionListeners() {
-    return injectionListeners == null
-        ? ImmutableSet.<InjectionListener<? super T>>of()
-        : ImmutableSet.copyOf(injectionListeners);
-  }
-
-  @Override
-  public void register(MembersInjector<? super T> membersInjector) {
-    checkState(valid, "Encounters may not be used after hear() returns.");
-
-    if (membersInjectors == null) {
-      membersInjectors = new ArrayList<>();
+    void invalidate()
+    {
+        valid = false;
     }
 
-    membersInjectors.add(membersInjector);
-  }
-
-  @Override
-  public void register(InjectionListener<? super T> injectionListener) {
-    checkState(valid, "Encounters may not be used after hear() returns.");
-
-    if (injectionListeners == null) {
-      injectionListeners = new ArrayList<>();
+    ImmutableList<MethodAspect> getAspects()
+    {
+        return aspects == null ? ImmutableList.<MethodAspect>of() : ImmutableList.copyOf(aspects);
     }
 
-    injectionListeners.add(injectionListener);
-  }
+    @Override
+    public void bindInterceptor(
+            Matcher<? super Method> methodMatcher,
+            org.aopalliance.intercept.MethodInterceptor... interceptors)
+    {
+        checkState(valid, "Encounters may not be used after hear() returns.");
 
-  @Override
-  public void addError(String message, Object... arguments) {
-    checkState(valid, "Encounters may not be used after hear() returns.");
-    errors.addMessage(message, arguments);
-  }
+        // make sure the applicable aspects is mutable
+        if (aspects == null) {
+            aspects = new ArrayList<>();
+        }
 
-  @Override
-  public void addError(Throwable t) {
-    checkState(valid, "Encounters may not be used after hear() returns.");
-    errors.errorInUserCode(t, "An exception was caught and reported. Message: %s", t.getMessage());
-  }
+        aspects.add(new MethodAspect(Matchers.any(), methodMatcher, interceptors));
+    }
 
-  @Override
-  public void addError(Message message) {
-    checkState(valid, "Encounters may not be used after hear() returns.");
-    errors.addMessage(message);
-  }
+    ImmutableSet<MembersInjector<? super T>> getMembersInjectors()
+    {
+        return membersInjectors == null
+                ? ImmutableSet.<MembersInjector<? super T>>of()
+                : ImmutableSet.copyOf(membersInjectors);
+    }
 
-  @Override
-  public <T> Provider<T> getProvider(Key<T> key) {
-    checkState(valid, "Encounters may not be used after hear() returns.");
-    return lookups.getProvider(key);
-  }
+    ImmutableSet<InjectionListener<? super T>> getInjectionListeners()
+    {
+        return injectionListeners == null
+                ? ImmutableSet.<InjectionListener<? super T>>of()
+                : ImmutableSet.copyOf(injectionListeners);
+    }
 
-  @Override
-  public <T> Provider<T> getProvider(Class<T> type) {
-    return getProvider(Key.get(type));
-  }
+    @Override
+    public void register(MembersInjector<? super T> membersInjector)
+    {
+        checkState(valid, "Encounters may not be used after hear() returns.");
 
-  @Override
-  public <T> MembersInjector<T> getMembersInjector(TypeLiteral<T> typeLiteral) {
-    checkState(valid, "Encounters may not be used after hear() returns.");
-    return lookups.getMembersInjector(typeLiteral);
-  }
+        if (membersInjectors == null) {
+            membersInjectors = new ArrayList<>();
+        }
 
-  @Override
-  public <T> MembersInjector<T> getMembersInjector(Class<T> type) {
-    return getMembersInjector(TypeLiteral.get(type));
-  }
+        membersInjectors.add(membersInjector);
+    }
+
+    @Override
+    public void register(InjectionListener<? super T> injectionListener)
+    {
+        checkState(valid, "Encounters may not be used after hear() returns.");
+
+        if (injectionListeners == null) {
+            injectionListeners = new ArrayList<>();
+        }
+
+        injectionListeners.add(injectionListener);
+    }
+
+    @Override
+    public void addError(String message, Object... arguments)
+    {
+        checkState(valid, "Encounters may not be used after hear() returns.");
+        errors.addMessage(message, arguments);
+    }
+
+    @Override
+    public void addError(Throwable t)
+    {
+        checkState(valid, "Encounters may not be used after hear() returns.");
+        errors.errorInUserCode(t, "An exception was caught and reported. Message: %s", t.getMessage());
+    }
+
+    @Override
+    public void addError(Message message)
+    {
+        checkState(valid, "Encounters may not be used after hear() returns.");
+        errors.addMessage(message);
+    }
+
+    @Override
+    public <T> Provider<T> getProvider(Key<T> key)
+    {
+        checkState(valid, "Encounters may not be used after hear() returns.");
+        return lookups.getProvider(key);
+    }
+
+    @Override
+    public <T> Provider<T> getProvider(Class<T> type)
+    {
+        return getProvider(Key.get(type));
+    }
+
+    @Override
+    public <T> MembersInjector<T> getMembersInjector(TypeLiteral<T> typeLiteral)
+    {
+        checkState(valid, "Encounters may not be used after hear() returns.");
+        return lookups.getMembersInjector(typeLiteral);
+    }
+
+    @Override
+    public <T> MembersInjector<T> getMembersInjector(Class<T> type)
+    {
+        return getMembersInjector(TypeLiteral.get(type));
+    }
 }

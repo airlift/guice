@@ -1,17 +1,17 @@
 package com.google.inject.servlet;
 
-import static org.mockito.Mockito.mock;
-
 import com.google.inject.Guice;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import jakarta.servlet.FilterConfig;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.Mockito.mock;
 
 /**
  * Ensures that an error is thrown if a Servlet or Filter is bound under any scope other than
@@ -19,90 +19,110 @@ import org.junit.jupiter.api.Test;
  *
  * @author dhanji@gmail.com
  */
-public class InvalidScopeBindingTest {
-
-  @AfterEach
-  public void tearDown() throws Exception {
-    GuiceFilter.reset();
-  }
-
-  @Test
-  public final void testServletInNonSingletonScopeThrowsServletException() {
-    GuiceFilter guiceFilter = new GuiceFilter();
-
-    Guice.createInjector(
-        new ServletModule() {
-          @Override
-          protected void configureServlets() {
-            serve("/*").with(MyNonSingletonServlet.class);
-          }
-        });
-
-    ServletException se = null;
-    try {
-      guiceFilter.init(mock(FilterConfig.class));
-    } catch (ServletException e) {
-      se = e;
-    } finally {
-      assertNotNull(se, "Servlet exception was not thrown with wrong scope binding");
+public class InvalidScopeBindingTest
+{
+    @AfterEach
+    public void tearDown()
+            throws Exception
+    {
+        GuiceFilter.reset();
     }
-  }
 
-  @Test
-  public final void testFilterInNonSingletonScopeThrowsServletException() {
-    GuiceFilter guiceFilter = new GuiceFilter();
+    @Test
+    public final void testServletInNonSingletonScopeThrowsServletException()
+    {
+        GuiceFilter guiceFilter = new GuiceFilter();
 
-    Guice.createInjector(
-        new ServletModule() {
-          @Override
-          protected void configureServlets() {
-            filter("/*").through(MyNonSingletonFilter.class);
-          }
-        });
+        Guice.createInjector(
+                new ServletModule()
+                {
+                    @Override
+                    protected void configureServlets()
+                    {
+                        serve("/*").with(MyNonSingletonServlet.class);
+                    }
+                });
 
-    ServletException se = null;
-    try {
-      guiceFilter.init(mock(FilterConfig.class));
-    } catch (ServletException e) {
-      se = e;
-    } finally {
-      assertNotNull(se, "Servlet exception was not thrown with wrong scope binding");
+        ServletException se = null;
+        try {
+            guiceFilter.init(mock(FilterConfig.class));
+        }
+        catch (ServletException e) {
+            se = e;
+        }
+        finally {
+            assertNotNull(se, "Servlet exception was not thrown with wrong scope binding");
+        }
     }
-  }
 
-  @Test
-  public final void testHappyCaseFilter() {
-    GuiceFilter guiceFilter = new GuiceFilter();
+    @Test
+    public final void testFilterInNonSingletonScopeThrowsServletException()
+    {
+        GuiceFilter guiceFilter = new GuiceFilter();
 
-    Guice.createInjector(
-        new ServletModule() {
-          @Override
-          protected void configureServlets() {
-            // Annotated scoping variant.
-            filter("/*").through(MySingletonFilter.class);
+        Guice.createInjector(
+                new ServletModule()
+                {
+                    @Override
+                    protected void configureServlets()
+                    {
+                        filter("/*").through(MyNonSingletonFilter.class);
+                    }
+                });
 
-            // Explicit scoping variant.
-            bind(DummyFilterImpl.class).in(Scopes.SINGLETON);
-            filter("/*").through(DummyFilterImpl.class);
-          }
-        });
-
-    ServletException se = null;
-    try {
-      guiceFilter.init(mock(FilterConfig.class));
-    } catch (ServletException e) {
-      se = e;
-    } finally {
-      assertNull(se, "Servlet exception was thrown with correct scope binding");
+        ServletException se = null;
+        try {
+            guiceFilter.init(mock(FilterConfig.class));
+        }
+        catch (ServletException e) {
+            se = e;
+        }
+        finally {
+            assertNotNull(se, "Servlet exception was not thrown with wrong scope binding");
+        }
     }
-  }
 
-  @RequestScoped
-  public static class MyNonSingletonServlet extends HttpServlet {}
+    @Test
+    public final void testHappyCaseFilter()
+    {
+        GuiceFilter guiceFilter = new GuiceFilter();
 
-  @SessionScoped
-  public static class MyNonSingletonFilter extends DummyFilterImpl {}
+        Guice.createInjector(
+                new ServletModule()
+                {
+                    @Override
+                    protected void configureServlets()
+                    {
+                        // Annotated scoping variant.
+                        filter("/*").through(MySingletonFilter.class);
 
-  @Singleton
-  public static class MySingletonFilter extends DummyFilterImpl {}
+                        // Explicit scoping variant.
+                        bind(DummyFilterImpl.class).in(Scopes.SINGLETON);
+                        filter("/*").through(DummyFilterImpl.class);
+                    }
+                });
+
+        ServletException se = null;
+        try {
+            guiceFilter.init(mock(FilterConfig.class));
+        }
+        catch (ServletException e) {
+            se = e;
+        }
+        finally {
+            assertNull(se, "Servlet exception was thrown with correct scope binding");
+        }
+    }
+
+    @RequestScoped
+    public static class MyNonSingletonServlet
+            extends HttpServlet {}
+
+    @SessionScoped
+    public static class MyNonSingletonFilter
+            extends DummyFilterImpl {}
+
+    @Singleton
+    public static class MySingletonFilter
+            extends DummyFilterImpl {}
 }

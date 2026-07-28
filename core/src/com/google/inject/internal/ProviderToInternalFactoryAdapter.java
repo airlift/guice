@@ -33,55 +33,68 @@ import com.google.inject.spi.Dependency;
  *
  * @author crazybob@google.com (Bob Lee)
  */
-public class ProviderToInternalFactoryAdapter<T> implements Provider<T> {
+public class ProviderToInternalFactoryAdapter<T>
+        implements Provider<T>
+{
+    private final InjectorImpl injector;
+    final InternalFactory<? extends T> internalFactory;
 
-  private final InjectorImpl injector;
-  final InternalFactory<? extends T> internalFactory;
+    static <T> ProviderToInternalFactoryAdapter<T> create(
+            InjectorImpl injector,
+            InternalFactory<? extends T> internalFactory)
+    {
+        if (InternalFlags.getUseMethodHandlesOption()) {
+            return InternalMethodHandles.makeScopedProvider(internalFactory, injector);
+        }
 
-  static <T> ProviderToInternalFactoryAdapter<T> create(
-      InjectorImpl injector, InternalFactory<? extends T> internalFactory) {
-    if (InternalFlags.getUseMethodHandlesOption()) {
-      return InternalMethodHandles.makeScopedProvider(internalFactory, injector);
+        return new ProviderToInternalFactoryAdapter<>(injector, internalFactory);
     }
 
-    return new ProviderToInternalFactoryAdapter<>(injector, internalFactory);
-  }
-
-  protected ProviderToInternalFactoryAdapter(
-      InjectorImpl injector, InternalFactory<? extends T> internalFactory) {
-    this.injector = injector;
-    this.internalFactory = internalFactory;
-  }
-
-  @Override
-  public T get() {
-    InternalContext context = injector.enterContext();
-    try {
-      return doGet(context, context.getDependency());
-    } catch (InternalProvisionException e) {
-      throw e.toProvisionException();
-    } finally {
-      context.close();
+    protected ProviderToInternalFactoryAdapter(
+            InjectorImpl injector,
+            InternalFactory<? extends T> internalFactory)
+    {
+        this.injector = injector;
+        this.internalFactory = internalFactory;
     }
-  }
 
-  // Exposed so it can be overridden by the generated provider when method handles are enabled.
-  // See InternalMethodHandles.makeScopedProvider.
-  protected T doGet(InternalContext context, Dependency<?> dependency)
-      throws InternalProvisionException {
-    // Always pretend that we are a linked binding, to support
-    // scoping implicit bindings.  If we are not actually a linked
-    // binding, we'll fail properly elsewhere in the chain.
-    return internalFactory.get(context, dependency, true);
-  }
+    @Override
+    public T get()
+    {
+        InternalContext context = injector.enterContext();
+        try {
+            return doGet(context, context.getDependency());
+        }
+        catch (InternalProvisionException e) {
+            throw e.toProvisionException();
+        }
+        finally {
+            context.close();
+        }
+    }
 
-  /** Exposed for SingletonScope. */
-  InjectorImpl getInjector() {
-    return injector;
-  }
+    // Exposed so it can be overridden by the generated provider when method handles are enabled.
+    // See InternalMethodHandles.makeScopedProvider.
+    protected T doGet(InternalContext context, Dependency<?> dependency)
+            throws InternalProvisionException
+    {
+        // Always pretend that we are a linked binding, to support
+        // scoping implicit bindings.  If we are not actually a linked
+        // binding, we'll fail properly elsewhere in the chain.
+        return internalFactory.get(context, dependency, true);
+    }
 
-  @Override
-  public String toString() {
-    return internalFactory.toString();
-  }
+    /**
+     * Exposed for SingletonScope.
+     */
+    InjectorImpl getInjector()
+    {
+        return injector;
+    }
+
+    @Override
+    public String toString()
+    {
+        return internalFactory.toString();
+    }
 }

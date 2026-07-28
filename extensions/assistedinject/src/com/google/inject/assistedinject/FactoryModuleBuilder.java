@@ -21,6 +21,7 @@ import com.google.inject.Key;
 import com.google.inject.Module;
 import com.google.inject.Provider;
 import com.google.inject.TypeLiteral;
+
 import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandles;
 
@@ -210,132 +211,195 @@ import java.lang.invoke.MethodHandles;
  * @since 3.0
  * @author schmitt@google.com (Peter Schmitt)
  */
-public final class FactoryModuleBuilder {
+public final class FactoryModuleBuilder
+{
+    private final BindingCollector bindings = new BindingCollector();
+    private MethodHandles.Lookup lookups;
 
-  private final BindingCollector bindings = new BindingCollector();
-  private MethodHandles.Lookup lookups;
+    /**
+     * See the factory configuration examples at {@link FactoryModuleBuilder}.
+     */
+    public <T> FactoryModuleBuilder implement(Class<T> source, Class<? extends T> target)
+    {
+        return implement(source, TypeLiteral.get(target));
+    }
 
-  /** See the factory configuration examples at {@link FactoryModuleBuilder}. */
-  public <T> FactoryModuleBuilder implement(Class<T> source, Class<? extends T> target) {
-    return implement(source, TypeLiteral.get(target));
-  }
+    /**
+     * See the factory configuration examples at {@link FactoryModuleBuilder}.
+     */
+    public <T> FactoryModuleBuilder implement(Class<T> source, TypeLiteral<? extends T> target)
+    {
+        return implement(TypeLiteral.get(source), target);
+    }
 
-  /** See the factory configuration examples at {@link FactoryModuleBuilder}. */
-  public <T> FactoryModuleBuilder implement(Class<T> source, TypeLiteral<? extends T> target) {
-    return implement(TypeLiteral.get(source), target);
-  }
+    /**
+     * See the factory configuration examples at {@link FactoryModuleBuilder}.
+     */
+    public <T> FactoryModuleBuilder implement(TypeLiteral<T> source, Class<? extends T> target)
+    {
+        return implement(source, TypeLiteral.get(target));
+    }
 
-  /** See the factory configuration examples at {@link FactoryModuleBuilder}. */
-  public <T> FactoryModuleBuilder implement(TypeLiteral<T> source, Class<? extends T> target) {
-    return implement(source, TypeLiteral.get(target));
-  }
+    /**
+     * See the factory configuration examples at {@link FactoryModuleBuilder}.
+     */
+    public <T> FactoryModuleBuilder implement(
+            TypeLiteral<T> source,
+            TypeLiteral<? extends T> target)
+    {
+        return implement(Key.get(source), target);
+    }
 
-  /** See the factory configuration examples at {@link FactoryModuleBuilder}. */
-  public <T> FactoryModuleBuilder implement(
-      TypeLiteral<T> source, TypeLiteral<? extends T> target) {
-    return implement(Key.get(source), target);
-  }
+    /**
+     * See the factory configuration examples at {@link FactoryModuleBuilder}.
+     */
+    public <T> FactoryModuleBuilder implement(
+            Class<T> source,
+            Annotation annotation,
+            Class<? extends T> target)
+    {
+        return implement(source, annotation, TypeLiteral.get(target));
+    }
 
-  /** See the factory configuration examples at {@link FactoryModuleBuilder}. */
-  public <T> FactoryModuleBuilder implement(
-      Class<T> source, Annotation annotation, Class<? extends T> target) {
-    return implement(source, annotation, TypeLiteral.get(target));
-  }
+    /**
+     * See the factory configuration examples at {@link FactoryModuleBuilder}.
+     */
+    public <T> FactoryModuleBuilder implement(
+            Class<T> source,
+            Annotation annotation,
+            TypeLiteral<? extends T> target)
+    {
+        return implement(TypeLiteral.get(source), annotation, target);
+    }
 
-  /** See the factory configuration examples at {@link FactoryModuleBuilder}. */
-  public <T> FactoryModuleBuilder implement(
-      Class<T> source, Annotation annotation, TypeLiteral<? extends T> target) {
-    return implement(TypeLiteral.get(source), annotation, target);
-  }
+    /**
+     * See the factory configuration examples at {@link FactoryModuleBuilder}.
+     */
+    public <T> FactoryModuleBuilder implement(
+            TypeLiteral<T> source,
+            Annotation annotation,
+            Class<? extends T> target)
+    {
+        return implement(source, annotation, TypeLiteral.get(target));
+    }
 
-  /** See the factory configuration examples at {@link FactoryModuleBuilder}. */
-  public <T> FactoryModuleBuilder implement(
-      TypeLiteral<T> source, Annotation annotation, Class<? extends T> target) {
-    return implement(source, annotation, TypeLiteral.get(target));
-  }
+    /**
+     * See the factory configuration examples at {@link FactoryModuleBuilder}.
+     */
+    public <T> FactoryModuleBuilder implement(
+            TypeLiteral<T> source,
+            Annotation annotation,
+            TypeLiteral<? extends T> target)
+    {
+        return implement(Key.get(source, annotation), target);
+    }
 
-  /** See the factory configuration examples at {@link FactoryModuleBuilder}. */
-  public <T> FactoryModuleBuilder implement(
-      TypeLiteral<T> source, Annotation annotation, TypeLiteral<? extends T> target) {
-    return implement(Key.get(source, annotation), target);
-  }
+    /**
+     * See the factory configuration examples at {@link FactoryModuleBuilder}.
+     */
+    public <T> FactoryModuleBuilder implement(
+            Class<T> source,
+            Class<? extends Annotation> annotationType,
+            Class<? extends T> target)
+    {
+        return implement(source, annotationType, TypeLiteral.get(target));
+    }
 
-  /** See the factory configuration examples at {@link FactoryModuleBuilder}. */
-  public <T> FactoryModuleBuilder implement(
-      Class<T> source, Class<? extends Annotation> annotationType, Class<? extends T> target) {
-    return implement(source, annotationType, TypeLiteral.get(target));
-  }
+    /**
+     * See the factory configuration examples at {@link FactoryModuleBuilder}.
+     */
+    public <T> FactoryModuleBuilder implement(
+            Class<T> source,
+            Class<? extends Annotation> annotationType,
+            TypeLiteral<? extends T> target)
+    {
+        return implement(TypeLiteral.get(source), annotationType, target);
+    }
 
-  /** See the factory configuration examples at {@link FactoryModuleBuilder}. */
-  public <T> FactoryModuleBuilder implement(
-      Class<T> source,
-      Class<? extends Annotation> annotationType,
-      TypeLiteral<? extends T> target) {
-    return implement(TypeLiteral.get(source), annotationType, target);
-  }
+    /**
+     * See the factory configuration examples at {@link FactoryModuleBuilder}.
+     */
+    public <T> FactoryModuleBuilder implement(
+            TypeLiteral<T> source,
+            Class<? extends Annotation> annotationType,
+            Class<? extends T> target)
+    {
+        return implement(source, annotationType, TypeLiteral.get(target));
+    }
 
-  /** See the factory configuration examples at {@link FactoryModuleBuilder}. */
-  public <T> FactoryModuleBuilder implement(
-      TypeLiteral<T> source,
-      Class<? extends Annotation> annotationType,
-      Class<? extends T> target) {
-    return implement(source, annotationType, TypeLiteral.get(target));
-  }
+    /**
+     * See the factory configuration examples at {@link FactoryModuleBuilder}.
+     */
+    public <T> FactoryModuleBuilder implement(
+            TypeLiteral<T> source,
+            Class<? extends Annotation> annotationType,
+            TypeLiteral<? extends T> target)
+    {
+        return implement(Key.get(source, annotationType), target);
+    }
 
-  /** See the factory configuration examples at {@link FactoryModuleBuilder}. */
-  public <T> FactoryModuleBuilder implement(
-      TypeLiteral<T> source,
-      Class<? extends Annotation> annotationType,
-      TypeLiteral<? extends T> target) {
-    return implement(Key.get(source, annotationType), target);
-  }
+    /**
+     * See the factory configuration examples at {@link FactoryModuleBuilder}.
+     */
+    public <T> FactoryModuleBuilder implement(Key<T> source, Class<? extends T> target)
+    {
+        return implement(source, TypeLiteral.get(target));
+    }
 
-  /** See the factory configuration examples at {@link FactoryModuleBuilder}. */
-  public <T> FactoryModuleBuilder implement(Key<T> source, Class<? extends T> target) {
-    return implement(source, TypeLiteral.get(target));
-  }
+    /**
+     * See the factory configuration examples at {@link FactoryModuleBuilder}.
+     */
+    public <T> FactoryModuleBuilder implement(Key<T> source, TypeLiteral<? extends T> target)
+    {
+        bindings.addBinding(source, target);
+        return this;
+    }
 
-  /** See the factory configuration examples at {@link FactoryModuleBuilder}. */
-  public <T> FactoryModuleBuilder implement(Key<T> source, TypeLiteral<? extends T> target) {
-    bindings.addBinding(source, target);
-    return this;
-  }
+    /**
+     * Typically called via {@code withLookups(MethodHandles.lookup())}. Sets the MethodHandles.Lookup
+     * that the factory implementation will use to call default methods on the factory interface.
+     * While this is not always required, it is always OK to set it. It is required if the factory
+     * passed to {@link #build} is non-public and javac generated default methods while compiling it
+     * (which javac can sometimes do if the factory uses generic types).
+     *
+     * <p>Guice will try to work properly even if this method is not called (or called with a lookups
+     * that doesn't have access to the factory), but doing so requires reflection into the JDK, which
+     * may break at any time (and trigger unsafe access warnings).
+     *
+     * @since 5.0
+     */
+    public <T> FactoryModuleBuilder withLookups(MethodHandles.Lookup lookups)
+    {
+        this.lookups = lookups;
+        return this;
+    }
 
-  /**
-   * Typically called via {@code withLookups(MethodHandles.lookup())}. Sets the MethodHandles.Lookup
-   * that the factory implementation will use to call default methods on the factory interface.
-   * While this is not always required, it is always OK to set it. It is required if the factory
-   * passed to {@link #build} is non-public and javac generated default methods while compiling it
-   * (which javac can sometimes do if the factory uses generic types).
-   *
-   * <p>Guice will try to work properly even if this method is not called (or called with a lookups
-   * that doesn't have access to the factory), but doing so requires reflection into the JDK, which
-   * may break at any time (and trigger unsafe access warnings).
-   *
-   * @since 5.0
-   */
-  public <T> FactoryModuleBuilder withLookups(MethodHandles.Lookup lookups) {
-    this.lookups = lookups;
-    return this;
-  }
+    /**
+     * See the factory configuration examples at {@link FactoryModuleBuilder}.
+     */
+    public <F> Module build(Class<F> factoryInterface)
+    {
+        return build(TypeLiteral.get(factoryInterface));
+    }
 
-  /** See the factory configuration examples at {@link FactoryModuleBuilder}. */
-  public <F> Module build(Class<F> factoryInterface) {
-    return build(TypeLiteral.get(factoryInterface));
-  }
+    /**
+     * See the factory configuration examples at {@link FactoryModuleBuilder}.
+     */
+    public <F> Module build(TypeLiteral<F> factoryInterface)
+    {
+        return build(Key.get(factoryInterface));
+    }
 
-  /** See the factory configuration examples at {@link FactoryModuleBuilder}. */
-  public <F> Module build(TypeLiteral<F> factoryInterface) {
-    return build(Key.get(factoryInterface));
-  }
-
-  public <F> Module build(final Key<F> factoryInterface) {
-    return new AbstractModule() {
-      @Override
-      protected void configure() {
-        Provider<F> provider = new FactoryProvider2<>(factoryInterface, bindings, lookups);
-        binder().skipSources(this.getClass()).bind(factoryInterface).toProvider(provider);
-      }
-    };
-  }
+    public <F> Module build(final Key<F> factoryInterface)
+    {
+        return new AbstractModule()
+        {
+            @Override
+            protected void configure()
+            {
+                Provider<F> provider = new FactoryProvider2<>(factoryInterface, bindings, lookups);
+                binder().skipSources(this.getClass()).bind(factoryInterface).toProvider(provider);
+            }
+        };
+    }
 }

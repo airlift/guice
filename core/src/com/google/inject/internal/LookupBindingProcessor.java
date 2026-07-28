@@ -20,39 +20,47 @@ import com.google.inject.internal.InjectorImpl.JitLimitation;
 import com.google.inject.spi.MembersInjectorLookup;
 import com.google.inject.spi.ProviderLookup;
 
-/** Processes just MembersInjectorLookups and ProviderLookups to create their bindings. */
-final class LookupBindingProcessor extends AbstractProcessor {
-
-  LookupBindingProcessor(Errors errors) {
-    super(errors);
-  }
-
-  @Override
-  public <T> Boolean visit(MembersInjectorLookup<T> lookup) {
-    injector.getBindingData().putMembersInjectorLookup(lookup);
-    // Members injector lookups are resolved by the lookup processor but may require jit bindings to
-    // be created, do that now, so that other phases can see them.
-    try {
-      var unused = injector.membersInjectorStore.get(lookup.getType(), errors);
-    } catch (ErrorsException e) {
-      errors.merge(e.getErrors());
-    }
-    return false; // leave the lookups for the LookupProcessor to handle
-  }
-
-  @Override
-  public <T> Boolean visit(ProviderLookup<T> lookup) {
-    injector.getBindingData().putProviderLookup(lookup);
-    // Provider lookups are resolved by the lookup processor but may require jit bindings to be
-    // created, do that now, so that other phases can see them.
-    try {
-      var unused = injector.getBindingOrThrow(lookup.getKey(), errors, JitLimitation.NO_JIT);
-      // ProviderLookups need a Provider but we cannot create it yet since it is too early in the
-      // processing.
-    } catch (ErrorsException e) {
-      errors.merge(e.getErrors());
+/**
+ * Processes just MembersInjectorLookups and ProviderLookups to create their bindings.
+ */
+final class LookupBindingProcessor
+        extends AbstractProcessor
+{
+    LookupBindingProcessor(Errors errors)
+    {
+        super(errors);
     }
 
-    return false; // leave the lookups for the LookupProcessor to handle
-  }
+    @Override
+    public <T> Boolean visit(MembersInjectorLookup<T> lookup)
+    {
+        injector.getBindingData().putMembersInjectorLookup(lookup);
+        // Members injector lookups are resolved by the lookup processor but may require jit bindings to
+        // be created, do that now, so that other phases can see them.
+        try {
+            var unused = injector.membersInjectorStore.get(lookup.getType(), errors);
+        }
+        catch (ErrorsException e) {
+            errors.merge(e.getErrors());
+        }
+        return false; // leave the lookups for the LookupProcessor to handle
+    }
+
+    @Override
+    public <T> Boolean visit(ProviderLookup<T> lookup)
+    {
+        injector.getBindingData().putProviderLookup(lookup);
+        // Provider lookups are resolved by the lookup processor but may require jit bindings to be
+        // created, do that now, so that other phases can see them.
+        try {
+            var unused = injector.getBindingOrThrow(lookup.getKey(), errors, JitLimitation.NO_JIT);
+            // ProviderLookups need a Provider but we cannot create it yet since it is too early in the
+            // processing.
+        }
+        catch (ErrorsException e) {
+            errors.merge(e.getErrors());
+        }
+
+        return false; // leave the lookups for the LookupProcessor to handle
+    }
 }

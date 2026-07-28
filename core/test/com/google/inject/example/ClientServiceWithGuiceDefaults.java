@@ -25,63 +25,77 @@ import com.google.inject.Singleton;
 import junit.framework.Assert;
 import org.junit.jupiter.api.Test;
 
-/** @author crazybob@google.com (Bob Lee) */
-public class ClientServiceWithGuiceDefaults {
+/**
+ * @author crazybob@google.com (Bob Lee)
+ */
+public class ClientServiceWithGuiceDefaults
+{
+    // 44 lines
 
-  // 44 lines
-
-  @ImplementedBy(ServiceImpl.class)
-  public interface Service {
-    void go();
-  }
-
-  @Singleton
-  public static class ServiceImpl implements ClientServiceWithGuiceDefaults.Service {
-    @Override
-    public void go() {
-      // ...
-    }
-  }
-
-  public static class Client {
-
-    private final Service service;
-
-    @Inject
-    public Client(Service service) {
-      this.service = service;
+    @ImplementedBy(ServiceImpl.class)
+    public interface Service
+    {
+        void go();
     }
 
-    public void go() {
-      service.go();
-    }
-  }
-
-  @Test
-  public void testClient() {
-    MockService mock = new MockService();
-    Client client = new Client(mock);
-    client.go();
-    Assert.assertTrue(mock.isGone());
-  }
-
-  public static class MockService implements Service {
-
-    private boolean gone = false;
-
-    @Override
-    public void go() {
-      gone = true;
+    @Singleton
+    public static class ServiceImpl
+            implements ClientServiceWithGuiceDefaults.Service
+    {
+        @Override
+        public void go()
+        {
+            // ...
+        }
     }
 
-    public boolean isGone() {
-      return gone;
-    }
-  }
+    public static class Client
+    {
+        private final Service service;
 
-  public static void main(String[] args) throws CreationException {
-    new ClientServiceWithGuiceDefaults().testClient();
-    Injector injector = Guice.createInjector();
-    Client client = injector.getProvider(Client.class).get();
-  }
+        @Inject
+        public Client(Service service)
+        {
+            this.service = service;
+        }
+
+        public void go()
+        {
+            service.go();
+        }
+    }
+
+    @Test
+    public void testClient()
+    {
+        MockService mock = new MockService();
+        Client client = new Client(mock);
+        client.go();
+        Assert.assertTrue(mock.isGone());
+    }
+
+    public static class MockService
+            implements Service
+    {
+        private boolean gone;
+
+        @Override
+        public void go()
+        {
+            gone = true;
+        }
+
+        public boolean isGone()
+        {
+            return gone;
+        }
+    }
+
+    public static void main(String[] args)
+            throws CreationException
+    {
+        new ClientServiceWithGuiceDefaults().testClient();
+        Injector injector = Guice.createInjector();
+        Client client = injector.getProvider(Client.class).get();
+    }
 }

@@ -16,14 +16,14 @@
 
 package com.google.inject.spi;
 
-
-import static java.util.Objects.requireNonNull;
-
-import com.google.common.base.MoreObjects;
 import com.google.inject.Binder;
 import com.google.inject.Scope;
 import com.google.inject.internal.Errors;
+
 import java.lang.annotation.Annotation;
+
+import static com.google.common.base.MoreObjects.toStringHelper;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Registration of a scope annotation with the scope that implements it. Instances are created
@@ -37,46 +37,55 @@ import java.lang.annotation.Annotation;
  * @author jessewilson@google.com (Jesse Wilson)
  * @since 2.0
  */
-public final class ScopeBinding implements Element {
-  private final Object source;
-  private final Class<? extends Annotation> annotationType;
-  private final Scope scope;
+public final class ScopeBinding
+        implements Element
+{
+    private final Object source;
+    private final Class<? extends Annotation> annotationType;
+    private final Scope scope;
 
-  ScopeBinding(Object source, Class<? extends Annotation> annotationType, Scope scope) {
-    this.source = requireNonNull(source, "source");
-    this.annotationType = requireNonNull(annotationType, "annotationType");
-    this.scope = requireNonNull(scope, "scope");
-  }
+    ScopeBinding(Object source, Class<? extends Annotation> annotationType, Scope scope)
+    {
+        this.source = requireNonNull(source, "source");
+        this.annotationType = requireNonNull(annotationType, "annotationType");
+        this.scope = requireNonNull(scope, "scope");
+    }
 
-  @Override
-  public Object getSource() {
-    return source;
-  }
+    @Override
+    public Object getSource()
+    {
+        return source;
+    }
 
-  public Class<? extends Annotation> getAnnotationType() {
-    return annotationType;
-  }
+    public Class<? extends Annotation> getAnnotationType()
+    {
+        return annotationType;
+    }
 
-  public Scope getScope() {
-    return scope;
-  }
+    public Scope getScope()
+    {
+        return scope;
+    }
 
-  @Override
-  public <T> T acceptVisitor(ElementVisitor<T> visitor) {
-    return visitor.visit(this);
-  }
+    @Override
+    public <T> T acceptVisitor(ElementVisitor<T> visitor)
+    {
+        return visitor.visit(this);
+    }
 
-  @Override
-  public void applyTo(Binder binder) {
-    binder.withSource(getSource()).bindScope(annotationType, scope);
-  }
+    @Override
+    public void applyTo(Binder binder)
+    {
+        binder.withSource(getSource()).bindScope(annotationType, scope);
+    }
 
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(ScopeBinding.class)
-        .add("annotationType", annotationType)
-        .add("scope", scope)
-        .add("source", Errors.convert(source))
-        .toString();
-  }
+    @Override
+    public String toString()
+    {
+        return toStringHelper(ScopeBinding.class)
+                .add("annotationType", annotationType)
+                .add("scope", scope)
+                .add("source", Errors.convert(source))
+                .toString();
+    }
 }

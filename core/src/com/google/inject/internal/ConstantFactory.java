@@ -16,69 +16,82 @@
 
 package com.google.inject.internal;
 
-import com.google.common.base.MoreObjects;
 import com.google.inject.Provider;
 import com.google.inject.spi.Dependency;
+
+import static com.google.common.base.MoreObjects.toStringHelper;
 
 /**
  * @author crazybob@google.com (Bob Lee)
  */
-final class ConstantFactory<T> extends InternalFactory<T> {
+final class ConstantFactory<T>
+        extends InternalFactory<T>
+{
+    private static <T> InternalFactory<T> nullFactory(Object source)
+    {
+        return new InternalFactory<T>()
+        {
+            @Override
+            public T get(InternalContext context, Dependency<?> dependency, boolean linked)
+                    throws InternalProvisionException
+            {
+                if (!dependency.isNullable()) {
+                    InternalProvisionException.onNullInjectedIntoNonNullableDependency(source, dependency);
+                }
+                return null;
+            }
 
-  private static <T> InternalFactory<T> nullFactory(Object source) {
-    return new InternalFactory<T>() {
-      @Override
-      public T get(InternalContext context, Dependency<?> dependency, boolean linked)
-          throws InternalProvisionException {
-        if (!dependency.isNullable()) {
-          InternalProvisionException.onNullInjectedIntoNonNullableDependency(source, dependency);
-        }
-        return null;
-      }
+            @Override
+            public Provider<T> makeProvider(InjectorImpl injector, Dependency<?> dependency)
+            {
+                return InternalFactory.makeProviderForNull(source, this, dependency);
+            }
 
-      @Override
-      public Provider<T> makeProvider(InjectorImpl injector, Dependency<?> dependency) {
-        return InternalFactory.makeProviderForNull(source, this, dependency);
-      }
-
-      @Override
-      MethodHandleResult makeHandle(LinkageContext context, boolean linked) {
-        var returnNull = InternalMethodHandles.constantFactoryGetHandle(null);
-        return makeCachable(InternalMethodHandles.nullCheckResult(returnNull, source));
-      }
-    };
-  }
-
-  private final T instance;
-
-  static <T> InternalFactory<T> create(T instance, Object source) {
-    if (instance == null) {
-      return nullFactory(source);
+            @Override
+            MethodHandleResult makeHandle(LinkageContext context, boolean linked)
+            {
+                var returnNull = InternalMethodHandles.constantFactoryGetHandle(null);
+                return makeCachable(InternalMethodHandles.nullCheckResult(returnNull, source));
+            }
+        };
     }
-    return new ConstantFactory<>(instance);
-  }
 
-  private ConstantFactory(T instance) {
-    this.instance = instance;
-  }
+    private final T instance;
 
-  @Override
-  public T get(InternalContext context, Dependency<?> dependency, boolean linked) {
-    return instance;
-  }
+    static <T> InternalFactory<T> create(T instance, Object source)
+    {
+        if (instance == null) {
+            return nullFactory(source);
+        }
+        return new ConstantFactory<>(instance);
+    }
 
-  @Override
-  public Provider<T> makeProvider(InjectorImpl injector, Dependency<?> dependency) {
-    return InternalFactory.makeProviderFor(instance, this);
-  }
+    private ConstantFactory(T instance)
+    {
+        this.instance = instance;
+    }
 
-  @Override
-  MethodHandleResult makeHandle(LinkageContext context, boolean linked) {
-    return makeCachable(InternalMethodHandles.constantFactoryGetHandle(instance));
-  }
+    @Override
+    public T get(InternalContext context, Dependency<?> dependency, boolean linked)
+    {
+        return instance;
+    }
 
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(ConstantFactory.class).add("value", instance).toString();
-  }
+    @Override
+    public Provider<T> makeProvider(InjectorImpl injector, Dependency<?> dependency)
+    {
+        return InternalFactory.makeProviderFor(instance, this);
+    }
+
+    @Override
+    MethodHandleResult makeHandle(LinkageContext context, boolean linked)
+    {
+        return makeCachable(InternalMethodHandles.constantFactoryGetHandle(instance));
+    }
+
+    @Override
+    public String toString()
+    {
+        return toStringHelper(ConstantFactory.class).add("value", instance).toString();
+    }
 }

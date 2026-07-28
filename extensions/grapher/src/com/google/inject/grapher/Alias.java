@@ -23,20 +23,24 @@ package com.google.inject.grapher;
  * @author bojand@google.com (Bojan Djordjevic)
  * @since 4.0
  */
-public final class Alias {
-  private final NodeId fromId;
-  private final NodeId toId;
+public final class Alias
+{
+    private final NodeId fromId;
+    private final NodeId toId;
 
-  public Alias(NodeId fromId, NodeId toId) {
-    this.fromId = fromId;
-    this.toId = toId;
-  }
+    public Alias(NodeId fromId, NodeId toId)
+    {
+        this.fromId = fromId;
+        this.toId = toId;
+    }
 
-  public NodeId getFromId() {
-    return fromId;
-  }
+    public NodeId getFromId()
+    {
+        return fromId;
+    }
 
-  public NodeId getToId() {
-    return toId;
-  }
+    public NodeId getToId()
+    {
+        return toId;
+    }
 }

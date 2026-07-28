@@ -16,7 +16,6 @@
 
 package com.google.inject.internal;
 
-import com.google.common.base.Preconditions;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.RemovalCause;
@@ -25,115 +24,127 @@ import com.google.common.collect.LinkedHashMultiset;
 import com.google.common.collect.Multiset;
 import com.google.inject.Key;
 import com.google.inject.internal.util.SourceProvider;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import static com.google.common.base.Preconditions.checkState;
+
 /**
  * Minimal set that doesn't hold strong references to the contained keys.
  *
  * @author dweis@google.com (Daniel Weis)
  */
-final class WeakKeySet {
+final class WeakKeySet
+{
+    private Map<Key<?>, Multiset<Object>> backingMap;
 
-  private Map<Key<?>, Multiset<Object>> backingMap;
+    /**
+     * This is already locked externally on add and getSources but we need it to handle clean up in
+     * the evictionCache's RemovalListener.
+     */
+    private final Object lock;
 
-  /**
-   * This is already locked externally on add and getSources but we need it to handle clean up in
-   * the evictionCache's RemovalListener.
-   */
-  private final Object lock;
+    /**
+     * Tracks child injector lifetimes and evicts banned keys/sources after the child injector is
+     * garbage collected.
+     */
+    private final Cache<InjectorBindingData, Set<KeyAndSource>> evictionCache =
+            CacheBuilder.newBuilder().weakKeys().removalListener(this::cleanupOnRemoval).build();
 
-  /**
-   * Tracks child injector lifetimes and evicts banned keys/sources after the child injector is
-   * garbage collected.
-   */
-  private final Cache<InjectorBindingData, Set<KeyAndSource>> evictionCache =
-      CacheBuilder.newBuilder().weakKeys().removalListener(this::cleanupOnRemoval).build();
+    private void cleanupOnRemoval(
+            RemovalNotification<InjectorBindingData, Set<KeyAndSource>> notification)
+    {
+        checkState(RemovalCause.COLLECTED.equals(notification.getCause()));
 
-  private void cleanupOnRemoval(
-      RemovalNotification<InjectorBindingData, Set<KeyAndSource>> notification) {
-    Preconditions.checkState(RemovalCause.COLLECTED.equals(notification.getCause()));
-
-    // There may be multiple child injectors banning a certain key so only remove the source
-    // that's relevant.
-    synchronized (lock) {
-      for (KeyAndSource keyAndSource : notification.getValue()) {
-        Multiset<Object> set = backingMap.get(keyAndSource.key);
-        if (set != null) {
-          set.remove(keyAndSource.source);
-          if (set.isEmpty()) {
-            backingMap.remove(keyAndSource.key);
-          }
+        // There may be multiple child injectors banning a certain key so only remove the source
+        // that's relevant.
+        synchronized (lock) {
+            for (KeyAndSource keyAndSource : notification.getValue()) {
+                Multiset<Object> set = backingMap.get(keyAndSource.key);
+                if (set != null) {
+                    set.remove(keyAndSource.source);
+                    if (set.isEmpty()) {
+                        backingMap.remove(keyAndSource.key);
+                    }
+                }
+            }
         }
-      }
-    }
-  }
-
-  WeakKeySet(Object lock) {
-    this.lock = lock;
-  }
-
-  public void add(Key<?> key, InjectorBindingData state, Object source) {
-    if (backingMap == null) {
-      backingMap = new HashMap<>();
-    }
-    // if it's an instanceof Class, it was a JIT binding, which we don't
-    // want to retain.
-    if (source instanceof Class || source == SourceProvider.UNKNOWN_SOURCE) {
-      source = null;
-    }
-    Object convertedSource = Errors.convert(source);
-    backingMap.computeIfAbsent(key, k -> LinkedHashMultiset.create()).add(convertedSource);
-
-    // Avoid all the extra work if we can.
-    if (state.parent().isPresent()) {
-      Set<KeyAndSource> keyAndSources = evictionCache.getIfPresent(state);
-      if (keyAndSources == null) {
-        evictionCache.put(state, keyAndSources = new HashSet<>());
-      }
-      keyAndSources.add(new KeyAndSource(key, convertedSource));
-    }
-  }
-
-  public boolean contains(Key<?> key) {
-    evictionCache.cleanUp();
-    return backingMap != null && backingMap.containsKey(key);
-  }
-
-  public Set<Object> getSources(Key<?> key) {
-    evictionCache.cleanUp();
-    Multiset<Object> sources = (backingMap == null) ? null : backingMap.get(key);
-    return (sources == null) ? null : sources.elementSet();
-  }
-
-  private static final class KeyAndSource {
-    final Key<?> key;
-    final Object source;
-
-    KeyAndSource(Key<?> key, Object source) {
-      this.key = key;
-      this.source = source;
     }
 
-    @Override
-    public int hashCode() {
-      return Objects.hash(key, source);
+    WeakKeySet(Object lock)
+    {
+        this.lock = lock;
     }
 
-    @Override
-    public boolean equals(Object obj) {
-      if (this == obj) {
-        return true;
-      }
+    public void add(Key<?> key, InjectorBindingData state, Object source)
+    {
+        if (backingMap == null) {
+            backingMap = new HashMap<>();
+        }
+        // if it's an instanceof Class, it was a JIT binding, which we don't
+        // want to retain.
+        if (source instanceof Class || source == SourceProvider.UNKNOWN_SOURCE) {
+            source = null;
+        }
+        Object convertedSource = Errors.convert(source);
+        backingMap.computeIfAbsent(key, _ -> LinkedHashMultiset.create()).add(convertedSource);
 
-      if (!(obj instanceof KeyAndSource other)) {
-        return false;
-      }
-
-      return Objects.equals(key, other.key) && Objects.equals(source, other.source);
+        // Avoid all the extra work if we can.
+        if (state.parent().isPresent()) {
+            Set<KeyAndSource> keyAndSources = evictionCache.getIfPresent(state);
+            if (keyAndSources == null) {
+                evictionCache.put(state, keyAndSources = new HashSet<>());
+            }
+            keyAndSources.add(new KeyAndSource(key, convertedSource));
+        }
     }
-  }
+
+    public boolean contains(Key<?> key)
+    {
+        evictionCache.cleanUp();
+        return backingMap != null && backingMap.containsKey(key);
+    }
+
+    public Set<Object> getSources(Key<?> key)
+    {
+        evictionCache.cleanUp();
+        Multiset<Object> sources = (backingMap == null) ? null : backingMap.get(key);
+        return (sources == null) ? null : sources.elementSet();
+    }
+
+    private static final class KeyAndSource
+    {
+        final Key<?> key;
+        final Object source;
+
+        KeyAndSource(Key<?> key, Object source)
+        {
+            this.key = key;
+            this.source = source;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return Objects.hash(key, source);
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (this == obj) {
+                return true;
+            }
+
+            if (!(obj instanceof KeyAndSource other)) {
+                return false;
+            }
+
+            return Objects.equals(key, other.key) && Objects.equals(source, other.source);
+        }
+    }
 }

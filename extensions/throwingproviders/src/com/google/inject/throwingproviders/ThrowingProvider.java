@@ -36,7 +36,10 @@ package com.google.inject.throwingproviders;
  * @deprecated use {@link CheckedProvider} instead.
  */
 @Deprecated
-public interface ThrowingProvider<T, E extends Exception> extends CheckedProvider<T> {
-  @Override
-  T get() throws E;
+public interface ThrowingProvider<T, E extends Exception>
+        extends CheckedProvider<T>
+{
+    @Override
+    T get()
+            throws E;
 }

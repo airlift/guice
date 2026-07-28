@@ -16,18 +16,19 @@
 
 package com.google.inject.spi;
 
-import static com.google.common.base.Preconditions.checkState;
-import static java.util.Objects.requireNonNull;
-
-import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Binder;
 import com.google.inject.Key;
 import com.google.inject.Provider;
 import com.google.inject.internal.Errors;
 import com.google.inject.util.Types;
+
 import java.util.Objects;
 import java.util.Set;
+
+import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.common.base.Preconditions.checkState;
+import static java.util.Objects.requireNonNull;
 
 /**
  * A lookup of the provider for a type. Lookups are created explicitly in a module using {@link
@@ -40,112 +41,135 @@ import java.util.Set;
  * @author jessewilson@google.com (Jesse Wilson)
  * @since 2.0
  */
-public final class ProviderLookup<T> implements Element {
-  private final Object source;
-  private final Dependency<T> dependency;
-  private Provider<T> delegate;
+public final class ProviderLookup<T>
+        implements Element
+{
+    private final Object source;
+    private final Dependency<T> dependency;
+    private Provider<T> delegate;
 
-  public ProviderLookup(Object source, Key<T> key) {
-    this(source, Dependency.get(requireNonNull(key, "key")));
-  }
+    public ProviderLookup(Object source, Key<T> key)
+    {
+        this(source, Dependency.get(requireNonNull(key, "key")));
+    }
 
-  /** @since 4.0 */
-  public ProviderLookup(Object source, Dependency<T> dependency) {
-    this.source = requireNonNull(source, "source");
-    this.dependency = requireNonNull(dependency, "dependency");
-  }
+    /**
+     * @since 4.0
+     */
+    public ProviderLookup(Object source, Dependency<T> dependency)
+    {
+        this.source = requireNonNull(source, "source");
+        this.dependency = requireNonNull(dependency, "dependency");
+    }
 
-  @Override
-  public Object getSource() {
-    return source;
-  }
+    @Override
+    public Object getSource()
+    {
+        return source;
+    }
 
-  public Key<T> getKey() {
-    return dependency.getKey();
-  }
+    public Key<T> getKey()
+    {
+        return dependency.getKey();
+    }
 
-  /** @since 4.0 */
-  public Dependency<T> getDependency() {
-    return dependency;
-  }
+    /**
+     * @since 4.0
+     */
+    public Dependency<T> getDependency()
+    {
+        return dependency;
+    }
 
-  @Override
-  public <T> T acceptVisitor(ElementVisitor<T> visitor) {
-    return visitor.visit(this);
-  }
+    @Override
+    public <T> T acceptVisitor(ElementVisitor<T> visitor)
+    {
+        return visitor.visit(this);
+    }
 
-  /**
-   * Sets the actual provider.
-   *
-   * @throws IllegalStateException if the delegate is already set
-   */
-  public void initializeDelegate(Provider<T> delegate) {
-    checkState(this.delegate == null, "delegate already initialized");
-    this.delegate = requireNonNull(delegate, "delegate");
-  }
+    /**
+     * Sets the actual provider.
+     *
+     * @throws IllegalStateException if the delegate is already set
+     */
+    public void initializeDelegate(Provider<T> delegate)
+    {
+        checkState(this.delegate == null, "delegate already initialized");
+        this.delegate = requireNonNull(delegate, "delegate");
+    }
 
-  @Override
-  public void applyTo(Binder binder) {
-    initializeDelegate(binder.withSource(getSource()).getProvider(dependency));
-  }
+    @Override
+    public void applyTo(Binder binder)
+    {
+        initializeDelegate(binder.withSource(getSource()).getProvider(dependency));
+    }
 
-  /**
-   * Returns the delegate provider, or {@code null} if it has not yet been initialized. The delegate
-   * will be initialized when this element is processed, or otherwise used to create an injector.
-   */
-  public Provider<T> getDelegate() {
-    return delegate;
-  }
+    /**
+     * Returns the delegate provider, or {@code null} if it has not yet been initialized. The delegate
+     * will be initialized when this element is processed, or otherwise used to create an injector.
+     */
+    public Provider<T> getDelegate()
+    {
+        return delegate;
+    }
 
-  /**
-   * Returns the looked up provider. The result is not valid until this lookup has been initialized,
-   * which usually happens when the injector is created. The provider will throw an {@code
-   * IllegalStateException} if you try to use it beforehand.
-   */
-  public Provider<T> getProvider() {
-    return new ProviderWithDependencies<T>() {
-      @Override
-      public T get() {
-        Provider<T> local = delegate;
-        if (local == null) {
-          throw new IllegalStateException(
-              "This Provider cannot be used until the Injector has been created.");
-        }
-        return local.get();
-      }
+    /**
+     * Returns the looked up provider. The result is not valid until this lookup has been initialized,
+     * which usually happens when the injector is created. The provider will throw an {@code
+     * IllegalStateException} if you try to use it beforehand.
+     */
+    public Provider<T> getProvider()
+    {
+        return new ProviderWithDependencies<T>()
+        {
+            @Override
+            public T get()
+            {
+                Provider<T> local = delegate;
+                if (local == null) {
+                    throw new IllegalStateException(
+                            "This Provider cannot be used until the Injector has been created.");
+                }
+                return local.get();
+            }
 
-      @Override
-      public Set<Dependency<?>> getDependencies() {
-        // We depend on Provider<T>, not T directly.  This is an important distinction
-        // for dependency analysis tools that short-circuit on providers.
-        Key<?> providerKey = getKey().ofType(Types.providerOf(getKey().getTypeLiteral().getType()));
-        return ImmutableSet.<Dependency<?>>of(Dependency.get(providerKey));
-      }
+            @Override
+            public Set<Dependency<?>> getDependencies()
+            {
+                // We depend on Provider<T>, not T directly.  This is an important distinction
+                // for dependency analysis tools that short-circuit on providers.
+                Key<?> providerKey = getKey().ofType(Types.providerOf(getKey().getTypeLiteral().getType()));
+                return ImmutableSet.<Dependency<?>>of(Dependency.get(providerKey));
+            }
 
-      @Override
-      public String toString() {
-        return "Provider<" + getKey().getTypeLiteral() + ">";
-      }
-    };
-  }
+            @Override
+            public String toString()
+            {
+                return "Provider<" + getKey().getTypeLiteral() + ">";
+            }
+        };
+    }
 
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(ProviderLookup.class)
-        .add("dependency", dependency)
-        .add("source", Errors.convert(source))
-        .toString();
-  }
+    @Override
+    public String toString()
+    {
+        return toStringHelper(ProviderLookup.class)
+                .add("dependency", dependency)
+                .add("source", Errors.convert(source))
+                .toString();
+    }
 
-  @Override
-  public boolean equals(Object obj) {
-    return obj instanceof ProviderLookup
-        && ((ProviderLookup<?>) obj).dependency.equals(dependency)
-        && ((ProviderLookup<?>) obj).source.equals(source);
-  }
+    @Override
+    public boolean equals(Object obj)
+    {
+        return obj instanceof ProviderLookup
+                && ((ProviderLookup<?>) obj).dependency.equals(dependency)
+                && ((ProviderLookup<?>) obj).source.equals(source);
+    }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(dependency, source);
-  }
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(dependency, source);
+    }
 }

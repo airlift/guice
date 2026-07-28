@@ -16,9 +16,6 @@
 
 package com.google.inject.util;
 
-import static com.google.common.collect.ImmutableSet.toImmutableSet;
-import static java.util.Objects.requireNonNull;
-
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.inject.Inject;
@@ -27,8 +24,12 @@ import com.google.inject.Provider;
 import com.google.inject.spi.Dependency;
 import com.google.inject.spi.InjectionPoint;
 import com.google.inject.spi.ProviderWithDependencies;
+
 import java.util.Objects;
 import java.util.Set;
+
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Static utility methods for creating and working with instances of {@link Provider}.
@@ -37,152 +38,176 @@ import java.util.Set;
  * @since 2.0
  */
 @CheckReturnValue
-public final class Providers {
-
-  /**
-   * Returns a provider which always provides {@code instance}. This should not be necessary to use
-   * in your application, but is helpful for several types of unit tests.
-   *
-   * <p><b>Java 8+ users:</b> prefer {@code () -> instance}. However, note the following
-   * differences:
-   *
-   * <ul>
-   *   <li>Lambdas will delay evaluation of the instance. {@code () -> computeValue()} will be
-   *       computed when {@code provider.get()} is called, but {@code Providers.of(computeValue())}
-   *       will be computed immediately.
-   *   <li>Lambdas do not implement {@code equals()} or {@code hashCode()}, so avoid putting them in
-   *       a collection.
-   *   <li>Lambdas do not implement a useful {@code toString()}.
-   * </ul>
-   *
-   * @param instance the instance that should always be provided. This is also permitted to be null,
-   *     to enable aggressive testing, although in real life a Guice-supplied Provider will never
-   *     return null.
-   */
-  public static <T> Provider<T> of(final T instance) {
-    return new ConstantProvider<T>(instance);
-  }
-
-  private static final class ConstantProvider<T> implements Provider<T> {
-    private final T instance;
-
-    private ConstantProvider(T instance) {
-      this.instance = instance;
+public final class Providers
+{
+    /**
+     * Returns a provider which always provides {@code instance}. This should not be necessary to use
+     * in your application, but is helpful for several types of unit tests.
+     *
+     * <p><b>Java 8+ users:</b> prefer {@code () -> instance}. However, note the following
+     * differences:
+     *
+     * <ul>
+     *   <li>Lambdas will delay evaluation of the instance. {@code () -> computeValue()} will be
+     *       computed when {@code provider.get()} is called, but {@code Providers.of(computeValue())}
+     *       will be computed immediately.
+     *   <li>Lambdas do not implement {@code equals()} or {@code hashCode()}, so avoid putting them in
+     *       a collection.
+     *   <li>Lambdas do not implement a useful {@code toString()}.
+     * </ul>
+     *
+     * @param instance the instance that should always be provided. This is also permitted to be null,
+     *         to enable aggressive testing, although in real life a Guice-supplied Provider will never
+     *         return null.
+     */
+    public static <T> Provider<T> of(final T instance)
+    {
+        return new ConstantProvider<T>(instance);
     }
 
-    @Override
-    public T get() {
-      return instance;
+    private static final class ConstantProvider<T>
+            implements Provider<T>
+    {
+        private final T instance;
+
+        private ConstantProvider(T instance)
+        {
+            this.instance = instance;
+        }
+
+        @Override
+        public T get()
+        {
+            return instance;
+        }
+
+        @Override
+        public String toString()
+        {
+            return "of(" + instance + ")";
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            return (obj instanceof ConstantProvider)
+                    && Objects.equals(instance, ((ConstantProvider<?>) obj).instance);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return Objects.hash(instance);
+        }
     }
 
-    @Override
-    public String toString() {
-      return "of(" + instance + ")";
+    /**
+     * Returns itself. This exists primarily to avoid ambiguous method reference compile errors when
+     * calling guicify with a Guice provider.
+     *
+     * @since 6.0
+     * @deprecated Marked as deprecated as a hint to users that calling this is unnecessary, because
+     *         the provider is already a guice Provider.
+     */
+    @Deprecated
+    public static <T> Provider<T> guicify(Provider<T> provider)
+    {
+        return provider;
     }
 
-    @Override
-    public boolean equals(Object obj) {
-      return (obj instanceof ConstantProvider)
-          && Objects.equals(instance, ((ConstantProvider<?>) obj).instance);
+    /**
+     * Returns a Guice-friendly {@code com.google.inject.Provider} for the given {@code
+     * jakarta.inject.Provider}. The converse method is unnecessary, since Guice providers directly
+     * implement the jakarta.inject.Provider interface.
+     *
+     * @since 6.0
+     */
+    public static <T> Provider<T> guicify(jakarta.inject.Provider<T> provider)
+    {
+        if (provider instanceof Provider) {
+            return (Provider<T>) provider;
+        }
+
+        jakarta.inject.Provider<T> delegate = requireNonNull(provider, "provider");
+
+        // Ensure that we inject all injection points from the delegate provider.
+        Set<InjectionPoint> injectionPoints =
+                InjectionPoint.forInstanceMethodsAndFields(provider.getClass());
+        if (injectionPoints.isEmpty()) {
+            return new GuicifiedJakartaProvider<T>(delegate);
+        }
+        else {
+            ImmutableSet<Dependency<?>> dependencies =
+                    injectionPoints.stream()
+                            .flatMap(ip -> ip.getDependencies().stream())
+                            .collect(toImmutableSet());
+            return new GuicifiedJakartaProviderWithDependencies<T>(dependencies, delegate);
+        }
     }
 
-    @Override
-    public int hashCode() {
-      return Objects.hash(instance);
-    }
-  }
+    private static class GuicifiedJakartaProvider<T>
+            implements Provider<T>
+    {
+        protected final jakarta.inject.Provider<T> delegate;
 
-  /**
-   * Returns itself. This exists primarily to avoid ambiguous method reference compile errors when
-   * calling guicify with a Guice provider.
-   *
-   * @since 6.0
-   * @deprecated Marked as deprecated as a hint to users that calling this is unnecessary, because
-   *     the provider is already a guice Provider.
-   */
-  @Deprecated
-  public static <T> Provider<T> guicify(Provider<T> provider) {
-    return provider;
-  }
+        private GuicifiedJakartaProvider(jakarta.inject.Provider<T> delegate)
+        {
+            this.delegate = delegate;
+        }
 
-  /**
-   * Returns a Guice-friendly {@code com.google.inject.Provider} for the given {@code
-   * jakarta.inject.Provider}. The converse method is unnecessary, since Guice providers directly
-   * implement the jakarta.inject.Provider interface.
-   *
-   * @since 6.0
-   */
-  public static <T> Provider<T> guicify(jakarta.inject.Provider<T> provider) {
-    if (provider instanceof Provider) {
-      return (Provider<T>) provider;
-    }
+        @Override
+        public T get()
+        {
+            return delegate.get();
+        }
 
-    jakarta.inject.Provider<T> delegate = requireNonNull(provider, "provider");
+        @Override
+        public String toString()
+        {
+            return "guicified(" + delegate + ")";
+        }
 
-    // Ensure that we inject all injection points from the delegate provider.
-    Set<InjectionPoint> injectionPoints =
-        InjectionPoint.forInstanceMethodsAndFields(provider.getClass());
-    if (injectionPoints.isEmpty()) {
-      return new GuicifiedJakartaProvider<T>(delegate);
-    } else {
-      ImmutableSet<Dependency<?>> dependencies =
-          injectionPoints.stream()
-              .flatMap(ip -> ip.getDependencies().stream())
-              .collect(toImmutableSet());
-      return new GuicifiedJakartaProviderWithDependencies<T>(dependencies, delegate);
-    }
-  }
+        @Override
+        public boolean equals(Object obj)
+        {
+            return (obj instanceof GuicifiedJakartaProvider)
+                    && Objects.equals(delegate, ((GuicifiedJakartaProvider<?>) obj).delegate);
+        }
 
-  private static class GuicifiedJakartaProvider<T> implements Provider<T> {
-    protected final jakarta.inject.Provider<T> delegate;
-
-    private GuicifiedJakartaProvider(jakarta.inject.Provider<T> delegate) {
-      this.delegate = delegate;
+        @Override
+        public int hashCode()
+        {
+            return Objects.hash(delegate);
+        }
     }
 
-    @Override
-    public T get() {
-      return delegate.get();
+    private static final class GuicifiedJakartaProviderWithDependencies<T>
+            extends GuicifiedJakartaProvider<T>
+            implements ProviderWithDependencies<T>
+    {
+        private final Set<Dependency<?>> dependencies;
+
+        private GuicifiedJakartaProviderWithDependencies(
+                Set<Dependency<?>> dependencies,
+                jakarta.inject.Provider<T> delegate)
+        {
+            super(delegate);
+            this.dependencies = dependencies;
+        }
+
+        @SuppressWarnings("unused")
+        @Inject
+        void initialize(Injector injector)
+        {
+            injector.injectMembers(delegate);
+        }
+
+        @Override
+        public Set<Dependency<?>> getDependencies()
+        {
+            return dependencies;
+        }
     }
 
-    @Override
-    public String toString() {
-      return "guicified(" + delegate + ")";
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      return (obj instanceof GuicifiedJakartaProvider)
-          && Objects.equals(delegate, ((GuicifiedJakartaProvider<?>) obj).delegate);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(delegate);
-    }
-  }
-
-  private static final class GuicifiedJakartaProviderWithDependencies<T>
-      extends GuicifiedJakartaProvider<T> implements ProviderWithDependencies<T> {
-    private final Set<Dependency<?>> dependencies;
-
-    private GuicifiedJakartaProviderWithDependencies(
-        Set<Dependency<?>> dependencies, jakarta.inject.Provider<T> delegate) {
-      super(delegate);
-      this.dependencies = dependencies;
-    }
-
-    @SuppressWarnings("unused")
-    @Inject
-    void initialize(Injector injector) {
-      injector.injectMembers(delegate);
-    }
-
-    @Override
-    public Set<Dependency<?>> getDependencies() {
-      return dependencies;
-    }
-  }
-
-  private Providers() {}
+    private Providers() {}
 }

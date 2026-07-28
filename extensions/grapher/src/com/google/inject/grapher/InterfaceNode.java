@@ -23,23 +23,29 @@ package com.google.inject.grapher;
  * @author phopkins@gmail.com (Pete Hopkins)
  * @since 4.0 (since 2.0 as an interface)
  */
-public class InterfaceNode extends Node {
-  public InterfaceNode(NodeId id, Object source) {
-    super(id, source);
-  }
+public class InterfaceNode
+        extends Node
+{
+    public InterfaceNode(NodeId id, Object source)
+    {
+        super(id, source);
+    }
 
-  @Override
-  public Node copy(NodeId id) {
-    return new InterfaceNode(id, getSource());
-  }
+    @Override
+    public Node copy(NodeId id)
+    {
+        return new InterfaceNode(id, getSource());
+    }
 
-  @Override
-  public boolean equals(Object obj) {
-    return (obj instanceof InterfaceNode) && super.equals(obj);
-  }
+    @Override
+    public boolean equals(Object obj)
+    {
+        return (obj instanceof InterfaceNode) && super.equals(obj);
+    }
 
-  @Override
-  public String toString() {
-    return "InterfaceNode{id=" + getId() + " source=" + getSource() + "}";
-  }
+    @Override
+    public String toString()
+    {
+        return "InterfaceNode{id=" + getId() + " source=" + getSource() + "}";
+    }
 }

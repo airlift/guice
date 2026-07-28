@@ -16,16 +16,6 @@
 
 package com.google.inject.servlet;
 
-import static com.google.inject.Asserts.assertContains;
-import static com.google.inject.Asserts.reserialize;
-import static com.google.inject.servlet.ServletTestUtils.newFakeHttpServletRequest;
-import static com.google.inject.servlet.ServletTestUtils.newFakeHttpServletResponse;
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.ElementType.PARAMETER;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import static org.mockito.Mockito.mock;
-
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.AbstractModule;
@@ -44,11 +34,6 @@ import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.google.inject.servlet.ServletScopes.NullObject;
 import com.google.inject.util.Providers;
-import java.io.IOException;
-import java.io.Serializable;
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
-import java.util.Map;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.FilterConfig;
@@ -61,496 +46,593 @@ import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletResponseWrapper;
 import jakarta.servlet.http.HttpSession;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.fail;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-/** @author crazybob@google.com (Bob Lee) */
-public class ServletTest {
-  private static final Key<HttpServletRequest> HTTP_REQ_KEY = Key.get(HttpServletRequest.class);
-  private static final Key<HttpServletResponse> HTTP_RESP_KEY = Key.get(HttpServletResponse.class);
-  private static final Key<Map<String, String[]>> REQ_PARAMS_KEY =
-      new Key<Map<String, String[]>>(RequestParameters.class) {};
+import java.io.IOException;
+import java.io.Serializable;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+import java.util.Map;
 
-  private static final Key<InRequest> IN_REQUEST_NULL_KEY = Key.get(InRequest.class, Null.class);
-  private static final Key<InSession> IN_SESSION_KEY = Key.get(InSession.class);
-  private static final Key<InSession> IN_SESSION_NULL_KEY = Key.get(InSession.class, Null.class);
+import static com.google.inject.Asserts.assertContains;
+import static com.google.inject.Asserts.reserialize;
+import static com.google.inject.servlet.ServletTestUtils.newFakeHttpServletRequest;
+import static com.google.inject.servlet.ServletTestUtils.newFakeHttpServletResponse;
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.Mockito.mock;
 
-  @BeforeEach
-  public void setUp() {
-    //we need to clear the reference to the pipeline every test =(
-    GuiceFilter.reset();
-  }
+/**
+ * @author crazybob@google.com (Bob Lee)
+ */
+public class ServletTest
+{
+    private static final Key<HttpServletRequest> HTTP_REQ_KEY = Key.get(HttpServletRequest.class);
+    private static final Key<HttpServletResponse> HTTP_RESP_KEY = Key.get(HttpServletResponse.class);
+    private static final Key<Map<String, String[]>> REQ_PARAMS_KEY =
+            new Key<Map<String, String[]>>(RequestParameters.class) {};
 
-  @Test
-  public void testScopeExceptions() throws Exception {
-    Injector injector =
-        Guice.createInjector(
-            new AbstractModule() {
-              @Override
-              protected void configure() {
-                install(new ServletModule());
-              }
+    private static final Key<InRequest> IN_REQUEST_NULL_KEY = Key.get(InRequest.class, Null.class);
+    private static final Key<InSession> IN_SESSION_KEY = Key.get(InSession.class);
+    private static final Key<InSession> IN_SESSION_NULL_KEY = Key.get(InSession.class, Null.class);
 
-              @Provides
-              @RequestScoped
-              String provideString() {
-                return "foo";
-              }
-
-              @Provides
-              @SessionScoped
-              Integer provideInteger() {
-                return 1;
-              }
-
-              @Provides
-              @RequestScoped
-              @Named("foo")
-              String provideNamedString() {
-                return "foo";
-              }
-            });
-
-    try {
-      injector.getInstance(String.class);
-      fail();
-    } catch (ProvisionException oose) {
-      assertContains(oose.getMessage(), "Cannot access scoped [String].");
+    @BeforeEach
+    public void setUp()
+    {
+        // we need to clear the reference to the pipeline every test =(
+        GuiceFilter.reset();
     }
 
-    try {
-      injector.getInstance(Integer.class);
-      fail();
-    } catch (ProvisionException oose) {
-      assertContains(oose.getMessage(), "Cannot access scoped [Integer].");
-    }
+    @Test
+    public void testScopeExceptions()
+            throws Exception
+    {
+        Injector injector =
+                Guice.createInjector(
+                        new AbstractModule()
+                        {
+                            @Override
+                            protected void configure()
+                            {
+                                install(new ServletModule());
+                            }
 
-    Key<?> key = Key.get(String.class, Names.named("foo"));
-    try {
-      injector.getInstance(key);
-      fail();
-    } catch (ProvisionException oose) {
-      assertContains(
-          oose.getMessage(),
-          "Cannot access scoped [String annotated with @Named("
-              + Annotations.memberValueString("value", "foo")
-              + ")]");
-    }
-  }
+                            @Provides
+                            @RequestScoped
+                            String provideString()
+                            {
+                                return "foo";
+                            }
 
-  @Test
-  public void testRequestAndResponseBindings() throws Exception {
-    final Injector injector = createInjector();
-    final HttpServletRequest request = newFakeHttpServletRequest();
-    final HttpServletResponse response = newFakeHttpServletResponse();
+                            @Provides
+                            @SessionScoped
+                            Integer provideInteger()
+                            {
+                                return 1;
+                            }
 
-    final boolean[] invoked = new boolean[1];
-    GuiceFilter filter = new GuiceFilter();
-    FilterChain filterChain =
-        new FilterChain() {
-          @Override
-          public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse) {
-            invoked[0] = true;
-            assertSame(request, servletRequest);
-            assertSame(request, injector.getInstance(ServletRequest.class));
-            assertSame(request, injector.getInstance(HTTP_REQ_KEY));
-
-            assertSame(response, servletResponse);
-            assertSame(response, injector.getInstance(ServletResponse.class));
-            assertSame(response, injector.getInstance(HTTP_RESP_KEY));
-
-            assertSame(servletRequest.getParameterMap(), injector.getInstance(REQ_PARAMS_KEY));
-          }
-        };
-    filter.doFilter(request, response, filterChain);
-
-    assertTrue(invoked[0]);
-  }
-
-  @Test
-  public void testRequestAndResponseBindings_wrappingFilter() throws Exception {
-    final HttpServletRequest request = newFakeHttpServletRequest();
-    final ImmutableMap<String, String[]> wrappedParamMap =
-        ImmutableMap.of("wrap", new String[] {"a", "b"});
-    final HttpServletRequestWrapper requestWrapper =
-        new HttpServletRequestWrapper(request) {
-          @Override
-          public Map<String, String[]> getParameterMap() {
-            return wrappedParamMap;
-          }
-
-          @Override
-          public Object getAttribute(String attr) {
-            // Ensure that attributes are stored on the original request object.
-            throw new UnsupportedOperationException();
-          }
-        };
-    final HttpServletResponse response = newFakeHttpServletResponse();
-    final HttpServletResponseWrapper responseWrapper = new HttpServletResponseWrapper(response);
-
-    final boolean[] filterInvoked = new boolean[1];
-    final Injector injector =
-        createInjector(
-            new ServletModule() {
-              @Override
-              protected void configureServlets() {
-                filter("/*")
-                    .through(
-                        new Filter() {
-                          @Inject Provider<ServletRequest> servletReqProvider;
-                          @Inject Provider<HttpServletRequest> reqProvider;
-                          @Inject Provider<ServletResponse> servletRespProvider;
-                          @Inject Provider<HttpServletResponse> respProvider;
-
-                          @Override
-                          public void init(FilterConfig filterConfig) {}
-
-                          @Override
-                          public void doFilter(
-                              ServletRequest req, ServletResponse resp, FilterChain chain)
-                              throws IOException, ServletException {
-                            filterInvoked[0] = true;
-                            assertSame(req, servletReqProvider.get());
-                            assertSame(req, reqProvider.get());
-
-                            assertSame(resp, servletRespProvider.get());
-                            assertSame(resp, respProvider.get());
-
-                            chain.doFilter(requestWrapper, responseWrapper);
-
-                            assertSame(req, reqProvider.get());
-                            assertSame(resp, respProvider.get());
-                          }
-
-                          @Override
-                          public void destroy() {}
+                            @Provides
+                            @RequestScoped
+                            @Named("foo")
+                            String provideNamedString()
+                            {
+                                return "foo";
+                            }
                         });
-              }
-            });
 
-    GuiceFilter filter = new GuiceFilter();
-    final boolean[] chainInvoked = new boolean[1];
-    FilterChain filterChain =
-        new FilterChain() {
-          @Override
-          public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse) {
-            chainInvoked[0] = true;
-            assertSame(requestWrapper, servletRequest);
-            assertSame(requestWrapper, injector.getInstance(ServletRequest.class));
-            assertSame(requestWrapper, injector.getInstance(HTTP_REQ_KEY));
+        try {
+            injector.getInstance(String.class);
+            fail();
+        }
+        catch (ProvisionException oose) {
+            assertContains(oose.getMessage(), "Cannot access scoped [String].");
+        }
 
-            assertSame(responseWrapper, servletResponse);
-            assertSame(responseWrapper, injector.getInstance(ServletResponse.class));
-            assertSame(responseWrapper, injector.getInstance(HTTP_RESP_KEY));
+        try {
+            injector.getInstance(Integer.class);
+            fail();
+        }
+        catch (ProvisionException oose) {
+            assertContains(oose.getMessage(), "Cannot access scoped [Integer].");
+        }
 
-            assertSame(servletRequest.getParameterMap(), injector.getInstance(REQ_PARAMS_KEY));
+        Key<?> key = Key.get(String.class, Names.named("foo"));
+        try {
+            injector.getInstance(key);
+            fail();
+        }
+        catch (ProvisionException oose) {
+            assertContains(
+                    oose.getMessage(),
+                    "Cannot access scoped [String annotated with @Named("
+                            + Annotations.memberValueString("value", "foo")
+                            + ")]");
+        }
+    }
 
-            InRequest inRequest = injector.getInstance(InRequest.class);
-            assertSame(inRequest, injector.getInstance(InRequest.class));
-          }
-        };
-    filter.doFilter(request, response, filterChain);
+    @Test
+    public void testRequestAndResponseBindings()
+            throws Exception
+    {
+        final Injector injector = createInjector();
+        final HttpServletRequest request = newFakeHttpServletRequest();
+        final HttpServletResponse response = newFakeHttpServletResponse();
 
-    assertTrue(chainInvoked[0]);
-    assertTrue(filterInvoked[0]);
-  }
+        final boolean[] invoked = new boolean[1];
+        GuiceFilter filter = new GuiceFilter();
+        FilterChain filterChain =
+                new FilterChain()
+                {
+                    @Override
+                    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse)
+                    {
+                        invoked[0] = true;
+                        assertSame(request, servletRequest);
+                        assertSame(request, injector.getInstance(ServletRequest.class));
+                        assertSame(request, injector.getInstance(HTTP_REQ_KEY));
 
-  @Test
-  public void testRequestAndResponseBindings_matchesPassedParameters() throws Exception {
-    final int[] filterInvoked = new int[1];
-    final boolean[] servletInvoked = new boolean[1];
-    createInjector(
-        new ServletModule() {
-          @Override
-          protected void configureServlets() {
-            final HttpServletRequest[] previousReq = new HttpServletRequest[1];
-            final HttpServletResponse[] previousResp = new HttpServletResponse[1];
+                        assertSame(response, servletResponse);
+                        assertSame(response, injector.getInstance(ServletResponse.class));
+                        assertSame(response, injector.getInstance(HTTP_RESP_KEY));
 
-            final Provider<ServletRequest> servletReqProvider = getProvider(ServletRequest.class);
-            final Provider<HttpServletRequest> reqProvider = getProvider(HttpServletRequest.class);
-            final Provider<ServletResponse> servletRespProvider =
-                getProvider(ServletResponse.class);
-            final Provider<HttpServletResponse> respProvider =
-                getProvider(HttpServletResponse.class);
+                        assertSame(servletRequest.getParameterMap(), injector.getInstance(REQ_PARAMS_KEY));
+                    }
+                };
+        filter.doFilter(request, response, filterChain);
 
-            Filter filter =
-                new Filter() {
-                  @Override
-                  public void init(FilterConfig filterConfig) {}
+        assertTrue(invoked[0]);
+    }
 
-                  @Override
-                  public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain)
-                      throws IOException, ServletException {
-                    filterInvoked[0]++;
-                    assertSame(req, servletReqProvider.get());
-                    assertSame(req, reqProvider.get());
-                    if (previousReq[0] != null) {
-                      assertEquals(req, previousReq[0]);
+    @Test
+    public void testRequestAndResponseBindings_wrappingFilter()
+            throws Exception
+    {
+        final HttpServletRequest request = newFakeHttpServletRequest();
+        final ImmutableMap<String, String[]> wrappedParamMap =
+                ImmutableMap.of("wrap", new String[] {"a", "b"});
+        final HttpServletRequestWrapper requestWrapper =
+                new HttpServletRequestWrapper(request)
+                {
+                    @Override
+                    public Map<String, String[]> getParameterMap()
+                    {
+                        return wrappedParamMap;
                     }
 
-                    assertSame(resp, servletRespProvider.get());
-                    assertSame(resp, respProvider.get());
-                    if (previousResp[0] != null) {
-                      assertEquals(resp, previousResp[0]);
+                    @Override
+                    public Object getAttribute(String attr)
+                    {
+                        // Ensure that attributes are stored on the original request object.
+                        throw new UnsupportedOperationException();
                     }
+                };
+        final HttpServletResponse response = newFakeHttpServletResponse();
+        final HttpServletResponseWrapper responseWrapper = new HttpServletResponseWrapper(response);
 
-                    chain.doFilter(
-                        previousReq[0] = new HttpServletRequestWrapper((HttpServletRequest) req),
-                        previousResp[0] =
-                            new HttpServletResponseWrapper((HttpServletResponse) resp));
+        final boolean[] filterInvoked = new boolean[1];
+        final Injector injector =
+                createInjector(
+                        new ServletModule()
+                        {
+                            @Override
+                            protected void configureServlets()
+                            {
+                                filter("/*")
+                                        .through(
+                                                new Filter()
+                                                {
+                                                    @Inject
+                                                    Provider<ServletRequest> servletReqProvider;
+                                                    @Inject
+                                                    Provider<HttpServletRequest> reqProvider;
+                                                    @Inject
+                                                    Provider<ServletResponse> servletRespProvider;
+                                                    @Inject
+                                                    Provider<HttpServletResponse> respProvider;
 
-                    assertSame(req, reqProvider.get());
-                    assertSame(resp, respProvider.get());
-                  }
+                                                    @Override
+                                                    public void init(FilterConfig filterConfig) {}
 
-                  @Override
-                  public void destroy() {}
+                                                    @Override
+                                                    public void doFilter(
+                                                            ServletRequest req,
+                                                            ServletResponse resp,
+                                                            FilterChain chain)
+                                                            throws IOException, ServletException
+                                                    {
+                                                        filterInvoked[0] = true;
+                                                        assertSame(req, servletReqProvider.get());
+                                                        assertSame(req, reqProvider.get());
+
+                                                        assertSame(resp, servletRespProvider.get());
+                                                        assertSame(resp, respProvider.get());
+
+                                                        chain.doFilter(requestWrapper, responseWrapper);
+
+                                                        assertSame(req, reqProvider.get());
+                                                        assertSame(resp, respProvider.get());
+                                                    }
+
+                                                    @Override
+                                                    public void destroy() {}
+                                                });
+                            }
+                        });
+
+        GuiceFilter filter = new GuiceFilter();
+        final boolean[] chainInvoked = new boolean[1];
+        FilterChain filterChain =
+                new FilterChain()
+                {
+                    @Override
+                    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse)
+                    {
+                        chainInvoked[0] = true;
+                        assertSame(requestWrapper, servletRequest);
+                        assertSame(requestWrapper, injector.getInstance(ServletRequest.class));
+                        assertSame(requestWrapper, injector.getInstance(HTTP_REQ_KEY));
+
+                        assertSame(responseWrapper, servletResponse);
+                        assertSame(responseWrapper, injector.getInstance(ServletResponse.class));
+                        assertSame(responseWrapper, injector.getInstance(HTTP_RESP_KEY));
+
+                        assertSame(servletRequest.getParameterMap(), injector.getInstance(REQ_PARAMS_KEY));
+
+                        InRequest inRequest = injector.getInstance(InRequest.class);
+                        assertSame(inRequest, injector.getInstance(InRequest.class));
+                    }
+                };
+        filter.doFilter(request, response, filterChain);
+
+        assertTrue(chainInvoked[0]);
+        assertTrue(filterInvoked[0]);
+    }
+
+    @Test
+    public void testRequestAndResponseBindings_matchesPassedParameters()
+            throws Exception
+    {
+        final int[] filterInvoked = new int[1];
+        final boolean[] servletInvoked = new boolean[1];
+        createInjector(
+                new ServletModule()
+                {
+                    @Override
+                    protected void configureServlets()
+                    {
+                        final HttpServletRequest[] previousReq = new HttpServletRequest[1];
+                        final HttpServletResponse[] previousResp = new HttpServletResponse[1];
+
+                        final Provider<ServletRequest> servletReqProvider = getProvider(ServletRequest.class);
+                        final Provider<HttpServletRequest> reqProvider = getProvider(HttpServletRequest.class);
+                        final Provider<ServletResponse> servletRespProvider =
+                                getProvider(ServletResponse.class);
+                        final Provider<HttpServletResponse> respProvider =
+                                getProvider(HttpServletResponse.class);
+
+                        Filter filter =
+                                new Filter()
+                                {
+                                    @Override
+                                    public void init(FilterConfig filterConfig) {}
+
+                                    @Override
+                                    public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain)
+                                            throws IOException, ServletException
+                                    {
+                                        filterInvoked[0]++;
+                                        assertSame(req, servletReqProvider.get());
+                                        assertSame(req, reqProvider.get());
+                                        if (previousReq[0] != null) {
+                                            assertEquals(req, previousReq[0]);
+                                        }
+
+                                        assertSame(resp, servletRespProvider.get());
+                                        assertSame(resp, respProvider.get());
+                                        if (previousResp[0] != null) {
+                                            assertEquals(resp, previousResp[0]);
+                                        }
+
+                                        chain.doFilter(
+                                                previousReq[0] = new HttpServletRequestWrapper((HttpServletRequest) req),
+                                                previousResp[0] =
+                                                        new HttpServletResponseWrapper((HttpServletResponse) resp));
+
+                                        assertSame(req, reqProvider.get());
+                                        assertSame(resp, respProvider.get());
+                                    }
+
+                                    @Override
+                                    public void destroy() {}
+                                };
+
+                        filter("/*").through(filter);
+                        filter("/*").through(filter); // filter twice to test wrapping in filters
+                        serve("/*")
+                                .with(
+                                        new HttpServlet()
+                                        {
+                                            @Override
+                                            protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+                                            {
+                                                servletInvoked[0] = true;
+                                                assertSame(req, servletReqProvider.get());
+                                                assertSame(req, reqProvider.get());
+
+                                                assertSame(resp, servletRespProvider.get());
+                                                assertSame(resp, respProvider.get());
+                                            }
+                                        });
+                    }
+                });
+
+        GuiceFilter filter = new GuiceFilter();
+        filter.doFilter(
+                newFakeHttpServletRequest(),
+                newFakeHttpServletResponse(),
+                new FilterChain()
+                {
+                    @Override
+                    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse)
+                    {
+                        throw new IllegalStateException("Shouldn't get here");
+                    }
+                });
+
+        assertEquals(2, filterInvoked[0]);
+        assertTrue(servletInvoked[0]);
+    }
+
+    @Test
+    public void testNewRequestObject()
+            throws CreationException, IOException, ServletException
+    {
+        final Injector injector = createInjector();
+        final HttpServletRequest request = newFakeHttpServletRequest();
+
+        GuiceFilter filter = new GuiceFilter();
+        final boolean[] invoked = new boolean[1];
+        FilterChain filterChain =
+                new FilterChain()
+                {
+                    @Override
+                    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse)
+                    {
+                        invoked[0] = true;
+                        assertNotNull(injector.getInstance(InRequest.class));
+                        assertNull(injector.getInstance(IN_REQUEST_NULL_KEY));
+                    }
                 };
 
-            filter("/*").through(filter);
-            filter("/*").through(filter); // filter twice to test wrapping in filters
-            serve("/*")
-                .with(
-                    new HttpServlet() {
-                      @Override
-                      protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
-                        servletInvoked[0] = true;
-                        assertSame(req, servletReqProvider.get());
-                        assertSame(req, reqProvider.get());
+        filter.doFilter(request, null, filterChain);
 
-                        assertSame(resp, servletRespProvider.get());
-                        assertSame(resp, respProvider.get());
-                      }
-                    });
-          }
-        });
+        assertTrue(invoked[0]);
+    }
 
-    GuiceFilter filter = new GuiceFilter();
-    filter.doFilter(
-        newFakeHttpServletRequest(),
-        newFakeHttpServletResponse(),
-        new FilterChain() {
-          @Override
-          public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse) {
-            throw new IllegalStateException("Shouldn't get here");
-          }
-        });
+    @Test
+    public void testExistingRequestObject()
+            throws CreationException, IOException, ServletException
+    {
+        final Injector injector = createInjector();
+        final HttpServletRequest request = newFakeHttpServletRequest();
 
-    assertEquals(2, filterInvoked[0]);
-    assertTrue(servletInvoked[0]);
-  }
+        GuiceFilter filter = new GuiceFilter();
+        final boolean[] invoked = new boolean[1];
+        FilterChain filterChain =
+                new FilterChain()
+                {
+                    @Override
+                    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse)
+                    {
+                        invoked[0] = true;
 
-  @Test
-  public void testNewRequestObject() throws CreationException, IOException, ServletException {
-    final Injector injector = createInjector();
-    final HttpServletRequest request = newFakeHttpServletRequest();
+                        InRequest inRequest = injector.getInstance(InRequest.class);
+                        assertSame(inRequest, injector.getInstance(InRequest.class));
 
-    GuiceFilter filter = new GuiceFilter();
-    final boolean[] invoked = new boolean[1];
-    FilterChain filterChain =
-        new FilterChain() {
-          @Override
-          public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse) {
-            invoked[0] = true;
-            assertNotNull(injector.getInstance(InRequest.class));
-            assertNull(injector.getInstance(IN_REQUEST_NULL_KEY));
-          }
-        };
+                        assertNull(injector.getInstance(IN_REQUEST_NULL_KEY));
+                        assertNull(injector.getInstance(IN_REQUEST_NULL_KEY));
+                    }
+                };
 
-    filter.doFilter(request, null, filterChain);
+        filter.doFilter(request, null, filterChain);
 
-    assertTrue(invoked[0]);
-  }
+        assertTrue(invoked[0]);
+    }
 
-  @Test
-  public void testExistingRequestObject() throws CreationException, IOException, ServletException {
-    final Injector injector = createInjector();
-    final HttpServletRequest request = newFakeHttpServletRequest();
+    @Test
+    public void testNewSessionObject()
+            throws CreationException, IOException, ServletException
+    {
+        final Injector injector = createInjector();
+        final HttpServletRequest request = newFakeHttpServletRequest();
 
-    GuiceFilter filter = new GuiceFilter();
-    final boolean[] invoked = new boolean[1];
-    FilterChain filterChain =
-        new FilterChain() {
-          @Override
-          public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse) {
-            invoked[0] = true;
+        GuiceFilter filter = new GuiceFilter();
+        final boolean[] invoked = new boolean[1];
+        FilterChain filterChain =
+                new FilterChain()
+                {
+                    @Override
+                    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse)
+                    {
+                        invoked[0] = true;
+                        assertNotNull(injector.getInstance(InSession.class));
+                        assertNull(injector.getInstance(IN_SESSION_NULL_KEY));
+                    }
+                };
 
-            InRequest inRequest = injector.getInstance(InRequest.class);
-            assertSame(inRequest, injector.getInstance(InRequest.class));
+        filter.doFilter(request, null, filterChain);
 
-            assertNull(injector.getInstance(IN_REQUEST_NULL_KEY));
-            assertNull(injector.getInstance(IN_REQUEST_NULL_KEY));
-          }
-        };
+        assertTrue(invoked[0]);
+    }
 
-    filter.doFilter(request, null, filterChain);
+    @Test
+    public void testExistingSessionObject()
+            throws CreationException, IOException, ServletException
+    {
+        final Injector injector = createInjector();
+        final HttpServletRequest request = newFakeHttpServletRequest();
 
-    assertTrue(invoked[0]);
-  }
+        GuiceFilter filter = new GuiceFilter();
+        final boolean[] invoked = new boolean[1];
+        FilterChain filterChain =
+                new FilterChain()
+                {
+                    @Override
+                    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse)
+                    {
+                        invoked[0] = true;
 
-  @Test
-  public void testNewSessionObject() throws CreationException, IOException, ServletException {
-    final Injector injector = createInjector();
-    final HttpServletRequest request = newFakeHttpServletRequest();
+                        InSession inSession = injector.getInstance(InSession.class);
+                        assertSame(inSession, injector.getInstance(InSession.class));
 
-    GuiceFilter filter = new GuiceFilter();
-    final boolean[] invoked = new boolean[1];
-    FilterChain filterChain =
-        new FilterChain() {
-          @Override
-          public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse) {
-            invoked[0] = true;
-            assertNotNull(injector.getInstance(InSession.class));
-            assertNull(injector.getInstance(IN_SESSION_NULL_KEY));
-          }
-        };
+                        assertNull(injector.getInstance(IN_SESSION_NULL_KEY));
+                        assertNull(injector.getInstance(IN_SESSION_NULL_KEY));
+                    }
+                };
 
-    filter.doFilter(request, null, filterChain);
+        filter.doFilter(request, null, filterChain);
 
-    assertTrue(invoked[0]);
-  }
+        assertTrue(invoked[0]);
+    }
 
-  @Test
-  public void testExistingSessionObject() throws CreationException, IOException, ServletException {
-    final Injector injector = createInjector();
-    final HttpServletRequest request = newFakeHttpServletRequest();
+    @Test
+    public void testHttpSessionIsSerializable()
+            throws Exception
+    {
+        final Injector injector = createInjector();
+        final HttpServletRequest request = newFakeHttpServletRequest();
+        final HttpSession session = request.getSession();
 
-    GuiceFilter filter = new GuiceFilter();
-    final boolean[] invoked = new boolean[1];
-    FilterChain filterChain =
-        new FilterChain() {
-          @Override
-          public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse) {
-            invoked[0] = true;
+        GuiceFilter filter = new GuiceFilter();
+        final boolean[] invoked = new boolean[1];
+        FilterChain filterChain =
+                new FilterChain()
+                {
+                    @Override
+                    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse)
+                    {
+                        invoked[0] = true;
+                        assertNotNull(injector.getInstance(InSession.class));
+                        assertNull(injector.getInstance(IN_SESSION_NULL_KEY));
+                    }
+                };
 
-            InSession inSession = injector.getInstance(InSession.class);
-            assertSame(inSession, injector.getInstance(InSession.class));
+        filter.doFilter(request, null, filterChain);
 
-            assertNull(injector.getInstance(IN_SESSION_NULL_KEY));
-            assertNull(injector.getInstance(IN_SESSION_NULL_KEY));
-          }
-        };
+        assertTrue(invoked[0]);
 
-    filter.doFilter(request, null, filterChain);
+        HttpSession deserializedSession = reserialize(session);
 
-    assertTrue(invoked[0]);
-  }
+        String inSessionKey = IN_SESSION_KEY.toString();
+        String inSessionNullKey = IN_SESSION_NULL_KEY.toString();
+        assertTrue(deserializedSession.getAttribute(inSessionKey) instanceof InSession);
+        assertEquals(NullObject.INSTANCE, deserializedSession.getAttribute(inSessionNullKey));
+    }
 
-  @Test
-  public void testHttpSessionIsSerializable() throws Exception {
-    final Injector injector = createInjector();
-    final HttpServletRequest request = newFakeHttpServletRequest();
-    final HttpSession session = request.getSession();
-
-    GuiceFilter filter = new GuiceFilter();
-    final boolean[] invoked = new boolean[1];
-    FilterChain filterChain =
-        new FilterChain() {
-          @Override
-          public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse) {
-            invoked[0] = true;
-            assertNotNull(injector.getInstance(InSession.class));
-            assertNull(injector.getInstance(IN_SESSION_NULL_KEY));
-          }
-        };
-
-    filter.doFilter(request, null, filterChain);
-
-    assertTrue(invoked[0]);
-
-    HttpSession deserializedSession = reserialize(session);
-
-    String inSessionKey = IN_SESSION_KEY.toString();
-    String inSessionNullKey = IN_SESSION_NULL_KEY.toString();
-    assertTrue(deserializedSession.getAttribute(inSessionKey) instanceof InSession);
-    assertEquals(NullObject.INSTANCE, deserializedSession.getAttribute(inSessionNullKey));
-  }
-
-  @Test
-  public void testGuiceFilterConstructors() throws Exception {
-    final RuntimeException servletException = new RuntimeException();
-    final RuntimeException chainException = new RuntimeException();
-    final Injector injector =
-        createInjector(
-            new ServletModule() {
-              @Override
-              protected void configureServlets() {
-                serve("/*")
-                    .with(
-                        new HttpServlet() {
-                          @Override
-                          protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
-                            throw servletException;
-                          }
+    @Test
+    public void testGuiceFilterConstructors()
+            throws Exception
+    {
+        final RuntimeException servletException = new RuntimeException();
+        final RuntimeException chainException = new RuntimeException();
+        final Injector injector =
+                createInjector(
+                        new ServletModule()
+                        {
+                            @Override
+                            protected void configureServlets()
+                            {
+                                serve("/*")
+                                        .with(
+                                                new HttpServlet()
+                                                {
+                                                    @Override
+                                                    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+                                                    {
+                                                        throw servletException;
+                                                    }
+                                                });
+                            }
                         });
-              }
-            });
-    final HttpServletRequest request = newFakeHttpServletRequest();
-    final HttpServletResponse response = mock(HttpServletResponse.class); // spec requires non-null
-    FilterChain filterChain =
-        new FilterChain() {
-          @Override
-          public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse) {
-            throw chainException;
-          }
-        };
+        final HttpServletRequest request = newFakeHttpServletRequest();
+        final HttpServletResponse response = mock(HttpServletResponse.class); // spec requires non-null
+        FilterChain filterChain =
+                new FilterChain()
+                {
+                    @Override
+                    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse)
+                    {
+                        throw chainException;
+                    }
+                };
 
-    try {
-      new GuiceFilter().doFilter(request, response, filterChain);
-      fail();
-    } catch (RuntimeException e) {
-      assertSame(servletException, e);
+        try {
+            new GuiceFilter().doFilter(request, response, filterChain);
+            fail();
+        }
+        catch (RuntimeException e) {
+            assertSame(servletException, e);
+        }
+        try {
+            injector.getInstance(GuiceFilter.class).doFilter(request, response, filterChain);
+            fail();
+        }
+        catch (RuntimeException e) {
+            assertSame(servletException, e);
+        }
+        try {
+            injector
+                    .getInstance(Key.get(GuiceFilter.class, ScopingOnly.class))
+                    .doFilter(request, response, filterChain);
+            fail();
+        }
+        catch (RuntimeException e) {
+            assertSame(chainException, e);
+        }
     }
-    try {
-      injector.getInstance(GuiceFilter.class).doFilter(request, response, filterChain);
-      fail();
-    } catch (RuntimeException e) {
-      assertSame(servletException, e);
+
+    private Injector createInjector(Module... modules)
+            throws CreationException
+    {
+        return Guice.createInjector(
+                Lists.<Module>asList(
+                        new AbstractModule()
+                        {
+                            @Override
+                            protected void configure()
+                            {
+                                install(new ServletModule());
+                                bind(InSession.class);
+                                bind(IN_SESSION_NULL_KEY)
+                                        .toProvider(Providers.<InSession>of(null))
+                                        .in(SessionScoped.class);
+                                bind(InRequest.class);
+                                bind(IN_REQUEST_NULL_KEY)
+                                        .toProvider(Providers.<InRequest>of(null))
+                                        .in(RequestScoped.class);
+                            }
+                        },
+                        modules));
     }
-    try {
-      injector
-          .getInstance(Key.get(GuiceFilter.class, ScopingOnly.class))
-          .doFilter(request, response, filterChain);
-      fail();
-    } catch (RuntimeException e) {
-      assertSame(chainException, e);
-    }
-  }
 
-  private Injector createInjector(Module... modules) throws CreationException {
-    return Guice.createInjector(
-        Lists.<Module>asList(
-            new AbstractModule() {
-              @Override
-              protected void configure() {
-                install(new ServletModule());
-                bind(InSession.class);
-                bind(IN_SESSION_NULL_KEY)
-                    .toProvider(Providers.<InSession>of(null))
-                    .in(SessionScoped.class);
-                bind(InRequest.class);
-                bind(IN_REQUEST_NULL_KEY)
-                    .toProvider(Providers.<InRequest>of(null))
-                    .in(RequestScoped.class);
-              }
-            },
-            modules));
-  }
+    @SessionScoped
+    static class InSession
+            implements Serializable {}
 
-  @SessionScoped
-  static class InSession implements Serializable {}
+    @RequestScoped
+    static class InRequest {}
 
-  @RequestScoped
-  static class InRequest {}
-
-  @BindingAnnotation
-  @Retention(RUNTIME)
-  @Target({PARAMETER, METHOD, FIELD})
-  @interface Null {}
+    @BindingAnnotation
+    @Retention(RUNTIME)
+    @Target({PARAMETER, METHOD, FIELD})
+    @interface Null {}
 }

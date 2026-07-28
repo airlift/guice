@@ -21,14 +21,20 @@ package com.google.inject.tools.jmx;
  *
  * @author crazybob@google.com (Bob Lee)
  */
-public interface ManagedBindingMBean {
+public interface ManagedBindingMBean
+{
+    /**
+     * Gets the source of this binding.
+     */
+    String getSource();
 
-  /** Gets the source of this binding. */
-  String getSource();
+    /**
+     * Gets the provider to which this binding is bound.
+     */
+    String getProvider();
 
-  /** Gets the provider to which this binding is bound. */
-  String getProvider();
-
-  /** Gets the binding key. */
-  String getKey();
+    /**
+     * Gets the binding key.
+     */
+    String getKey();
 }

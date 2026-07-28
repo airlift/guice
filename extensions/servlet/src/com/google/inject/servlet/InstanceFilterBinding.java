@@ -24,8 +24,11 @@ import jakarta.servlet.Filter;
  * @author sameb@google.com
  * @since 3.0
  */
-public interface InstanceFilterBinding extends ServletModuleBinding {
-
-  /** Returns the filter instance that will be used. */
-  Filter getFilterInstance();
+public interface InstanceFilterBinding
+        extends ServletModuleBinding
+{
+    /**
+     * Returns the filter instance that will be used.
+     */
+    Filter getFilterInstance();
 }

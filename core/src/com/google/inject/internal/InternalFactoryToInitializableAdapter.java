@@ -16,11 +16,10 @@
 
 package com.google.inject.internal;
 
-
-import static java.util.Objects.requireNonNull;
-
 import com.google.inject.spi.Dependency;
 import com.google.inject.spi.ProviderInstanceBinding;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Adapts {@link ProviderInstanceBinding} providers, ensuring circular proxies fail (or proxy)
@@ -28,37 +27,42 @@ import com.google.inject.spi.ProviderInstanceBinding;
  *
  * @author sameb@google.com (Sam Berlin)
  */
-final class InternalFactoryToInitializableAdapter<T> extends ProviderInternalFactory<T> {
+final class InternalFactoryToInitializableAdapter<T>
+        extends ProviderInternalFactory<T>
+{
+    private final ProvisionListenerStackCallback<T> provisionCallback;
+    private final Initializable<? extends jakarta.inject.Provider<? extends T>> initializable;
 
-  private final ProvisionListenerStackCallback<T> provisionCallback;
-  private final Initializable<? extends jakarta.inject.Provider<? extends T>> initializable;
+    public InternalFactoryToInitializableAdapter(
+            Class<? super T> rawType,
+            Initializable<? extends jakarta.inject.Provider<? extends T>> initializable,
+            Object source,
+            ProvisionListenerStackCallback<T> provisionCallback,
+            int circularFactoryId)
+    {
+        super(rawType, source, circularFactoryId);
+        this.provisionCallback = provisionCallback;
+        this.initializable = requireNonNull(initializable, "provider");
+    }
 
-  public InternalFactoryToInitializableAdapter(
-      Class<? super T> rawType,
-      Initializable<? extends jakarta.inject.Provider<? extends T>> initializable,
-      Object source,
-      ProvisionListenerStackCallback<T> provisionCallback,
-      int circularFactoryId) {
-    super(rawType, source, circularFactoryId);
-    this.provisionCallback = provisionCallback;
-    this.initializable = requireNonNull(initializable, "provider");
-  }
+    @Override
+    public T get(InternalContext context, Dependency<?> dependency, boolean linked)
+            throws InternalProvisionException
+    {
+        return circularGet(initializable.get(context), context, dependency, provisionCallback);
+    }
 
-  @Override
-  public T get(InternalContext context, Dependency<?> dependency, boolean linked)
-      throws InternalProvisionException {
-    return circularGet(initializable.get(context), context, dependency, provisionCallback);
-  }
+    @Override
+    MethodHandleResult makeHandle(LinkageContext context, boolean linked)
+    {
+        return makeCachable(
+                circularGetHandle(
+                        InternalMethodHandles.initializableFactoryGetHandle(initializable), provisionCallback));
+    }
 
-  @Override
-  MethodHandleResult makeHandle(LinkageContext context, boolean linked) {
-    return makeCachable(
-        circularGetHandle(
-            InternalMethodHandles.initializableFactoryGetHandle(initializable), provisionCallback));
-  }
-
-  @Override
-  public String toString() {
-    return initializable.toString();
-  }
+    @Override
+    public String toString()
+    {
+        return initializable.toString();
+    }
 }

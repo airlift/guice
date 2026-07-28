@@ -16,53 +16,67 @@
 
 package com.google.inject;
 
-import static com.google.inject.Asserts.assertContains;
+import org.junit.jupiter.api.Test;
+import org.opentest4j.AssertionFailedError;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.List;
-import org.opentest4j.AssertionFailedError;
-import org.junit.jupiter.api.Test;
 
-/** @author jessewilson@google.com (Jesse Wilson) */
-public class SerializationTest {
+import static com.google.inject.Asserts.assertContains;
 
-  @Test
-  public void testAbstractModuleIsSerializable() throws IOException {
-    Asserts.reserialize(new MyAbstractModule());
-  }
-
-  static class MyAbstractModule extends AbstractModule implements Serializable {
-  }
-
-  @Test
-  public void testCreationExceptionIsSerializable() throws IOException {
-    CreationException exception = createCreationException();
-    CreationException reserialized = Asserts.reserialize(exception);
-    assertContains(
-        reserialized.getMessage(),
-        "1) [Guice/MissingImplementation]: No implementation for List was bound.",
-        "at SerializationTest$1.configure");
-  }
-
-  private CreationException createCreationException() {
-    try {
-      Guice.createInjector(
-          new AbstractModule() {
-            @Override
-            protected void configure() {
-              bind(List.class);
-            }
-          });
-      throw new AssertionFailedError();
-    } catch (CreationException e) {
-      return e;
+/**
+ * @author jessewilson@google.com (Jesse Wilson)
+ */
+public class SerializationTest
+{
+    @Test
+    public void testAbstractModuleIsSerializable()
+            throws IOException
+    {
+        Asserts.reserialize(new MyAbstractModule());
     }
-  }
 
-  static class A {
-    @Inject B b;
-  }
+    static class MyAbstractModule
+            extends AbstractModule
+            implements Serializable {}
 
-  static class B {}
+    @Test
+    public void testCreationExceptionIsSerializable()
+            throws IOException
+    {
+        CreationException exception = createCreationException();
+        CreationException reserialized = Asserts.reserialize(exception);
+        assertContains(
+                reserialized.getMessage(),
+                "1) [Guice/MissingImplementation]: No implementation for List was bound.",
+                "at SerializationTest$1.configure");
+    }
+
+    private CreationException createCreationException()
+    {
+        try {
+            Guice.createInjector(
+                    new AbstractModule()
+                    {
+                        @Override
+                        protected void configure()
+                        {
+                            bind(List.class);
+                        }
+                    });
+            throw new AssertionFailedError();
+        }
+        catch (CreationException e) {
+            return e;
+        }
+    }
+
+    static class A
+    {
+        @Inject
+        B b;
+    }
+
+    static class B {}
 }

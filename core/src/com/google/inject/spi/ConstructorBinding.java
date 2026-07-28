@@ -17,11 +17,12 @@
 package com.google.inject.spi;
 
 import com.google.inject.Binding;
+import org.aopalliance.intercept.MethodInterceptor;
+
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.aopalliance.intercept.MethodInterceptor;
 
 /**
  * A binding to the constructor of a concrete class. To resolve injections, an instance is
@@ -30,24 +31,27 @@ import org.aopalliance.intercept.MethodInterceptor;
  * @author jessewilson@google.com (Jesse Wilson)
  * @since 2.0
  */
-public interface ConstructorBinding<T> extends Binding<T>, HasDependencies {
+public interface ConstructorBinding<T>
+        extends Binding<T>, HasDependencies
+{
+    /**
+     * Gets the constructor this binding injects.
+     */
+    InjectionPoint getConstructor();
 
-  /** Gets the constructor this binding injects. */
-  InjectionPoint getConstructor();
+    /**
+     * Returns all instance method and field injection points on {@code type}.
+     *
+     * @return a possibly empty set of injection points. The set has a specified iteration order. All
+     *         fields are returned and then all methods. Within the fields, supertype fields are returned
+     *         before subtype fields. Similarly, supertype methods are returned before subtype methods.
+     */
+    Set<InjectionPoint> getInjectableMembers();
 
-  /**
-   * Returns all instance method and field injection points on {@code type}.
-   *
-   * @return a possibly empty set of injection points. The set has a specified iteration order. All
-   *     fields are returned and then all methods. Within the fields, supertype fields are returned
-   *     before subtype fields. Similarly, supertype methods are returned before subtype methods.
-   */
-  Set<InjectionPoint> getInjectableMembers();
-
-  /**
-   * Returns the interceptors applied to each method, in the order that they will be applied.
-   *
-   * @return a possibly empty map
-   */
-  Map<Method, List<MethodInterceptor>> getMethodInterceptors();
+    /**
+     * Returns the interceptors applied to each method, in the order that they will be applied.
+     *
+     * @return a possibly empty map
+     */
+    Map<Method, List<MethodInterceptor>> getMethodInterceptors();
 }

@@ -15,217 +15,255 @@
  */
 
 package com.google.inject;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Tests for {@link Binder#requireAtInjectOnConstructors()}
  *
  * @author sameb@google.com (Sam Berlin)
  */
-public class RequireAtInjectOnConstructorsTest {
-
-  @Test
-  public void testNoCxtors_explicitBinding() {
-    try {
-      Guice.createInjector(
-          new AbstractModule() {
-            @Override
-            protected void configure() {
-              bind(NoCxtors.class);
-              binder().requireAtInjectOnConstructors();
-            }
-          });
-      fail();
-    } catch (CreationException ce) {
-      assertEquals(1, ce.getErrorMessages().size());
-      Asserts.assertContains(
-          ce.getMessage(),
-          "No injectable constructor for type RequireAtInjectOnConstructorsTest$NoCxtors.",
-          "at RequireAtInjectOnConstructorsTest$1.configure");
+public class RequireAtInjectOnConstructorsTest
+{
+    @Test
+    public void testNoCxtors_explicitBinding()
+    {
+        try {
+            Guice.createInjector(
+                    new AbstractModule()
+                    {
+                        @Override
+                        protected void configure()
+                        {
+                            bind(NoCxtors.class);
+                            binder().requireAtInjectOnConstructors();
+                        }
+                    });
+            fail();
+        }
+        catch (CreationException ce) {
+            assertEquals(1, ce.getErrorMessages().size());
+            Asserts.assertContains(
+                    ce.getMessage(),
+                    "No injectable constructor for type RequireAtInjectOnConstructorsTest$NoCxtors.",
+                    "at RequireAtInjectOnConstructorsTest$1.configure");
+        }
     }
-  }
 
-  @Test
-  public void testNoCxtors_jitBinding() {
-    Injector injector =
-        Guice.createInjector(
-            new AbstractModule() {
-              @Override
-              protected void configure() {
-                binder().requireAtInjectOnConstructors();
-              }
-            });
-    try {
-      injector.getInstance(NoCxtors.class);
-      fail();
-    } catch (ConfigurationException ce) {
-      Asserts.assertContains(
-          ce.getMessage(),
-          "No injectable constructor for type RequireAtInjectOnConstructorsTest$NoCxtors.",
-          "while locating RequireAtInjectOnConstructorsTest$NoCxtors");
+    @Test
+    public void testNoCxtors_jitBinding()
+    {
+        Injector injector =
+                Guice.createInjector(
+                        new AbstractModule()
+                        {
+                            @Override
+                            protected void configure()
+                            {
+                                binder().requireAtInjectOnConstructors();
+                            }
+                        });
+        try {
+            injector.getInstance(NoCxtors.class);
+            fail();
+        }
+        catch (ConfigurationException ce) {
+            Asserts.assertContains(
+                    ce.getMessage(),
+                    "No injectable constructor for type RequireAtInjectOnConstructorsTest$NoCxtors.",
+                    "while locating RequireAtInjectOnConstructorsTest$NoCxtors");
+        }
     }
-  }
 
-  @Test
-  public void testNoCxtors_implicitBinding() {
-    try {
-      Guice.createInjector(
-          new AbstractModule() {
-            @Override
-            protected void configure() {
-              bind(Interface.class).to(NoCxtors.class);
-              binder().requireAtInjectOnConstructors();
-            }
-          });
-      fail();
-    } catch (CreationException ce) {
-      assertEquals(1, ce.getErrorMessages().size());
-      Asserts.assertContains(
-          ce.getMessage(),
-          "No injectable constructor for type RequireAtInjectOnConstructorsTest$NoCxtors",
-          "at RequireAtInjectOnConstructorsTest$3.configure");
+    @Test
+    public void testNoCxtors_implicitBinding()
+    {
+        try {
+            Guice.createInjector(
+                    new AbstractModule()
+                    {
+                        @Override
+                        protected void configure()
+                        {
+                            bind(Interface.class).to(NoCxtors.class);
+                            binder().requireAtInjectOnConstructors();
+                        }
+                    });
+            fail();
+        }
+        catch (CreationException ce) {
+            assertEquals(1, ce.getErrorMessages().size());
+            Asserts.assertContains(
+                    ce.getMessage(),
+                    "No injectable constructor for type RequireAtInjectOnConstructorsTest$NoCxtors",
+                    "at RequireAtInjectOnConstructorsTest$3.configure");
+        }
     }
-  }
 
-  @Test
-  public void testNoCxtors_inheritedByPrivateModules() {
-    try {
-      Guice.createInjector(
-          new AbstractModule() {
-            @Override
-            protected void configure() {
-              binder().requireAtInjectOnConstructors();
-              install(
-                  new PrivateModule() {
-                    @Override
-                    protected void configure() {
-                      bind(NoCxtors.class);
-                    }
-                  });
-            }
-          });
-      fail();
-    } catch (CreationException ce) {
-      assertEquals(1, ce.getErrorMessages().size());
-      Asserts.assertContains(
-          ce.getMessage(),
-          "No injectable constructor for type RequireAtInjectOnConstructorsTest$NoCxtors.",
-          "at RequireAtInjectOnConstructorsTest$4$1.configure");
+    @Test
+    public void testNoCxtors_inheritedByPrivateModules()
+    {
+        try {
+            Guice.createInjector(
+                    new AbstractModule()
+                    {
+                        @Override
+                        protected void configure()
+                        {
+                            binder().requireAtInjectOnConstructors();
+                            install(
+                                    new PrivateModule()
+                                    {
+                                        @Override
+                                        protected void configure()
+                                        {
+                                            bind(NoCxtors.class);
+                                        }
+                                    });
+                        }
+                    });
+            fail();
+        }
+        catch (CreationException ce) {
+            assertEquals(1, ce.getErrorMessages().size());
+            Asserts.assertContains(
+                    ce.getMessage(),
+                    "No injectable constructor for type RequireAtInjectOnConstructorsTest$NoCxtors.",
+                    "at RequireAtInjectOnConstructorsTest$4$1.configure");
+        }
     }
-  }
 
-  @Test
-  public void testNoCxtors_accumulatesAllErrors() {
-    try {
-      Guice.createInjector(
-          new AbstractModule() {
-            @Override
-            protected void configure() {
-              bind(NoCxtors.class);
-              bind(AnotherNoCxtors.class);
-              binder().requireAtInjectOnConstructors();
-            }
-          });
-      fail();
-    } catch (CreationException ce) {
-      assertEquals(2, ce.getErrorMessages().size());
-      Asserts.assertContains(
-          ce.getMessage(),
-          "No injectable constructor for type RequireAtInjectOnConstructorsTest$AnotherNoCxtors.",
-          "at RequireAtInjectOnConstructorsTest$5.configure",
-          "No injectable constructor for type RequireAtInjectOnConstructorsTest$NoCxtors.",
-          "at RequireAtInjectOnConstructorsTest$5.configure");
+    @Test
+    public void testNoCxtors_accumulatesAllErrors()
+    {
+        try {
+            Guice.createInjector(
+                    new AbstractModule()
+                    {
+                        @Override
+                        protected void configure()
+                        {
+                            bind(NoCxtors.class);
+                            bind(AnotherNoCxtors.class);
+                            binder().requireAtInjectOnConstructors();
+                        }
+                    });
+            fail();
+        }
+        catch (CreationException ce) {
+            assertEquals(2, ce.getErrorMessages().size());
+            Asserts.assertContains(
+                    ce.getMessage(),
+                    "No injectable constructor for type RequireAtInjectOnConstructorsTest$AnotherNoCxtors.",
+                    "at RequireAtInjectOnConstructorsTest$5.configure",
+                    "No injectable constructor for type RequireAtInjectOnConstructorsTest$NoCxtors.",
+                    "at RequireAtInjectOnConstructorsTest$5.configure");
+        }
     }
-  }
 
-  @Test
-  public void testNoCxtors_separateOptionsForPrivateModules() {
-    try {
-      Guice.createInjector(
-          new AbstractModule() {
-            @Override
-            protected void configure() {
-              bind(AnotherNoCxtors.class);
-              install(
-                  new PrivateModule() {
-                    @Override
-                    protected void configure() {
-                      binder().requireAtInjectOnConstructors();
-                      bind(NoCxtors.class);
-                    }
-                  });
-            }
-          });
-      fail();
-    } catch (CreationException ce) {
-      // This is testing that the parent module doesn't fail because it isn't included
-      // in the error message.
-      assertEquals(1, ce.getErrorMessages().size());
-      Asserts.assertContains(
-          ce.getMessage(),
-          "No injectable constructor for type RequireAtInjectOnConstructorsTest$NoCxtors.",
-          "Injector is configured to require @Inject constructors",
-          "at RequireAtInjectOnConstructorsTest$6$1.configure");
+    @Test
+    public void testNoCxtors_separateOptionsForPrivateModules()
+    {
+        try {
+            Guice.createInjector(
+                    new AbstractModule()
+                    {
+                        @Override
+                        protected void configure()
+                        {
+                            bind(AnotherNoCxtors.class);
+                            install(
+                                    new PrivateModule()
+                                    {
+                                        @Override
+                                        protected void configure()
+                                        {
+                                            binder().requireAtInjectOnConstructors();
+                                            bind(NoCxtors.class);
+                                        }
+                                    });
+                        }
+                    });
+            fail();
+        }
+        catch (CreationException ce) {
+            // This is testing that the parent module doesn't fail because it isn't included
+            // in the error message.
+            assertEquals(1, ce.getErrorMessages().size());
+            Asserts.assertContains(
+                    ce.getMessage(),
+                    "No injectable constructor for type RequireAtInjectOnConstructorsTest$NoCxtors.",
+                    "Injector is configured to require @Inject constructors",
+                    "at RequireAtInjectOnConstructorsTest$6$1.configure");
+        }
     }
-  }
 
-  @Test
-  public void testManyConstructorsButNoneWithAtInject() {
-    try {
-      Guice.createInjector(
-          new AbstractModule() {
-            @Override
-            protected void configure() {
-              bind(ManyConstructors.class);
-              binder().requireAtInjectOnConstructors();
-            }
-          });
-      fail();
-    } catch (CreationException ce) {
-      assertEquals(1, ce.getErrorMessages().size());
-      Asserts.assertContains(
-          ce.getMessage(),
-          "No injectable constructor for type RequireAtInjectOnConstructorsTest$ManyConstructors.",
-          "at RequireAtInjectOnConstructorsTest$7.configure");
+    @Test
+    public void testManyConstructorsButNoneWithAtInject()
+    {
+        try {
+            Guice.createInjector(
+                    new AbstractModule()
+                    {
+                        @Override
+                        protected void configure()
+                        {
+                            bind(ManyConstructors.class);
+                            binder().requireAtInjectOnConstructors();
+                        }
+                    });
+            fail();
+        }
+        catch (CreationException ce) {
+            assertEquals(1, ce.getErrorMessages().size());
+            Asserts.assertContains(
+                    ce.getMessage(),
+                    "No injectable constructor for type RequireAtInjectOnConstructorsTest$ManyConstructors.",
+                    "at RequireAtInjectOnConstructorsTest$7.configure");
+        }
     }
-  }
 
-  @Test
-  public void testRequireAtInjectStillAllowsToConstructorBindings() {
-    Injector injector =
-        Guice.createInjector(
-            new AbstractModule() {
-              @Override
-              protected void configure() {
-                try {
-                  bind(ManyConstructors.class)
-                      .toConstructor(ManyConstructors.class.getDeclaredConstructor());
-                } catch (Exception e) {
-                  throw new RuntimeException(e);
-                }
-                binder().requireAtInjectOnConstructors();
-              }
-            });
-    injector.getInstance(ManyConstructors.class);
-  }
+    @Test
+    public void testRequireAtInjectStillAllowsToConstructorBindings()
+    {
+        Injector injector =
+                Guice.createInjector(
+                        new AbstractModule()
+                        {
+                            @Override
+                            protected void configure()
+                            {
+                                try {
+                                    bind(ManyConstructors.class)
+                                            .toConstructor(ManyConstructors.class.getDeclaredConstructor());
+                                }
+                                catch (Exception e) {
+                                    throw new RuntimeException(e);
+                                }
+                                binder().requireAtInjectOnConstructors();
+                            }
+                        });
+        injector.getInstance(ManyConstructors.class);
+    }
 
-  private static interface Interface {}
+    private static interface Interface {}
 
-  private static class NoCxtors implements Interface {}
+    private static class NoCxtors
+            implements Interface {}
 
-  private static class AnotherNoCxtors {}
+    private static class AnotherNoCxtors {}
 
-  private static class ManyConstructors {
-    @SuppressWarnings("unused")
-    ManyConstructors() {}
+    private static class ManyConstructors
+    {
+        @SuppressWarnings("unused")
+        ManyConstructors() {}
 
-    @SuppressWarnings("unused")
-    ManyConstructors(String a) {}
+        @SuppressWarnings("unused")
+        ManyConstructors(String a) {}
 
-    @SuppressWarnings("unused")
-    ManyConstructors(int a) {}
-  }
+        @SuppressWarnings("unused")
+        ManyConstructors(int a) {}
+    }
 }

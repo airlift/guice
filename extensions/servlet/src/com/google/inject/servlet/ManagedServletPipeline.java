@@ -15,7 +15,6 @@
  */
 package com.google.inject.servlet;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.google.inject.Binding;
 import com.google.inject.Inject;
@@ -30,10 +29,13 @@ import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+
+import static com.google.common.base.Preconditions.checkState;
 
 /**
  * A wrapping dispatcher for servlets, in much the same way as {@link ManagedFilterPipeline} is for
@@ -42,180 +44,201 @@ import java.util.Set;
  * @author dhanji@gmail.com (Dhanji R. Prasanna)
  */
 @Singleton
-class ManagedServletPipeline {
-  private final ServletDefinition[] servletDefinitions;
-  private static final TypeLiteral<ServletDefinition> SERVLET_DEFS =
-      TypeLiteral.get(ServletDefinition.class);
+class ManagedServletPipeline
+{
+    private final ServletDefinition[] servletDefinitions;
+    private static final TypeLiteral<ServletDefinition> SERVLET_DEFS =
+            TypeLiteral.get(ServletDefinition.class);
 
-  @Inject
-  public ManagedServletPipeline(Injector injector) {
-    this.servletDefinitions = collectServletDefinitions(injector);
-  }
-
-  boolean hasServletsMapped() {
-    return servletDefinitions.length > 0;
-  }
-
-  /**
-   * Introspects the injector and collects all instances of bound {@code List<ServletDefinition>}
-   * into a master list.
-   *
-   * <p>We have a guarantee that {@link com.google.inject.Injector#getBindings()} returns a map that
-   * preserves insertion order in entry-set iterators.
-   */
-  private ServletDefinition[] collectServletDefinitions(Injector injector) {
-    List<ServletDefinition> servletDefinitions = new ArrayList<>();
-    for (Binding<ServletDefinition> entry : injector.findBindingsByType(SERVLET_DEFS)) {
-      servletDefinitions.add(entry.getProvider().get());
+    @Inject
+    public ManagedServletPipeline(Injector injector)
+    {
+        this.servletDefinitions = collectServletDefinitions(injector);
     }
 
-    // Copy to a fixed size array for speed.
-    return servletDefinitions.toArray(ServletDefinition[]::new);
-  }
-
-  public void init(ServletContext servletContext, Injector injector) throws ServletException {
-    Set<HttpServlet> initializedSoFar = Sets.newIdentityHashSet();
-
-    for (ServletDefinition servletDefinition : servletDefinitions) {
-      servletDefinition.init(servletContext, injector, initializedSoFar);
-    }
-  }
-
-  public boolean service(ServletRequest request, ServletResponse response)
-      throws IOException, ServletException {
-
-    //stop at the first matching servlet and service
-    for (ServletDefinition servletDefinition : servletDefinitions) {
-      if (servletDefinition.service(request, response)) {
-        return true;
-      }
+    boolean hasServletsMapped()
+    {
+        return servletDefinitions.length > 0;
     }
 
-    //there was no match...
-    return false;
-  }
+    /**
+     * Introspects the injector and collects all instances of bound {@code List<ServletDefinition>}
+     * into a master list.
+     *
+     * <p>We have a guarantee that {@link com.google.inject.Injector#getBindings()} returns a map that
+     * preserves insertion order in entry-set iterators.
+     */
+    private ServletDefinition[] collectServletDefinitions(Injector injector)
+    {
+        List<ServletDefinition> servletDefinitions = new ArrayList<>();
+        for (Binding<ServletDefinition> entry : injector.findBindingsByType(SERVLET_DEFS)) {
+            servletDefinitions.add(entry.getProvider().get());
+        }
 
-  public void destroy() {
-    Set<HttpServlet> destroyedSoFar = Sets.newIdentityHashSet();
-    for (ServletDefinition servletDefinition : servletDefinitions) {
-      servletDefinition.destroy(destroyedSoFar);
+        // Copy to a fixed size array for speed.
+        return servletDefinitions.toArray(ServletDefinition[]::new);
     }
-  }
 
-  /**
-   * @return Returns a request dispatcher wrapped with a servlet mapped to the given path or null if
-   *     no mapping was found.
-   */
-  RequestDispatcher getRequestDispatcher(String path) {
-    final String newRequestUri = path;
+    public void init(ServletContext servletContext, Injector injector)
+            throws ServletException
+    {
+        Set<HttpServlet> initializedSoFar = Sets.newIdentityHashSet();
 
-    // TODO(user): check servlet spec to see if the following is legal or not.
-    // Need to strip query string if requested...
+        for (ServletDefinition servletDefinition : servletDefinitions) {
+            servletDefinition.init(servletContext, injector, initializedSoFar);
+        }
+    }
 
-    for (final ServletDefinition servletDefinition : servletDefinitions) {
-      if (servletDefinition.shouldServe(path)) {
-        return new RequestDispatcher() {
-          @Override
-          public void forward(ServletRequest servletRequest, ServletResponse servletResponse)
-              throws ServletException, IOException {
-            Preconditions.checkState(
-                !servletResponse.isCommitted(),
-                "Response has been committed--you can only call forward before"
-                    + " committing the response (hint: don't flush buffers)");
-
-            // clear buffer before forwarding
-            servletResponse.resetBuffer();
-
-            ServletRequest requestToProcess;
-            if (servletRequest instanceof HttpServletRequest) {
-              requestToProcess = wrapRequest((HttpServletRequest) servletRequest, newRequestUri);
-            } else {
-              // This should never happen, but instead of throwing an exception
-              // we will allow a happy case pass thru for maximum tolerance to
-              // legacy (and internal) code.
-              requestToProcess = servletRequest;
+    public boolean service(ServletRequest request, ServletResponse response)
+            throws IOException, ServletException
+    {
+        // stop at the first matching servlet and service
+        for (ServletDefinition servletDefinition : servletDefinitions) {
+            if (servletDefinition.service(request, response)) {
+                return true;
             }
+        }
 
-            // now dispatch to the servlet
-            doServiceImpl(servletDefinition, requestToProcess, servletResponse);
-          }
+        // there was no match...
+        return false;
+    }
 
-          @Override
-          public void include(ServletRequest servletRequest, ServletResponse servletResponse)
-              throws ServletException, IOException {
-            // route to the target servlet
-            doServiceImpl(servletDefinition, servletRequest, servletResponse);
-          }
+    public void destroy()
+    {
+        Set<HttpServlet> destroyedSoFar = Sets.newIdentityHashSet();
+        for (ServletDefinition servletDefinition : servletDefinitions) {
+            servletDefinition.destroy(destroyedSoFar);
+        }
+    }
 
-          private void doServiceImpl(
-              ServletDefinition servletDefinition,
-              ServletRequest servletRequest,
-              ServletResponse servletResponse)
-              throws ServletException, IOException {
-            servletRequest.setAttribute(REQUEST_DISPATCHER_REQUEST, Boolean.TRUE);
+    /**
+     * @return Returns a request dispatcher wrapped with a servlet mapped to the given path or null if
+     *         no mapping was found.
+     */
+    RequestDispatcher getRequestDispatcher(String path)
+    {
+        final String newRequestUri = path;
 
-            try {
-              servletDefinition.doService(servletRequest, servletResponse);
-            } finally {
-              servletRequest.removeAttribute(REQUEST_DISPATCHER_REQUEST);
+        // TODO(user): check servlet spec to see if the following is legal or not.
+        // Need to strip query string if requested...
+
+        for (final ServletDefinition servletDefinition : servletDefinitions) {
+            if (servletDefinition.shouldServe(path)) {
+                return new RequestDispatcher()
+                {
+                    @Override
+                    public void forward(ServletRequest servletRequest, ServletResponse servletResponse)
+                            throws ServletException, IOException
+                    {
+                        checkState(
+                                !servletResponse.isCommitted(),
+                                "Response has been committed--you can only call forward before"
+                                        + " committing the response (hint: don't flush buffers)");
+
+                        // clear buffer before forwarding
+                        servletResponse.resetBuffer();
+
+                        ServletRequest requestToProcess;
+                        if (servletRequest instanceof HttpServletRequest) {
+                            requestToProcess = wrapRequest((HttpServletRequest) servletRequest, newRequestUri);
+                        }
+                        else {
+                            // This should never happen, but instead of throwing an exception
+                            // we will allow a happy case pass thru for maximum tolerance to
+                            // legacy (and internal) code.
+                            requestToProcess = servletRequest;
+                        }
+
+                        // now dispatch to the servlet
+                        doServiceImpl(servletDefinition, requestToProcess, servletResponse);
+                    }
+
+                    @Override
+                    public void include(ServletRequest servletRequest, ServletResponse servletResponse)
+                            throws ServletException, IOException
+                    {
+                        // route to the target servlet
+                        doServiceImpl(servletDefinition, servletRequest, servletResponse);
+                    }
+
+                    private void doServiceImpl(
+                            ServletDefinition servletDefinition,
+                            ServletRequest servletRequest,
+                            ServletResponse servletResponse)
+                            throws ServletException, IOException
+                    {
+                        servletRequest.setAttribute(REQUEST_DISPATCHER_REQUEST, Boolean.TRUE);
+
+                        try {
+                            servletDefinition.doService(servletRequest, servletResponse);
+                        }
+                        finally {
+                            servletRequest.removeAttribute(REQUEST_DISPATCHER_REQUEST);
+                        }
+                    }
+                };
             }
-          }
-        };
-      }
+        }
+
+        // otherwise, can't process
+        return null;
     }
 
-    //otherwise, can't process
-    return null;
-  }
-
-  // visible for testing
-  static HttpServletRequest wrapRequest(HttpServletRequest request, String newUri) {
-    return new RequestDispatcherRequestWrapper(request, newUri);
-  }
-
-  /**
-   * A Marker constant attribute that when present in the request indicates to Guice servlet that
-   * this request has been generated by a request dispatcher rather than the servlet pipeline. In
-   * accordance with section 8.4.2 of the Servlet 2.4 specification.
-   */
-  public static final String REQUEST_DISPATCHER_REQUEST = "jakarta.servlet.forward.servlet_path";
-
-  private static class RequestDispatcherRequestWrapper extends HttpServletRequestWrapper {
-    private final String newRequestUri;
-
-    public RequestDispatcherRequestWrapper(
-        HttpServletRequest servletRequest, String newRequestUri) {
-      super(servletRequest);
-      this.newRequestUri = newRequestUri;
+    // visible for testing
+    static HttpServletRequest wrapRequest(HttpServletRequest request, String newUri)
+    {
+        return new RequestDispatcherRequestWrapper(request, newUri);
     }
 
-    @Override
-    public String getRequestURI() {
-      return newRequestUri;
+    /**
+     * A Marker constant attribute that when present in the request indicates to Guice servlet that
+     * this request has been generated by a request dispatcher rather than the servlet pipeline. In
+     * accordance with section 8.4.2 of the Servlet 2.4 specification.
+     */
+    public static final String REQUEST_DISPATCHER_REQUEST = "jakarta.servlet.forward.servlet_path";
+
+    private static class RequestDispatcherRequestWrapper
+            extends HttpServletRequestWrapper
+    {
+        private final String newRequestUri;
+
+        public RequestDispatcherRequestWrapper(
+                HttpServletRequest servletRequest,
+                String newRequestUri)
+        {
+            super(servletRequest);
+            this.newRequestUri = newRequestUri;
+        }
+
+        @Override
+        public String getRequestURI()
+        {
+            return newRequestUri;
+        }
+
+        @Override
+        public StringBuffer getRequestURL()
+        {
+            // The servlet API requires this method to return a StringBuffer. Modernizer flags every
+            // StringBuffer constructor; the whole wrapper class is exempted via ignoreClassNamePatterns
+            // in the modernizer configuration.
+            StringBuffer url = new StringBuffer();
+            String scheme = getScheme();
+            int port = getServerPort();
+
+            url.append(scheme);
+            url.append("://");
+            url.append(getServerName());
+            // port might be -1 in some cases (see java.net.URL.getPort)
+            if (port > 0
+                    && (("http".equals(scheme) && (port != 80))
+                    || ("https".equals(scheme) && (port != 443)))) {
+                url.append(':');
+                url.append(port);
+            }
+            url.append(getRequestURI());
+
+            return (url);
+        }
     }
-
-    @Override
-    public StringBuffer getRequestURL() {
-      // The servlet API requires this method to return a StringBuffer. Modernizer flags every
-      // StringBuffer constructor; the whole wrapper class is exempted via ignoreClassNamePatterns
-      // in the modernizer configuration.
-      StringBuffer url = new StringBuffer();
-      String scheme = getScheme();
-      int port = getServerPort();
-
-      url.append(scheme);
-      url.append("://");
-      url.append(getServerName());
-      // port might be -1 in some cases (see java.net.URL.getPort)
-      if (port > 0
-          && (("http".equals(scheme) && (port != 80))
-              || ("https".equals(scheme) && (port != 443)))) {
-        url.append(':');
-        url.append(port);
-      }
-      url.append(getRequestURI());
-
-      return (url);
-    }
-  }
 }

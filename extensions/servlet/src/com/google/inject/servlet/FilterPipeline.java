@@ -16,12 +16,13 @@
 package com.google.inject.servlet;
 
 import com.google.inject.ImplementedBy;
-import java.io.IOException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
+
+import java.io.IOException;
 
 /**
  * An internal dispatcher for guice-servlet registered servlets and filters. By default, we assume a
@@ -35,11 +36,12 @@ import jakarta.servlet.ServletResponse;
  * @author dhanji@gmail.com (Dhanji R. Prasanna)
  */
 @ImplementedBy(DefaultFilterPipeline.class)
-interface FilterPipeline {
-  void initPipeline(ServletContext context) throws ServletException;
+interface FilterPipeline
+{
+    void initPipeline(ServletContext context) throws ServletException;
 
-  void destroyPipeline();
+    void destroyPipeline();
 
-  void dispatch(ServletRequest request, ServletResponse response, FilterChain defaultFilterChain)
-      throws IOException, ServletException;
+    void dispatch(ServletRequest request, ServletResponse response, FilterChain defaultFilterChain)
+            throws IOException, ServletException;
 }

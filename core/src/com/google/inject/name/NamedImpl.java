@@ -16,50 +16,57 @@
 
 package com.google.inject.name;
 
-
-import static java.util.Objects.requireNonNull;
-
 import com.google.inject.internal.Annotations;
+
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 
-class NamedImpl implements Named, Serializable {
+import static java.util.Objects.requireNonNull;
 
-  private final String value;
+class NamedImpl
+        implements Named, Serializable
+{
+    private final String value;
 
-  public NamedImpl(String value) {
-    this.value = requireNonNull(value, "name");
-  }
-
-  @Override
-  public String value() {
-    return this.value;
-  }
-
-  @Override
-  public int hashCode() {
-    // This is specified in java.lang.Annotation.
-    return (127 * "value".hashCode()) ^ value.hashCode();
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (!(o instanceof Named other)) {
-      return false;
+    public NamedImpl(String value)
+    {
+        this.value = requireNonNull(value, "name");
     }
 
-    return value.equals(other.value());
-  }
+    @Override
+    public String value()
+    {
+        return this.value;
+    }
 
-  @Override
-  public String toString() {
-    return '@' + Named.class.getName() + '(' + Annotations.memberValueString("value", value) + ')';
-  }
+    @Override
+    public int hashCode()
+    {
+        // This is specified in java.lang.Annotation.
+        return (127 * "value".hashCode()) ^ value.hashCode();
+    }
 
-  @Override
-  public Class<? extends Annotation> annotationType() {
-    return Named.class;
-  }
+    @Override
+    public boolean equals(Object o)
+    {
+        if (!(o instanceof Named other)) {
+            return false;
+        }
 
-  private static final long serialVersionUID = 0;
+        return value.equals(other.value());
+    }
+
+    @Override
+    public String toString()
+    {
+        return '@' + Named.class.getName() + '(' + Annotations.memberValueString("value", value) + ')';
+    }
+
+    @Override
+    public Class<? extends Annotation> annotationType()
+    {
+        return Named.class;
+    }
+
+    private static final long serialVersionUID = 0;
 }

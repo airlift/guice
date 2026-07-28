@@ -28,18 +28,23 @@ import com.google.inject.spi.BindingTargetVisitor;
  * @since 3.0
  * @author sameb@google.com (Sam Berlin)
  */
-public interface MultibindingsTargetVisitor<T, V> extends BindingTargetVisitor<T, V> {
+public interface MultibindingsTargetVisitor<T, V>
+        extends BindingTargetVisitor<T, V>
+{
+    /**
+     * Visits a binding created through {@link Multibinder}.
+     */
+    V visit(MultibinderBinding<? extends T> multibinding);
 
-  /** Visits a binding created through {@link Multibinder}. */
-  V visit(MultibinderBinding<? extends T> multibinding);
+    /**
+     * Visits a binding created through {@link MapBinder}.
+     */
+    V visit(MapBinderBinding<? extends T> mapbinding);
 
-  /** Visits a binding created through {@link MapBinder}. */
-  V visit(MapBinderBinding<? extends T> mapbinding);
-
-  /**
-   * Visits a binding created through {@link OptionalBinder}.
-   *
-   * @since 4.0
-   */
-  V visit(OptionalBinderBinding<? extends T> optionalbinding);
+    /**
+     * Visits a binding created through {@link OptionalBinder}.
+     *
+     * @since 4.0
+     */
+    V visit(OptionalBinderBinding<? extends T> optionalbinding);
 }

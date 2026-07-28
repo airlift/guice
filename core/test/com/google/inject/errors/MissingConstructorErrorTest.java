@@ -1,9 +1,5 @@
 package com.google.inject.errors;
 
-import static com.google.inject.errors.ErrorMessageTestUtils.assertGuiceErrorEqualsIgnoreLineNumber;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
-
 import com.google.inject.AbstractModule;
 import com.google.inject.CreationException;
 import com.google.inject.Guice;
@@ -14,111 +10,140 @@ import jakarta.inject.Inject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public final class MissingConstructorErrorTest {
+import static com.google.inject.errors.ErrorMessageTestUtils.assertGuiceErrorEqualsIgnoreLineNumber;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-  @BeforeEach
-  public void checkStackTraceIsIncluded() {
-    // Only run the tests when the stack traces are included in the errors.
-    assumeTrue(InternalFlags.getIncludeStackTraceOption() != IncludeStackTraceOption.OFF);
-  }
-
-  static class NoArgConstructorWithAtInject {
-    @Inject
-    NoArgConstructorWithAtInject() {}
-  }
-
-  static class NoArgConstructorWithoutAtInject {
-    NoArgConstructorWithoutAtInject() {}
-  }
-
-  static class MissingNoArgConstructor {
-    MissingNoArgConstructor(int param) {}
-  }
-
-  static class MissingAtInjectConstructor {
-    MissingAtInjectConstructor() {}
-  }
-
-  static class PrivateConstructor {
-    private PrivateConstructor() {}
-  }
-
-  private static class PrivateClassWithPrivateConstructor {
-    private PrivateClassWithPrivateConstructor() {}
-  }
-
-  static class MissingConstructorModule extends AbstractModule {
-    @Provides
-    static Object provideObject(
-        NoArgConstructorWithAtInject noArgConstructorWithAtInject,
-        NoArgConstructorWithoutAtInject noArgConstructorWithoutAtInject,
-        MissingNoArgConstructor missingNoArgConstructor,
-        PrivateConstructor privateConstructor,
-        PrivateClassWithPrivateConstructor privateClassWithPrivateConstructor) {
-      return null;
-    }
-  }
-
-  @Test
-  public void missingConstructorErrors() throws Exception {
-    CreationException exception =
-        assertThrows(
-            CreationException.class, () -> Guice.createInjector(new MissingConstructorModule()));
-    assertGuiceErrorEqualsIgnoreLineNumber(
-        exception.getMessage(), "missing_constructor_errors.txt");
-  }
-
-  static class MissingConstructorAtInjectRequiredModule extends AbstractModule {
-    @Override
-    protected void configure() {
-      binder().requireAtInjectOnConstructors();
+public final class MissingConstructorErrorTest
+{
+    @BeforeEach
+    public void checkStackTraceIsIncluded()
+    {
+        // Only run the tests when the stack traces are included in the errors.
+        assumeTrue(InternalFlags.getIncludeStackTraceOption() != IncludeStackTraceOption.OFF);
     }
 
-    @Provides
-    static Object provideObject(
-        NoArgConstructorWithAtInject noArgConstructorWithAtInject,
-        NoArgConstructorWithoutAtInject noArgConstructorWithoutAtInject,
-        PrivateConstructor privateConstructor) {
-      return null;
-    }
-  }
-
-  @Test
-  public void missingConstructorErrors_atInjectRequired() throws Exception {
-    CreationException exception =
-        assertThrows(
-            CreationException.class,
-            () -> Guice.createInjector(new MissingConstructorAtInjectRequiredModule()));
-    assertGuiceErrorEqualsIgnoreLineNumber(
-        exception.getMessage(), "missing_constructor_errors_at_inject_required.txt");
-  }
-
-  static class DependsOnMissingNoArgConstructor {
-    @Inject
-    DependsOnMissingNoArgConstructor(MissingNoArgConstructor noArgConstructor) {}
-  }
-
-  static class DependsOnMissingNoArgConstructorModule extends AbstractModule {
-    @Override
-    protected void configure() {
-      bind(DependsOnMissingNoArgConstructor.class);
+    static class NoArgConstructorWithAtInject
+    {
+        @Inject
+        NoArgConstructorWithAtInject() {}
     }
 
-    @Provides
-    String provideString(PrivateConstructor privateConstructor) {
-      return privateConstructor.toString();
+    static class NoArgConstructorWithoutAtInject
+    {
+        NoArgConstructorWithoutAtInject() {}
     }
-  }
 
-  @Test
-  public void missingConstructorErrors_merged() throws Exception {
-    CreationException exception =
-        assertThrows(
-            CreationException.class,
-            () ->
-                Guice.createInjector(
-                    new MissingConstructorModule(), new DependsOnMissingNoArgConstructorModule()));
-    assertGuiceErrorEqualsIgnoreLineNumber(
-        exception.getMessage(), "missing_constructor_errors_merged.txt");
-  }
+    static class MissingNoArgConstructor
+    {
+        MissingNoArgConstructor(int param) {}
+    }
+
+    static class MissingAtInjectConstructor
+    {
+        MissingAtInjectConstructor() {}
+    }
+
+    static class PrivateConstructor
+    {
+        private PrivateConstructor() {}
+    }
+
+    private static class PrivateClassWithPrivateConstructor
+    {
+        private PrivateClassWithPrivateConstructor() {}
+    }
+
+    static class MissingConstructorModule
+            extends AbstractModule
+    {
+        @Provides
+        static Object provideObject(
+                NoArgConstructorWithAtInject noArgConstructorWithAtInject,
+                NoArgConstructorWithoutAtInject noArgConstructorWithoutAtInject,
+                MissingNoArgConstructor missingNoArgConstructor,
+                PrivateConstructor privateConstructor,
+                PrivateClassWithPrivateConstructor privateClassWithPrivateConstructor)
+        {
+            return null;
+        }
+    }
+
+    @Test
+    public void missingConstructorErrors()
+            throws Exception
+    {
+        CreationException exception =
+                assertThrows(
+                        CreationException.class, () -> Guice.createInjector(new MissingConstructorModule()));
+        assertGuiceErrorEqualsIgnoreLineNumber(
+                exception.getMessage(), "missing_constructor_errors.txt");
+    }
+
+    static class MissingConstructorAtInjectRequiredModule
+            extends AbstractModule
+    {
+        @Override
+        protected void configure()
+        {
+            binder().requireAtInjectOnConstructors();
+        }
+
+        @Provides
+        static Object provideObject(
+                NoArgConstructorWithAtInject noArgConstructorWithAtInject,
+                NoArgConstructorWithoutAtInject noArgConstructorWithoutAtInject,
+                PrivateConstructor privateConstructor)
+        {
+            return null;
+        }
+    }
+
+    @Test
+    public void missingConstructorErrors_atInjectRequired()
+            throws Exception
+    {
+        CreationException exception =
+                assertThrows(
+                        CreationException.class,
+                        () -> Guice.createInjector(new MissingConstructorAtInjectRequiredModule()));
+        assertGuiceErrorEqualsIgnoreLineNumber(
+                exception.getMessage(), "missing_constructor_errors_at_inject_required.txt");
+    }
+
+    static class DependsOnMissingNoArgConstructor
+    {
+        @Inject
+        DependsOnMissingNoArgConstructor(MissingNoArgConstructor noArgConstructor) {}
+    }
+
+    static class DependsOnMissingNoArgConstructorModule
+            extends AbstractModule
+    {
+        @Override
+        protected void configure()
+        {
+            bind(DependsOnMissingNoArgConstructor.class);
+        }
+
+        @Provides
+        String provideString(PrivateConstructor privateConstructor)
+        {
+            return privateConstructor.toString();
+        }
+    }
+
+    @Test
+    public void missingConstructorErrors_merged()
+            throws Exception
+    {
+        CreationException exception =
+                assertThrows(
+                        CreationException.class,
+                        () ->
+                                Guice.createInjector(
+                                        new MissingConstructorModule(), new DependsOnMissingNoArgConstructorModule()));
+        assertGuiceErrorEqualsIgnoreLineNumber(
+                exception.getMessage(), "missing_constructor_errors_merged.txt");
+    }
 }

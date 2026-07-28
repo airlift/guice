@@ -24,42 +24,48 @@ import java.util.Objects;
  * @author bojand@google.com (Bojan Djordjevic)
  * @since 4.0
  */
-public abstract class Edge {
-  private final NodeId fromId;
-  private final NodeId toId;
+public abstract class Edge
+{
+    private final NodeId fromId;
+    private final NodeId toId;
 
-  protected Edge(NodeId fromId, NodeId toId) {
-    this.fromId = fromId;
-    this.toId = toId;
-  }
-
-  public NodeId getFromId() {
-    return fromId;
-  }
-
-  public NodeId getToId() {
-    return toId;
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (!(obj instanceof Edge other)) {
-      return false;
+    protected Edge(NodeId fromId, NodeId toId)
+    {
+        this.fromId = fromId;
+        this.toId = toId;
     }
-    return Objects.equals(fromId, other.fromId) && Objects.equals(toId, other.toId);
-  }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(fromId, toId);
-  }
+    public NodeId getFromId()
+    {
+        return fromId;
+    }
 
-  /**
-   * Returns a copy of the edge with new node IDs.
-   *
-   * @param fromId new ID of the 'from' node
-   * @param toId new ID of the 'to' node
-   * @return copy of the edge with the new node IDs
-   */
-  public abstract Edge copy(NodeId fromId, NodeId toId);
+    public NodeId getToId()
+    {
+        return toId;
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (!(obj instanceof Edge other)) {
+            return false;
+        }
+        return Objects.equals(fromId, other.fromId) && Objects.equals(toId, other.toId);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(fromId, toId);
+    }
+
+    /**
+     * Returns a copy of the edge with new node IDs.
+     *
+     * @param fromId new ID of the 'from' node
+     * @param toId new ID of the 'to' node
+     * @return copy of the edge with the new node IDs
+     */
+    public abstract Edge copy(NodeId fromId, NodeId toId);
 }

@@ -16,69 +16,81 @@
 
 package com.google.inject;
 
+import com.google.inject.internal.InternalFlags;
+import org.aopalliance.intercept.MethodInterceptor;
+import org.aopalliance.intercept.MethodInvocation;
+import org.junit.jupiter.api.Test;
+
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.inject.matcher.Matchers.any;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.google.inject.internal.InternalFlags;
-import org.aopalliance.intercept.MethodInterceptor;
-import org.aopalliance.intercept.MethodInvocation;
-import org.junit.jupiter.api.Test;
+/**
+ * @author crazybob@google.com (Bob Lee)
+ */
+public class IntegrationTest
+{
+    @Test
+    public void testIntegration()
+            throws CreationException
+    {
+        final CountingInterceptor counter = new CountingInterceptor();
 
-/** @author crazybob@google.com (Bob Lee) */
-public class IntegrationTest {
+        Module module =
+                new AbstractModule()
+                {
+                    @Override
+                    protected void configure()
+                    {
+                        bind(Foo.class);
+                        bindInterceptor(any(), any(), counter);
+                    }
+                };
+        if (InternalFlags.isBytecodeGenEnabled()) {
+            Injector injector = Guice.createInjector(module);
 
-  @Test
-  public void testIntegration() throws CreationException {
-    final CountingInterceptor counter = new CountingInterceptor();
+            Foo foo = injector.getInstance(Key.get(Foo.class));
+            foo.foo();
+            assertTrue(foo.invoked);
+            assertEquals(1, counter.count);
 
-    Module module =
-        new AbstractModule() {
-          @Override
-          protected void configure() {
-            bind(Foo.class);
-            bindInterceptor(any(), any(), counter);
-          }
-        };
-    if (InternalFlags.isBytecodeGenEnabled()) {
-      Injector injector = Guice.createInjector(module);
-
-      Foo foo = injector.getInstance(Key.get(Foo.class));
-      foo.foo();
-      assertTrue(foo.invoked);
-      assertEquals(1, counter.count);
-
-      foo = injector.getInstance(Foo.class);
-      foo.foo();
-      assertTrue(foo.invoked);
-      assertEquals(2, counter.count);
-    } else {
-      CreationException exception =
-          assertThrows(CreationException.class, () -> Guice.createInjector(module));
-      assertThat(exception)
-          .hasMessageThat()
-          .contains("Binding interceptor is not supported when bytecode generation is disabled.");
+            foo = injector.getInstance(Foo.class);
+            foo.foo();
+            assertTrue(foo.invoked);
+            assertEquals(2, counter.count);
+        }
+        else {
+            CreationException exception =
+                    assertThrows(CreationException.class, () -> Guice.createInjector(module));
+            assertThat(exception)
+                    .hasMessageThat()
+                    .contains("Binding interceptor is not supported when bytecode generation is disabled.");
+        }
     }
-  }
 
-  public static class Foo {
-    boolean invoked;
+    public static class Foo
+    {
+        boolean invoked;
 
-    public void foo() {
-      invoked = true;
+        public void foo()
+        {
+            invoked = true;
+        }
     }
-  }
 
-  static class CountingInterceptor implements MethodInterceptor {
+    static class CountingInterceptor
+            implements MethodInterceptor
+    {
+        int count;
 
-    int count;
-
-    @Override
-    public Object invoke(MethodInvocation methodInvocation) throws Throwable {
-      count++;
-      return methodInvocation.proceed();
+        @Override
+        public Object invoke(MethodInvocation methodInvocation)
+                throws Throwable
+        {
+            count++;
+            return methodInvocation.proceed();
+        }
     }
-  }
 }

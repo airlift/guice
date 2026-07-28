@@ -16,11 +16,11 @@
 
 package com.google.inject;
 
-import static java.lang.annotation.ElementType.TYPE;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * A pointer to the default implementation of a type.
@@ -29,8 +29,10 @@ import java.lang.annotation.Target;
  */
 @Retention(RUNTIME)
 @Target(TYPE)
-public @interface ImplementedBy {
-
-  /** The implementation type. */
-  Class<?> value();
+public @interface ImplementedBy
+{
+    /**
+     * The implementation type.
+     */
+    Class<?> value();
 }

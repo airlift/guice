@@ -15,7 +15,6 @@
  */
 package com.google.inject.servlet;
 
-import java.io.IOException;
 import jakarta.inject.Inject;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletContext;
@@ -23,27 +22,33 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 
+import java.io.IOException;
+
 /**
  * This default pipeline simply dispatches to web.xml's servlet pipeline.
  *
  * @author dhanji@gmail.com (Dhanji R. Prasanna)
  * @see com.google.inject.servlet.ManagedFilterPipeline See Also ManagedFilterPipeline.
  */
-class DefaultFilterPipeline implements FilterPipeline {
-  @Inject
-  DefaultFilterPipeline() {}
+class DefaultFilterPipeline
+        implements FilterPipeline
+{
+    @Inject
+    DefaultFilterPipeline() {}
 
-  @Override
-  public void initPipeline(ServletContext context) {}
+    @Override
+    public void initPipeline(ServletContext context) {}
 
-  @Override
-  public void destroyPipeline() {}
+    @Override
+    public void destroyPipeline() {}
 
-  @Override
-  public void dispatch(
-      ServletRequest request, ServletResponse response, FilterChain proceedingFilterChain)
-      throws IOException, ServletException {
-
-    proceedingFilterChain.doFilter(request, response);
-  }
+    @Override
+    public void dispatch(
+            ServletRequest request,
+            ServletResponse response,
+            FilterChain proceedingFilterChain)
+            throws IOException, ServletException
+    {
+        proceedingFilterChain.doFilter(request, response);
+    }
 }

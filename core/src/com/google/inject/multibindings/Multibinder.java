@@ -16,16 +16,17 @@
 
 package com.google.inject.multibindings;
 
-import static com.google.inject.internal.RealMultibinder.newRealSetBinder;
-
 import com.google.inject.Binder;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
 import com.google.inject.binder.LinkedBindingBuilder;
 import com.google.inject.internal.RealMultibinder;
+
 import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.Set;
+
+import static com.google.inject.internal.RealMultibinder.newRealSetBinder;
 
 /**
  * An API to bind multiple values separately, only to later inject them as a complete collection.
@@ -81,116 +82,137 @@ import java.util.Set;
  *
  * @author jessewilson@google.com (Jesse Wilson)
  */
-public class Multibinder<T> {
-  // This class is non-final due to users mocking this in tests :(
+public class Multibinder<T>
+{
+    // This class is non-final due to users mocking this in tests :(
 
-  /**
-   * Returns a new multibinder that collects instances of {@code type} in a {@link Set} that is
-   * itself bound with no binding annotation.
-   */
-  public static <T> Multibinder<T> newSetBinder(Binder binder, TypeLiteral<T> type) {
-    return newSetBinder(binder, Key.get(type));
-  }
-
-  /**
-   * Returns a new multibinder that collects instances of {@code type} in a {@link Set} that is
-   * itself bound with no binding annotation.
-   */
-  public static <T> Multibinder<T> newSetBinder(Binder binder, Class<T> type) {
-    return newSetBinder(binder, Key.get(type));
-  }
-
-  /**
-   * Returns a new multibinder that collects instances of {@code type} in a {@link Set} that is
-   * itself bound with {@code annotation}.
-   */
-  public static <T> Multibinder<T> newSetBinder(
-      Binder binder, TypeLiteral<T> type, Annotation annotation) {
-    return newSetBinder(binder, Key.get(type, annotation));
-  }
-
-  /**
-   * Returns a new multibinder that collects instances of {@code type} in a {@link Set} that is
-   * itself bound with {@code annotation}.
-   */
-  public static <T> Multibinder<T> newSetBinder(
-      Binder binder, Class<T> type, Annotation annotation) {
-    return newSetBinder(binder, Key.get(type, annotation));
-  }
-
-  /**
-   * Returns a new multibinder that collects instances of {@code type} in a {@link Set} that is
-   * itself bound with {@code annotationType}.
-   */
-  public static <T> Multibinder<T> newSetBinder(
-      Binder binder, TypeLiteral<T> type, Class<? extends Annotation> annotationType) {
-    return newSetBinder(binder, Key.get(type, annotationType));
-  }
-
-  /**
-   * Returns a new multibinder that collects instances of the key's type in a {@link Set} that is
-   * itself bound with the annotation (if any) of the key.
-   *
-   * @since 4.0
-   */
-  public static <T> Multibinder<T> newSetBinder(Binder binder, Key<T> key) {
-    return new Multibinder<T>(newRealSetBinder(binder, key));
-  }
-
-  /**
-   * Returns a new multibinder that collects instances of {@code type} in a {@link Set} that is
-   * itself bound with {@code annotationType}.
-   */
-  public static <T> Multibinder<T> newSetBinder(
-      Binder binder, Class<T> type, Class<? extends Annotation> annotationType) {
-    return newSetBinder(binder, Key.get(type, annotationType));
-  }
-
-  private final RealMultibinder<T> delegate;
-
-  private Multibinder(RealMultibinder<T> delegate) {
-    this.delegate = delegate;
-  }
-
-  /**
-   * Configures the bound set to silently discard duplicate elements. When multiple equal values are
-   * bound, the one that gets included is arbitrary. When multiple modules contribute elements to
-   * the set, this configuration option impacts all of them.
-   *
-   * @return this multibinder
-   * @since 3.0
-   */
-  public Multibinder<T> permitDuplicates() {
-    delegate.permitDuplicates();
-    return this;
-  }
-
-  /**
-   * Returns a binding builder used to add a new element in the set. Each bound element must have a
-   * distinct value. Bound providers will be evaluated each time the set is injected.
-   *
-   * <p>It is an error to call this method without also calling one of the {@code to} methods on the
-   * returned binding builder.
-   *
-   * <p>Scoping elements independently is supported. Use the {@code in} method to specify a binding
-   * scope.
-   */
-  public LinkedBindingBuilder<T> addBinding() {
-    return delegate.addBinding();
-  }
-
-  // Some tests rely on Multibinder implementing equals/hashCode
-
-  @Override
-  public boolean equals(Object obj) {
-    if (obj instanceof Multibinder) {
-      return delegate.equals(((Multibinder<?>) obj).delegate);
+    /**
+     * Returns a new multibinder that collects instances of {@code type} in a {@link Set} that is
+     * itself bound with no binding annotation.
+     */
+    public static <T> Multibinder<T> newSetBinder(Binder binder, TypeLiteral<T> type)
+    {
+        return newSetBinder(binder, Key.get(type));
     }
-    return false;
-  }
 
-  @Override
-  public int hashCode() {
-    return delegate.hashCode();
-  }
+    /**
+     * Returns a new multibinder that collects instances of {@code type} in a {@link Set} that is
+     * itself bound with no binding annotation.
+     */
+    public static <T> Multibinder<T> newSetBinder(Binder binder, Class<T> type)
+    {
+        return newSetBinder(binder, Key.get(type));
+    }
+
+    /**
+     * Returns a new multibinder that collects instances of {@code type} in a {@link Set} that is
+     * itself bound with {@code annotation}.
+     */
+    public static <T> Multibinder<T> newSetBinder(
+            Binder binder,
+            TypeLiteral<T> type,
+            Annotation annotation)
+    {
+        return newSetBinder(binder, Key.get(type, annotation));
+    }
+
+    /**
+     * Returns a new multibinder that collects instances of {@code type} in a {@link Set} that is
+     * itself bound with {@code annotation}.
+     */
+    public static <T> Multibinder<T> newSetBinder(
+            Binder binder,
+            Class<T> type,
+            Annotation annotation)
+    {
+        return newSetBinder(binder, Key.get(type, annotation));
+    }
+
+    /**
+     * Returns a new multibinder that collects instances of {@code type} in a {@link Set} that is
+     * itself bound with {@code annotationType}.
+     */
+    public static <T> Multibinder<T> newSetBinder(
+            Binder binder,
+            TypeLiteral<T> type,
+            Class<? extends Annotation> annotationType)
+    {
+        return newSetBinder(binder, Key.get(type, annotationType));
+    }
+
+    /**
+     * Returns a new multibinder that collects instances of the key's type in a {@link Set} that is
+     * itself bound with the annotation (if any) of the key.
+     *
+     * @since 4.0
+     */
+    public static <T> Multibinder<T> newSetBinder(Binder binder, Key<T> key)
+    {
+        return new Multibinder<T>(newRealSetBinder(binder, key));
+    }
+
+    /**
+     * Returns a new multibinder that collects instances of {@code type} in a {@link Set} that is
+     * itself bound with {@code annotationType}.
+     */
+    public static <T> Multibinder<T> newSetBinder(
+            Binder binder,
+            Class<T> type,
+            Class<? extends Annotation> annotationType)
+    {
+        return newSetBinder(binder, Key.get(type, annotationType));
+    }
+
+    private final RealMultibinder<T> delegate;
+
+    private Multibinder(RealMultibinder<T> delegate)
+    {
+        this.delegate = delegate;
+    }
+
+    /**
+     * Configures the bound set to silently discard duplicate elements. When multiple equal values are
+     * bound, the one that gets included is arbitrary. When multiple modules contribute elements to
+     * the set, this configuration option impacts all of them.
+     *
+     * @return this multibinder
+     * @since 3.0
+     */
+    public Multibinder<T> permitDuplicates()
+    {
+        delegate.permitDuplicates();
+        return this;
+    }
+
+    /**
+     * Returns a binding builder used to add a new element in the set. Each bound element must have a
+     * distinct value. Bound providers will be evaluated each time the set is injected.
+     *
+     * <p>It is an error to call this method without also calling one of the {@code to} methods on the
+     * returned binding builder.
+     *
+     * <p>Scoping elements independently is supported. Use the {@code in} method to specify a binding
+     * scope.
+     */
+    public LinkedBindingBuilder<T> addBinding()
+    {
+        return delegate.addBinding();
+    }
+
+    // Some tests rely on Multibinder implementing equals/hashCode
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (obj instanceof Multibinder) {
+            return delegate.equals(((Multibinder<?>) obj).delegate);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return delegate.hashCode();
+    }
 }

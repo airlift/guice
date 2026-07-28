@@ -22,8 +22,11 @@ package com.google.inject.servlet;
  * @author Chris Nokleberg
  * @since 4.0
  */
-public final class ScopingException extends IllegalStateException {
-  public ScopingException(String message) {
-    super(message);
-  }
+public final class ScopingException
+        extends IllegalStateException
+{
+    public ScopingException(String message)
+    {
+        super(message);
+    }
 }

@@ -16,10 +16,11 @@
 
 package com.google.inject.spi;
 
-import static java.util.Objects.requireNonNull;
+import javax.annotation.Nullable;
 
 import java.util.List;
-import javax.annotation.Nullable;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Contains information about where and how an {@link Element element} was bound.
@@ -39,93 +40,104 @@ import javax.annotation.Nullable;
  *
  * @since 4.0
  */
-public final class ElementSource {
+public final class ElementSource
+{
+    /**
+     * The {@link ElementSource source} of element that this element created from (if there is any),
+     * otherwise {@code null}.
+     */
+    final ElementSource originalElementSource;
 
-  /**
-   * The {@link ElementSource source} of element that this element created from (if there is any),
-   * otherwise {@code null}.
-   */
-  final ElementSource originalElementSource;
+    /**
+     * Whether the originalElementSource was set externally (untrusted) or by Guice internals
+     * (trusted).
+     *
+     * <p>External code can set the originalElementSource to an arbitrary ElementSource via
+     * Binder.withSource(ElementSource), thereby spoofing the element origin.
+     */
+    final boolean trustedOriginalElementSource;
 
-  /**
-   * Whether the originalElementSource was set externally (untrusted) or by Guice internals
-   * (trusted).
-   *
-   * <p>External code can set the originalElementSource to an arbitrary ElementSource via
-   * Binder.withSource(ElementSource), thereby spoofing the element origin.
-   */
-  final boolean trustedOriginalElementSource;
+    /**
+     * The {@link ModuleSource source} of module creates the element.
+     */
+    final ModuleSource moduleSource;
 
-  /** The {@link ModuleSource source} of module creates the element. */
-  final ModuleSource moduleSource;
+    /**
+     * Refers to a single location in source code that causes the element creation. It can be any
+     * object such as {@link Constructor}, {@link Method}, {@link Field}, {@link StackTraceElement},
+     * etc. For example, if the element is created from a method annotated by {@literal @Provides},
+     * the declaring source of element would be the method itself.
+     */
+    final Object declaringSource;
 
-  /**
-   * Refers to a single location in source code that causes the element creation. It can be any
-   * object such as {@link Constructor}, {@link Method}, {@link Field}, {@link StackTraceElement},
-   * etc. For example, if the element is created from a method annotated by {@literal @Provides},
-   * the declaring source of element would be the method itself.
-   */
-  final Object declaringSource;
+    /**
+     * The scanner that created this binding (if it was created by a scanner).
+     */
+    final ModuleAnnotatedMethodScanner scanner;
 
-  /** The scanner that created this binding (if it was created by a scanner). */
-  final ModuleAnnotatedMethodScanner scanner;
+    /**
+     * Creates a new {@ElementSource} from the given parameters.
+     *
+     * @param originalSource The source of element that this element was created from (if there is
+     *         any), otherwise {@code null}.
+     * @param declaringSource the source (in)directly declared the element.
+     * @param moduleSource the moduleSource when the element is bound
+     * @param partialCallStack the partial call stack from the top module to where the element is
+     *         bound
+     */
+    ElementSource(
+            @Nullable ElementSource originalSource,
+            boolean trustedOriginalSource,
+            Object declaringSource,
+            ModuleSource moduleSource,
+            ModuleAnnotatedMethodScanner scanner)
+    {
+        requireNonNull(declaringSource, "declaringSource cannot be null.");
+        requireNonNull(moduleSource, "moduleSource cannot be null.");
+        this.originalElementSource = originalSource;
+        this.trustedOriginalElementSource = trustedOriginalSource;
+        this.declaringSource = declaringSource;
+        this.moduleSource = moduleSource;
+        this.scanner = scanner;
+    }
 
-  /**
-   * Creates a new {@ElementSource} from the given parameters.
-   *
-   * @param originalSource The source of element that this element was created from (if there is
-   *     any), otherwise {@code null}.
-   * @param declaringSource the source (in)directly declared the element.
-   * @param moduleSource the moduleSource when the element is bound
-   * @param partialCallStack the partial call stack from the top module to where the element is
-   *     bound
-   */
-  ElementSource(
-      @Nullable ElementSource originalSource,
-      boolean trustedOriginalSource,
-      Object declaringSource,
-      ModuleSource moduleSource,
-      ModuleAnnotatedMethodScanner scanner) {
-    requireNonNull(declaringSource, "declaringSource cannot be null.");
-    requireNonNull(moduleSource, "moduleSource cannot be null.");
-    this.originalElementSource = originalSource;
-    this.trustedOriginalElementSource = trustedOriginalSource;
-    this.declaringSource = declaringSource;
-    this.moduleSource = moduleSource;
-    this.scanner = scanner;
-  }
+    /**
+     * Returns the {@link ElementSource} of the element this was created or copied from. If this was
+     * not created or copied from another element, returns {@code null}.
+     */
+    public ElementSource getOriginalElementSource()
+    {
+        return originalElementSource;
+    }
 
-  /**
-   * Returns the {@link ElementSource} of the element this was created or copied from. If this was
-   * not created or copied from another element, returns {@code null}.
-   */
-  public ElementSource getOriginalElementSource() {
-    return originalElementSource;
-  }
+    /**
+     * Returns a single location in source code that defines the element. It can be any object such as
+     * {@link java.lang.reflect.Constructor}, {@link java.lang.reflect.Method}, {@link
+     * java.lang.reflect.Field}, {@link StackTraceElement}, etc. For example, if the element is
+     * created from a method annotated by {@literal @Provides}, the declaring source of element would
+     * be the method itself.
+     */
+    public Object getDeclaringSource()
+    {
+        return declaringSource;
+    }
 
-  /**
-   * Returns a single location in source code that defines the element. It can be any object such as
-   * {@link java.lang.reflect.Constructor}, {@link java.lang.reflect.Method}, {@link
-   * java.lang.reflect.Field}, {@link StackTraceElement}, etc. For example, if the element is
-   * created from a method annotated by {@literal @Provides}, the declaring source of element would
-   * be the method itself.
-   */
-  public Object getDeclaringSource() {
-    return declaringSource;
-  }
+    /**
+     * Returns the class names of modules involved in creating this {@link Element}. The first element
+     * (index 0) is the class name of module that defined the element, and the last element is the
+     * class name of root module.
+     */
+    public List<String> getModuleClassNames()
+    {
+        return moduleSource.getModuleClassNames();
+    }
 
-  /**
-   * Returns the class names of modules involved in creating this {@link Element}. The first element
-   * (index 0) is the class name of module that defined the element, and the last element is the
-   * class name of root module.
-   */
-  public List<String> getModuleClassNames() {
-    return moduleSource.getModuleClassNames();
-  }
-
-  /** Returns {@code getDeclaringSource().toString()} value. */
-  @Override
-  public String toString() {
-    return getDeclaringSource().toString();
-  }
+    /**
+     * Returns {@code getDeclaringSource().toString()} value.
+     */
+    @Override
+    public String toString()
+    {
+        return getDeclaringSource().toString();
+    }
 }

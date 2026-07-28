@@ -16,11 +16,10 @@
 
 package com.google.inject.spi;
 
-
-import static java.util.Objects.requireNonNull;
-
 import com.google.inject.Binder;
 import com.google.inject.Inject;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A request to require explicit {@literal @}{@link Inject} annotations on constructors.
@@ -28,25 +27,31 @@ import com.google.inject.Inject;
  * @author sameb@google.com (Sam Berlin)
  * @since 4.0
  */
-public final class RequireAtInjectOnConstructorsOption implements Element {
-  private final Object source;
+public final class RequireAtInjectOnConstructorsOption
+        implements Element
+{
+    private final Object source;
 
-  RequireAtInjectOnConstructorsOption(Object source) {
-    this.source = requireNonNull(source, "source");
-  }
+    RequireAtInjectOnConstructorsOption(Object source)
+    {
+        this.source = requireNonNull(source, "source");
+    }
 
-  @Override
-  public Object getSource() {
-    return source;
-  }
+    @Override
+    public Object getSource()
+    {
+        return source;
+    }
 
-  @Override
-  public void applyTo(Binder binder) {
-    binder.withSource(getSource()).requireAtInjectOnConstructors();
-  }
+    @Override
+    public void applyTo(Binder binder)
+    {
+        binder.withSource(getSource()).requireAtInjectOnConstructors();
+    }
 
-  @Override
-  public <T> T acceptVisitor(ElementVisitor<T> visitor) {
-    return visitor.visit(this);
-  }
+    @Override
+    public <T> T acceptVisitor(ElementVisitor<T> visitor)
+    {
+        return visitor.visit(this);
+    }
 }

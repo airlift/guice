@@ -21,21 +21,25 @@ package com.google.inject.matcher;
  *
  * @author crazybob@google.com (Bob Lee)
  * @deprecated This class used to be useful to avoid implementing {@code and()} and {@code or()}
- *     yourself, but is no longer necessary now that {@link Matcher} implements these methods.
+ *         yourself, but is no longer necessary now that {@link Matcher} implements these methods.
  */
 @Deprecated
-public abstract class AbstractMatcher<T> implements Matcher<T> {
-  // FYI: AbstractMatcher explicitly implements `and` and `or` in order
-  // to reduce binary compatibility issues, despite their impls directly
-  // delegating to the Matcher impl.
+public abstract class AbstractMatcher<T>
+        implements Matcher<T>
+{
+    // FYI: AbstractMatcher explicitly implements `and` and `or` in order
+    // to reduce binary compatibility issues, despite their impls directly
+    // delegating to the Matcher impl.
 
-  @Override
-  public Matcher<T> and(final Matcher<? super T> other) {
-    return Matcher.super.and(other);
-  }
+    @Override
+    public Matcher<T> and(final Matcher<? super T> other)
+    {
+        return Matcher.super.and(other);
+    }
 
-  @Override
-  public Matcher<T> or(Matcher<? super T> other) {
-    return Matcher.super.or(other);
-  }
+    @Override
+    public Matcher<T> or(Matcher<? super T> other)
+    {
+        return Matcher.super.or(other);
+    }
 }

@@ -16,82 +16,98 @@
 
 package com.google.inject.example;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
-/** @author crazybob@google.com (Bob Lee) */
-public class ClientServiceWithDependencyInjection {
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-  // 62 lines
+/**
+ * @author crazybob@google.com (Bob Lee)
+ */
+public class ClientServiceWithDependencyInjection
+{
+    // 62 lines
 
-  public interface Service {
-    void go();
-  }
-
-  public static class ServiceImpl implements ClientServiceWithDependencyInjection.Service {
-    @Override
-    public void go() {
-      // ...
-    }
-  }
-
-  public static class ServiceFactory {
-
-    private ServiceFactory() {}
-
-    private static final Service service = new ServiceImpl();
-
-    public static Service getInstance() {
-      return service;
-    }
-  }
-
-  public static class Client {
-
-    private final Service service;
-
-    public Client(Service service) {
-      this.service = service;
+    public interface Service
+    {
+        void go();
     }
 
-    public void go() {
-      service.go();
-    }
-  }
-
-  public static class ClientFactory {
-
-    private ClientFactory() {}
-
-    public static Client getInstance() {
-      Service service = ServiceFactory.getInstance();
-      return new Client(service);
-    }
-  }
-
-  @Test
-  public void testClient() {
-    MockService mock = new MockService();
-    Client client = new Client(mock);
-    client.go();
-    assertTrue(mock.isGone());
-  }
-
-  public static class MockService implements Service {
-
-    private boolean gone = false;
-
-    @Override
-    public void go() {
-      gone = true;
+    public static class ServiceImpl
+            implements ClientServiceWithDependencyInjection.Service
+    {
+        @Override
+        public void go()
+        {
+            // ...
+        }
     }
 
-    public boolean isGone() {
-      return gone;
-    }
-  }
+    public static class ServiceFactory
+    {
+        private ServiceFactory() {}
 
-  public static void main(String[] args) {
-    new ClientServiceWithDependencyInjection().testClient();
-  }
+        private static final Service service = new ServiceImpl();
+
+        public static Service getInstance()
+        {
+            return service;
+        }
+    }
+
+    public static class Client
+    {
+        private final Service service;
+
+        public Client(Service service)
+        {
+            this.service = service;
+        }
+
+        public void go()
+        {
+            service.go();
+        }
+    }
+
+    public static class ClientFactory
+    {
+        private ClientFactory() {}
+
+        public static Client getInstance()
+        {
+            Service service = ServiceFactory.getInstance();
+            return new Client(service);
+        }
+    }
+
+    @Test
+    public void testClient()
+    {
+        MockService mock = new MockService();
+        Client client = new Client(mock);
+        client.go();
+        assertTrue(mock.isGone());
+    }
+
+    public static class MockService
+            implements Service
+    {
+        private boolean gone;
+
+        @Override
+        public void go()
+        {
+            gone = true;
+        }
+
+        public boolean isGone()
+        {
+            return gone;
+        }
+    }
+
+    public static void main(String[] args)
+    {
+        new ClientServiceWithDependencyInjection().testClient();
+    }
 }

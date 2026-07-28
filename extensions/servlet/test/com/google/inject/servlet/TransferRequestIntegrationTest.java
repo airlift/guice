@@ -23,198 +23,235 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.OutOfScopeException;
 import com.google.inject.Provides;
+import org.junit.jupiter.api.Test;
+
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
-import org.junit.jupiter.api.Test;
 
 // TODO: Add test for HTTP transferring.
-/** Tests transferring of entire request scope. */
 
-public class TransferRequestIntegrationTest {
+/**
+ * Tests transferring of entire request scope.
+ */
 
-  @Test
-  public void testTransferHttp_outOfScope() {
-    try {
-      ServletScopes.transferRequest(() -> false);
-      fail();
-    } catch (OutOfScopeException expected) {
+public class TransferRequestIntegrationTest
+{
+    @Test
+    public void testTransferHttp_outOfScope()
+    {
+        try {
+            ServletScopes.transferRequest(() -> false);
+            fail();
+        }
+        catch (OutOfScopeException expected) {
+        }
     }
-  }
 
-  @Test
-  public void testTransferNonHttp_outOfScope() {
-    try {
-      ServletScopes.transferRequest(() -> false);
-      fail();
-    } catch (OutOfScopeException expected) {
+    @Test
+    public void testTransferNonHttp_outOfScope()
+    {
+        try {
+            ServletScopes.transferRequest(() -> false);
+            fail();
+        }
+        catch (OutOfScopeException expected) {
+        }
     }
-  }
 
-  @Test
-  public void testTransferNonHttp_outOfScope_closeable() {
-    try {
-      ServletScopes.transferRequest();
-      fail();
-    } catch (OutOfScopeException expected) {
+    @Test
+    public void testTransferNonHttp_outOfScope_closeable()
+    {
+        try {
+            ServletScopes.transferRequest();
+            fail();
+        }
+        catch (OutOfScopeException expected) {
+        }
     }
-  }
 
-  @Test
-  public void testTransferNonHttpRequest() throws Exception {
-    final Injector injector =
-        Guice.createInjector(
-            new AbstractModule() {
-              @Override
-              protected void configure() {
-                bindScope(RequestScoped.class, ServletScopes.REQUEST);
-              }
+    @Test
+    public void testTransferNonHttpRequest()
+            throws Exception
+    {
+        final Injector injector =
+                Guice.createInjector(
+                        new AbstractModule()
+                        {
+                            @Override
+                            protected void configure()
+                            {
+                                bindScope(RequestScoped.class, ServletScopes.REQUEST);
+                            }
 
-              @Provides
-              @RequestScoped
-              Object provideObject() {
-                return new Object();
-              }
-            });
+                            @Provides
+                            @RequestScoped
+                            Object provideObject()
+                            {
+                                return new Object();
+                            }
+                        });
 
-    Callable<Callable<Boolean>> callable =
+        Callable<Callable<Boolean>> callable =
         () -> {
-          final Object original = injector.getInstance(Object.class);
-          return ServletScopes.transferRequest(
-              () -> original == injector.getInstance(Object.class));
+            final Object original = injector.getInstance(Object.class);
+            return ServletScopes.transferRequest(
+                    () -> original == injector.getInstance(Object.class));
         };
 
-    ImmutableMap<Key<?>, Object> seedMap = ImmutableMap.of();
-    Callable<Boolean> transfer = ServletScopes.scopeRequest(callable, seedMap).call();
+        ImmutableMap<Key<?>, Object> seedMap = ImmutableMap.of();
+        Callable<Boolean> transfer = ServletScopes.scopeRequest(callable, seedMap).call();
 
-    ExecutorService executor = Executors.newSingleThreadExecutor();
-    assertTrue(executor.submit(transfer).get());
-    executor.shutdownNow();
-  }
-
-  @Test
-  public void testTransferNonHttpRequest_closeable() throws Exception {
-    final Injector injector =
-        Guice.createInjector(
-            new AbstractModule() {
-              @Override
-              protected void configure() {
-                bindScope(RequestScoped.class, ServletScopes.REQUEST);
-              }
-
-              @Provides
-              @RequestScoped
-              Object provideObject() {
-                return new Object();
-              }
-            });
-
-    class Data {
-      Object object;
-      RequestScoper scoper;
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        assertTrue(executor.submit(transfer).get());
+        executor.shutdownNow();
     }
 
-    Callable<Data> callable =
+    @Test
+    public void testTransferNonHttpRequest_closeable()
+            throws Exception
+    {
+        final Injector injector =
+                Guice.createInjector(
+                        new AbstractModule()
+                        {
+                            @Override
+                            protected void configure()
+                            {
+                                bindScope(RequestScoped.class, ServletScopes.REQUEST);
+                            }
+
+                            @Provides
+                            @RequestScoped
+                            Object provideObject()
+                            {
+                                return new Object();
+                            }
+                        });
+
+        class Data
+        {
+            Object object;
+            RequestScoper scoper;
+        }
+
+        Callable<Data> callable =
         () -> {
-          Data data = new Data();
-          data.object = injector.getInstance(Object.class);
-          data.scoper = ServletScopes.transferRequest();
-          return data;
+            Data data = new Data();
+            data.object = injector.getInstance(Object.class);
+            data.scoper = ServletScopes.transferRequest();
+            return data;
         };
 
-    ImmutableMap<Key<?>, Object> seedMap = ImmutableMap.of();
-    Data data = ServletScopes.scopeRequest(callable, seedMap).call();
+        ImmutableMap<Key<?>, Object> seedMap = ImmutableMap.of();
+        Data data = ServletScopes.scopeRequest(callable, seedMap).call();
 
-    ExecutorService executor = Executors.newSingleThreadExecutor();
-    RequestScoper.CloseableScope scope = data.scoper.open();
-    try {
-      assertSame(data.object, injector.getInstance(Object.class));
-    } finally {
-      scope.close();
-      executor.shutdownNow();
-    }
-  }
-
-  @Test
-  public void testTransferNonHttpRequest_concurrentUseBlocks() throws Exception {
-    Callable<Boolean> callable =
-        () -> {
-          ExecutorService executor = Executors.newSingleThreadExecutor();
-          try {
-            Future<Boolean> future = executor.submit(ServletScopes.transferRequest(() -> false));
-            try {
-              return future.get(100, TimeUnit.MILLISECONDS);
-            } catch (TimeoutException e) {
-              return true;
-            }
-          } finally {
-            executor.shutdownNow();
-          }
-        };
-
-    ImmutableMap<Key<?>, Object> seedMap = ImmutableMap.of();
-    assertTrue(ServletScopes.scopeRequest(callable, seedMap).call());
-  }
-
-  @Test
-  public void testTransferNonHttpRequest_concurrentUseBlocks_closeable() throws Exception {
-    Callable<Boolean> callable =
-        () -> {
-          final RequestScoper scoper = ServletScopes.transferRequest();
-          ExecutorService executor = Executors.newSingleThreadExecutor();
-          try {
-            Future<Boolean> future =
-                executor.submit(
-                    () -> {
-                      RequestScoper.CloseableScope scope = scoper.open();
-                      try {
-                        return false;
-                      } finally {
-                        scope.close();
-                      }
-                    });
-            try {
-              return future.get(100, TimeUnit.MILLISECONDS);
-            } catch (TimeoutException e) {
-              return true;
-            }
-          } finally {
-            executor.shutdownNow();
-          }
-        };
-
-    ImmutableMap<Key<?>, Object> seedMap = ImmutableMap.of();
-    assertTrue(ServletScopes.scopeRequest(callable, seedMap).call());
-  }
-
-  @Test
-  public void testTransferNonHttpRequest_concurrentUseSameThreadOk() throws Exception {
-    Callable<Boolean> callable = () -> ServletScopes.transferRequest(() -> false).call();
-
-    ImmutableMap<Key<?>, Object> seedMap = ImmutableMap.of();
-    assertFalse(ServletScopes.scopeRequest(callable, seedMap).call());
-  }
-
-  @Test
-  public void testTransferNonHttpRequest_concurrentUseSameThreadOk_closeable() throws Exception {
-    Callable<Boolean> callable =
-        () -> {
-          RequestScoper.CloseableScope scope = ServletScopes.transferRequest().open();
-          try {
-            return false;
-          } finally {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        RequestScoper.CloseableScope scope = data.scoper.open();
+        try {
+            assertSame(data.object, injector.getInstance(Object.class));
+        }
+        finally {
             scope.close();
-          }
+            executor.shutdownNow();
+        }
+    }
+
+    @Test
+    public void testTransferNonHttpRequest_concurrentUseBlocks()
+            throws Exception
+    {
+        Callable<Boolean> callable =
+        () -> {
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            try {
+                Future<Boolean> future = executor.submit(ServletScopes.transferRequest(() -> false));
+                try {
+                    return future.get(100, TimeUnit.MILLISECONDS);
+                }
+                catch (TimeoutException e) {
+                    return true;
+                }
+            }
+            finally {
+                executor.shutdownNow();
+            }
         };
 
-    ImmutableMap<Key<?>, Object> seedMap = ImmutableMap.of();
-    assertFalse(ServletScopes.scopeRequest(callable, seedMap).call());
-  }
+        ImmutableMap<Key<?>, Object> seedMap = ImmutableMap.of();
+        assertTrue(ServletScopes.scopeRequest(callable, seedMap).call());
+    }
+
+    @Test
+    public void testTransferNonHttpRequest_concurrentUseBlocks_closeable()
+            throws Exception
+    {
+        Callable<Boolean> callable =
+        () -> {
+            final RequestScoper scoper = ServletScopes.transferRequest();
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            try {
+                Future<Boolean> future =
+                        executor.submit(
+                                () -> {
+                                    RequestScoper.CloseableScope scope = scoper.open();
+                                    try {
+                                        return false;
+                                    }
+                                    finally {
+                                        scope.close();
+                                    }
+                                });
+                try {
+                    return future.get(100, TimeUnit.MILLISECONDS);
+                }
+                catch (TimeoutException e) {
+                    return true;
+                }
+            }
+            finally {
+                executor.shutdownNow();
+            }
+        };
+
+        ImmutableMap<Key<?>, Object> seedMap = ImmutableMap.of();
+        assertTrue(ServletScopes.scopeRequest(callable, seedMap).call());
+    }
+
+    @Test
+    public void testTransferNonHttpRequest_concurrentUseSameThreadOk()
+            throws Exception
+    {
+        Callable<Boolean> callable = () -> ServletScopes.transferRequest(() -> false).call();
+
+        ImmutableMap<Key<?>, Object> seedMap = ImmutableMap.of();
+        assertFalse(ServletScopes.scopeRequest(callable, seedMap).call());
+    }
+
+    @Test
+    public void testTransferNonHttpRequest_concurrentUseSameThreadOk_closeable()
+            throws Exception
+    {
+        Callable<Boolean> callable =
+        () -> {
+            RequestScoper.CloseableScope scope = ServletScopes.transferRequest().open();
+            try {
+                return false;
+            }
+            finally {
+                scope.close();
+            }
+        };
+
+        ImmutableMap<Key<?>, Object> seedMap = ImmutableMap.of();
+        assertFalse(ServletScopes.scopeRequest(callable, seedMap).call());
+    }
 }

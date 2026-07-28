@@ -18,6 +18,7 @@ package com.google.inject.internal;
 
 import com.google.inject.spi.DefaultElementVisitor;
 import com.google.inject.spi.Element;
+
 import java.util.List;
 
 /**
@@ -28,38 +29,44 @@ import java.util.List;
  *
  * @author jessewilson@google.com (Jesse Wilson)
  */
-abstract class AbstractProcessor extends DefaultElementVisitor<Boolean> {
+abstract class AbstractProcessor
+        extends DefaultElementVisitor<Boolean>
+{
+    protected Errors errors;
+    protected InjectorImpl injector;
 
-  protected Errors errors;
-  protected InjectorImpl injector;
-
-  protected AbstractProcessor(Errors errors) {
-    this.errors = errors;
-  }
-
-  public void process(Iterable<InjectorShell> isolatedInjectorBuilders) {
-    for (InjectorShell injectorShell : isolatedInjectorBuilders) {
-      process(injectorShell.getInjector(), injectorShell.getElements());
+    protected AbstractProcessor(Errors errors)
+    {
+        this.errors = errors;
     }
-  }
 
-  public void process(InjectorImpl injector, List<Element> elements) {
-    Errors errorsAnyElement = this.errors;
-    this.injector = injector;
-    try {
-      elements.removeIf(
-          e -> {
-            this.errors = errorsAnyElement.withSource(e.getSource());
-            return e.acceptVisitor(this);
-          });
-    } finally {
-      this.errors = errorsAnyElement;
-      this.injector = null;
+    public void process(Iterable<InjectorShell> isolatedInjectorBuilders)
+    {
+        for (InjectorShell injectorShell : isolatedInjectorBuilders) {
+            process(injectorShell.getInjector(), injectorShell.getElements());
+        }
     }
-  }
 
-  @Override
-  protected Boolean visitOther(Element element) {
-    return false;
-  }
+    public void process(InjectorImpl injector, List<Element> elements)
+    {
+        Errors errorsAnyElement = this.errors;
+        this.injector = injector;
+        try {
+            elements.removeIf(
+                    e -> {
+                        this.errors = errorsAnyElement.withSource(e.getSource());
+                        return e.acceptVisitor(this);
+                    });
+        }
+        finally {
+            this.errors = errorsAnyElement;
+            this.injector = null;
+        }
+    }
+
+    @Override
+    protected Boolean visitOther(Element element)
+    {
+        return false;
+    }
 }

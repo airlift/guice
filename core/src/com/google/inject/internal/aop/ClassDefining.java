@@ -24,42 +24,60 @@ import com.google.inject.internal.InternalFlags.CustomClassLoadingOption;
  *
  * @author mcculls@gmail.com (Stuart McCulloch)
  */
-public final class ClassDefining {
-  private ClassDefining() {}
+public final class ClassDefining
+{
+    private ClassDefining() {}
 
-  // initialization-on-demand...
-  private static class ClassDefinerHolder {
-    static final ClassDefiner INSTANCE = bindClassDefiner();
-    static final boolean IS_LOOKUP = INSTANCE instanceof LookupClassDefiner;
-  }
-
-  /** Defines a new class relative to the host. */
-  public static Class<?> define(Class<?> hostClass, byte[] bytecode) throws Exception {
-    return ClassDefinerHolder.INSTANCE.define(hostClass, bytecode);
-  }
-
-  /** Returns true if the current class definer allows access to package-private members. */
-  public static boolean hasPackageAccess() {
-    return ClassDefinerHolder.IS_LOOKUP;
-  }
-
-  /** Returns true if it's possible to load by name proxies defined from the given host. */
-  public static boolean canLoadProxyByName(Class<?> hostClass) {
-    return !ClassDefinerHolder.IS_LOOKUP || LookupClassDefiner.canLoadProxyByName(hostClass);
-  }
-
-  /** Returns true if it's possible to downcast to proxies defined from the given host. */
-  public static boolean canDowncastToProxy(Class<?> hostClass) {
-    return !ClassDefinerHolder.IS_LOOKUP || LookupClassDefiner.canDowncastToProxy(hostClass);
-  }
-
-  /** Binds the preferred {@link ClassDefiner} instance. */
-  static ClassDefiner bindClassDefiner() {
-    // ANONYMOUS keeps the lookup definer but changes how it defines classes
-    CustomClassLoadingOption loadingOption = InternalFlags.getCustomClassLoadingOption();
-    if (loadingOption == CustomClassLoadingOption.CHILD) {
-      return new ChildClassDefiner(); // override default choice
+    // initialization-on-demand...
+    private static class ClassDefinerHolder
+    {
+        static final ClassDefiner INSTANCE = bindClassDefiner();
+        static final boolean IS_LOOKUP = INSTANCE instanceof LookupClassDefiner;
     }
-    return new LookupClassDefiner();
-  }
+
+    /**
+     * Defines a new class relative to the host.
+     */
+    public static Class<?> define(Class<?> hostClass, byte[] bytecode)
+            throws Exception
+    {
+        return ClassDefinerHolder.INSTANCE.define(hostClass, bytecode);
+    }
+
+    /**
+     * Returns true if the current class definer allows access to package-private members.
+     */
+    public static boolean hasPackageAccess()
+    {
+        return ClassDefinerHolder.IS_LOOKUP;
+    }
+
+    /**
+     * Returns true if it's possible to load by name proxies defined from the given host.
+     */
+    public static boolean canLoadProxyByName(Class<?> hostClass)
+    {
+        return !ClassDefinerHolder.IS_LOOKUP || LookupClassDefiner.canLoadProxyByName(hostClass);
+    }
+
+    /**
+     * Returns true if it's possible to downcast to proxies defined from the given host.
+     */
+    public static boolean canDowncastToProxy(Class<?> hostClass)
+    {
+        return !ClassDefinerHolder.IS_LOOKUP || LookupClassDefiner.canDowncastToProxy(hostClass);
+    }
+
+    /**
+     * Binds the preferred {@link ClassDefiner} instance.
+     */
+    static ClassDefiner bindClassDefiner()
+    {
+        // ANONYMOUS keeps the lookup definer but changes how it defines classes
+        CustomClassLoadingOption loadingOption = InternalFlags.getCustomClassLoadingOption();
+        if (loadingOption == CustomClassLoadingOption.CHILD) {
+            return new ChildClassDefiner(); // override default choice
+        }
+        return new LookupClassDefiner();
+    }
 }

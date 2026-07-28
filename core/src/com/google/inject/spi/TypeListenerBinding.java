@@ -31,41 +31,54 @@ import com.google.inject.matcher.Matcher;
  * @author jessewilson@google.com (Jesse Wilson)
  * @since 2.0
  */
-public final class TypeListenerBinding implements Element {
+public final class TypeListenerBinding
+        implements Element
+{
+    private final Object source;
+    private final Matcher<? super TypeLiteral<?>> typeMatcher;
+    private final TypeListener listener;
 
-  private final Object source;
-  private final Matcher<? super TypeLiteral<?>> typeMatcher;
-  private final TypeListener listener;
+    TypeListenerBinding(
+            Object source,
+            TypeListener listener,
+            Matcher<? super TypeLiteral<?>> typeMatcher)
+    {
+        this.source = source;
+        this.listener = listener;
+        this.typeMatcher = typeMatcher;
+    }
 
-  TypeListenerBinding(
-      Object source, TypeListener listener, Matcher<? super TypeLiteral<?>> typeMatcher) {
-    this.source = source;
-    this.listener = listener;
-    this.typeMatcher = typeMatcher;
-  }
+    /**
+     * Returns the registered listener.
+     */
+    public TypeListener getListener()
+    {
+        return listener;
+    }
 
-  /** Returns the registered listener. */
-  public TypeListener getListener() {
-    return listener;
-  }
+    /**
+     * Returns the type matcher which chooses which types the listener should be notified of.
+     */
+    public Matcher<? super TypeLiteral<?>> getTypeMatcher()
+    {
+        return typeMatcher;
+    }
 
-  /** Returns the type matcher which chooses which types the listener should be notified of. */
-  public Matcher<? super TypeLiteral<?>> getTypeMatcher() {
-    return typeMatcher;
-  }
+    @Override
+    public Object getSource()
+    {
+        return source;
+    }
 
-  @Override
-  public Object getSource() {
-    return source;
-  }
+    @Override
+    public <T> T acceptVisitor(ElementVisitor<T> visitor)
+    {
+        return visitor.visit(this);
+    }
 
-  @Override
-  public <T> T acceptVisitor(ElementVisitor<T> visitor) {
-    return visitor.visit(this);
-  }
-
-  @Override
-  public void applyTo(Binder binder) {
-    binder.withSource(getSource()).bindListener(typeMatcher, listener);
-  }
+    @Override
+    public void applyTo(Binder binder)
+    {
+        binder.withSource(getSource()).bindListener(typeMatcher, listener);
+    }
 }

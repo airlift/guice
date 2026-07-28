@@ -20,6 +20,7 @@ import com.google.inject.ConfigurationException;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
 import com.google.inject.spi.Message;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,32 +30,36 @@ import java.util.Map;
  *
  * @author schmitt@google.com (Peter Schmitt)
  */
-class BindingCollector {
+class BindingCollector
+{
+    private final Map<Key<?>, TypeLiteral<?>> bindings = new HashMap<>();
 
-  private final Map<Key<?>, TypeLiteral<?>> bindings = new HashMap<>();
+    public BindingCollector addBinding(Key<?> key, TypeLiteral<?> target)
+    {
+        if (bindings.containsKey(key)) {
+            throw new ConfigurationException(
+                    ImmutableSet.of(new Message("Only one implementation can be specified for " + key)));
+        }
 
-  public BindingCollector addBinding(Key<?> key, TypeLiteral<?> target) {
-    if (bindings.containsKey(key)) {
-      throw new ConfigurationException(
-          ImmutableSet.of(new Message("Only one implementation can be specified for " + key)));
+        bindings.put(key, target);
+
+        return this;
     }
 
-    bindings.put(key, target);
+    public Map<Key<?>, TypeLiteral<?>> getBindings()
+    {
+        return Collections.unmodifiableMap(bindings);
+    }
 
-    return this;
-  }
+    @Override
+    public int hashCode()
+    {
+        return bindings.hashCode();
+    }
 
-  public Map<Key<?>, TypeLiteral<?>> getBindings() {
-    return Collections.unmodifiableMap(bindings);
-  }
-
-  @Override
-  public int hashCode() {
-    return bindings.hashCode();
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    return (obj instanceof BindingCollector) && bindings.equals(((BindingCollector) obj).bindings);
-  }
+    @Override
+    public boolean equals(Object obj)
+    {
+        return (obj instanceof BindingCollector) && bindings.equals(((BindingCollector) obj).bindings);
+    }
 }

@@ -23,61 +23,74 @@ import com.google.inject.Binding;
  * #visitOther(Binding)}, returning its result.
  *
  * @param <V> any type to be returned by the visit method. Use {@link Void} with {@code return null}
- *     if no return type is needed.
+ *         if no return type is needed.
  * @author jessewilson@google.com (Jesse Wilson)
  * @since 2.0
  */
-public abstract class DefaultBindingTargetVisitor<T, V> implements BindingTargetVisitor<T, V> {
+public abstract class DefaultBindingTargetVisitor<T, V>
+        implements BindingTargetVisitor<T, V>
+{
+    /**
+     * Default visit implementation. Returns {@code null}.
+     */
+    protected V visitOther(Binding<? extends T> binding)
+    {
+        return null;
+    }
 
-  /** Default visit implementation. Returns {@code null}. */
-  protected V visitOther(Binding<? extends T> binding) {
-    return null;
-  }
+    @Override
+    public V visit(InstanceBinding<? extends T> instanceBinding)
+    {
+        return visitOther(instanceBinding);
+    }
 
-  @Override
-  public V visit(InstanceBinding<? extends T> instanceBinding) {
-    return visitOther(instanceBinding);
-  }
+    @Override
+    public V visit(ProviderInstanceBinding<? extends T> providerInstanceBinding)
+    {
+        return visitOther(providerInstanceBinding);
+    }
 
-  @Override
-  public V visit(ProviderInstanceBinding<? extends T> providerInstanceBinding) {
-    return visitOther(providerInstanceBinding);
-  }
+    @Override
+    public V visit(ProviderKeyBinding<? extends T> providerKeyBinding)
+    {
+        return visitOther(providerKeyBinding);
+    }
 
-  @Override
-  public V visit(ProviderKeyBinding<? extends T> providerKeyBinding) {
-    return visitOther(providerKeyBinding);
-  }
+    @Override
+    public V visit(LinkedKeyBinding<? extends T> linkedKeyBinding)
+    {
+        return visitOther(linkedKeyBinding);
+    }
 
-  @Override
-  public V visit(LinkedKeyBinding<? extends T> linkedKeyBinding) {
-    return visitOther(linkedKeyBinding);
-  }
+    @Override
+    public V visit(ExposedBinding<? extends T> exposedBinding)
+    {
+        return visitOther(exposedBinding);
+    }
 
-  @Override
-  public V visit(ExposedBinding<? extends T> exposedBinding) {
-    return visitOther(exposedBinding);
-  }
+    @Override
+    public V visit(UntargettedBinding<? extends T> untargettedBinding)
+    {
+        return visitOther(untargettedBinding);
+    }
 
-  @Override
-  public V visit(UntargettedBinding<? extends T> untargettedBinding) {
-    return visitOther(untargettedBinding);
-  }
+    @Override
+    public V visit(ConstructorBinding<? extends T> constructorBinding)
+    {
+        return visitOther(constructorBinding);
+    }
 
-  @Override
-  public V visit(ConstructorBinding<? extends T> constructorBinding) {
-    return visitOther(constructorBinding);
-  }
+    @Override
+    public V visit(ConvertedConstantBinding<? extends T> convertedConstantBinding)
+    {
+        return visitOther(convertedConstantBinding);
+    }
 
-  @Override
-  public V visit(ConvertedConstantBinding<? extends T> convertedConstantBinding) {
-    return visitOther(convertedConstantBinding);
-  }
-
-  @Override
-  @SuppressWarnings("unchecked")
-  public V visit(ProviderBinding<? extends T> providerBinding) {
-    // TODO(cushon): remove raw (Binding) cast when we don't care about javac 6 anymore
-    return visitOther((Binding<? extends T>) (Binding) providerBinding);
-  }
+    @Override
+    @SuppressWarnings("unchecked")
+    public V visit(ProviderBinding<? extends T> providerBinding)
+    {
+        // TODO(cushon): remove raw (Binding) cast when we don't care about javac 6 anymore
+        return visitOther((Binding<? extends T>) (Binding) providerBinding);
+    }
 }

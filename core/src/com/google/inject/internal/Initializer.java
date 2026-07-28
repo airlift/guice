@@ -16,10 +16,6 @@
 
 package com.google.inject.internal;
 
-
-import static java.util.Objects.requireNonNull;
-
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Multimap;
 import com.google.inject.Binding;
 import com.google.inject.Key;
@@ -27,12 +23,17 @@ import com.google.inject.Stage;
 import com.google.inject.TypeLiteral;
 import com.google.inject.internal.CycleDetectingLock.CycleDetectingLockFactory;
 import com.google.inject.spi.InjectionPoint;
+
+import javax.annotation.Nullable;
+
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import javax.annotation.Nullable;
+
+import static com.google.common.base.Preconditions.checkState;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Manages and injects instances at injector-creation time. This is made more complicated by
@@ -41,243 +42,263 @@ import javax.annotation.Nullable;
  *
  * @author jessewilson@google.com (Jesse Wilson)
  */
-final class Initializer {
+final class Initializer
+{
+    /**
+     * Is set to true once {@link #validateOustandingInjections} is called.
+     */
+    private volatile boolean validationStarted;
 
-  /** Is set to true once {@link #validateOustandingInjections} is called. */
-  private volatile boolean validationStarted = false;
+    /**
+     * Allows us to detect circular dependencies. It's only used during injectable reference
+     * initialization. After initialization direct access through volatile field is used.
+     */
+    private final CycleDetectingLockFactory<Class<?>> cycleDetectingLockFactory =
+            new CycleDetectingLockFactory<Class<?>>();
 
-  /**
-   * Allows us to detect circular dependencies. It's only used during injectable reference
-   * initialization. After initialization direct access through volatile field is used.
-   */
-  private final CycleDetectingLockFactory<Class<?>> cycleDetectingLockFactory =
-      new CycleDetectingLockFactory<Class<?>>();
+    /**
+     * Instances that need injection during injector creation to a source that registered them. New
+     * references added before {@link #validateOustandingInjections}. Cleared up in {@link
+     * #injectAll}.
+     */
+    private final List<InjectableReference<?>> pendingInjections = new ArrayList<>();
 
-  /**
-   * Instances that need injection during injector creation to a source that registered them. New
-   * references added before {@link #validateOustandingInjections}. Cleared up in {@link
-   * #injectAll}.
-   */
-  private final List<InjectableReference<?>> pendingInjections = new ArrayList<>();
+    /**
+     * Map that guarantees that no instance would get two references. New references added before
+     * {@link #validateOustandingInjections}. Cleared up in {@link #validateOustandingInjections}.
+     */
+    private final IdentityHashMap<Object, InjectableReference<?>> initializablesCache =
+            new IdentityHashMap<>();
 
-  /**
-   * Map that guarantees that no instance would get two references. New references added before
-   * {@link #validateOustandingInjections}. Cleared up in {@link #validateOustandingInjections}.
-   */
-  private final IdentityHashMap<Object, InjectableReference<?>> initializablesCache =
-      new IdentityHashMap<>();
+    /**
+     * Registers an instance for member injection when that step is performed.
+     *
+     * <p>Returns an {@link Optional} of the {@link Initializable} that was registered, or {@link
+     * Optional#empty()} if no injection or listeners are required.
+     *
+     * @param instance an instance that optionally has members to be injected (each annotated
+     *         with @Inject).
+     * @param binding the binding that caused this initializable to be created, if it exists.
+     * @param source the source location that this injection was requested
+     */
+    <T> Optional<Initializable<T>> requestInjection(
+            InjectorImpl injector,
+            @Nullable TypeLiteral<T> type,
+            @Nullable T instance,
+            @Nullable Binding<T> binding,
+            Object source,
+            Set<InjectionPoint> injectionPoints,
+            Errors errors)
+    {
+        requireNonNull(source);
+        checkState(
+                !validationStarted, "Member injection could not be requested after validation is started");
+        ProvisionListenerStackCallback<T> provisionCallback =
+                binding == null ? null : injector.provisionListenerStore.get(binding);
 
-  /**
-   * Registers an instance for member injection when that step is performed.
-   *
-   * <p>Returns an {@link Optional} of the {@link Initializable} that was registered, or {@link
-   * Optional#empty()} if no injection or listeners are required.
-   *
-   * @param instance an instance that optionally has members to be injected (each annotated
-   *     with @Inject).
-   * @param binding the binding that caused this initializable to be created, if it exists.
-   * @param source the source location that this injection was requested
-   */
-  <T> Optional<Initializable<T>> requestInjection(
-      InjectorImpl injector,
-      @Nullable TypeLiteral<T> type,
-      @Nullable T instance,
-      @Nullable Binding<T> binding,
-      Object source,
-      Set<InjectionPoint> injectionPoints,
-      Errors errors) {
-    requireNonNull(source);
-    Preconditions.checkState(
-        !validationStarted, "Member injection could not be requested after validation is started");
-    ProvisionListenerStackCallback<T> provisionCallback =
-        binding == null ? null : injector.provisionListenerStore.get(binding);
-
-    // short circuit if the object has no injections or listeners.
-    if (instance == null
-        || (injectionPoints.isEmpty()
-            && !injector.membersInjectorStore.hasTypeListeners()
-            && provisionCallback == null)) {
-      return Optional.empty();
-    }
-
-    if (type == null) {
-      @SuppressWarnings("unchecked") // the type of 'T' is a TypeLiteral<T>
-      TypeLiteral<T> instanceType = TypeLiteral.get((Class<T>) instance.getClass());
-      type = instanceType;
-    }
-
-    @SuppressWarnings("unchecked") // Map from T to InjectableReference<T>
-    InjectableReference<T> cached = (InjectableReference<T>) initializablesCache.get(instance);
-    if (cached != null) {
-      if (!cached.type.equals(type)) {
-        // Record the error, but proceed to capture as many errors as possible.
-        errors.requestInjectionWithDifferentTypes(instance, cached.type, cached.source, type);
-      }
-      return Optional.of(cached);
-    }
-
-    InjectableReference<T> injectableReference =
-        new InjectableReference<T>(
-            injector,
-            instance,
-            type,
-            binding == null ? null : binding.getKey(),
-            provisionCallback,
-            source,
-            cycleDetectingLockFactory.create(instance.getClass()));
-    initializablesCache.put(instance, injectableReference);
-    pendingInjections.add(injectableReference);
-    return Optional.of(injectableReference);
-  }
-
-  /**
-   * Prepares member injectors for all injected instances. This prompts Guice to do static analysis
-   * on the injected instances.
-   */
-  void validateOustandingInjections(Errors errors) {
-    validationStarted = true;
-    initializablesCache.clear();
-    for (InjectableReference<?> reference : pendingInjections) {
-      try {
-        reference.validate(errors);
-      } catch (ErrorsException e) {
-        errors.merge(e.getErrors());
-      }
-    }
-  }
-
-  /**
-   * Performs creation-time injections on all objects that require it. Whenever fulfilling an
-   * injection depends on another object that requires injection, we inject it first. If the two
-   * instances are codependent (directly or transitively), ordering of injection is arbitrary.
-   */
-  void injectAll(final Errors errors) {
-    Preconditions.checkState(validationStarted, "Validation should be done before injection");
-
-    if (pendingInjections.isEmpty()) {
-      return;
-    }
-    // Note: it doesn't actually matter which injector we use here, since all injectors in a
-    // hierarchy can share the same context and literally do share the same contextLocal.
-    try (InternalContext context = pendingInjections.get(0).injector.enterContext()) {
-      for (InjectableReference<?> reference : pendingInjections) {
-        try {
-          Object unused = reference.get(context);
-        } catch (InternalProvisionException ipe) {
-          errors.merge(ipe);
+        // short circuit if the object has no injections or listeners.
+        if (instance == null
+                || (injectionPoints.isEmpty()
+                && !injector.membersInjectorStore.hasTypeListeners()
+                && provisionCallback == null)) {
+            return Optional.empty();
         }
-      }
-    }
-    pendingInjections.clear();
-  }
 
-  private enum InjectableReferenceState {
-    NEW,
-    VALIDATED,
-    INJECTING,
-    READY
-  }
+        if (type == null) {
+            @SuppressWarnings("unchecked") // the type of 'T' is a TypeLiteral<T>
+            TypeLiteral<T> instanceType = TypeLiteral.get((Class<T>) instance.getClass());
+            type = instanceType;
+        }
 
-  private static final class InjectableReference<T> implements Initializable<T> {
-    private volatile InjectableReferenceState state = InjectableReferenceState.NEW;
-    private volatile MembersInjectorImpl<T> membersInjector = null;
+        @SuppressWarnings("unchecked") // Map from T to InjectableReference<T>
+        InjectableReference<T> cached = (InjectableReference<T>) initializablesCache.get(instance);
+        if (cached != null) {
+            if (!cached.type.equals(type)) {
+                // Record the error, but proceed to capture as many errors as possible.
+                errors.requestInjectionWithDifferentTypes(instance, cached.type, cached.source, type);
+            }
+            return Optional.of(cached);
+        }
 
-    private final InjectorImpl injector;
-    private final T instance;
-    private final TypeLiteral<T> type;
-    private final Object source;
-    @Nullable private final Key<T> key;
-    @Nullable private final ProvisionListenerStackCallback<T> provisionCallback;
-    private final CycleDetectingLock<?> lock;
-
-    InjectableReference(
-        InjectorImpl injector,
-        T instance,
-        TypeLiteral<T> type,
-        @Nullable Key<T> key,
-        @Nullable ProvisionListenerStackCallback<T> provisionCallback,
-        Object source,
-        CycleDetectingLock<?> lock) {
-      this.injector = injector;
-      this.key = key; // possibly null!
-      this.provisionCallback = provisionCallback; // possibly null!
-      this.instance = requireNonNull(instance, "instance");
-      this.type = requireNonNull(type, "type");
-      this.source = requireNonNull(source, "source");
-      this.lock = requireNonNull(lock, "lock");
-    }
-
-    public void validate(Errors errors) throws ErrorsException {
-      membersInjector = injector.membersInjectorStore.get(type, errors.withSource(source));
-      requireNonNull(
-          membersInjector,
-          () -> "No membersInjector available for type: " + type + ", from key: " + key);
-      state = InjectableReferenceState.VALIDATED;
+        InjectableReference<T> injectableReference =
+                new InjectableReference<T>(
+                        injector,
+                        instance,
+                        type,
+                        binding == null ? null : binding.getKey(),
+                        provisionCallback,
+                        source,
+                        cycleDetectingLockFactory.create(instance.getClass()));
+        initializablesCache.put(instance, injectableReference);
+        pendingInjections.add(injectableReference);
+        return Optional.of(injectableReference);
     }
 
     /**
-     * Reentrant. If {@code instance} was registered for injection at injector-creation time, this
-     * method will ensure that all its members have been injected before returning.
+     * Prepares member injectors for all injected instances. This prompts Guice to do static analysis
+     * on the injected instances.
      */
-    @Override
-    public T get(InternalContext context) throws InternalProvisionException {
-      // skipping acquiring lock if initialization is already finished
-      if (state == InjectableReferenceState.READY) {
-        return instance;
-      }
-
-      // acquire lock for current binding to initialize an instance
-      Multimap<?, ?> lockCycle = lock.lockOrDetectPotentialLocksCycle();
-      if (!lockCycle.isEmpty()) {
-        // Potential deadlock detected and creation lock is not taken.
-        // According to injectAll()'s contract return non-initialized instance.
-
-        // This condition should not be possible under the current Guice implementation.
-        // This clause exists for defensive programming purposes.
-
-        // Reasoning:
-        // get() is called either directly from injectAll(), holds no locks and can not create
-        // a cycle, or it is called through a singleton scope, which resolves deadlocks by itself.
-        // Before calling get() object has to be requested for injection.
-        // Initializer.requestInjection() is called either for constant object bindings, which wrap
-        // creation into a Singleton scope, or from Binder.requestInjection(), which
-        // has to use Singleton scope to reuse the same InjectableReference to potentially
-        // create a lock cycle.
-        return instance;
-      }
-      try {
-        // lock acquired, current thread owns this instance initialization
-        switch (state) {
-            // When instance depends on itself in the same thread potential dead lock
-            // is not detected. We have to prevent a stack overflow and we use
-            // an "injecting" stage to short-circuit a call.
-          case READY, INJECTING -> {
-            return instance;
-          }
-          case VALIDATED -> state = InjectableReferenceState.INJECTING;
-          case NEW -> throw new IllegalStateException("InjectableReference is not validated yet");
-          default -> throw new IllegalStateException("Unknown state: " + state);
+    void validateOustandingInjections(Errors errors)
+    {
+        validationStarted = true;
+        initializablesCache.clear();
+        for (InjectableReference<?> reference : pendingInjections) {
+            try {
+                reference.validate(errors);
+            }
+            catch (ErrorsException e) {
+                errors.merge(e.getErrors());
+            }
         }
-        // if in Stage.TOOL, we only want to inject & notify toolable injection points.
-        // (otherwise we'll inject all of them)
-        try {
-          membersInjector.injectAndNotify(
-              context, instance, provisionCallback, source, injector.options.stage == Stage.TOOL);
-        } catch (InternalProvisionException ipe) {
-          throw ipe.addSource(source);
-        }
-        // mark instance as ready to skip a lock on subsequent calls
-        state = InjectableReferenceState.READY;
-        return instance;
-      } finally {
-        // always release our creation lock, even on failures
-        lock.unlock();
-      }
     }
 
-    @Override
-    public String toString() {
-      return instance.toString();
+    /**
+     * Performs creation-time injections on all objects that require it. Whenever fulfilling an
+     * injection depends on another object that requires injection, we inject it first. If the two
+     * instances are codependent (directly or transitively), ordering of injection is arbitrary.
+     */
+    void injectAll(final Errors errors)
+    {
+        checkState(validationStarted, "Validation should be done before injection");
+
+        if (pendingInjections.isEmpty()) {
+            return;
+        }
+        // Note: it doesn't actually matter which injector we use here, since all injectors in a
+        // hierarchy can share the same context and literally do share the same contextLocal.
+        try (InternalContext context = pendingInjections.get(0).injector.enterContext()) {
+            for (InjectableReference<?> reference : pendingInjections) {
+                try {
+                    Object unused = reference.get(context);
+                }
+                catch (InternalProvisionException ipe) {
+                    errors.merge(ipe);
+                }
+            }
+        }
+        pendingInjections.clear();
     }
-  }
+
+    private enum InjectableReferenceState
+    {
+        NEW,
+        VALIDATED,
+        INJECTING,
+        READY,
+    }
+
+    private static final class InjectableReference<T>
+            implements Initializable<T>
+    {
+        private volatile InjectableReferenceState state = InjectableReferenceState.NEW;
+        private volatile MembersInjectorImpl<T> membersInjector;
+
+        private final InjectorImpl injector;
+        private final T instance;
+        private final TypeLiteral<T> type;
+        private final Object source;
+        @Nullable
+        private final Key<T> key;
+        @Nullable
+        private final ProvisionListenerStackCallback<T> provisionCallback;
+        private final CycleDetectingLock<?> lock;
+
+        InjectableReference(
+                InjectorImpl injector,
+                T instance,
+                TypeLiteral<T> type,
+                @Nullable Key<T> key,
+                @Nullable ProvisionListenerStackCallback<T> provisionCallback,
+                Object source,
+                CycleDetectingLock<?> lock)
+        {
+            this.injector = injector;
+            this.key = key; // possibly null!
+            this.provisionCallback = provisionCallback; // possibly null!
+            this.instance = requireNonNull(instance, "instance");
+            this.type = requireNonNull(type, "type");
+            this.source = requireNonNull(source, "source");
+            this.lock = requireNonNull(lock, "lock");
+        }
+
+        public void validate(Errors errors)
+                throws ErrorsException
+        {
+            membersInjector = injector.membersInjectorStore.get(type, errors.withSource(source));
+            requireNonNull(
+                    membersInjector,
+                    () -> "No membersInjector available for type: " + type + ", from key: " + key);
+            state = InjectableReferenceState.VALIDATED;
+        }
+
+        /**
+         * Reentrant. If {@code instance} was registered for injection at injector-creation time, this
+         * method will ensure that all its members have been injected before returning.
+         */
+        @Override
+        public T get(InternalContext context)
+                throws InternalProvisionException
+        {
+            // skipping acquiring lock if initialization is already finished
+            if (state == InjectableReferenceState.READY) {
+                return instance;
+            }
+
+            // acquire lock for current binding to initialize an instance
+            Multimap<?, ?> lockCycle = lock.lockOrDetectPotentialLocksCycle();
+            if (!lockCycle.isEmpty()) {
+                // Potential deadlock detected and creation lock is not taken.
+                // According to injectAll()'s contract return non-initialized instance.
+
+                // This condition should not be possible under the current Guice implementation.
+                // This clause exists for defensive programming purposes.
+
+                // Reasoning:
+                // get() is called either directly from injectAll(), holds no locks and can not create
+                // a cycle, or it is called through a singleton scope, which resolves deadlocks by itself.
+                // Before calling get() object has to be requested for injection.
+                // Initializer.requestInjection() is called either for constant object bindings, which wrap
+                // creation into a Singleton scope, or from Binder.requestInjection(), which
+                // has to use Singleton scope to reuse the same InjectableReference to potentially
+                // create a lock cycle.
+                return instance;
+            }
+            try {
+                // lock acquired, current thread owns this instance initialization
+                switch (state) {
+                    // When instance depends on itself in the same thread potential dead lock
+                    // is not detected. We have to prevent a stack overflow and we use
+                    // an "injecting" stage to short-circuit a call.
+                    case READY, INJECTING -> {
+                        return instance;
+                    }
+                    case VALIDATED -> state = InjectableReferenceState.INJECTING;
+                    case NEW -> throw new IllegalStateException("InjectableReference is not validated yet");
+                    default -> throw new IllegalStateException("Unknown state: " + state);
+                }
+                // if in Stage.TOOL, we only want to inject & notify toolable injection points.
+                // (otherwise we'll inject all of them)
+                try {
+                    membersInjector.injectAndNotify(
+                            context, instance, provisionCallback, source, injector.options.stage == Stage.TOOL);
+                }
+                catch (InternalProvisionException ipe) {
+                    throw ipe.addSource(source);
+                }
+                // mark instance as ready to skip a lock on subsequent calls
+                state = InjectableReferenceState.READY;
+                return instance;
+            }
+            finally {
+                // always release our creation lock, even on failures
+                lock.unlock();
+            }
+        }
+
+        @Override
+        public String toString()
+        {
+            return instance.toString();
+        }
+    }
 }

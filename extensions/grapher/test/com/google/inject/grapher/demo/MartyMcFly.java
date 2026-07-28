@@ -16,4 +16,5 @@
 
 package com.google.inject.grapher.demo;
 
-class MartyMcFly implements Person {}
+class MartyMcFly
+        implements Person {}

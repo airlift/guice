@@ -27,8 +27,11 @@ import com.google.inject.spi.BindingTargetVisitor;
  * @since 3.0
  * @author ramakrishna@google.com (Ramakrishna Rajanna)
  */
-public interface AssistedInjectTargetVisitor<T, V> extends BindingTargetVisitor<T, V> {
-
-  /** Visits an {@link AssistedInjectBinding} created through {@link FactoryModuleBuilder}. */
-  V visit(AssistedInjectBinding<? extends T> assistedInjectBinding);
+public interface AssistedInjectTargetVisitor<T, V>
+        extends BindingTargetVisitor<T, V>
+{
+    /**
+     * Visits an {@link AssistedInjectBinding} created through {@link FactoryModuleBuilder}.
+     */
+    V visit(AssistedInjectBinding<? extends T> assistedInjectBinding);
 }

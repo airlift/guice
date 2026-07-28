@@ -5,78 +5,89 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.spi.ErrorDetail;
+
 import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.List;
 import java.util.function.Supplier;
 
-/** Error reported by Guice when a key is not bound in the injector. */
+/**
+ * Error reported by Guice when a key is not bound in the injector.
+ */
 final class MissingImplementationError<T>
-    extends InternalErrorDetail<MissingImplementationError<T>> {
+        extends InternalErrorDetail<MissingImplementationError<T>>
+{
+    private final Key<T> key;
+    private final Supplier<ImmutableList<String>> suggestionsSupplier;
 
-  private final Key<T> key;
-  private final Supplier<ImmutableList<String>> suggestionsSupplier;
-
-  public MissingImplementationError(Key<T> key, Injector injector, List<Object> sources) {
-    this(
-        key,
-        // Defer building suggestions until messages are requested, to avoid the work associated
-        // with iterating bindings in scenarios where the exceptions are discarded.
-        Suppliers.memoize(
-            () -> MissingImplementationErrorHints.getSuggestions(key, injector, sources)),
-        sources);
-  }
-
-  private MissingImplementationError(
-      Key<T> key, Supplier<ImmutableList<String>> suggestionsSupplier, List<Object> sources) {
-    super(
-        ErrorId.MISSING_IMPLEMENTATION,
-        "No implementation for %s was bound.".formatted(Messages.convert(key)),
-        sources,
-        null);
-    this.key = key;
-    this.suggestionsSupplier = suggestionsSupplier;
-  }
-
-  @Override
-  public boolean isMergeable(ErrorDetail<?> otherError) {
-    return otherError instanceof MissingImplementationError
-        && ((MissingImplementationError) otherError).key.equals(this.key);
-  }
-
-  @Override
-  public void formatDetail(List<ErrorDetail<?>> mergeableErrors, Formatter formatter) {
-    ImmutableList<String> suggestions = suggestionsSupplier.get();
-    if (!suggestions.isEmpty()) {
-      suggestions.forEach(formatter::format);
+    public MissingImplementationError(Key<T> key, Injector injector, List<Object> sources)
+    {
+        this(key,
+                // Defer building suggestions until messages are requested, to avoid the work associated
+                // with iterating bindings in scenarios where the exceptions are discarded.
+                Suppliers.memoize(
+                        () -> MissingImplementationErrorHints.getSuggestions(key, injector, sources)),
+                sources);
     }
-    List<List<Object>> sourcesList = new ArrayList<>();
-    sourcesList.add(getSources());
-    sourcesList.addAll(
-        mergeableErrors.stream().map(ErrorDetail::getSources).toList());
 
-    List<List<Object>> filteredSourcesList =
-        sourcesList.stream()
-            .map(this::trimSource)
-            .filter(sources -> !sources.isEmpty())
-            .toList();
-
-    if (!filteredSourcesList.isEmpty()) {
-      formatter.format("\n%s\n", Messages.bold("Requested by:"));
-      int sourceListIndex = 1;
-      for (List<Object> sources : filteredSourcesList) {
-        ErrorFormatter.formatSources(sourceListIndex++, sources.reversed(), formatter);
-      }
+    private MissingImplementationError(
+            Key<T> key,
+            Supplier<ImmutableList<String>> suggestionsSupplier,
+            List<Object> sources)
+    {
+        super(ErrorId.MISSING_IMPLEMENTATION,
+                "No implementation for %s was bound.".formatted(Messages.convert(key)),
+                sources,
+                null);
+        this.key = key;
+        this.suggestionsSupplier = suggestionsSupplier;
     }
-  }
 
-  @Override
-  public MissingImplementationError<T> withSources(List<Object> newSources) {
-    return new MissingImplementationError<T>(key, suggestionsSupplier, newSources);
-  }
+    @Override
+    public boolean isMergeable(ErrorDetail<?> otherError)
+    {
+        return otherError instanceof MissingImplementationError
+                && ((MissingImplementationError) otherError).key.equals(this.key);
+    }
 
-  /** Omit the key itself in the source list since the information is redundant. */
-  private List<Object> trimSource(List<Object> sources) {
-    return sources.stream().filter(source -> !source.equals(this.key)).toList();
-  }
+    @Override
+    public void formatDetail(List<ErrorDetail<?>> mergeableErrors, Formatter formatter)
+    {
+        ImmutableList<String> suggestions = suggestionsSupplier.get();
+        if (!suggestions.isEmpty()) {
+            suggestions.forEach(formatter::format);
+        }
+        List<List<Object>> sourcesList = new ArrayList<>();
+        sourcesList.add(getSources());
+        sourcesList.addAll(
+                mergeableErrors.stream().map(ErrorDetail::getSources).toList());
+
+        List<List<Object>> filteredSourcesList =
+                sourcesList.stream()
+                        .map(this::trimSource)
+                        .filter(sources -> !sources.isEmpty())
+                        .toList();
+
+        if (!filteredSourcesList.isEmpty()) {
+            formatter.format("\n%s\n", Messages.bold("Requested by:"));
+            int sourceListIndex = 1;
+            for (List<Object> sources : filteredSourcesList) {
+                ErrorFormatter.formatSources(sourceListIndex++, sources.reversed(), formatter);
+            }
+        }
+    }
+
+    @Override
+    public MissingImplementationError<T> withSources(List<Object> newSources)
+    {
+        return new MissingImplementationError<T>(key, suggestionsSupplier, newSources);
+    }
+
+    /**
+     * Omit the key itself in the source list since the information is redundant.
+     */
+    private List<Object> trimSource(List<Object> sources)
+    {
+        return sources.stream().filter(source -> !source.equals(this.key)).toList();
+    }
 }

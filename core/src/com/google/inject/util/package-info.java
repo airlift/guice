@@ -14,5 +14,7 @@
  * limitations under the License.
  */
 
-/** Helper methods for working with Guice. */
+/**
+ * Helper methods for working with Guice.
+ */
 package com.google.inject.util;

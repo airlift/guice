@@ -16,45 +16,54 @@
 
 package com.google.inject.tools.jmx;
 
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
 import com.google.inject.AbstractModule;
 import com.google.inject.BindingAnnotation;
 import com.google.inject.Key;
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
+
 import java.lang.annotation.Retention;
 
-/** @author crazybob@google.com (Bob Lee) */
-public class JmxTest {
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-  interface Foo {}
+/**
+ * @author crazybob@google.com (Bob Lee)
+ */
+public class JmxTest
+{
+    interface Foo {}
 
-  static class FooImpl implements Foo {}
+    static class FooImpl
+            implements Foo {}
 
-  @Singleton
-  static class TransactionalFoo implements Foo {}
+    @Singleton
+    static class TransactionalFoo
+            implements Foo {}
 
-  static class Bar {}
+    static class Bar {}
 
-  @BindingAnnotation
-  @Retention(RUNTIME)
-  @interface Transactional {}
+    @BindingAnnotation
+    @Retention(RUNTIME)
+    @interface Transactional {}
 
-  public static void main(String[] args) throws Exception {
-    Manager.main(new String[] {TestModule.class.getName()});
-  }
-
-  public static class TestModule extends AbstractModule {
-
-    @Override
-    protected void configure() {
-      bind(Foo.class).to(FooImpl.class);
-      bind(Bar.class);
-      bind(Foo.class).annotatedWith(Transactional.class).to(FooImpl.class);
-      bindConstant().annotatedWith(Names.named("port")).to(8080);
-      bind(Key.get(Object.class)).to(Key.get(Bar.class));
-      //      install(new ServletModule());
+    public static void main(String[] args)
+            throws Exception
+    {
+        Manager.main(new String[] {TestModule.class.getName()});
     }
-  }
+
+    public static class TestModule
+            extends AbstractModule
+    {
+        @Override
+        protected void configure()
+        {
+            bind(Foo.class).to(FooImpl.class);
+            bind(Bar.class);
+            bind(Foo.class).annotatedWith(Transactional.class).to(FooImpl.class);
+            bindConstant().annotatedWith(Names.named("port")).to(8080);
+            bind(Key.get(Object.class)).to(Key.get(Bar.class));
+            //      install(new ServletModule());
+        }
+    }
 }

@@ -54,33 +54,36 @@ import com.google.inject.spi.Element;
  * @author crazybob@google.com (Bob Lee)
  * @author jessewilson@google.com (Jesse Wilson)
  */
-public interface Binding<T> extends Element {
+public interface Binding<T>
+        extends Element
+{
+    /**
+     * Returns the key for this binding.
+     */
+    Key<T> getKey();
 
-  /** Returns the key for this binding. */
-  Key<T> getKey();
+    /**
+     * Returns the scoped provider guice uses to fulfill requests for this binding.
+     *
+     * @throws UnsupportedOperationException when invoked on a {@link Binding} created via {@link
+     *         com.google.inject.spi.Elements#getElements}. This method is only supported on {@link
+     *         Binding}s returned from an injector.
+     */
+    Provider<T> getProvider();
 
-  /**
-   * Returns the scoped provider guice uses to fulfill requests for this binding.
-   *
-   * @throws UnsupportedOperationException when invoked on a {@link Binding} created via {@link
-   *     com.google.inject.spi.Elements#getElements}. This method is only supported on {@link
-   *     Binding}s returned from an injector.
-   */
-  Provider<T> getProvider();
+    /**
+     * Accepts a target visitor. Invokes the visitor method specific to this binding's target.
+     *
+     * @param visitor to call back on
+     * @since 2.0
+     */
+    <V> V acceptTargetVisitor(BindingTargetVisitor<? super T, V> visitor);
 
-  /**
-   * Accepts a target visitor. Invokes the visitor method specific to this binding's target.
-   *
-   * @param visitor to call back on
-   * @since 2.0
-   */
-  <V> V acceptTargetVisitor(BindingTargetVisitor<? super T, V> visitor);
-
-  /**
-   * Accepts a scoping visitor. Invokes the visitor method specific to this binding's scoping.
-   *
-   * @param visitor to call back on
-   * @since 2.0
-   */
-  <V> V acceptScopingVisitor(BindingScopingVisitor<V> visitor);
+    /**
+     * Accepts a scoping visitor. Invokes the visitor method specific to this binding's scoping.
+     *
+     * @param visitor to call back on
+     * @since 2.0
+     */
+    <V> V acceptScopingVisitor(BindingScopingVisitor<V> visitor);
 }

@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Binder;
 import com.google.inject.Binding;
 import com.google.inject.matcher.Matcher;
+
 import java.util.List;
 
 /**
@@ -29,45 +30,56 @@ import java.util.List;
  * @author sameb@google.com (Sam Berlin)
  * @since 4.0
  */
-public final class ProvisionListenerBinding implements Element {
+public final class ProvisionListenerBinding
+        implements Element
+{
+    private final Object source;
+    private final Matcher<? super Binding<?>> bindingMatcher;
+    private final List<ProvisionListener> listeners;
 
-  private final Object source;
-  private final Matcher<? super Binding<?>> bindingMatcher;
-  private final List<ProvisionListener> listeners;
+    ProvisionListenerBinding(
+            Object source,
+            Matcher<? super Binding<?>> bindingMatcher,
+            ProvisionListener[] listeners)
+    {
+        this.source = source;
+        this.bindingMatcher = bindingMatcher;
+        this.listeners = ImmutableList.copyOf(listeners);
+    }
 
-  ProvisionListenerBinding(
-      Object source, Matcher<? super Binding<?>> bindingMatcher, ProvisionListener[] listeners) {
-    this.source = source;
-    this.bindingMatcher = bindingMatcher;
-    this.listeners = ImmutableList.copyOf(listeners);
-  }
+    /**
+     * Returns the registered listeners.
+     */
+    public List<ProvisionListener> getListeners()
+    {
+        return listeners;
+    }
 
-  /** Returns the registered listeners. */
-  public List<ProvisionListener> getListeners() {
-    return listeners;
-  }
+    /**
+     * Returns the binding matcher which chooses which bindings the listener should be notified of.
+     */
+    public Matcher<? super Binding<?>> getBindingMatcher()
+    {
+        return bindingMatcher;
+    }
 
-  /**
-   * Returns the binding matcher which chooses which bindings the listener should be notified of.
-   */
-  public Matcher<? super Binding<?>> getBindingMatcher() {
-    return bindingMatcher;
-  }
+    @Override
+    public Object getSource()
+    {
+        return source;
+    }
 
-  @Override
-  public Object getSource() {
-    return source;
-  }
+    @Override
+    public <R> R acceptVisitor(ElementVisitor<R> visitor)
+    {
+        return visitor.visit(this);
+    }
 
-  @Override
-  public <R> R acceptVisitor(ElementVisitor<R> visitor) {
-    return visitor.visit(this);
-  }
-
-  @Override
-  public void applyTo(Binder binder) {
-    binder
-        .withSource(getSource())
-        .bindListener(bindingMatcher, listeners.toArray(ProvisionListener[]::new));
-  }
+    @Override
+    public void applyTo(Binder binder)
+    {
+        binder
+                .withSource(getSource())
+                .bindListener(bindingMatcher, listeners.toArray(ProvisionListener[]::new));
+    }
 }

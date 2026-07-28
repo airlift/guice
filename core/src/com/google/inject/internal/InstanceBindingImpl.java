@@ -16,10 +16,6 @@
 
 package com.google.inject.internal;
 
-import static com.google.inject.internal.GuiceInternal.GUICE_INTERNAL;
-import static com.google.inject.spi.Elements.withTrustedSource;
-
-import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Binder;
 import com.google.inject.Key;
@@ -28,94 +24,118 @@ import com.google.inject.spi.Dependency;
 import com.google.inject.spi.HasDependencies;
 import com.google.inject.spi.InjectionPoint;
 import com.google.inject.spi.InstanceBinding;
+
 import java.util.Objects;
 import java.util.Set;
 
-final class InstanceBindingImpl<T> extends BindingImpl<T> implements InstanceBinding<T> {
+import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.inject.internal.GuiceInternal.GUICE_INTERNAL;
+import static com.google.inject.spi.Elements.withTrustedSource;
 
-  final T instance;
-  final ImmutableSet<InjectionPoint> injectionPoints;
+final class InstanceBindingImpl<T>
+        extends BindingImpl<T>
+        implements InstanceBinding<T>
+{
+    final T instance;
+    final ImmutableSet<InjectionPoint> injectionPoints;
 
-  public InstanceBindingImpl(
-      InjectorImpl injector,
-      Key<T> key,
-      Object source,
-      InternalFactory<? extends T> internalFactory,
-      Set<InjectionPoint> injectionPoints,
-      T instance) {
-    super(injector, key, source, internalFactory, Scoping.EAGER_SINGLETON);
-    this.injectionPoints = ImmutableSet.copyOf(injectionPoints);
-    this.instance = instance;
-  }
-
-  public InstanceBindingImpl(
-      Object source, Key<T> key, Scoping scoping, Set<InjectionPoint> injectionPoints, T instance) {
-    super(source, key, scoping);
-    this.injectionPoints = ImmutableSet.copyOf(injectionPoints);
-    this.instance = instance;
-  }
-
-  @Override
-  public <V> V acceptTargetVisitor(BindingTargetVisitor<? super T, V> visitor) {
-    return visitor.visit(this);
-  }
-
-  @Override
-  public T getInstance() {
-    return instance;
-  }
-
-  @Override
-  public Set<InjectionPoint> getInjectionPoints() {
-    return injectionPoints;
-  }
-
-  @Override
-  public Set<Dependency<?>> getDependencies() {
-    return instance instanceof HasDependencies
-        ? ImmutableSet.copyOf(((HasDependencies) instance).getDependencies())
-        : Dependency.forInjectionPoints(injectionPoints);
-  }
-
-  @Override
-  public BindingImpl<T> withScoping(Scoping scoping) {
-    return new InstanceBindingImpl<T>(getSource(), getKey(), scoping, injectionPoints, instance);
-  }
-
-  @Override
-  public BindingImpl<T> withKey(Key<T> key) {
-    return new InstanceBindingImpl<T>(getSource(), key, getScoping(), injectionPoints, instance);
-  }
-
-  @Override
-  public void applyTo(Binder binder) {
-    // instance bindings aren't scoped
-    withTrustedSource(GUICE_INTERNAL, binder, getSource()).bind(getKey()).toInstance(instance);
-  }
-
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(InstanceBinding.class)
-        .add("key", getKey())
-        .add("source", getSource())
-        .add("instance", instance)
-        .toString();
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (obj instanceof InstanceBindingImpl) {
-      InstanceBindingImpl<?> o = (InstanceBindingImpl<?>) obj;
-      return getKey().equals(o.getKey())
-          && getScoping().equals(o.getScoping())
-          && Objects.equals(instance, o.instance);
-    } else {
-      return false;
+    public InstanceBindingImpl(
+            InjectorImpl injector,
+            Key<T> key,
+            Object source,
+            InternalFactory<? extends T> internalFactory,
+            Set<InjectionPoint> injectionPoints,
+            T instance)
+    {
+        super(injector, key, source, internalFactory, Scoping.EAGER_SINGLETON);
+        this.injectionPoints = ImmutableSet.copyOf(injectionPoints);
+        this.instance = instance;
     }
-  }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(getKey(), getScoping());
-  }
+    public InstanceBindingImpl(
+            Object source,
+            Key<T> key,
+            Scoping scoping,
+            Set<InjectionPoint> injectionPoints,
+            T instance)
+    {
+        super(source, key, scoping);
+        this.injectionPoints = ImmutableSet.copyOf(injectionPoints);
+        this.instance = instance;
+    }
+
+    @Override
+    public <V> V acceptTargetVisitor(BindingTargetVisitor<? super T, V> visitor)
+    {
+        return visitor.visit(this);
+    }
+
+    @Override
+    public T getInstance()
+    {
+        return instance;
+    }
+
+    @Override
+    public Set<InjectionPoint> getInjectionPoints()
+    {
+        return injectionPoints;
+    }
+
+    @Override
+    public Set<Dependency<?>> getDependencies()
+    {
+        return instance instanceof HasDependencies
+                ? ImmutableSet.copyOf(((HasDependencies) instance).getDependencies())
+                : Dependency.forInjectionPoints(injectionPoints);
+    }
+
+    @Override
+    public BindingImpl<T> withScoping(Scoping scoping)
+    {
+        return new InstanceBindingImpl<T>(getSource(), getKey(), scoping, injectionPoints, instance);
+    }
+
+    @Override
+    public BindingImpl<T> withKey(Key<T> key)
+    {
+        return new InstanceBindingImpl<T>(getSource(), key, getScoping(), injectionPoints, instance);
+    }
+
+    @Override
+    public void applyTo(Binder binder)
+    {
+        // instance bindings aren't scoped
+        withTrustedSource(GUICE_INTERNAL, binder, getSource()).bind(getKey()).toInstance(instance);
+    }
+
+    @Override
+    public String toString()
+    {
+        return toStringHelper(InstanceBinding.class)
+                .add("key", getKey())
+                .add("source", getSource())
+                .add("instance", instance)
+                .toString();
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (obj instanceof InstanceBindingImpl) {
+            InstanceBindingImpl<?> o = (InstanceBindingImpl<?>) obj;
+            return getKey().equals(o.getKey())
+                    && getScoping().equals(o.getScoping())
+                    && Objects.equals(instance, o.instance);
+        }
+        else {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(getKey(), getScoping());
+    }
 }

@@ -22,25 +22,30 @@ package com.google.inject.servlet;
  *
  * @author dhanji@gmail.com (Dhanji R. Prasanna)
  */
-interface UriPatternMatcher {
-  /**
-   * @param uri A "contextual" (i.e. relative) and "normalized" Request URI, *not* a complete one.
-   * @return Returns true if the uri matches the pattern.
-   */
-  boolean matches(String uri);
+interface UriPatternMatcher
+{
+    /**
+     * @param uri A "contextual" (i.e. relative) and "normalized" Request URI, *not* a complete one.
+     * @return Returns true if the uri matches the pattern.
+     */
+    boolean matches(String uri);
 
-  /**
-   * @param pattern The Path that this service pattern can match against.
-   * @return Returns a canonical servlet path from this pattern. For instance, if the pattern is
-   *     {@code /home/*} then the path extracted will be {@code /home}. Each pattern matcher
-   *     implementation must decide and publish what a canonical path represents.
-   *     <p>NOTE(user): This method returns null for the regex pattern matcher.
-   */
-  String extractPath(String pattern);
+    /**
+     * @param pattern The Path that this service pattern can match against.
+     * @return Returns a canonical servlet path from this pattern. For instance, if the pattern is
+     *         {@code /home/*} then the path extracted will be {@code /home}. Each pattern matcher
+     *         implementation must decide and publish what a canonical path represents.
+     *         <p>NOTE(user): This method returns null for the regex pattern matcher.
+     */
+    String extractPath(String pattern);
 
-  /** Returns the type of pattern this is. */
-  UriPatternType getPatternType();
+    /**
+     * Returns the type of pattern this is.
+     */
+    UriPatternType getPatternType();
 
-  /** Returns the original pattern that was registered. */
-  String getOriginalPattern();
+    /**
+     * Returns the original pattern that was registered.
+     */
+    String getOriginalPattern();
 }

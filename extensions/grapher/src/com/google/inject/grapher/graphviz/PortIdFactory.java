@@ -24,6 +24,7 @@ import java.lang.reflect.Member;
  *
  * @author phopkins@gmail.com (Pete Hopkins)
  */
-public interface PortIdFactory {
-  String getPortId(Member member);
+public interface PortIdFactory
+{
+    String getPortId(Member member);
 }

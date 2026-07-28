@@ -16,106 +16,111 @@
 
 package com.google.inject.servlet;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.inject.Binding;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.spi.BindingScopingVisitor;
-import java.io.IOException;
-import java.util.Enumeration;
-import java.util.Map;
 import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.junit.jupiter.api.Test;
+
+import java.io.IOException;
+import java.util.Enumeration;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Basic unit test for lifecycle of a ServletDefinition (wrapper).
  *
  * @author Dhanji R. Prasanna (dhanji@gmail com)
  */
-public class ServletDefinitionTest {
+public class ServletDefinitionTest
+{
+    @SuppressWarnings("unchecked") // Safe because mock will only ever return HttpServlet
+    @Test
+    public final void testServletInitAndConfig()
+            throws ServletException
+    {
+        Injector injector = mock(Injector.class);
+        Binding<HttpServlet> binding = mock(Binding.class);
 
-  @SuppressWarnings("unchecked") // Safe because mock will only ever return HttpServlet
-  @Test
-  public final void testServletInitAndConfig() throws ServletException {
-    Injector injector = mock(Injector.class);
-    Binding<HttpServlet> binding = mock(Binding.class);
+        when(binding.acceptScopingVisitor((BindingScopingVisitor<Boolean>) any())).thenReturn(true);
+        when(injector.getBinding(Key.get(HttpServlet.class))).thenReturn(binding);
+        final HttpServlet mockServlet = new HttpServlet() {};
+        when(injector.getInstance(Key.get(HttpServlet.class))).thenReturn(mockServlet);
 
-    when(binding.acceptScopingVisitor((BindingScopingVisitor<Boolean>) any())).thenReturn(true);
-    when(injector.getBinding(Key.get(HttpServlet.class))).thenReturn(binding);
-    final HttpServlet mockServlet = new HttpServlet() {};
-    when(injector.getInstance(Key.get(HttpServlet.class))).thenReturn(mockServlet);
+        // some init params
+        //noinspection SSBasedInspection
+        final Map<String, String> initParams =
+                new ImmutableMap.Builder<String, String>()
+                        .put("ahsd", "asdas24dok")
+                        .put("ahssd", "asdasd124ok")
+                        .buildOrThrow();
 
-    // some init params
-    //noinspection SSBasedInspection
-    final Map<String, String> initParams =
-        new ImmutableMap.Builder<String, String>()
-            .put("ahsd", "asdas24dok")
-            .put("ahssd", "asdasd124ok")
-            .buildOrThrow();
+        String pattern = "/*";
+        final ServletDefinition servletDefinition =
+                new ServletDefinition(
+                        Key.get(HttpServlet.class),
+                        UriPatternType.get(UriPatternType.SERVLET, pattern),
+                        initParams,
+                        null);
 
-    String pattern = "/*";
-    final ServletDefinition servletDefinition =
-        new ServletDefinition(
-            Key.get(HttpServlet.class),
-            UriPatternType.get(UriPatternType.SERVLET, pattern),
-            initParams,
-            null);
+        ServletContext servletContext = mock(ServletContext.class);
+        final String contextName = "thing__!@@44__SRV" + getClass();
+        when(servletContext.getServletContextName()).thenReturn(contextName);
 
-    ServletContext servletContext = mock(ServletContext.class);
-    final String contextName = "thing__!@@44__SRV" + getClass();
-    when(servletContext.getServletContextName()).thenReturn(contextName);
+        servletDefinition.init(servletContext, injector, Sets.<HttpServlet>newIdentityHashSet());
 
-    servletDefinition.init(servletContext, injector, Sets.<HttpServlet>newIdentityHashSet());
+        assertNotNull(mockServlet.getServletContext());
+        assertEquals(contextName, mockServlet.getServletContext().getServletContextName());
+        assertEquals(Key.get(HttpServlet.class).toString(), mockServlet.getServletName());
 
-    assertNotNull(mockServlet.getServletContext());
-    assertEquals(contextName, mockServlet.getServletContext().getServletContextName());
-    assertEquals(Key.get(HttpServlet.class).toString(), mockServlet.getServletName());
+        final ServletConfig servletConfig = mockServlet.getServletConfig();
+        final Enumeration<String> names = servletConfig.getInitParameterNames();
+        while (names.hasMoreElements()) {
+            String name = names.nextElement();
 
-    final ServletConfig servletConfig = mockServlet.getServletConfig();
-    final Enumeration<String> names = servletConfig.getInitParameterNames();
-    while (names.hasMoreElements()) {
-      String name = names.nextElement();
-
-      assertTrue(initParams.containsKey(name));
-      assertEquals(initParams.get(name), servletConfig.getInitParameter(name));
+            assertTrue(initParams.containsKey(name));
+            assertEquals(initParams.get(name), servletConfig.getInitParameter(name));
+        }
     }
-  }
 
-  @Test
-  public void testServiceWithContextPath() throws IOException, ServletException {
-    String pattern = "/*";
-    // some init params
-    Map<String, String> initParams =
-        new ImmutableMap.Builder<String, String>()
-            .put("ahsd", "asdas24dok")
-            .put("ahssd", "asdasd124ok")
-            .buildOrThrow();
+    @Test
+    public void testServiceWithContextPath()
+            throws IOException, ServletException
+    {
+        String pattern = "/*";
+        // some init params
+        Map<String, String> initParams =
+                new ImmutableMap.Builder<String, String>()
+                        .put("ahsd", "asdas24dok")
+                        .put("ahssd", "asdasd124ok")
+                        .buildOrThrow();
 
-    final ServletDefinition servletDefinition =
-        new ServletDefinition(
-            Key.get(HttpServlet.class),
-            UriPatternType.get(UriPatternType.SERVLET, pattern),
-            initParams,
-            null);
-    HttpServletResponse servletResponse = mock(HttpServletResponse.class);
-    HttpServletRequest servletRequest = mock(HttpServletRequest.class);
+        final ServletDefinition servletDefinition =
+                new ServletDefinition(
+                        Key.get(HttpServlet.class),
+                        UriPatternType.get(UriPatternType.SERVLET, pattern),
+                        initParams,
+                        null);
+        HttpServletResponse servletResponse = mock(HttpServletResponse.class);
+        HttpServletRequest servletRequest = mock(HttpServletRequest.class);
 
-    when(servletRequest.getContextPath()).thenReturn("/a_context_path");
-    when(servletRequest.getRequestURI()).thenReturn("/test.html");
+        when(servletRequest.getContextPath()).thenReturn("/a_context_path");
+        when(servletRequest.getRequestURI()).thenReturn("/test.html");
 
-    servletDefinition.service(servletRequest, servletResponse);
-  }
+        servletDefinition.service(servletRequest, servletResponse);
+    }
 }

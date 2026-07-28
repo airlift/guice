@@ -16,35 +16,43 @@
 
 package com.google.inject.servlet;
 
-import com.google.common.base.MoreObjects;
-import java.util.Map;
 import jakarta.servlet.http.HttpServlet;
+
+import java.util.Map;
+
+import static com.google.common.base.MoreObjects.toStringHelper;
 
 /**
  * Default implementation of InstanceServletBinding.
  *
  * @author sameb@google.com (Sam Berlin)
  */
-class InstanceServletBindingImpl extends AbstractServletModuleBinding<HttpServlet>
-    implements InstanceServletBinding {
+class InstanceServletBindingImpl
+        extends AbstractServletModuleBinding<HttpServlet>
+        implements InstanceServletBinding
+{
+    InstanceServletBindingImpl(
+            Map<String, String> initParams,
+            HttpServlet target,
+            UriPatternMatcher patternMatcher)
+    {
+        super(initParams, target, patternMatcher);
+    }
 
-  InstanceServletBindingImpl(
-      Map<String, String> initParams, HttpServlet target, UriPatternMatcher patternMatcher) {
-    super(initParams, target, patternMatcher);
-  }
+    @Override
+    public HttpServlet getServletInstance()
+    {
+        return getTarget();
+    }
 
-  @Override
-  public HttpServlet getServletInstance() {
-    return getTarget();
-  }
-
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(InstanceServletBinding.class)
-        .add("pattern", getPattern())
-        .add("initParams", getInitParams())
-        .add("uriPatternType", getUriPatternType())
-        .add("servletInstance", getServletInstance())
-        .toString();
-  }
+    @Override
+    public String toString()
+    {
+        return toStringHelper(InstanceServletBinding.class)
+                .add("pattern", getPattern())
+                .add("initParams", getInitParams())
+                .add("uriPatternType", getUriPatternType())
+                .add("servletInstance", getServletInstance())
+                .toString();
+    }
 }

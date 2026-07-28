@@ -1,9 +1,5 @@
 package com.google.inject.assistedinject.subpkg;
 
-import static com.google.common.collect.MoreCollectors.onlyElement;
-import static com.google.common.truth.Truth.assertThat;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
-
 import com.google.common.base.StandardSystemProperty;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -11,16 +7,21 @@ import com.google.inject.Injector;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
+import jakarta.inject.Inject;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
-import jakarta.inject.Inject;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+
+import static com.google.common.collect.MoreCollectors.onlyElement;
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Tests that run in a subpackage, to make sure tests aren't passing because they're run in the same
@@ -28,131 +29,162 @@ import org.junit.jupiter.api.Test;
  *
  * <p>See https://github.com/google/guice/issues/904
  */
-public final class SubpackageTestPrivateFallbackOnly {
-  private static final double JAVA_VERSION =
-      Double.parseDouble(StandardSystemProperty.JAVA_SPECIFICATION_VERSION.value());
+public final class SubpackageTestPrivateFallbackOnly
+{
+    private static final double JAVA_VERSION =
+            Double.parseDouble(StandardSystemProperty.JAVA_SPECIFICATION_VERSION.value());
 
-  private final Logger loggerToWatch = Logger.getLogger(AssistedInject.class.getName());
+    private final Logger loggerToWatch = Logger.getLogger(AssistedInject.class.getName());
 
-  private final List<LogRecord> logRecords = new ArrayList<>();
-  private final Handler fakeHandler =
-      new Handler() {
-        @Override
-        public void publish(LogRecord logRecord) {
-          logRecords.add(logRecord);
+    private final List<LogRecord> logRecords = new ArrayList<>();
+    private final Handler fakeHandler =
+            new Handler()
+            {
+                @Override
+                public void publish(LogRecord logRecord)
+                {
+                    logRecords.add(logRecord);
+                }
+
+                @Override
+                public void flush() {}
+
+                @Override
+                public void close() {}
+            };
+
+    @BeforeEach
+    public void setUp()
+            throws Exception
+    {
+        loggerToWatch.addHandler(fakeHandler);
+        setAllowPrivateLookupFallback(true);
+        setAllowMethodHandleWorkaround(true);
+    }
+
+    @AfterEach
+    public void tearDown()
+            throws Exception
+    {
+        loggerToWatch.removeHandler(fakeHandler);
+        setAllowPrivateLookupFallback(true);
+        setAllowMethodHandleWorkaround(true);
+    }
+
+    public abstract static class AbstractAssisted
+    {
+        interface Factory<O extends AbstractAssisted, I extends CharSequence>
+        {
+            O create(I string);
+        }
+    }
+
+    static class ConcreteAssisted
+            extends AbstractAssisted
+    {
+        @Inject
+        ConcreteAssisted(@SuppressWarnings("unused") @Assisted String string) {}
+    }
+
+    static class ConcreteAssistedWithOverride
+            extends AbstractAssisted
+    {
+        @AssistedInject
+        ConcreteAssistedWithOverride(@SuppressWarnings("unused") @Assisted String string) {}
+
+        @AssistedInject
+        ConcreteAssistedWithOverride(@SuppressWarnings("unused") @Assisted StringBuilder sb) {}
+
+        interface Factory
+                extends AbstractAssisted.Factory<ConcreteAssistedWithOverride, String>
+        {
+            @Override
+            ConcreteAssistedWithOverride create(String string);
         }
 
-        @Override
-        public void flush() {}
+        interface Factory2
+                extends AbstractAssisted.Factory<ConcreteAssistedWithOverride, String>
+        {
+            @Override
+            ConcreteAssistedWithOverride create(String string);
 
-        @Override
-        public void close() {}
-      };
-
-  @BeforeEach
-  public void setUp() throws Exception {
-    loggerToWatch.addHandler(fakeHandler);
-    setAllowPrivateLookupFallback(true);
-    setAllowMethodHandleWorkaround(true);
-  }
-
-  @AfterEach
-  public void tearDown() throws Exception {
-    loggerToWatch.removeHandler(fakeHandler);
-    setAllowPrivateLookupFallback(true);
-    setAllowMethodHandleWorkaround(true);
-  }
-
-  public abstract static class AbstractAssisted {
-    interface Factory<O extends AbstractAssisted, I extends CharSequence> {
-      O create(I string);
-    }
-  }
-
-  static class ConcreteAssisted extends AbstractAssisted {
-    @Inject
-    ConcreteAssisted(@SuppressWarnings("unused") @Assisted String string) {}
-  }
-
-  static class ConcreteAssistedWithOverride extends AbstractAssisted {
-    @AssistedInject
-    ConcreteAssistedWithOverride(@SuppressWarnings("unused") @Assisted String string) {}
-
-    @AssistedInject
-    ConcreteAssistedWithOverride(@SuppressWarnings("unused") @Assisted StringBuilder sb) {}
-
-    interface Factory extends AbstractAssisted.Factory<ConcreteAssistedWithOverride, String> {
-      @Override
-      ConcreteAssistedWithOverride create(String string);
+            ConcreteAssistedWithOverride create(StringBuilder sb);
+        }
     }
 
-    interface Factory2 extends AbstractAssisted.Factory<ConcreteAssistedWithOverride, String> {
-      @Override
-      ConcreteAssistedWithOverride create(String string);
+    static class ConcreteAssistedWithoutOverride
+            extends AbstractAssisted
+    {
+        @Inject
+        ConcreteAssistedWithoutOverride(@SuppressWarnings("unused") @Assisted String string) {}
 
-      ConcreteAssistedWithOverride create(StringBuilder sb);
+        interface Factory
+                extends AbstractAssisted.Factory<ConcreteAssistedWithoutOverride, String> {}
     }
-  }
 
-  static class ConcreteAssistedWithoutOverride extends AbstractAssisted {
-    @Inject
-    ConcreteAssistedWithoutOverride(@SuppressWarnings("unused") @Assisted String string) {}
+    public static class Public
+            extends AbstractAssisted
+    {
+        @AssistedInject
+        Public(@SuppressWarnings("unused") @Assisted String string) {}
 
-    interface Factory extends AbstractAssisted.Factory<ConcreteAssistedWithoutOverride, String> {}
-  }
+        @AssistedInject
+        Public(@SuppressWarnings("unused") @Assisted StringBuilder sb) {}
 
-  public static class Public extends AbstractAssisted {
-    @AssistedInject
-    Public(@SuppressWarnings("unused") @Assisted String string) {}
+        public interface Factory
+                extends AbstractAssisted.Factory<Public, String>
+        {
+            @Override
+            Public create(String string);
 
-    @AssistedInject
-    Public(@SuppressWarnings("unused") @Assisted StringBuilder sb) {}
-
-    public interface Factory extends AbstractAssisted.Factory<Public, String> {
-      @Override
-      Public create(String string);
-
-      Public create(StringBuilder sb);
+            Public create(StringBuilder sb);
+        }
     }
-  }
 
-  @Test
-  public void testPrivateFallbackOnly() throws Exception {
-    // Private fallback only works on JDKs below 17. On 17+ it's disabled.
-    assumeTrue(JAVA_VERSION < 17);
+    @Test
+    public void testPrivateFallbackOnly()
+            throws Exception
+    {
+        // Private fallback only works on JDKs below 17. On 17+ it's disabled.
+        assumeTrue(JAVA_VERSION < 17);
 
-    setAllowMethodHandleWorkaround(false);
+        setAllowMethodHandleWorkaround(false);
 
-    Injector injector =
-        Guice.createInjector(
-            new AbstractModule() {
-              @Override
-              protected void configure() {
-                install(
-                    new FactoryModuleBuilder().build(ConcreteAssistedWithOverride.Factory.class));
-              }
-            });
-    LogRecord record = logRecords.stream().collect(onlyElement());
-    assertThat(record.getMessage()).contains("Please pass a `MethodHandles.lookup()`");
+        Injector injector =
+                Guice.createInjector(
+                        new AbstractModule()
+                        {
+                            @Override
+                            protected void configure()
+                            {
+                                install(new FactoryModuleBuilder().build(ConcreteAssistedWithOverride.Factory.class));
+                            }
+                        });
+        LogRecord record = logRecords.stream().collect(onlyElement());
+        assertThat(record.getMessage()).contains("Please pass a `MethodHandles.lookup()`");
 
-    ConcreteAssistedWithOverride.Factory factory =
-        injector.getInstance(ConcreteAssistedWithOverride.Factory.class);
-    ConcreteAssistedWithOverride unused = factory.create("foo");
-    AbstractAssisted.Factory<ConcreteAssistedWithOverride, String> factoryAbstract = factory;
-    unused = factoryAbstract.create("foo");
-  }
+        ConcreteAssistedWithOverride.Factory factory =
+                injector.getInstance(ConcreteAssistedWithOverride.Factory.class);
+        ConcreteAssistedWithOverride unused = factory.create("foo");
+        AbstractAssisted.Factory<ConcreteAssistedWithOverride, String> factoryAbstract = factory;
+        unused = factoryAbstract.create("foo");
+    }
 
-  private static void setAllowPrivateLookupFallback(boolean allowed) throws Exception {
-    Class<?> factoryProvider2 = Class.forName("com.google.inject.assistedinject.FactoryProvider2");
-    Field field = factoryProvider2.getDeclaredField("allowPrivateLookupFallback");
-    field.setAccessible(true);
-    field.setBoolean(null, allowed);
-  }
+    private static void setAllowPrivateLookupFallback(boolean allowed)
+            throws Exception
+    {
+        Class<?> factoryProvider2 = Class.forName("com.google.inject.assistedinject.FactoryProvider2");
+        Field field = factoryProvider2.getDeclaredField("allowPrivateLookupFallback");
+        field.setAccessible(true);
+        field.setBoolean(null, allowed);
+    }
 
-  private static void setAllowMethodHandleWorkaround(boolean allowed) throws Exception {
-    Class<?> factoryProvider2 = Class.forName("com.google.inject.assistedinject.FactoryProvider2");
-    Field field = factoryProvider2.getDeclaredField("allowMethodHandleWorkaround");
-    field.setAccessible(true);
-    field.setBoolean(null, allowed);
-  }
+    private static void setAllowMethodHandleWorkaround(boolean allowed)
+            throws Exception
+    {
+        Class<?> factoryProvider2 = Class.forName("com.google.inject.assistedinject.FactoryProvider2");
+        Field field = factoryProvider2.getDeclaredField("allowMethodHandleWorkaround");
+        field.setAccessible(true);
+        field.setBoolean(null, allowed);
+    }
 }

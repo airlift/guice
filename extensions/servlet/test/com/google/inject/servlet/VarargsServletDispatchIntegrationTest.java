@@ -16,14 +16,10 @@
 
 package com.google.inject.servlet;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Singleton;
-import java.io.IOException;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.FilterConfig;
@@ -33,10 +29,15 @@ import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.io.IOException;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests the FilterPipeline that dispatches to guice-managed servlets, is a full integration test,
@@ -44,195 +45,226 @@ import org.junit.jupiter.api.Test;
  *
  * @author Dhanji R. Prasanna (dhanji gmail com)
  */
-public class VarargsServletDispatchIntegrationTest {
-  private static int inits, services, destroys, doFilters;
+public class VarargsServletDispatchIntegrationTest
+{
+    private static int inits;
+    private static int services;
+    private static int destroys;
+    private static int doFilters;
 
-  @BeforeEach
-  public void setUp() {
-    inits = 0;
-    services = 0;
-    destroys = 0;
-    doFilters = 0;
+    @BeforeEach
+    public void setUp()
+    {
+        inits = 0;
+        services = 0;
+        destroys = 0;
+        doFilters = 0;
 
-    GuiceFilter.reset();
-  }
-
-  @Test
-  public final void testDispatchRequestToManagedPipelineServlets()
-      throws ServletException, IOException {
-    final Injector injector =
-        Guice.createInjector(
-            new ServletModule() {
-
-              @Override
-              protected void configureServlets() {
-                serve("/*", "/index.html").with(TestServlet.class);
-
-                // These servets should never fire... (ordering test)
-                serve("*.html", "/o/*", "/index/*", "*.jsp").with(Key.get(NeverServlet.class));
-              }
-            });
-
-    final FilterPipeline pipeline = injector.getInstance(FilterPipeline.class);
-
-    pipeline.initPipeline(null);
-
-    // create ourselves a mock request with test URI
-    HttpServletRequest requestMock = mock(HttpServletRequest.class);
-
-    when(requestMock.getRequestURI()).thenReturn("/index.html");
-    when(requestMock.getContextPath()).thenReturn("");
-
-    // dispatch request
-
-    pipeline.dispatch(requestMock, null, mock(FilterChain.class));
-    pipeline.destroyPipeline();
-
-    assertTrue(inits == 2 && services == 1 && destroys == 2, "lifecycle states did not fire correct number of times-- inits: "
-            + inits
-            + "; dos: "
-            + services
-            + "; destroys: "
-            + destroys);
-  }
-
-  @Test
-  public final void testVarargsSkipDispatchRequestToManagedPipelineServlets()
-      throws ServletException, IOException {
-    final Injector injector =
-        Guice.createInjector(
-            new ServletModule() {
-
-              @Override
-              protected void configureServlets() {
-                serve("/notindex", "/&*", "/index.html").with(TestServlet.class);
-
-                // These servets should never fire... (ordering test)
-                serve("*.html", "/*", "/index/*", "*.jsp").with(Key.get(NeverServlet.class));
-              }
-            });
-
-    final FilterPipeline pipeline = injector.getInstance(FilterPipeline.class);
-
-    pipeline.initPipeline(null);
-
-    // create ourselves a mock request with test URI
-    HttpServletRequest requestMock = mock(HttpServletRequest.class);
-
-    when(requestMock.getRequestURI()).thenReturn("/index.html");
-    when(requestMock.getContextPath()).thenReturn("");
-
-    // dispatch request
-
-    pipeline.dispatch(requestMock, null, mock(FilterChain.class));
-    pipeline.destroyPipeline();
-
-    assertTrue(inits == 2 && services == 1 && destroys == 2, "lifecycle states did not fire correct number of times-- inits: "
-            + inits
-            + "; dos: "
-            + services
-            + "; destroys: "
-            + destroys);
-  }
-
-  @Test
-  public final void testDispatchRequestToManagedPipelineWithFilter()
-      throws ServletException, IOException {
-    final Injector injector =
-        Guice.createInjector(
-            new ServletModule() {
-
-              @Override
-              protected void configureServlets() {
-                filter("/*").through(TestFilter.class);
-
-                serve("/*").with(TestServlet.class);
-
-                // These servets should never fire...
-                serve("*.html", "/y/*", "/index/*", "*.jsp").with(Key.get(NeverServlet.class));
-              }
-            });
-
-    final FilterPipeline pipeline = injector.getInstance(FilterPipeline.class);
-
-    pipeline.initPipeline(null);
-
-    // create ourselves a mock request with test URI
-    HttpServletRequest requestMock = mock(HttpServletRequest.class);
-
-    when(requestMock.getRequestURI()).thenReturn("/index.html");
-    when(requestMock.getContextPath()).thenReturn("");
-
-    // dispatch request
-
-    pipeline.dispatch(requestMock, null, mock(FilterChain.class));
-
-    pipeline.destroyPipeline();
-
-    assertTrue(inits == 3 && services == 1 && destroys == 3 && doFilters == 1, "lifecycle states did not fire correct number of times-- inits: "
-            + inits
-            + "; dos: "
-            + services
-            + "; destroys: "
-            + destroys);
-  }
-
-  @Singleton
-  public static class TestServlet extends HttpServlet {
-    @Override
-    public void init(ServletConfig filterConfig) throws ServletException {
-      inits++;
+        GuiceFilter.reset();
     }
 
-    @Override
-    public void service(ServletRequest servletRequest, ServletResponse servletResponse)
-        throws IOException, ServletException {
-      services++;
+    @Test
+    public final void testDispatchRequestToManagedPipelineServlets()
+            throws ServletException, IOException
+    {
+        final Injector injector =
+                Guice.createInjector(
+                        new ServletModule()
+                        {
+                            @Override
+                            protected void configureServlets()
+                            {
+                                serve("/*", "/index.html").with(TestServlet.class);
+
+                                // These servets should never fire... (ordering test)
+                                serve("*.html", "/o/*", "/index/*", "*.jsp").with(Key.get(NeverServlet.class));
+                            }
+                        });
+
+        final FilterPipeline pipeline = injector.getInstance(FilterPipeline.class);
+
+        pipeline.initPipeline(null);
+
+        // create ourselves a mock request with test URI
+        HttpServletRequest requestMock = mock(HttpServletRequest.class);
+
+        when(requestMock.getRequestURI()).thenReturn("/index.html");
+        when(requestMock.getContextPath()).thenReturn("");
+
+        // dispatch request
+
+        pipeline.dispatch(requestMock, null, mock(FilterChain.class));
+        pipeline.destroyPipeline();
+
+        assertTrue(inits == 2 && services == 1 && destroys == 2, "lifecycle states did not fire correct number of times-- inits: "
+                + inits
+                + "; dos: "
+                + services
+                + "; destroys: "
+                + destroys);
     }
 
-    @Override
-    public void destroy() {
-      destroys++;
-    }
-  }
+    @Test
+    public final void testVarargsSkipDispatchRequestToManagedPipelineServlets()
+            throws ServletException, IOException
+    {
+        final Injector injector =
+                Guice.createInjector(
+                        new ServletModule()
+                        {
+                            @Override
+                            protected void configureServlets()
+                            {
+                                serve("/notindex", "/&*", "/index.html").with(TestServlet.class);
 
-  @Singleton
-  public static class NeverServlet extends HttpServlet {
-    @Override
-    public void init(ServletConfig filterConfig) throws ServletException {
-      inits++;
+                                // These servets should never fire... (ordering test)
+                                serve("*.html", "/*", "/index/*", "*.jsp").with(Key.get(NeverServlet.class));
+                            }
+                        });
+
+        final FilterPipeline pipeline = injector.getInstance(FilterPipeline.class);
+
+        pipeline.initPipeline(null);
+
+        // create ourselves a mock request with test URI
+        HttpServletRequest requestMock = mock(HttpServletRequest.class);
+
+        when(requestMock.getRequestURI()).thenReturn("/index.html");
+        when(requestMock.getContextPath()).thenReturn("");
+
+        // dispatch request
+
+        pipeline.dispatch(requestMock, null, mock(FilterChain.class));
+        pipeline.destroyPipeline();
+
+        assertTrue(inits == 2 && services == 1 && destroys == 2, "lifecycle states did not fire correct number of times-- inits: "
+                + inits
+                + "; dos: "
+                + services
+                + "; destroys: "
+                + destroys);
     }
 
-    @Override
-    public void service(ServletRequest servletRequest, ServletResponse servletResponse)
-        throws IOException, ServletException {
-      fail("NeverServlet was fired, when it should not have been.");
+    @Test
+    public final void testDispatchRequestToManagedPipelineWithFilter()
+            throws ServletException, IOException
+    {
+        final Injector injector =
+                Guice.createInjector(
+                        new ServletModule()
+                        {
+                            @Override
+                            protected void configureServlets()
+                            {
+                                filter("/*").through(TestFilter.class);
+
+                                serve("/*").with(TestServlet.class);
+
+                                // These servets should never fire...
+                                serve("*.html", "/y/*", "/index/*", "*.jsp").with(Key.get(NeverServlet.class));
+                            }
+                        });
+
+        final FilterPipeline pipeline = injector.getInstance(FilterPipeline.class);
+
+        pipeline.initPipeline(null);
+
+        // create ourselves a mock request with test URI
+        HttpServletRequest requestMock = mock(HttpServletRequest.class);
+
+        when(requestMock.getRequestURI()).thenReturn("/index.html");
+        when(requestMock.getContextPath()).thenReturn("");
+
+        // dispatch request
+
+        pipeline.dispatch(requestMock, null, mock(FilterChain.class));
+
+        pipeline.destroyPipeline();
+
+        assertTrue(inits == 3 && services == 1 && destroys == 3 && doFilters == 1, "lifecycle states did not fire correct number of times-- inits: "
+                + inits
+                + "; dos: "
+                + services
+                + "; destroys: "
+                + destroys);
     }
 
-    @Override
-    public void destroy() {
-      destroys++;
-    }
-  }
+    @Singleton
+    public static class TestServlet
+            extends HttpServlet
+    {
+        @Override
+        public void init(ServletConfig filterConfig)
+                throws ServletException
+        {
+            inits++;
+        }
 
-  @Singleton
-  public static class TestFilter implements Filter {
-    @Override
-    public void init(FilterConfig filterConfig) throws ServletException {
-      inits++;
+        @Override
+        public void service(ServletRequest servletRequest, ServletResponse servletResponse)
+                throws IOException, ServletException
+        {
+            services++;
+        }
+
+        @Override
+        public void destroy()
+        {
+            destroys++;
+        }
     }
 
-    @Override
-    public void doFilter(
-        ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
-        throws IOException, ServletException {
-      doFilters++;
-      filterChain.doFilter(servletRequest, servletResponse);
+    @Singleton
+    public static class NeverServlet
+            extends HttpServlet
+    {
+        @Override
+        public void init(ServletConfig filterConfig)
+                throws ServletException
+        {
+            inits++;
+        }
+
+        @Override
+        public void service(ServletRequest servletRequest, ServletResponse servletResponse)
+                throws IOException, ServletException
+        {
+            fail("NeverServlet was fired, when it should not have been.");
+        }
+
+        @Override
+        public void destroy()
+        {
+            destroys++;
+        }
     }
 
-    @Override
-    public void destroy() {
-      destroys++;
+    @Singleton
+    public static class TestFilter
+            implements Filter
+    {
+        @Override
+        public void init(FilterConfig filterConfig)
+                throws ServletException
+        {
+            inits++;
+        }
+
+        @Override
+        public void doFilter(
+                ServletRequest servletRequest,
+                ServletResponse servletResponse,
+                FilterChain filterChain)
+                throws IOException, ServletException
+        {
+            doFilters++;
+            filterChain.doFilter(servletRequest, servletResponse);
+        }
+
+        @Override
+        public void destroy()
+        {
+            destroys++;
+        }
     }
-  }
 }

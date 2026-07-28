@@ -16,7 +16,8 @@
 
 package com.google.inject.internal;
 
-import static com.google.inject.internal.BytecodeGen.ENHANCER_BY_GUICE_MARKER;
+import org.aopalliance.intercept.MethodInterceptor;
+import org.aopalliance.intercept.MethodInvocation;
 
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.InvocationHandler;
@@ -24,8 +25,8 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
-import org.aopalliance.intercept.MethodInterceptor;
-import org.aopalliance.intercept.MethodInvocation;
+
+import static com.google.inject.internal.BytecodeGen.ENHANCER_BY_GUICE_MARKER;
 
 /**
  * Intercepts a method with a stack of interceptors.
@@ -34,90 +35,105 @@ import org.aopalliance.intercept.MethodInvocation;
  *
  * @author crazybob@google.com (Bob Lee)
  */
-final class InterceptorStackCallback implements InvocationHandler {
-  private static final String GUICE_INTERNAL_AOP_PACKAGE = "com.google.inject.internal.aop";
+final class InterceptorStackCallback
+        implements InvocationHandler
+{
+    private static final String GUICE_INTERNAL_AOP_PACKAGE = "com.google.inject.internal.aop";
 
-  final Method method;
-  final MethodInterceptor[] interceptors;
-  final BiFunction<Object, Object[], Object> superInvoker;
+    final Method method;
+    final MethodInterceptor[] interceptors;
+    final BiFunction<Object, Object[], Object> superInvoker;
 
-  public InterceptorStackCallback(
-      Method method,
-      List<MethodInterceptor> interceptors,
-      BiFunction<Object, Object[], Object> superInvoker) {
-    this.method = method;
-    this.interceptors = interceptors.toArray(MethodInterceptor[]::new);
-    this.superInvoker = superInvoker;
-  }
-
-  @Override
-  public Object invoke(Object proxy, Method unused, Object[] arguments) throws Throwable {
-    return new InterceptedMethodInvocation(proxy, arguments, 0).proceed();
-  }
-
-  private class InterceptedMethodInvocation implements MethodInvocation {
-
-    final Object proxy;
-    final Object[] arguments;
-    final int interceptorIndex;
-
-    public InterceptedMethodInvocation(Object proxy, Object[] arguments, int interceptorIndex) {
-      this.proxy = proxy;
-      this.arguments = arguments;
-      this.interceptorIndex = interceptorIndex;
+    public InterceptorStackCallback(
+            Method method,
+            List<MethodInterceptor> interceptors,
+            BiFunction<Object, Object[], Object> superInvoker)
+    {
+        this.method = method;
+        this.interceptors = interceptors.toArray(MethodInterceptor[]::new);
+        this.superInvoker = superInvoker;
     }
 
     @Override
-    public Object proceed() throws Throwable {
-      try {
-        return interceptorIndex == interceptors.length
-            ? superInvoker.apply(proxy, arguments)
-            : interceptors[interceptorIndex].invoke(
-                new InterceptedMethodInvocation(proxy, arguments, interceptorIndex + 1));
-      } catch (Throwable t) {
-        pruneStacktrace(t);
-        throw t;
-      }
+    public Object invoke(Object proxy, Method unused, Object[] arguments)
+            throws Throwable
+    {
+        return new InterceptedMethodInvocation(proxy, arguments, 0).proceed();
     }
 
-    @Override
-    public Method getMethod() {
-      return method;
-    }
+    private class InterceptedMethodInvocation
+            implements MethodInvocation
+    {
+        final Object proxy;
+        final Object[] arguments;
+        final int interceptorIndex;
 
-    @Override
-    public Object[] getArguments() {
-      return arguments;
-    }
-
-    @Override
-    public Object getThis() {
-      return proxy;
-    }
-
-    @Override
-    public AccessibleObject getStaticPart() {
-      return getMethod();
-    }
-  }
-
-  /**
-   * Removes stacktrace elements related to AOP internal mechanics from the throwable's stack trace
-   * and any causes it may have.
-   */
-  private void pruneStacktrace(Throwable throwable) {
-    for (Throwable t = throwable; t != null; t = t.getCause()) {
-      StackTraceElement[] stackTrace = t.getStackTrace();
-      List<StackTraceElement> pruned = new ArrayList<>();
-      for (StackTraceElement element : stackTrace) {
-        String className = element.getClassName();
-        if (!className.startsWith(InterceptorStackCallback.class.getName())
-            && !className.startsWith(GUICE_INTERNAL_AOP_PACKAGE)
-            && !className.contains(ENHANCER_BY_GUICE_MARKER)) {
-          pruned.add(element);
+        public InterceptedMethodInvocation(Object proxy, Object[] arguments, int interceptorIndex)
+        {
+            this.proxy = proxy;
+            this.arguments = arguments;
+            this.interceptorIndex = interceptorIndex;
         }
-      }
-      t.setStackTrace(pruned.toArray(StackTraceElement[]::new));
+
+        @Override
+        public Object proceed()
+                throws Throwable
+        {
+            try {
+                return interceptorIndex == interceptors.length
+                        ? superInvoker.apply(proxy, arguments)
+                        : interceptors[interceptorIndex].invoke(
+                        new InterceptedMethodInvocation(proxy, arguments, interceptorIndex + 1));
+            }
+            catch (Throwable t) {
+                pruneStacktrace(t);
+                throw t;
+            }
+        }
+
+        @Override
+        public Method getMethod()
+        {
+            return method;
+        }
+
+        @Override
+        public Object[] getArguments()
+        {
+            return arguments;
+        }
+
+        @Override
+        public Object getThis()
+        {
+            return proxy;
+        }
+
+        @Override
+        public AccessibleObject getStaticPart()
+        {
+            return getMethod();
+        }
     }
-  }
+
+    /**
+     * Removes stacktrace elements related to AOP internal mechanics from the throwable's stack trace
+     * and any causes it may have.
+     */
+    private void pruneStacktrace(Throwable throwable)
+    {
+        for (Throwable t = throwable; t != null; t = t.getCause()) {
+            StackTraceElement[] stackTrace = t.getStackTrace();
+            List<StackTraceElement> pruned = new ArrayList<>();
+            for (StackTraceElement element : stackTrace) {
+                String className = element.getClassName();
+                if (!className.startsWith(InterceptorStackCallback.class.getName())
+                        && !className.startsWith(GUICE_INTERNAL_AOP_PACKAGE)
+                        && !className.contains(ENHANCER_BY_GUICE_MARKER)) {
+                    pruned.add(element);
+                }
+            }
+            t.setStackTrace(pruned.toArray(StackTraceElement[]::new));
+        }
+    }
 }

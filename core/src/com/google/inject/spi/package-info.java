@@ -14,5 +14,7 @@
  * limitations under the License.
  */
 
-/** Guice service provider interface */
+/**
+ * Guice service provider interface
+ */
 package com.google.inject.spi;

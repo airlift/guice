@@ -18,11 +18,12 @@ package com.google.inject.servlet;
 import com.google.inject.Binder;
 import com.google.inject.Key;
 import com.google.inject.internal.UniqueAnnotations;
+import jakarta.servlet.Filter;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import jakarta.servlet.Filter;
 
 /**
  * Builds the guice module that binds configured filters, with their wrapper FilterDefinitions. Is
@@ -30,90 +31,106 @@ import jakarta.servlet.Filter;
  *
  * @author dhanji@gmail.com (Dhanji R. Prasanna)
  */
-class FiltersModuleBuilder {
+class FiltersModuleBuilder
+{
+    private final Binder binder;
 
-  private final Binder binder;
-
-  public FiltersModuleBuilder(Binder binder) {
-    this.binder = binder;
-  }
-
-  public ServletModule.FilterKeyBindingBuilder filter(List<String> patterns) {
-    return new FilterKeyBindingBuilderImpl(parsePatterns(UriPatternType.SERVLET, patterns));
-  }
-
-  public ServletModule.FilterKeyBindingBuilder filterRegex(List<String> regexes) {
-    return new FilterKeyBindingBuilderImpl(parsePatterns(UriPatternType.REGEX, regexes));
-  }
-
-  private List<UriPatternMatcher> parsePatterns(UriPatternType type, List<String> patterns) {
-    List<UriPatternMatcher> patternMatchers = new ArrayList<>();
-    for (String pattern : patterns) {
-      UriPatternMatcher matcher = null;
-      try {
-        matcher = UriPatternType.get(type, pattern);
-      } catch (IllegalArgumentException iae) {
-        binder
-            .skipSources(ServletModule.class, FiltersModuleBuilder.class)
-            .addError("%s", iae.getMessage());
-      }
-      if (matcher != null) {
-        patternMatchers.add(matcher);
-      }
-    }
-    return patternMatchers;
-  }
-
-  //non-static inner class so it can access state of enclosing module class
-  class FilterKeyBindingBuilderImpl implements ServletModule.FilterKeyBindingBuilder {
-    private final List<UriPatternMatcher> uriPatterns;
-
-    private FilterKeyBindingBuilderImpl(List<UriPatternMatcher> uriPatterns) {
-      this.uriPatterns = uriPatterns;
+    public FiltersModuleBuilder(Binder binder)
+    {
+        this.binder = binder;
     }
 
-    @Override
-    public void through(Class<? extends Filter> filterKey) {
-      through(Key.get(filterKey));
+    public ServletModule.FilterKeyBindingBuilder filter(List<String> patterns)
+    {
+        return new FilterKeyBindingBuilderImpl(parsePatterns(UriPatternType.SERVLET, patterns));
     }
 
-    @Override
-    public void through(Key<? extends Filter> filterKey) {
-      through(filterKey, new HashMap<String, String>());
+    public ServletModule.FilterKeyBindingBuilder filterRegex(List<String> regexes)
+    {
+        return new FilterKeyBindingBuilderImpl(parsePatterns(UriPatternType.REGEX, regexes));
     }
 
-    @Override
-    public void through(Filter filter) {
-      through(filter, new HashMap<String, String>());
+    private List<UriPatternMatcher> parsePatterns(UriPatternType type, List<String> patterns)
+    {
+        List<UriPatternMatcher> patternMatchers = new ArrayList<>();
+        for (String pattern : patterns) {
+            UriPatternMatcher matcher = null;
+            try {
+                matcher = UriPatternType.get(type, pattern);
+            }
+            catch (IllegalArgumentException iae) {
+                binder
+                        .skipSources(ServletModule.class, FiltersModuleBuilder.class)
+                        .addError("%s", iae.getMessage());
+            }
+            if (matcher != null) {
+                patternMatchers.add(matcher);
+            }
+        }
+        return patternMatchers;
     }
 
-    @Override
-    public void through(Class<? extends Filter> filterKey, Map<String, String> initParams) {
+    // non-static inner class so it can access state of enclosing module class
+    class FilterKeyBindingBuilderImpl
+            implements ServletModule.FilterKeyBindingBuilder
+    {
+        private final List<UriPatternMatcher> uriPatterns;
 
-      // Careful you don't accidentally make this method recursive, thank you IntelliJ IDEA!
-      through(Key.get(filterKey), initParams);
-    }
+        private FilterKeyBindingBuilderImpl(List<UriPatternMatcher> uriPatterns)
+        {
+            this.uriPatterns = uriPatterns;
+        }
 
-    @Override
-    public void through(Key<? extends Filter> filterKey, Map<String, String> initParams) {
-      through(filterKey, initParams, null);
-    }
+        @Override
+        public void through(Class<? extends Filter> filterKey)
+        {
+            through(Key.get(filterKey));
+        }
 
-    private void through(
-        Key<? extends Filter> filterKey, Map<String, String> initParams, Filter filterInstance) {
-      for (UriPatternMatcher pattern : uriPatterns) {
-        binder
-            .bind(FilterDefinition.class)
-            .annotatedWith(UniqueAnnotations.create())
-            .toProvider(new FilterDefinition(filterKey, pattern, initParams, filterInstance));
-      }
-    }
+        @Override
+        public void through(Key<? extends Filter> filterKey)
+        {
+            through(filterKey, new HashMap<String, String>());
+        }
 
-    @Override
-    public void through(Filter filter, Map<String, String> initParams) {
-      Key<Filter> filterKey = Key.get(Filter.class, UniqueAnnotations.create());
-      binder.bind(filterKey).toInstance(filter);
-      through(filterKey, initParams, filter);
+        @Override
+        public void through(Filter filter)
+        {
+            through(filter, new HashMap<String, String>());
+        }
+
+        @Override
+        public void through(Class<? extends Filter> filterKey, Map<String, String> initParams)
+        {
+            // Careful you don't accidentally make this method recursive, thank you IntelliJ IDEA!
+            through(Key.get(filterKey), initParams);
+        }
+
+        @Override
+        public void through(Key<? extends Filter> filterKey, Map<String, String> initParams)
+        {
+            through(filterKey, initParams, null);
+        }
+
+        private void through(
+                Key<? extends Filter> filterKey,
+                Map<String, String> initParams,
+                Filter filterInstance)
+        {
+            for (UriPatternMatcher pattern : uriPatterns) {
+                binder
+                        .bind(FilterDefinition.class)
+                        .annotatedWith(UniqueAnnotations.create())
+                        .toProvider(new FilterDefinition(filterKey, pattern, initParams, filterInstance));
+            }
+        }
+
+        @Override
+        public void through(Filter filter, Map<String, String> initParams)
+        {
+            Key<Filter> filterKey = Key.get(Filter.class, UniqueAnnotations.create());
+            binder.bind(filterKey).toInstance(filter);
+            through(filterKey, initParams, filter);
+        }
     }
-  }
 }

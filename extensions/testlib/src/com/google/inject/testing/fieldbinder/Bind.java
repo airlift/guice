@@ -16,12 +16,13 @@
 
 package com.google.inject.testing.fieldbinder;
 
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
 import com.google.errorprone.annotations.Keep;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Annotation used by {@link BoundFieldModule} to indicate that a field should be bound to its value
@@ -40,19 +41,20 @@ import java.lang.annotation.Target;
 @Retention(RUNTIME)
 @Target({FIELD})
 @Keep
-public @interface Bind {
-  /**
-   * If specified, {@link BoundFieldModule} will bind the annotated field's value to this type,
-   * rather than to the field's actual type.
-   */
-  Class<?> to() default Bind.class;
+public @interface Bind
+{
+    /**
+     * If specified, {@link BoundFieldModule} will bind the annotated field's value to this type,
+     * rather than to the field's actual type.
+     */
+    Class<?> to() default Bind.class;
 
-  /**
-   * If true, {@link BoundFieldModule} will delay reading the field until injection time rather than
-   * eagerly reading it at configure time.
-   *
-   * <p>When used with Provider valued fields, the provider will be read from the field and {@code
-   * .get()} will be called for each provision. This may be useful for testing provision failures.
-   */
-  boolean lazy() default false;
+    /**
+     * If true, {@link BoundFieldModule} will delay reading the field until injection time rather than
+     * eagerly reading it at configure time.
+     *
+     * <p>When used with Provider valued fields, the provider will be read from the field and {@code
+     * .get()} will be called for each provision. This may be useful for testing provision failures.
+     */
+    boolean lazy() default false;
 }

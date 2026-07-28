@@ -16,47 +16,54 @@
 
 package com.google.inject.internal;
 
-import static java.util.Objects.requireNonNull;
-
-import com.google.common.base.Preconditions;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-final class DelegatingInvocationHandler implements InvocationHandler {
-  private static final Object UNINITIALIZED_PROXY = new Object();
-  private volatile Object delegate = UNINITIALIZED_PROXY;
+import static com.google.common.base.Preconditions.checkState;
+import static java.util.Objects.requireNonNull;
 
-  @Override
-  public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-    // checking volatile field for synchronization
-    final Object delegate = this.delegate;
-    Preconditions.checkState(
-        delegate != UNINITIALIZED_PROXY,
-        "This is a proxy used to support"
-            + " circular references. The object we're"
-            + " proxying is not constructed yet. Please wait until after"
-            + " injection has completed to use this object.");
-      requireNonNull(
-          delegate,
-          "This is a proxy used to support"
-              + " circular references. The object we're "
-              + " proxying is initialized to null."
-              + " No methods can be called.");
+final class DelegatingInvocationHandler
+        implements InvocationHandler
+{
+    private static final Object UNINITIALIZED_PROXY = new Object();
+    private volatile Object delegate = UNINITIALIZED_PROXY;
 
-    try {
-      // TODO: method.setAccessible(true); ?
-      // this would fix visibility errors when we proxy a
-      // non-public interface.
-      return method.invoke(delegate, args);
-    } catch (IllegalAccessException | IllegalArgumentException e) {
-      throw new RuntimeException(e);
-    } catch (InvocationTargetException e) {
-      throw e.getTargetException();
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args)
+            throws Throwable
+    {
+        // checking volatile field for synchronization
+        final Object delegate = this.delegate;
+        checkState(
+                delegate != UNINITIALIZED_PROXY,
+                "This is a proxy used to support"
+                        + " circular references. The object we're"
+                        + " proxying is not constructed yet. Please wait until after"
+                        + " injection has completed to use this object.");
+        requireNonNull(
+                delegate,
+                "This is a proxy used to support"
+                        + " circular references. The object we're "
+                        + " proxying is initialized to null."
+                        + " No methods can be called.");
+
+        try {
+            // TODO: method.setAccessible(true); ?
+            // this would fix visibility errors when we proxy a
+            // non-public interface.
+            return method.invoke(delegate, args);
+        }
+        catch (IllegalAccessException | IllegalArgumentException e) {
+            throw new RuntimeException(e);
+        }
+        catch (InvocationTargetException e) {
+            throw e.getTargetException();
+        }
     }
-  }
 
-  void setDelegate(Object delegate) {
-    this.delegate = delegate;
-  }
+    void setDelegate(Object delegate)
+    {
+        this.delegate = delegate;
+    }
 }

@@ -23,11 +23,15 @@ import com.google.inject.spi.Message;
  *
  * @author crazybob@google.com (Bob Lee)
  */
-interface ErrorHandler {
+interface ErrorHandler
+{
+    /**
+     * Handles an error.
+     */
+    void handle(Object source, Errors errors);
 
-  /** Handles an error. */
-  void handle(Object source, Errors errors);
-
-  /** Handles a user-reported error. */
-  void handle(Message message);
+    /**
+     * Handles a user-reported error.
+     */
+    void handle(Message message);
 }

@@ -24,21 +24,25 @@ import com.google.inject.spi.TypeListenerBinding;
  *
  * @author jessewilson@google.com (Jesse Wilson)
  */
-final class ListenerBindingProcessor extends AbstractProcessor {
+final class ListenerBindingProcessor
+        extends AbstractProcessor
+{
+    ListenerBindingProcessor(Errors errors)
+    {
+        super(errors);
+    }
 
-  ListenerBindingProcessor(Errors errors) {
-    super(errors);
-  }
+    @Override
+    public Boolean visit(TypeListenerBinding binding)
+    {
+        injector.getBindingData().addTypeListener(binding);
+        return true;
+    }
 
-  @Override
-  public Boolean visit(TypeListenerBinding binding) {
-    injector.getBindingData().addTypeListener(binding);
-    return true;
-  }
-
-  @Override
-  public Boolean visit(ProvisionListenerBinding binding) {
-    injector.getBindingData().addProvisionListener(binding);
-    return true;
-  }
+    @Override
+    public Boolean visit(ProvisionListenerBinding binding)
+    {
+        injector.getBindingData().addProvisionListener(binding);
+        return true;
+    }
 }

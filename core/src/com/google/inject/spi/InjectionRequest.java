@@ -16,14 +16,14 @@
 
 package com.google.inject.spi;
 
-
-import static java.util.Objects.requireNonNull;
-
 import com.google.inject.Binder;
 import com.google.inject.ConfigurationException;
 import com.google.inject.TypeLiteral;
+
 import java.util.Objects;
 import java.util.Set;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A request to inject the instance fields and methods of an instance. Requests are created
@@ -36,71 +36,82 @@ import java.util.Set;
  * @author mikeward@google.com (Mike Ward)
  * @since 2.0
  */
-public final class InjectionRequest<T> implements Element {
+public final class InjectionRequest<T>
+        implements Element
+{
+    private final Object source;
+    private final TypeLiteral<T> type;
+    private final T instance;
 
-  private final Object source;
-  private final TypeLiteral<T> type;
-  private final T instance;
+    public InjectionRequest(Object source, TypeLiteral<T> type, T instance)
+    {
+        this.source = requireNonNull(source, "source");
+        this.type = requireNonNull(type, "type");
+        this.instance = instance;
+    }
 
-  public InjectionRequest(Object source, TypeLiteral<T> type, T instance) {
-    this.source = requireNonNull(source, "source");
-    this.type = requireNonNull(type, "type");
-    this.instance = instance;
-  }
+    @Override
+    public Object getSource()
+    {
+        return source;
+    }
 
-  @Override
-  public Object getSource() {
-    return source;
-  }
+    /**
+     * Returns the instance that injection is being requested on. This may be null for injection
+     * requests returned from an Injector, to allow the injector to reclaim memory.
+     */
+    public T getInstance()
+    {
+        return instance;
+    }
 
-  /**
-   * Returns the instance that injection is being requested on. This may be null for injection
-   * requests returned from an Injector, to allow the injector to reclaim memory.
-   */
-  public T getInstance() {
-    return instance;
-  }
+    public TypeLiteral<T> getType()
+    {
+        return type;
+    }
 
-  public TypeLiteral<T> getType() {
-    return type;
-  }
+    /**
+     * Returns the instance methods and fields of {@code instance} that will be injected to fulfill
+     * this request.
+     *
+     * @return a possibly empty set of injection points. The set has a specified iteration order. All
+     *         fields are returned and then all methods. Within the fields, supertype fields are returned
+     *         before subtype fields. Similarly, supertype methods are returned before subtype methods.
+     * @throws ConfigurationException if there is a malformed injection point on the class of {@code
+     *         instance}, such as a field with multiple binding annotations. The exception's {@link
+     *         ConfigurationException#getPartialValue() partial value} is a {@code Set<InjectionPoint>} of
+     *         the valid injection points.
+     */
+    public Set<InjectionPoint> getInjectionPoints()
+            throws ConfigurationException
+    {
+        return InjectionPoint.forInstanceMethodsAndFields(type);
+    }
 
-  /**
-   * Returns the instance methods and fields of {@code instance} that will be injected to fulfill
-   * this request.
-   *
-   * @return a possibly empty set of injection points. The set has a specified iteration order. All
-   *     fields are returned and then all methods. Within the fields, supertype fields are returned
-   *     before subtype fields. Similarly, supertype methods are returned before subtype methods.
-   * @throws ConfigurationException if there is a malformed injection point on the class of {@code
-   *     instance}, such as a field with multiple binding annotations. The exception's {@link
-   *     ConfigurationException#getPartialValue() partial value} is a {@code Set<InjectionPoint>} of
-   *     the valid injection points.
-   */
-  public Set<InjectionPoint> getInjectionPoints() throws ConfigurationException {
-    return InjectionPoint.forInstanceMethodsAndFields(type);
-  }
+    @Override
+    public <R> R acceptVisitor(ElementVisitor<R> visitor)
+    {
+        return visitor.visit(this);
+    }
 
-  @Override
-  public <R> R acceptVisitor(ElementVisitor<R> visitor) {
-    return visitor.visit(this);
-  }
+    @Override
+    public void applyTo(Binder binder)
+    {
+        binder.withSource(getSource()).requestInjection(type, instance);
+    }
 
-  @Override
-  public void applyTo(Binder binder) {
-    binder.withSource(getSource()).requestInjection(type, instance);
-  }
+    @Override
+    public boolean equals(Object obj)
+    {
+        return obj instanceof InjectionRequest
+                && Objects.equals(((InjectionRequest<?>) obj).instance, instance)
+                && ((InjectionRequest<?>) obj).type.equals(type)
+                && ((InjectionRequest<?>) obj).source.equals(source);
+    }
 
-  @Override
-  public boolean equals(Object obj) {
-    return obj instanceof InjectionRequest
-        && Objects.equals(((InjectionRequest<?>) obj).instance, instance)
-        && ((InjectionRequest<?>) obj).type.equals(type)
-        && ((InjectionRequest<?>) obj).source.equals(source);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(type, source);
-  }
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(type, source);
+    }
 }

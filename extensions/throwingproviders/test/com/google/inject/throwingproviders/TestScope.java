@@ -16,46 +16,52 @@
 
 package com.google.inject.throwingproviders;
 
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
 import com.google.inject.Key;
 import com.google.inject.Provider;
 import com.google.inject.Scope;
 import com.google.inject.ScopeAnnotation;
+
 import java.lang.annotation.Retention;
 import java.util.HashMap;
 import java.util.Map;
+
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * A simple scope that can be explicitly reset.
  *
  * @author jmourits@google.com (Jerome Mourits)
  */
-class TestScope implements Scope {
+class TestScope
+        implements Scope
+{
+    @Retention(RUNTIME)
+    @ScopeAnnotation
+    public @interface Scoped {}
 
-  @Retention(RUNTIME)
-  @ScopeAnnotation
-  public @interface Scoped {}
+    private Map<Key<?>, Object> inScopeObjectsMap = new HashMap<>();
 
-  private Map<Key<?>, Object> inScopeObjectsMap = new HashMap<>();
+    @Override
+    public <T> Provider<T> scope(final Key<T> key, final Provider<T> provider)
+    {
+        return new Provider<T>()
+        {
+            @Override
+            @SuppressWarnings({"unchecked"})
+            public T get()
+            {
+                T t = (T) inScopeObjectsMap.get(key);
+                if (t == null) {
+                    t = provider.get();
+                    inScopeObjectsMap.put(key, t);
+                }
+                return t;
+            }
+        };
+    }
 
-  @Override
-  public <T> Provider<T> scope(final Key<T> key, final Provider<T> provider) {
-    return new Provider<T>() {
-      @Override
-      @SuppressWarnings({"unchecked"})
-      public T get() {
-        T t = (T) inScopeObjectsMap.get(key);
-        if (t == null) {
-          t = provider.get();
-          inScopeObjectsMap.put(key, t);
-        }
-        return t;
-      }
-    };
-  }
-
-  public void beginNewScope() {
-    inScopeObjectsMap = new HashMap<>();
-  }
+    public void beginNewScope()
+    {
+        inScopeObjectsMap = new HashMap<>();
+    }
 }

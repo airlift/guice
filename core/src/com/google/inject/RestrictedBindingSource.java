@@ -1,14 +1,14 @@
 package com.google.inject;
 
-import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
-import static java.lang.annotation.ElementType.TYPE;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+
+import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Annotation restricting the binding of the target type to permitted sources.
@@ -68,54 +68,55 @@ import java.lang.annotation.Target;
 @Inherited
 @Retention(RUNTIME)
 @Target(TYPE)
-public @interface RestrictedBindingSource {
-  /**
-   * Explanation of why binding this target type is restricted.
-   *
-   * <p>Will appear as the error message if the target type is bound by non-allowed modules.
-   */
-  String explanation();
+public @interface RestrictedBindingSource
+{
+    /**
+     * Explanation of why binding this target type is restricted.
+     *
+     * <p>Will appear as the error message if the target type is bound by non-allowed modules.
+     */
+    String explanation();
 
-  /**
-   * Meta-annotation indicating that the target annotation is a permit for binding restricted
-   * bindings. Annotating a binding source (defined in top-level javadoc) with a permit gives it
-   * permission to bind the restricted bindings guarded by the permit (see {@link #permits}).
-   *
-   * @since 5.0
-   */
-  @Documented
-  @Retention(RUNTIME)
-  @Target(ANNOTATION_TYPE)
-  public @interface Permit {}
+    /**
+     * Meta-annotation indicating that the target annotation is a permit for binding restricted
+     * bindings. Annotating a binding source (defined in top-level javadoc) with a permit gives it
+     * permission to bind the restricted bindings guarded by the permit (see {@link #permits}).
+     *
+     * @since 5.0
+     */
+    @Documented
+    @Retention(RUNTIME)
+    @Target(ANNOTATION_TYPE) @interface Permit {}
 
-  /**
-   * List of {@code Permit} annotations (must be non-empty), one of which has has to be present on a
-   * restricted binding's source (defined in top-level javadoc).
-   */
-  Class<? extends Annotation>[] permits();
+    /**
+     * List of {@code Permit} annotations (must be non-empty), one of which has has to be present on a
+     * restricted binding's source (defined in top-level javadoc).
+     */
+    Class<? extends Annotation>[] permits();
 
-  /**
-   * Exempt modules whose fully qualified class names match this regex.
-   *
-   * <p>If any module on the binding's module stack matches this regex, the binding is allowed (no
-   * permit necessary). No module is exempt by default (empty string).
-   *
-   * <p>Inteded to be used when retrofitting a binding with this restriction. When restricting an
-   * existing binding, it's often practical to first restrict with exemptions for existing
-   * violations (to prevent new violations), before updating the code in violation to use the
-   * permitted module(s).
-   */
-  String exemptModules() default "";
+    /**
+     * Exempt modules whose fully qualified class names match this regex.
+     *
+     * <p>If any module on the binding's module stack matches this regex, the binding is allowed (no
+     * permit necessary). No module is exempt by default (empty string).
+     *
+     * <p>Inteded to be used when retrofitting a binding with this restriction. When restricting an
+     * existing binding, it's often practical to first restrict with exemptions for existing
+     * violations (to prevent new violations), before updating the code in violation to use the
+     * permitted module(s).
+     */
+    String exemptModules() default "";
 
-  /**
-   * Level of restriction. Determines how violations are handled.
-   *
-   * @since 5.0
-   */
-  public static enum RestrictionLevel {
-    WARNING,
-    ERROR;
-  }
+    /**
+     * Level of restriction. Determines how violations are handled.
+     *
+     * @since 5.0
+     */
+    public static enum RestrictionLevel
+    {
+        WARNING,
+        ERROR,
+    }
 
-  RestrictionLevel restrictionLevel() default RestrictionLevel.ERROR;
+    RestrictionLevel restrictionLevel() default RestrictionLevel.ERROR;
 }

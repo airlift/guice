@@ -25,28 +25,31 @@ import com.google.inject.binder.AnnotatedElementBuilder;
  * @author jessewilson@google.com (Jesse Wilson)
  * @since 2.0
  */
-public interface PrivateBinder extends Binder {
+public interface PrivateBinder
+        extends Binder
+{
+    /**
+     * Makes the binding for {@code key} available to the enclosing environment
+     */
+    void expose(Key<?> key);
 
-  /** Makes the binding for {@code key} available to the enclosing environment */
-  void expose(Key<?> key);
+    /**
+     * Makes a binding for {@code type} available to the enclosing environment. Use {@link
+     * com.google.inject.binder.AnnotatedElementBuilder#annotatedWith(Class) annotatedWith()} to
+     * expose {@code type} with a binding annotation.
+     */
+    AnnotatedElementBuilder expose(Class<?> type);
 
-  /**
-   * Makes a binding for {@code type} available to the enclosing environment. Use {@link
-   * com.google.inject.binder.AnnotatedElementBuilder#annotatedWith(Class) annotatedWith()} to
-   * expose {@code type} with a binding annotation.
-   */
-  AnnotatedElementBuilder expose(Class<?> type);
+    /**
+     * Makes a binding for {@code type} available to the enclosing environment. Use {@link
+     * AnnotatedElementBuilder#annotatedWith(Class) annotatedWith()} to expose {@code type} with a
+     * binding annotation.
+     */
+    AnnotatedElementBuilder expose(TypeLiteral<?> type);
 
-  /**
-   * Makes a binding for {@code type} available to the enclosing environment. Use {@link
-   * AnnotatedElementBuilder#annotatedWith(Class) annotatedWith()} to expose {@code type} with a
-   * binding annotation.
-   */
-  AnnotatedElementBuilder expose(TypeLiteral<?> type);
+    @Override
+    PrivateBinder withSource(Object source);
 
-  @Override
-  PrivateBinder withSource(Object source);
-
-  @Override
-  PrivateBinder skipSources(Class<?>... classesToSkip);
+    @Override
+    PrivateBinder skipSources(Class<?>... classesToSkip);
 }

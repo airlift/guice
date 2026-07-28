@@ -16,12 +16,12 @@
 
 package com.google.inject.multibindings;
 
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Allows {@literal @}{@link ProvidesIntoMap} to specify a string map key.
@@ -32,6 +32,7 @@ import java.lang.annotation.Target;
 @Documented
 @Target(METHOD)
 @Retention(RUNTIME)
-public @interface StringMapKey {
-  String value();
+public @interface StringMapKey
+{
+    String value();
 }

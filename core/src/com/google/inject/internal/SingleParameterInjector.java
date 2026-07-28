@@ -18,88 +18,105 @@ package com.google.inject.internal;
 
 import com.google.errorprone.annotations.concurrent.LazyInit;
 import com.google.inject.spi.Dependency;
+
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 
-/** Resolves a single parameter, to be used in a constructor or method invocation. */
-final class SingleParameterInjector<T> {
-  private static final Object[] NO_ARGUMENTS = {};
-  private static final MethodHandle[] NO_ARGUMENTS_HANDLES = {};
+/**
+ * Resolves a single parameter, to be used in a constructor or method invocation.
+ */
+final class SingleParameterInjector<T>
+{
+    private static final Object[] NO_ARGUMENTS = {};
+    private static final MethodHandle[] NO_ARGUMENTS_HANDLES = {};
 
-  private final Dependency<T> dependency;
+    private final Dependency<T> dependency;
 
-  private final InternalFactory<? extends T> factory;
-  @LazyInit private MethodHandle handle;
+    private final InternalFactory<? extends T> factory;
+    @LazyInit
+    private MethodHandle handle;
 
-  SingleParameterInjector(Dependency<T> dependency, BindingImpl<? extends T> binding) {
-    this.dependency = dependency;
-    this.factory = binding.getInternalFactory();
-  }
-
-  T inject(InternalContext context) throws InternalProvisionException {
-    Dependency<T> localDependency = dependency;
-    try {
-      return factory.get(context, localDependency, false);
-    } catch (InternalProvisionException ipe) {
-      throw ipe.addSource(localDependency);
-    }
-  }
-
-  /**
-   * Returns a method handle for the injection.
-   *
-   * <p>The returned handle has the type `(InternalContext)->Object`
-   */
-  MethodHandle getInjectHandle(LinkageContext context) {
-    var handle = this.handle;
-    if (handle == null) {
-      handle =
-          InternalMethodHandles.catchInternalProvisionExceptionAndRethrowWithSource(
-              MethodHandles.insertArguments(
-                  factory.getHandle(context, /* linked= */ false), 1, dependency),
-              dependency);
-      this.handle = handle;
-    }
-    return handle;
-  }
-
-  // TODO(lukes): inline into callers to decrease stack depth
-
-  /** Returns an array of parameter values. */
-  static Object[] getAll(InternalContext context, SingleParameterInjector<?>[] parameterInjectors)
-      throws InternalProvisionException {
-    if (parameterInjectors == null) {
-      return NO_ARGUMENTS;
+    SingleParameterInjector(Dependency<T> dependency, BindingImpl<? extends T> binding)
+    {
+        this.dependency = dependency;
+        this.factory = binding.getInternalFactory();
     }
 
-    int size = parameterInjectors.length;
-    Object[] parameters = new Object[size];
+    T inject(InternalContext context)
+            throws InternalProvisionException
+    {
+        Dependency<T> localDependency = dependency;
+        try {
+            return factory.get(context, localDependency, false);
+        }
+        catch (InternalProvisionException ipe) {
+            throw ipe.addSource(localDependency);
+        }
+    }
 
-    // optimization: use manual for/each to save allocating an iterator here
-    Dependency<?> dependency = null;
-    try {
-    for (int i = 0; i < size; i++) {
-        SingleParameterInjector<?> injector = parameterInjectors[i];
-        dependency = injector.dependency;
-        parameters[i] = injector.factory.get(context, dependency, false);
-      }
-    } catch (InternalProvisionException ipe) {
-      throw ipe.addSource(dependency);
+    /**
+     * Returns a method handle for the injection.
+     *
+     * <p>The returned handle has the type `(InternalContext)->Object`
+     */
+    MethodHandle getInjectHandle(LinkageContext context)
+    {
+        var handle = this.handle;
+        if (handle == null) {
+            handle =
+                    InternalMethodHandles.catchInternalProvisionExceptionAndRethrowWithSource(
+                            MethodHandles.insertArguments(
+                                    factory.getHandle(context, /* linked= */ false), 1, dependency),
+                            dependency);
+            this.handle = handle;
+        }
+        return handle;
     }
-    return parameters;
-  }
 
-  /** Returns an array of handles for all parameters. */
-  static MethodHandle[] getAllHandles(
-      LinkageContext context, SingleParameterInjector<?>[] parameterInjectors) {
-    if (parameterInjectors == null) {
-      return NO_ARGUMENTS_HANDLES;
+    // TODO(lukes): inline into callers to decrease stack depth
+
+    /**
+     * Returns an array of parameter values.
+     */
+    static Object[] getAll(InternalContext context, SingleParameterInjector<?>[] parameterInjectors)
+            throws InternalProvisionException
+    {
+        if (parameterInjectors == null) {
+            return NO_ARGUMENTS;
+        }
+
+        int size = parameterInjectors.length;
+        Object[] parameters = new Object[size];
+
+        // optimization: use manual for/each to save allocating an iterator here
+        Dependency<?> dependency = null;
+        try {
+            for (int i = 0; i < size; i++) {
+                SingleParameterInjector<?> injector = parameterInjectors[i];
+                dependency = injector.dependency;
+                parameters[i] = injector.factory.get(context, dependency, false);
+            }
+        }
+        catch (InternalProvisionException ipe) {
+            throw ipe.addSource(dependency);
+        }
+        return parameters;
     }
-    MethodHandle[] parameters = new MethodHandle[parameterInjectors.length];
-    for (int i = 0; i < parameterInjectors.length; i++) {
-      parameters[i] = parameterInjectors[i].getInjectHandle(context);
+
+    /**
+     * Returns an array of handles for all parameters.
+     */
+    static MethodHandle[] getAllHandles(
+            LinkageContext context,
+            SingleParameterInjector<?>[] parameterInjectors)
+    {
+        if (parameterInjectors == null) {
+            return NO_ARGUMENTS_HANDLES;
+        }
+        MethodHandle[] parameters = new MethodHandle[parameterInjectors.length];
+        for (int i = 0; i < parameterInjectors.length; i++) {
+            parameters[i] = parameterInjectors[i].getInjectHandle(context);
+        }
+        return parameters;
     }
-    return parameters;
-  }
 }
-

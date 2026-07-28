@@ -22,8 +22,11 @@ package com.google.inject.internal;
  *
  * @author sameb@google.com (Sam Berlin)
  */
-interface DelayedInitialize {
-
-  /** Initializes this binding, throwing any errors if necessary. */
-  void initialize(InjectorImpl injector, Errors errors) throws ErrorsException;
+interface DelayedInitialize
+{
+    /**
+     * Initializes this binding, throwing any errors if necessary.
+     */
+    void initialize(InjectorImpl injector, Errors errors)
+            throws ErrorsException;
 }

@@ -25,6 +25,7 @@ import com.google.inject.spi.HasDependencies;
 import com.google.inject.spi.InjectionPoint;
 import com.google.inject.spi.InstanceBinding;
 import com.google.inject.spi.ProviderInstanceBinding;
+
 import java.lang.reflect.Member;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -35,101 +36,115 @@ import java.util.List;
  *
  * @author bojand@google.com (Bojan Djordjevic)
  */
-final class DefaultNodeCreator implements NodeCreator {
-  @Override
-  public Iterable<Node> getNodes(Iterable<Binding<?>> bindings) {
-    List<Node> nodes = new ArrayList<>();
-    NodeVisitor visitor = new NodeVisitor();
-    for (Binding<?> binding : bindings) {
-      nodes.addAll(binding.acceptTargetVisitor(visitor));
-    }
-    return nodes;
-  }
-
-  /**
-   * {@link BindingTargetVisitor} that adds nodes to the graph based on the visited {@link Binding}.
-   */
-  private static final class NodeVisitor
-      extends DefaultBindingTargetVisitor<Object, Collection<Node>> {
-
-    /** Returns a new interface node for the given {@link Binding}. */
-    private InterfaceNode newInterfaceNode(Binding<?> binding) {
-      return new InterfaceNode(NodeId.newTypeId(binding.getKey()), binding.getSource());
-    }
-
-    /**
-     * Returns a new implementation node for the given binding.
-     *
-     * @param binding binding for the node to create
-     * @param members members to add to the node
-     * @return implementation node for the given binding
-     */
-    private ImplementationNode newImplementationNode(
-        Binding<?> binding, Collection<Member> members) {
-      return new ImplementationNode(
-          NodeId.newTypeId(binding.getKey()), binding.getSource(), members);
-    }
-
-    /**
-     * Returns a new instance node for the given {@link Binding}.
-     *
-     * @param binding binding for the node to create
-     * @param instance value of the instance
-     * @return instance node for the given binding
-     */
-    private <T extends Binding<?> & HasDependencies> InstanceNode newInstanceNode(
-        T binding, Object instance) {
-      Collection<Member> members = new ArrayList<>();
-      for (Dependency<?> dependency : binding.getDependencies()) {
-        InjectionPoint injectionPoint = dependency.getInjectionPoint();
-
-        if (injectionPoint != null) {
-          members.add(injectionPoint.getMember());
+final class DefaultNodeCreator
+        implements NodeCreator
+{
+    @Override
+    public Iterable<Node> getNodes(Iterable<Binding<?>> bindings)
+    {
+        List<Node> nodes = new ArrayList<>();
+        NodeVisitor visitor = new NodeVisitor();
+        for (Binding<?> binding : bindings) {
+            nodes.addAll(binding.acceptTargetVisitor(visitor));
         }
-      }
-      return new InstanceNode(
-          NodeId.newInstanceId(binding.getKey()), binding.getSource(), instance, members);
+        return nodes;
     }
 
     /**
-     * Visitor for {@link ConstructorBinding}s. These are for classes that Guice will instantiate to
-     * satisfy injection requests.
+     * {@link BindingTargetVisitor} that adds nodes to the graph based on the visited {@link Binding}.
      */
-    @Override
-    public Collection<Node> visit(ConstructorBinding<?> binding) {
-      Collection<Member> members = new ArrayList<>();
-      members.add(binding.getConstructor().getMember());
-      for (InjectionPoint injectionPoint : binding.getInjectableMembers()) {
-        members.add(injectionPoint.getMember());
-      }
+    private static final class NodeVisitor
+            extends DefaultBindingTargetVisitor<Object, Collection<Node>>
+    {
+        /**
+         * Returns a new interface node for the given {@link Binding}.
+         */
+        private InterfaceNode newInterfaceNode(Binding<?> binding)
+        {
+            return new InterfaceNode(NodeId.newTypeId(binding.getKey()), binding.getSource());
+        }
 
-      return ImmutableList.<Node>of(newImplementationNode(binding, members));
-    }
+        /**
+         * Returns a new implementation node for the given binding.
+         *
+         * @param binding binding for the node to create
+         * @param members members to add to the node
+         * @return implementation node for the given binding
+         */
+        private ImplementationNode newImplementationNode(
+                Binding<?> binding,
+                Collection<Member> members)
+        {
+            return new ImplementationNode(
+                    NodeId.newTypeId(binding.getKey()), binding.getSource(), members);
+        }
 
-    /**
-     * Visitor for {@link InstanceBinding}. We render two nodes in this case: an interface node for
-     * the binding's {@link Key}, and then an implementation node for the instance {@link Object}
-     * itself.
-     */
-    @Override
-    public Collection<Node> visit(InstanceBinding<?> binding) {
-      return ImmutableList.<Node>of(
-          newInterfaceNode(binding), newInstanceNode(binding, binding.getInstance()));
-    }
+        /**
+         * Returns a new instance node for the given {@link Binding}.
+         *
+         * @param binding binding for the node to create
+         * @param instance value of the instance
+         * @return instance node for the given binding
+         */
+        private <T extends Binding<?> & HasDependencies> InstanceNode newInstanceNode(
+                T binding,
+                Object instance)
+        {
+            Collection<Member> members = new ArrayList<>();
+            for (Dependency<?> dependency : binding.getDependencies()) {
+                InjectionPoint injectionPoint = dependency.getInjectionPoint();
 
-    /**
-     * Same as {@link #visit(InstanceBinding)}, but the binding edge is {@link
-     * BindingEdgeType#PROVIDER}.
-     */
-    @Override
-    public Collection<Node> visit(ProviderInstanceBinding<?> binding) {
-      return ImmutableList.<Node>of(
-          newInterfaceNode(binding), newInstanceNode(binding, binding.getUserSuppliedProvider()));
-    }
+                if (injectionPoint != null) {
+                    members.add(injectionPoint.getMember());
+                }
+            }
+            return new InstanceNode(
+                    NodeId.newInstanceId(binding.getKey()), binding.getSource(), instance, members);
+        }
 
-    @Override
-    public Collection<Node> visitOther(Binding<?> binding) {
-      return ImmutableList.<Node>of(newInterfaceNode(binding));
+        /**
+         * Visitor for {@link ConstructorBinding}s. These are for classes that Guice will instantiate to
+         * satisfy injection requests.
+         */
+        @Override
+        public Collection<Node> visit(ConstructorBinding<?> binding)
+        {
+            Collection<Member> members = new ArrayList<>();
+            members.add(binding.getConstructor().getMember());
+            for (InjectionPoint injectionPoint : binding.getInjectableMembers()) {
+                members.add(injectionPoint.getMember());
+            }
+
+            return ImmutableList.<Node>of(newImplementationNode(binding, members));
+        }
+
+        /**
+         * Visitor for {@link InstanceBinding}. We render two nodes in this case: an interface node for
+         * the binding's {@link Key}, and then an implementation node for the instance {@link Object}
+         * itself.
+         */
+        @Override
+        public Collection<Node> visit(InstanceBinding<?> binding)
+        {
+            return ImmutableList.<Node>of(
+                    newInterfaceNode(binding), newInstanceNode(binding, binding.getInstance()));
+        }
+
+        /**
+         * Same as {@link #visit(InstanceBinding)}, but the binding edge is {@link
+         * BindingEdgeType#PROVIDER}.
+         */
+        @Override
+        public Collection<Node> visit(ProviderInstanceBinding<?> binding)
+        {
+            return ImmutableList.<Node>of(
+                    newInterfaceNode(binding), newInstanceNode(binding, binding.getUserSuppliedProvider()));
+        }
+
+        @Override
+        public Collection<Node> visitOther(Binding<?> binding)
+        {
+            return ImmutableList.<Node>of(newInterfaceNode(binding));
+        }
     }
-  }
 }

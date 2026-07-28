@@ -18,40 +18,48 @@ package com.google.inject.internal;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.spi.InjectionPoint;
+import org.aopalliance.intercept.MethodInterceptor;
+
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
-import org.aopalliance.intercept.MethodInterceptor;
 
 /**
  * Proxies calls to a {@link java.lang.reflect.Constructor} for a class {@code T}.
  *
  * @author crazybob@google.com (Bob Lee)
  */
-interface ConstructionProxy<T> {
+interface ConstructionProxy<T>
+{
+    /**
+     * Constructs an instance of {@code T} for the given arguments.
+     */
+    T newInstance(Object... arguments)
+            throws InvocationTargetException;
 
-  /** Constructs an instance of {@code T} for the given arguments. */
-  T newInstance(Object... arguments) throws InvocationTargetException;
+    /**
+     * Returns the method handle for the constructor, using the supplied handles to provide
+     * parameters.
+     *
+     * <p>The returned handle has {@link InternalMethodHandles#ELEMENT_FACTORY_TYPE} as its signature.
+     */
+    MethodHandle getConstructHandle(MethodHandle[] parameterHandles);
 
-  /**
-   * Returns the method handle for the constructor, using the supplied handles to provide
-   * parameters.
-   *
-   * <p>The returned handle has {@link InternalMethodHandles#ELEMENT_FACTORY_TYPE} as its signature.
-   */
-  MethodHandle getConstructHandle(MethodHandle[] parameterHandles);
+    /**
+     * Returns the injection point for this constructor.
+     */
+    InjectionPoint getInjectionPoint();
 
-  /** Returns the injection point for this constructor. */
-  InjectionPoint getInjectionPoint();
+    /**
+     * Returns the injected constructor. If the injected constructor is synthetic (such as generated
+     * code for method interception), the natural constructor is returned.
+     */
+    Constructor<T> getConstructor();
 
-  /**
-   * Returns the injected constructor. If the injected constructor is synthetic (such as generated
-   * code for method interception), the natural constructor is returned.
-   */
-  Constructor<T> getConstructor();
-
-  /** Returns the interceptors applied to each method, in order of invocation. */
-  ImmutableMap<Method, List<MethodInterceptor>> getMethodInterceptors();
+    /**
+     * Returns the interceptors applied to each method, in order of invocation.
+     */
+    ImmutableMap<Method, List<MethodInterceptor>> getMethodInterceptors();
 }

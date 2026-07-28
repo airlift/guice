@@ -16,13 +16,12 @@
 
 package com.google.inject.spi;
 
-
-import static java.util.Objects.requireNonNull;
-
 import com.google.inject.Binder;
 import com.google.inject.TypeLiteral;
 import com.google.inject.internal.Errors;
 import com.google.inject.matcher.Matcher;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Registration of type converters for matching target types. Instances are created explicitly in a
@@ -36,49 +35,62 @@ import com.google.inject.matcher.Matcher;
  * @author jessewilson@google.com (Jesse Wilson)
  * @since 2.0
  */
-public final class TypeConverterBinding implements Element {
-  private final Object source;
-  private final Matcher<? super TypeLiteral<?>> typeMatcher;
-  private final TypeConverter typeConverter;
+public final class TypeConverterBinding
+        implements Element
+{
+    private final Object source;
+    private final Matcher<? super TypeLiteral<?>> typeMatcher;
+    private final TypeConverter typeConverter;
 
-  /** @since 3.0 */
-  public TypeConverterBinding(
-      Object source, Matcher<? super TypeLiteral<?>> typeMatcher, TypeConverter typeConverter) {
-    this.source = requireNonNull(source, "source");
-    this.typeMatcher = requireNonNull(typeMatcher, "typeMatcher");
-    this.typeConverter = requireNonNull(typeConverter, "typeConverter");
-  }
+    /**
+     * @since 3.0
+     */
+    public TypeConverterBinding(
+            Object source,
+            Matcher<? super TypeLiteral<?>> typeMatcher,
+            TypeConverter typeConverter)
+    {
+        this.source = requireNonNull(source, "source");
+        this.typeMatcher = requireNonNull(typeMatcher, "typeMatcher");
+        this.typeConverter = requireNonNull(typeConverter, "typeConverter");
+    }
 
-  @Override
-  public Object getSource() {
-    return source;
-  }
+    @Override
+    public Object getSource()
+    {
+        return source;
+    }
 
-  public Matcher<? super TypeLiteral<?>> getTypeMatcher() {
-    return typeMatcher;
-  }
+    public Matcher<? super TypeLiteral<?>> getTypeMatcher()
+    {
+        return typeMatcher;
+    }
 
-  public TypeConverter getTypeConverter() {
-    return typeConverter;
-  }
+    public TypeConverter getTypeConverter()
+    {
+        return typeConverter;
+    }
 
-  @Override
-  public <T> T acceptVisitor(ElementVisitor<T> visitor) {
-    return visitor.visit(this);
-  }
+    @Override
+    public <T> T acceptVisitor(ElementVisitor<T> visitor)
+    {
+        return visitor.visit(this);
+    }
 
-  @Override
-  public void applyTo(Binder binder) {
-    binder.withSource(getSource()).convertToTypes(typeMatcher, typeConverter);
-  }
+    @Override
+    public void applyTo(Binder binder)
+    {
+        binder.withSource(getSource()).convertToTypes(typeMatcher, typeConverter);
+    }
 
-  @Override
-  public String toString() {
-    return typeConverter
-        + " which matches "
-        + typeMatcher
-        + " (bound at "
-        + Errors.convert(source)
-        + ")";
-  }
+    @Override
+    public String toString()
+    {
+        return typeConverter
+                + " which matches "
+                + typeMatcher
+                + " (bound at "
+                + Errors.convert(source)
+                + ")";
+    }
 }

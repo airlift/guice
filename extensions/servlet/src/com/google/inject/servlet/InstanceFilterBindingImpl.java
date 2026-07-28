@@ -16,35 +16,43 @@
 
 package com.google.inject.servlet;
 
-import com.google.common.base.MoreObjects;
-import java.util.Map;
 import jakarta.servlet.Filter;
+
+import java.util.Map;
+
+import static com.google.common.base.MoreObjects.toStringHelper;
 
 /**
  * Default implementation of InstanceFilterBinding.
  *
  * @author sameb@google.com (Sam Berlin)
  */
-class InstanceFilterBindingImpl extends AbstractServletModuleBinding<Filter>
-    implements InstanceFilterBinding {
+class InstanceFilterBindingImpl
+        extends AbstractServletModuleBinding<Filter>
+        implements InstanceFilterBinding
+{
+    InstanceFilterBindingImpl(
+            Map<String, String> initParams,
+            Filter target,
+            UriPatternMatcher patternMatcher)
+    {
+        super(initParams, target, patternMatcher);
+    }
 
-  InstanceFilterBindingImpl(
-      Map<String, String> initParams, Filter target, UriPatternMatcher patternMatcher) {
-    super(initParams, target, patternMatcher);
-  }
+    @Override
+    public Filter getFilterInstance()
+    {
+        return getTarget();
+    }
 
-  @Override
-  public Filter getFilterInstance() {
-    return getTarget();
-  }
-
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(InstanceFilterBinding.class)
-        .add("pattern", getPattern())
-        .add("initParams", getInitParams())
-        .add("uriPatternType", getUriPatternType())
-        .add("filterInstance", getFilterInstance())
-        .toString();
-  }
+    @Override
+    public String toString()
+    {
+        return toStringHelper(InstanceFilterBinding.class)
+                .add("pattern", getPattern())
+                .add("initParams", getInitParams())
+                .add("uriPatternType", getUriPatternType())
+                .add("filterInstance", getFilterInstance())
+                .toString();
+    }
 }

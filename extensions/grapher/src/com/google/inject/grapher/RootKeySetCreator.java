@@ -18,6 +18,7 @@ package com.google.inject.grapher;
 
 import com.google.inject.Injector;
 import com.google.inject.Key;
+
 import java.util.Set;
 
 /**
@@ -27,8 +28,10 @@ import java.util.Set;
  * @author bojand@google.com (Bojan Djordjevic)
  * @since 4.0
  */
-public interface RootKeySetCreator {
-
-  /** Returns the set of starting keys to graph. */
-  Set<Key<?>> getRootKeys(Injector injector);
+public interface RootKeySetCreator
+{
+    /**
+     * Returns the set of starting keys to graph.
+     */
+    Set<Key<?>> getRootKeys(Injector injector);
 }

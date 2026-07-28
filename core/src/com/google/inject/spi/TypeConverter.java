@@ -24,8 +24,10 @@ import com.google.inject.TypeLiteral;
  * @author crazybob@google.com (Bob Lee)
  * @since 2.0
  */
-public interface TypeConverter {
-
-  /** Converts a string value. Throws an exception if a conversion error occurs. */
-  Object convert(String value, TypeLiteral<?> toType);
+public interface TypeConverter
+{
+    /**
+     * Converts a string value. Throws an exception if a conversion error occurs.
+     */
+    Object convert(String value, TypeLiteral<?> toType);
 }

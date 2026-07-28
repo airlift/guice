@@ -23,17 +23,21 @@ package com.google.inject;
  * @author kevinb@google.com (Kevin Bourrillion)
  * @since 2.0
  */
-public final class OutOfScopeException extends RuntimeException {
+public final class OutOfScopeException
+        extends RuntimeException
+{
+    public OutOfScopeException(String message)
+    {
+        super(message);
+    }
 
-  public OutOfScopeException(String message) {
-    super(message);
-  }
+    public OutOfScopeException(String message, Throwable cause)
+    {
+        super(message, cause);
+    }
 
-  public OutOfScopeException(String message, Throwable cause) {
-    super(message, cause);
-  }
-
-  public OutOfScopeException(Throwable cause) {
-    super(cause);
-  }
+    public OutOfScopeException(Throwable cause)
+    {
+        super(cause);
+    }
 }

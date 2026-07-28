@@ -18,6 +18,7 @@ package com.google.inject.internal.aop;
 
 import com.google.inject.internal.InternalFlags;
 import com.google.inject.internal.InternalFlags.CustomClassLoadingOption;
+
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodHandles.Lookup;
 
@@ -33,35 +34,45 @@ import java.lang.invoke.MethodHandles.Lookup;
  *
  * @author mcculls@gmail.com (Stuart McCulloch)
  */
-final class LookupClassDefiner implements ClassDefiner {
+final class LookupClassDefiner
+        implements ClassDefiner
+{
+    private static final ClassDefiner HIDDEN_DEFINER = new HiddenClassDefiner();
 
-  private static final ClassDefiner HIDDEN_DEFINER = new HiddenClassDefiner();
+    private static final boolean ALWAYS_DEFINE_ANONYMOUSLY =
+            InternalFlags.getCustomClassLoadingOption() == CustomClassLoadingOption.ANONYMOUS;
 
-  private static final boolean ALWAYS_DEFINE_ANONYMOUSLY =
-      InternalFlags.getCustomClassLoadingOption() == CustomClassLoadingOption.ANONYMOUS;
-
-  /** Returns true if it's possible to load by name proxies defined from the given host. */
-  public static boolean canLoadProxyByName(Class<?> hostClass) {
-    return !definesHiddenClass(hostClass);
-  }
-
-  /** Returns true if it's possible to downcast to proxies defined from the given host. */
-  public static boolean canDowncastToProxy(Class<?> hostClass) {
-    return true;
-  }
-
-  @Override
-  public Class<?> define(Class<?> hostClass, byte[] bytecode) throws Exception {
-    Lookup hostLookup = MethodHandles.privateLookupIn(hostClass, MethodHandles.lookup());
-    // defineHiddenClass needs full privilege access, which a lookup teleported into another
-    // module does not have; fall back to defining the class alongside its host.
-    if (definesHiddenClass(hostClass) && hostLookup.hasFullPrivilegeAccess()) {
-      return HIDDEN_DEFINER.define(hostClass, bytecode);
+    /**
+     * Returns true if it's possible to load by name proxies defined from the given host.
+     */
+    public static boolean canLoadProxyByName(Class<?> hostClass)
+    {
+        return !definesHiddenClass(hostClass);
     }
-    return hostLookup.defineClass(bytecode);
-  }
 
-  private static boolean definesHiddenClass(Class<?> hostClass) {
-    return hostClass.getClassLoader() == null || ALWAYS_DEFINE_ANONYMOUSLY;
-  }
+    /**
+     * Returns true if it's possible to downcast to proxies defined from the given host.
+     */
+    public static boolean canDowncastToProxy(Class<?> hostClass)
+    {
+        return true;
+    }
+
+    @Override
+    public Class<?> define(Class<?> hostClass, byte[] bytecode)
+            throws Exception
+    {
+        Lookup hostLookup = MethodHandles.privateLookupIn(hostClass, MethodHandles.lookup());
+        // defineHiddenClass needs full privilege access, which a lookup teleported into another
+        // module does not have; fall back to defining the class alongside its host.
+        if (definesHiddenClass(hostClass) && hostLookup.hasFullPrivilegeAccess()) {
+            return HIDDEN_DEFINER.define(hostClass, bytecode);
+        }
+        return hostLookup.defineClass(bytecode);
+    }
+
+    private static boolean definesHiddenClass(Class<?> hostClass)
+    {
+        return hostClass.getClassLoader() == null || ALWAYS_DEFINE_ANONYMOUSLY;
+    }
 }

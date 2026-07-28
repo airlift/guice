@@ -16,218 +16,260 @@
 
 package com.google.inject;
 
-import static com.google.inject.name.Names.named;
-
 import com.google.inject.name.Named;
-import java.util.Arrays;
-import java.util.List;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertNotSame;
-import static org.junit.jupiter.api.Assertions.fail;
 import org.junit.jupiter.api.Test;
 
-/** @author crazybob@google.com (Bob Lee) */
-public class ProviderInjectionTest {
+import java.util.Arrays;
+import java.util.List;
 
-  @Test
-  public void testProviderInjection() throws CreationException {
-    Injector injector =
-        Guice.createInjector(
-            new AbstractModule() {
-              @Override
-              protected void configure() {
-                bind(Bar.class);
-                bind(SampleSingleton.class).in(Scopes.SINGLETON);
-              }
-            });
+import static com.google.inject.name.Names.named;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.fail;
 
-    Foo foo = injector.getInstance(Foo.class);
+/**
+ * @author crazybob@google.com (Bob Lee)
+ */
+public class ProviderInjectionTest
+{
+    @Test
+    public void testProviderInjection()
+            throws CreationException
+    {
+        Injector injector =
+                Guice.createInjector(
+                        new AbstractModule()
+                        {
+                            @Override
+                            protected void configure()
+                            {
+                                bind(Bar.class);
+                                bind(SampleSingleton.class).in(Scopes.SINGLETON);
+                            }
+                        });
 
-    Bar bar = foo.barProvider.get();
-    assertNotNull(bar);
-    assertNotSame(bar, foo.barProvider.get());
+        Foo foo = injector.getInstance(Foo.class);
 
-    SampleSingleton singleton = foo.singletonProvider.get();
-    assertNotNull(singleton);
-    assertSame(singleton, foo.singletonProvider.get());
-  }
+        Bar bar = foo.barProvider.get();
+        assertNotNull(bar);
+        assertNotSame(bar, foo.barProvider.get());
 
-  /** Test for bug 155. */
-  @Test
-  public void testProvidersAreInjectedWhenBound() {
-    Module m =
-        new AbstractModule() {
-          @Override
-          protected void configure() {
-            bind(Bar.class)
-                .toProvider(
-                    new Provider<Bar>() {
-                      @SuppressWarnings("unused")
-                      @Inject
-                      void cantBeCalled(Baz baz) {
-                        fail("Can't have called this method since Baz is not bound.");
-                      }
-
-                      @Override
-                      public Bar get() {
-                        return new Bar() {};
-                      }
-                    });
-          }
-        };
-
-    try {
-      Guice.createInjector(m);
-      fail("Should have thrown a CreationException");
-    } catch (CreationException expected) {
+        SampleSingleton singleton = foo.singletonProvider.get();
+        assertNotNull(singleton);
+        assertSame(singleton, foo.singletonProvider.get());
     }
-  }
 
-  /**
-   * When custom providers are used at injector creation time, they should be injected before use.
-   * In this testcase, we verify that a provider for List.class is injected before it is used.
-   */
-  @Test
-  public void testProvidersAreInjectedBeforeTheyAreUsed() {
-    Injector injector =
-        Guice.createInjector(
-            new AbstractModule() {
-              @Override
-              public void configure() {
-                // should bind String to "[true]"
-                bind(String.class)
-                    .toProvider(
-                        new Provider<String>() {
-                          private String value;
+    /**
+     * Test for bug 155.
+     */
+    @Test
+    public void testProvidersAreInjectedWhenBound()
+    {
+        Module m =
+                new AbstractModule()
+                {
+                    @Override
+                    protected void configure()
+                    {
+                        bind(Bar.class)
+                                .toProvider(
+                                        new Provider<Bar>()
+                                        {
+                                            @SuppressWarnings("unused")
+                                            @Inject
+                                            void cantBeCalled(Baz baz)
+                                            {
+                                                fail("Can't have called this method since Baz is not bound.");
+                                            }
 
-                          @Inject
-                          void initialize(List<Boolean> list) {
-                            value = list.toString();
-                          }
+                                            @Override
+                                            public Bar get()
+                                            {
+                                                return new Bar() {};
+                                            }
+                                        });
+                    }
+                };
 
-                          @Override
-                          public String get() {
-                            return value;
-                          }
-                        });
-
-                // should bind List to [true]
-                bind(new Key<List<Boolean>>() {})
-                    .toProvider(
-                        new Provider<List<Boolean>>() {
-                          @Inject Boolean injectedYet = Boolean.FALSE;
-
-                          @Override
-                          public List<Boolean> get() {
-                            return Arrays.asList(injectedYet);
-                          }
-                        });
-
-                // should bind Boolean to true
-                bind(Boolean.class).toInstance(Boolean.TRUE);
-              }
-            });
-
-    assertEquals("[true]", injector.getInstance(String.class), "Providers not injected before use");
-  }
-
-  /**
-   * This test ensures that regardless of binding order, instances are injected before they are
-   * used. It injects mutable Count objects and records their value at the time that they're
-   * injected.
-   */
-  @Test
-  public void testCreationTimeInjectionOrdering() {
-    Injector injector =
-        Guice.createInjector(
-            new AbstractModule() {
-              @Override
-              protected void configure() {
-                // instance injection
-                bind(Count.class)
-                    .annotatedWith(named("a"))
-                    .toInstance(
-                        new Count(0) {
-                          @Inject
-                          void initialize(@Named("b") Count bCount) {
-                            value = bCount.value + 1;
-                          }
-                        });
-
-                // provider injection
-                bind(Count.class)
-                    .annotatedWith(named("b"))
-                    .toProvider(
-                        new Provider<Count>() {
-                          Count count;
-
-                          @Inject
-                          void initialize(@Named("c") Count cCount) {
-                            count = new Count(cCount.value + 2);
-                          }
-
-                          @Override
-                          public Count get() {
-                            return count;
-                          }
-                        });
-
-                // field and method injection, fields first
-                bind(Count.class)
-                    .annotatedWith(named("c"))
-                    .toInstance(
-                        new Count(0) {
-                          @Inject
-                          @Named("d")
-                          Count dCount;
-
-                          @Inject
-                          void initialize(@Named("e") Count eCount) {
-                            value = dCount.value + eCount.value + 4;
-                          }
-                        });
-
-                // static injection
-                requestStaticInjection(StaticallyInjectable.class);
-
-                bind(Count.class).annotatedWith(named("d")).toInstance(new Count(8));
-                bind(Count.class).annotatedWith(named("e")).toInstance(new Count(16));
-              }
-            });
-
-    assertEquals(28, injector.getInstance(Key.get(Count.class, named("c"))).value);
-    assertEquals(30, injector.getInstance(Key.get(Count.class, named("b"))).value);
-    assertEquals(31, injector.getInstance(Key.get(Count.class, named("a"))).value);
-    assertEquals(28, StaticallyInjectable.cCountAtInjectionTime);
-  }
-
-  static class Count {
-    int value;
-
-    Count(int value) {
-      this.value = value;
+        try {
+            Guice.createInjector(m);
+            fail("Should have thrown a CreationException");
+        }
+        catch (CreationException expected) {
+        }
     }
-  }
 
-  static class StaticallyInjectable {
-    static int cCountAtInjectionTime;
+    /**
+     * When custom providers are used at injector creation time, they should be injected before use.
+     * In this testcase, we verify that a provider for List.class is injected before it is used.
+     */
+    @Test
+    public void testProvidersAreInjectedBeforeTheyAreUsed()
+    {
+        Injector injector =
+                Guice.createInjector(
+                        new AbstractModule()
+                        {
+                            @Override
+                            public void configure()
+                            {
+                                // should bind String to "[true]"
+                                bind(String.class)
+                                        .toProvider(
+                                                new Provider<String>()
+                                                {
+                                                    private String value;
 
-    @Inject
-    static void initialize(@Named("c") Count cCount) {
-      cCountAtInjectionTime = cCount.value;
+                                                    @Inject
+                                                    void initialize(List<Boolean> list)
+                                                    {
+                                                        value = list.toString();
+                                                    }
+
+                                                    @Override
+                                                    public String get()
+                                                    {
+                                                        return value;
+                                                    }
+                                                });
+
+                                // should bind List to [true]
+                                bind(new Key<List<Boolean>>() {})
+                                        .toProvider(
+                                                new Provider<List<Boolean>>()
+                                                {
+                                                    @Inject
+                                                    Boolean injectedYet = Boolean.FALSE;
+
+                                                    @Override
+                                                    public List<Boolean> get()
+                                                    {
+                                                        return Arrays.asList(injectedYet);
+                                                    }
+                                                });
+
+                                // should bind Boolean to true
+                                bind(Boolean.class).toInstance(Boolean.TRUE);
+                            }
+                        });
+
+        assertEquals("[true]", injector.getInstance(String.class), "Providers not injected before use");
     }
-  }
 
-  static class Foo {
-    @Inject Provider<Bar> barProvider;
-    @Inject Provider<SampleSingleton> singletonProvider;
-  }
+    /**
+     * This test ensures that regardless of binding order, instances are injected before they are
+     * used. It injects mutable Count objects and records their value at the time that they're
+     * injected.
+     */
+    @Test
+    public void testCreationTimeInjectionOrdering()
+    {
+        Injector injector =
+                Guice.createInjector(
+                        new AbstractModule()
+                        {
+                            @Override
+                            protected void configure()
+                            {
+                                // instance injection
+                                bind(Count.class)
+                                        .annotatedWith(named("a"))
+                                        .toInstance(
+                                                new Count(0)
+                                                {
+                                                    @Inject
+                                                    void initialize(@Named("b") Count bCount)
+                                                    {
+                                                        value = bCount.value + 1;
+                                                    }
+                                                });
 
-  static class Bar {}
+                                // provider injection
+                                bind(Count.class)
+                                        .annotatedWith(named("b"))
+                                        .toProvider(
+                                                new Provider<Count>()
+                                                {
+                                                    Count count;
 
-  static class SampleSingleton {}
+                                                    @Inject
+                                                    void initialize(@Named("c") Count cCount)
+                                                    {
+                                                        count = new Count(cCount.value + 2);
+                                                    }
 
-  interface Baz {}
+                                                    @Override
+                                                    public Count get()
+                                                    {
+                                                        return count;
+                                                    }
+                                                });
+
+                                // field and method injection, fields first
+                                bind(Count.class)
+                                        .annotatedWith(named("c"))
+                                        .toInstance(
+                                                new Count(0)
+                                                {
+                                                    @Inject
+                                                    @Named("d")
+                                                    Count dCount;
+
+                                                    @Inject
+                                                    void initialize(@Named("e") Count eCount)
+                                                    {
+                                                        value = dCount.value + eCount.value + 4;
+                                                    }
+                                                });
+
+                                // static injection
+                                requestStaticInjection(StaticallyInjectable.class);
+
+                                bind(Count.class).annotatedWith(named("d")).toInstance(new Count(8));
+                                bind(Count.class).annotatedWith(named("e")).toInstance(new Count(16));
+                            }
+                        });
+
+        assertEquals(28, injector.getInstance(Key.get(Count.class, named("c"))).value);
+        assertEquals(30, injector.getInstance(Key.get(Count.class, named("b"))).value);
+        assertEquals(31, injector.getInstance(Key.get(Count.class, named("a"))).value);
+        assertEquals(28, StaticallyInjectable.cCountAtInjectionTime);
+    }
+
+    static class Count
+    {
+        int value;
+
+        Count(int value)
+        {
+            this.value = value;
+        }
+    }
+
+    static class StaticallyInjectable
+    {
+        static int cCountAtInjectionTime;
+
+        @Inject
+        static void initialize(@Named("c") Count cCount)
+        {
+            cCountAtInjectionTime = cCount.value;
+        }
+    }
+
+    static class Foo
+    {
+        @Inject
+        Provider<Bar> barProvider;
+        @Inject
+        Provider<SampleSingleton> singletonProvider;
+    }
+
+    static class Bar {}
+
+    static class SampleSingleton {}
+
+    interface Baz {}
 }

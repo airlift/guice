@@ -16,11 +16,6 @@
 
 package com.google.inject.internal;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
-import static java.util.Objects.requireNonNull;
-
-import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Binder;
@@ -30,117 +25,142 @@ import com.google.inject.PrivateBinder;
 import com.google.inject.spi.Element;
 import com.google.inject.spi.ElementVisitor;
 import com.google.inject.spi.PrivateElements;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/** @author jessewilson@google.com (Jesse Wilson) */
-public final class PrivateElementsImpl implements PrivateElements {
+import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
+import static java.util.Objects.requireNonNull;
 
-  /*
-   * This class acts as both a value object and as a builder. When getElements() is called, an
-   * immutable collection of elements is constructed and the original mutable list is nulled out.
-   * Similarly, the exposed keys are made immutable on access.
-   */
+/**
+ * @author jessewilson@google.com (Jesse Wilson)
+ */
+public final class PrivateElementsImpl
+        implements PrivateElements
+{
+    /*
+     * This class acts as both a value object and as a builder. When getElements() is called, an
+     * immutable collection of elements is constructed and the original mutable list is nulled out.
+     * Similarly, the exposed keys are made immutable on access.
+     */
 
-  private final Object source;
+    private final Object source;
 
-  private List<Element> elementsMutable = new ArrayList<>();
-  private List<ExposureBuilder<?>> exposureBuilders = new ArrayList<>();
+    private List<Element> elementsMutable = new ArrayList<>();
+    private List<ExposureBuilder<?>> exposureBuilders = new ArrayList<>();
 
-  /** lazily instantiated */
-  private ImmutableList<Element> elements;
+    /**
+     * lazily instantiated
+     */
+    private ImmutableList<Element> elements;
 
-  /** lazily instantiated */
-  private ImmutableMap<Key<?>, Object> exposedKeysToSources;
+    /**
+     * lazily instantiated
+     */
+    private ImmutableMap<Key<?>, Object> exposedKeysToSources;
 
-  private Injector injector;
+    private Injector injector;
 
-  public PrivateElementsImpl(Object source) {
-    this.source = requireNonNull(source, "source");
-  }
-
-  @Override
-  public Object getSource() {
-    return source;
-  }
-
-  @Override
-  public List<Element> getElements() {
-    if (elements == null) {
-      elements = ImmutableList.copyOf(elementsMutable);
-      elementsMutable = null;
+    public PrivateElementsImpl(Object source)
+    {
+        this.source = requireNonNull(source, "source");
     }
 
-    return elements;
-  }
-
-  @Override
-  public Injector getInjector() {
-    return injector;
-  }
-
-  public void initInjector(Injector injector) {
-    checkState(this.injector == null, "injector already initialized");
-    this.injector = requireNonNull(injector, "injector");
-  }
-
-  @Override
-  public Set<Key<?>> getExposedKeys() {
-    if (exposedKeysToSources == null) {
-      Map<Key<?>, Object> exposedKeysToSourcesMutable = new LinkedHashMap<>();
-      for (ExposureBuilder<?> exposureBuilder : exposureBuilders) {
-        exposedKeysToSourcesMutable.put(exposureBuilder.getKey(), exposureBuilder.getSource());
-      }
-      exposedKeysToSources = ImmutableMap.copyOf(exposedKeysToSourcesMutable);
-      exposureBuilders = null;
+    @Override
+    public Object getSource()
+    {
+        return source;
     }
 
-    return exposedKeysToSources.keySet();
-  }
+    @Override
+    public List<Element> getElements()
+    {
+        if (elements == null) {
+            elements = ImmutableList.copyOf(elementsMutable);
+            elementsMutable = null;
+        }
 
-  @Override
-  public <T> T acceptVisitor(ElementVisitor<T> visitor) {
-    return visitor.visit(this);
-  }
-
-  public List<Element> getElementsMutable() {
-    return elementsMutable;
-  }
-
-  public void addExposureBuilder(ExposureBuilder<?> exposureBuilder) {
-    exposureBuilders.add(exposureBuilder);
-  }
-
-  @Override
-  public void applyTo(Binder binder) {
-    PrivateBinder privateBinder = binder.withSource(source).newPrivateBinder();
-
-    for (Element element : getElements()) {
-      element.applyTo(privateBinder);
+        return elements;
     }
 
-    getExposedKeys(); // ensure exposedKeysToSources is populated
-    for (Map.Entry<Key<?>, Object> entry : exposedKeysToSources.entrySet()) {
-      privateBinder.withSource(entry.getValue()).expose(entry.getKey());
+    @Override
+    public Injector getInjector()
+    {
+        return injector;
     }
-  }
 
-  @Override
-  public Object getExposedSource(Key<?> key) {
-    getExposedKeys(); // ensure exposedKeysToSources is populated
-    Object source = exposedKeysToSources.get(key);
-    checkArgument(source != null, "%s not exposed by %s.", key, this);
-    return source;
-  }
+    public void initInjector(Injector injector)
+    {
+        checkState(this.injector == null, "injector already initialized");
+        this.injector = requireNonNull(injector, "injector");
+    }
 
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(PrivateElements.class)
-        .add("exposedKeys", getExposedKeys())
-        .add("source", getSource())
-        .toString();
-  }
+    @Override
+    public Set<Key<?>> getExposedKeys()
+    {
+        if (exposedKeysToSources == null) {
+            Map<Key<?>, Object> exposedKeysToSourcesMutable = new LinkedHashMap<>();
+            for (ExposureBuilder<?> exposureBuilder : exposureBuilders) {
+                exposedKeysToSourcesMutable.put(exposureBuilder.getKey(), exposureBuilder.getSource());
+            }
+            exposedKeysToSources = ImmutableMap.copyOf(exposedKeysToSourcesMutable);
+            exposureBuilders = null;
+        }
+
+        return exposedKeysToSources.keySet();
+    }
+
+    @Override
+    public <T> T acceptVisitor(ElementVisitor<T> visitor)
+    {
+        return visitor.visit(this);
+    }
+
+    public List<Element> getElementsMutable()
+    {
+        return elementsMutable;
+    }
+
+    public void addExposureBuilder(ExposureBuilder<?> exposureBuilder)
+    {
+        exposureBuilders.add(exposureBuilder);
+    }
+
+    @Override
+    public void applyTo(Binder binder)
+    {
+        PrivateBinder privateBinder = binder.withSource(source).newPrivateBinder();
+
+        for (Element element : getElements()) {
+            element.applyTo(privateBinder);
+        }
+
+        getExposedKeys(); // ensure exposedKeysToSources is populated
+        for (Map.Entry<Key<?>, Object> entry : exposedKeysToSources.entrySet()) {
+            privateBinder.withSource(entry.getValue()).expose(entry.getKey());
+        }
+    }
+
+    @Override
+    public Object getExposedSource(Key<?> key)
+    {
+        getExposedKeys(); // ensure exposedKeysToSources is populated
+        Object source = exposedKeysToSources.get(key);
+        checkArgument(source != null, "%s not exposed by %s.", key, this);
+        return source;
+    }
+
+    @Override
+    public String toString()
+    {
+        return toStringHelper(PrivateElements.class)
+                .add("exposedKeys", getExposedKeys())
+                .add("source", getSource())
+                .toString();
+    }
 }

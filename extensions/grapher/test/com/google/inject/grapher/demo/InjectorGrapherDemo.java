@@ -21,6 +21,7 @@ import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.google.inject.grapher.graphviz.GraphvizGrapher;
 import com.google.inject.grapher.graphviz.GraphvizModule;
+
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -31,21 +32,24 @@ import java.nio.file.Path;
  *
  * @author phopkins@gmail.com (Pete Hopkins)
  */
-public class InjectorGrapherDemo {
-  public static void main(String[] args) throws Exception {
-    // TODO(user): Switch to Stage.TOOL when issue 297 is fixed.
-    Injector demoInjector =
-        Guice.createInjector(
-            Stage.DEVELOPMENT,
-            new BackToTheFutureModule(),
-            new MultibinderModule(),
-            new PrivateTestModule());
-    PrintWriter out = new PrintWriter(Path.of(args[0]).toFile(), StandardCharsets.UTF_8);
+public class InjectorGrapherDemo
+{
+    public static void main(String[] args)
+            throws Exception
+    {
+        // TODO(user): Switch to Stage.TOOL when issue 297 is fixed.
+        Injector demoInjector =
+                Guice.createInjector(
+                        Stage.DEVELOPMENT,
+                        new BackToTheFutureModule(),
+                        new MultibinderModule(),
+                        new PrivateTestModule());
+        PrintWriter out = new PrintWriter(Path.of(args[0]).toFile(), StandardCharsets.UTF_8);
 
-    Injector injector = Guice.createInjector(new GraphvizModule());
-    GraphvizGrapher grapher = injector.getInstance(GraphvizGrapher.class);
-    grapher.setOut(out);
-    grapher.setRankdir("TB");
-    grapher.graph(demoInjector);
-  }
+        Injector injector = Guice.createInjector(new GraphvizModule());
+        GraphvizGrapher grapher = injector.getInstance(GraphvizGrapher.class);
+        grapher.setOut(out);
+        grapher.setRankdir("TB");
+        grapher.graph(demoInjector);
+    }
 }

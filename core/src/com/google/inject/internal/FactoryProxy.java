@@ -16,64 +16,74 @@
 
 package com.google.inject.internal;
 
-import com.google.common.base.MoreObjects;
 import com.google.inject.Key;
 import com.google.inject.internal.InjectorImpl.JitLimitation;
 import com.google.inject.spi.Dependency;
+
+import static com.google.common.base.MoreObjects.toStringHelper;
 
 /**
  * A placeholder which enables us to swap in the real factory once the injector is created. Used for
  * a linked binding, so that getting the linked binding returns the link's factory.
  */
-final class FactoryProxy<T> extends InternalFactory<T> implements CreationListener {
+final class FactoryProxy<T>
+        extends InternalFactory<T>
+        implements CreationListener
+{
+    private final InjectorImpl injector;
+    private final Key<T> key;
+    private final Key<? extends T> targetKey;
+    private final Object source;
 
-  private final InjectorImpl injector;
-  private final Key<T> key;
-  private final Key<? extends T> targetKey;
-  private final Object source;
+    private InternalFactory<? extends T> targetFactory;
 
-  private InternalFactory<? extends T> targetFactory;
-
-  FactoryProxy(InjectorImpl injector, Key<T> key, Key<? extends T> targetKey, Object source) {
-    this.injector = injector;
-    this.key = key;
-    this.targetKey = targetKey;
-    this.source = source;
-  }
-
-  @Override
-  public void notify(final Errors errors) {
-    try {
-      targetFactory =
-          injector.getInternalFactory(
-              targetKey, errors.withSource(source), JitLimitation.NEW_OR_EXISTING_JIT);
-    } catch (ErrorsException e) {
-      errors.merge(e.getErrors());
+    FactoryProxy(InjectorImpl injector, Key<T> key, Key<? extends T> targetKey, Object source)
+    {
+        this.injector = injector;
+        this.key = key;
+        this.targetKey = targetKey;
+        this.source = source;
     }
-  }
 
-  @Override
-  public T get(InternalContext context, Dependency<?> dependency, boolean linked)
-      throws InternalProvisionException {
-    try {
-      return targetFactory.get(context, dependency, /* linked= */ true);
-    } catch (InternalProvisionException ipe) {
-      throw ipe.addSource(targetKey);
+    @Override
+    public void notify(final Errors errors)
+    {
+        try {
+            targetFactory =
+                    injector.getInternalFactory(
+                            targetKey, errors.withSource(source), JitLimitation.NEW_OR_EXISTING_JIT);
+        }
+        catch (ErrorsException e) {
+            errors.merge(e.getErrors());
+        }
     }
-  }
 
-  @Override
-  MethodHandleResult makeHandle(LinkageContext context, boolean linked) {
-    return makeCachable(
-        InternalMethodHandles.catchInternalProvisionExceptionAndRethrowWithSource(
-            targetFactory.getHandle(context, /* linked= */ true), targetKey));
-  }
+    @Override
+    public T get(InternalContext context, Dependency<?> dependency, boolean linked)
+            throws InternalProvisionException
+    {
+        try {
+            return targetFactory.get(context, dependency, /* linked= */ true);
+        }
+        catch (InternalProvisionException ipe) {
+            throw ipe.addSource(targetKey);
+        }
+    }
 
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(FactoryProxy.class)
-        .add("key", key)
-        .add("provider", targetFactory)
-        .toString();
-  }
+    @Override
+    MethodHandleResult makeHandle(LinkageContext context, boolean linked)
+    {
+        return makeCachable(
+                InternalMethodHandles.catchInternalProvisionExceptionAndRethrowWithSource(
+                        targetFactory.getHandle(context, /* linked= */ true), targetKey));
+    }
+
+    @Override
+    public String toString()
+    {
+        return toStringHelper(FactoryProxy.class)
+                .add("key", key)
+                .add("provider", targetFactory)
+                .toString();
+    }
 }

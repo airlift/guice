@@ -1,58 +1,66 @@
 package com.google.inject;
 
-import static com.google.common.truth.Truth.assertThat;
-
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 
-/** Tests that code in {@link KotlinSupport} doesn't break when analyzing Java code. */
-public class KotlinSupportDoesNotBreakJavaTest {
+import static com.google.common.truth.Truth.assertThat;
 
-  private static class InjectedViaConstructor {
-    final String s;
+/**
+ * Tests that code in {@link KotlinSupport} doesn't break when analyzing Java code.
+ */
+public class KotlinSupportDoesNotBreakJavaTest
+{
+    private static class InjectedViaConstructor
+    {
+        final String s;
 
-    @Inject
-    InjectedViaConstructor(String s) {
-      this.s = s;
+        @Inject
+        InjectedViaConstructor(String s)
+        {
+            this.s = s;
+        }
     }
-  }
 
-  @Test
-  public void testConstructorInjection() {
-    String s =
-        Guice.createInjector(
+    @Test
+    public void testConstructorInjection()
+    {
+        String s =
+                Guice.createInjector(
                 new AbstractModule() {
-                  @Override
-                  protected void configure() {
-                    bind(String.class).toInstance("test");
-                  }
+                @Override
+                protected void configure() {
+                bind(String.class).toInstance("test");
+                }
                 })
-            .getInstance(InjectedViaConstructor.class)
-            .s;
-    assertThat(s).isEqualTo("test");
-  }
-
-  private static class InjectedViaMethod {
-    String s;
-
-    @Inject
-    void setter(String s) {
-      this.s = s;
+                .getInstance(InjectedViaConstructor.class)
+                .s;
+        assertThat(s).isEqualTo("test");
     }
-  }
 
-  @Test
-  public void testMethodInjection() {
-    String s =
-        Guice.createInjector(
+    private static class InjectedViaMethod
+    {
+        String s;
+
+        @Inject
+        void setter(String s)
+        {
+            this.s = s;
+        }
+    }
+
+    @Test
+    public void testMethodInjection()
+    {
+        String s =
+                Guice.createInjector(
                 new AbstractModule() {
-                  @Override
-                  protected void configure() {
-                    bind(String.class).toInstance("test");
-                  }
+                @Override
+                protected void configure() {
+                bind(String.class).toInstance("test");
+                }
                 })
-            .getInstance(InjectedViaMethod.class)
-            .s;
-    assertThat(s).isEqualTo("test");
-  }
+                .getInstance(InjectedViaMethod.class)
+                .s;
+        assertThat(s).isEqualTo("test");
+    }
 }

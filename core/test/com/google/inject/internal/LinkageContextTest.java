@@ -15,148 +15,165 @@
  */
 package com.google.inject.internal;
 
+import com.google.errorprone.annotations.Keep;
+import com.google.inject.Key;
+import com.google.inject.spi.Dependency;
+import org.junit.jupiter.api.Test;
+
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
+
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.inject.internal.InternalMethodHandles.castReturnToObject;
 import static java.lang.invoke.MethodType.methodType;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.google.errorprone.annotations.Keep;
-import com.google.inject.Key;
-import com.google.inject.spi.Dependency;
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Supplier;
-import org.junit.jupiter.api.Test;
+public final class LinkageContextTest
+{
+    private static final Dependency<?> DEP = Dependency.get(Key.get(String.class));
 
-public final class LinkageContextTest {
-  private static final Dependency<?> DEP = Dependency.get(Key.get(String.class));
+    private static InternalFactory<String> makeFactory(Supplier<MethodHandle> handle)
+    {
+        return new InternalFactory<String>()
+        {
+            @Override
+            String get(InternalContext context, Dependency<?> dependency, boolean linked)
+                    throws InternalProvisionException
+            {
+                throw new UnsupportedOperationException("Unimplemented method 'get'");
+            }
 
-  private static InternalFactory<String> makeFactory(Supplier<MethodHandle> handle) {
-    return new InternalFactory<String>() {
+            @Override
+            MethodHandleResult makeHandle(LinkageContext context, boolean linked)
+            {
+                return makeCachable(handle.get());
+            }
+        };
+    }
 
-      @Override
-      String get(InternalContext context, Dependency<?> dependency, boolean linked)
-          throws InternalProvisionException {
-        throw new UnsupportedOperationException("Unimplemented method 'get'");
-      }
+    @Test
+    public void testMakeHandle_returnsHandle()
+            throws Throwable
+    {
+        LinkageContext context = new LinkageContext();
+        var result =
+                (Object)
+                        context
+                                .makeHandle(
+                                        makeFactory(
+                                                () -> InternalMethodHandles.constantFactoryGetHandle("Hello World")),
+                                        false)
+                                .methodHandle()
+                                .invokeExact((InternalContext) null, (Dependency<?>) null);
+        assertThat(result).isEqualTo("Hello World");
+    }
 
-      @Override
-      MethodHandleResult makeHandle(LinkageContext context, boolean linked) {
-        return makeCachable(handle.get());
-      }
-    };
-  }
+    @Keep
+    static String incrementAndReturn(
+            InternalContext ignored,
+            Dependency<?> ignored2,
+            String s,
+            int[] callCount)
+    {
+        callCount[0]++;
+        return s;
+    }
 
-  @Test
-  public void testMakeHandle_returnsHandle() throws Throwable {
-    LinkageContext context = new LinkageContext();
-    var result =
-        (Object)
-            context
-                .makeHandle(
-                    makeFactory(
-                        () -> InternalMethodHandles.constantFactoryGetHandle("Hello World")),
-                    false)
-                .methodHandle()
-                .invokeExact((InternalContext) null, (Dependency<?>) null);
-    assertThat(result).isEqualTo("Hello World");
-  }
+    private static final MethodHandle INCREMENT_AND_RETURN_HANDLE =
+            InternalMethodHandles.findStaticOrDie(
+                    LinkageContextTest.class,
+                    "incrementAndReturn",
+                    methodType(
+                            String.class, InternalContext.class, Dependency.class, String.class, int[].class));
 
-  @Keep
-  static String incrementAndReturn(
-      InternalContext ignored, Dependency<?> ignored2, String s, int[] callCount) {
-    callCount[0]++;
-    return s;
-  }
+    // Demonstrate that a recursive call links ultimately to the same method handle of the initial
+    // call.
+    @Test
+    public void testMakeHandle_resolvesCycles()
+            throws Throwable
+    {
+        LinkageContext context = new LinkageContext();
+        int[] callCount = new int[1];
+        MethodHandle[] recursiveHandle = new MethodHandle[1];
+        AtomicReference<InternalFactory<String>> factoryReference = new AtomicReference<>();
+        var factory =
+                makeFactory(
+                        () -> {
+                            if (recursiveHandle[0] != null) {
+                                throw new AssertionError();
+                            }
+                            recursiveHandle[0] = context.makeHandle(factoryReference.get(), false).methodHandle();
+                            return castReturnToObject(
+                                    MethodHandles.insertArguments(
+                                            INCREMENT_AND_RETURN_HANDLE, 2, "Hello World", callCount));
+                        });
+        factoryReference.set(factory);
+        MethodHandle handle = context.makeHandle(factory, false).methodHandle();
+        assertThat((Object) handle.invokeExact((InternalContext) null, (Dependency<?>) null))
+                .isEqualTo("Hello World");
+        assertThat(callCount[0]).isEqualTo(1);
+        assertThat((Object) handle.invokeExact((InternalContext) null, (Dependency<?>) null))
+                .isEqualTo("Hello World");
+        assertThat(callCount[0]).isEqualTo(2);
 
-  private static final MethodHandle INCREMENT_AND_RETURN_HANDLE =
-      InternalMethodHandles.findStaticOrDie(
-          LinkageContextTest.class,
-          "incrementAndReturn",
-          methodType(
-              String.class, InternalContext.class, Dependency.class, String.class, int[].class));
+        // The recursive handle is linked to the same instance, just indirectly.
+        assertThat(
+                (Object) recursiveHandle[0].invokeExact((InternalContext) null, (Dependency<?>) null))
+                .isEqualTo("Hello World");
+        assertThat(callCount[0]).isEqualTo(3);
+    }
 
-  // Demonstrate that a recursive call links ultimately to the same method handle of the initial
-  // call.
-  @Test
-  public void testMakeHandle_resolvesCycles() throws Throwable {
-    LinkageContext context = new LinkageContext();
-    int[] callCount = new int[1];
-    MethodHandle[] recursiveHandle = new MethodHandle[1];
-    AtomicReference<InternalFactory<String>> factoryReference = new AtomicReference<>();
-    var factory =
-        makeFactory(
-            () -> {
-              if (recursiveHandle[0] != null) {
-                throw new AssertionError();
-              }
-              recursiveHandle[0] = context.makeHandle(factoryReference.get(), false).methodHandle();
-              return castReturnToObject(
-                  MethodHandles.insertArguments(
-                      INCREMENT_AND_RETURN_HANDLE, 2, "Hello World", callCount));
-            });
-    factoryReference.set(factory);
-    MethodHandle handle = context.makeHandle(factory, false).methodHandle();
-    assertThat((Object) handle.invokeExact((InternalContext) null, (Dependency<?>) null))
-        .isEqualTo("Hello World");
-    assertThat(callCount[0]).isEqualTo(1);
-    assertThat((Object) handle.invokeExact((InternalContext) null, (Dependency<?>) null))
-        .isEqualTo("Hello World");
-    assertThat(callCount[0]).isEqualTo(2);
+    @Keep
+    static String detectsCycle(InternalContext ctx, Dependency<?> ignored, int[] callCount)
+            throws InternalProvisionException
+    {
+        callCount[0]++;
+        var unused = ctx.tryStartConstruction(1, DEP);
+        return "Hello World";
+    }
 
-    // The recursive handle is linked to the same instance, just indirectly.
-    assertThat(
-            (Object) recursiveHandle[0].invokeExact((InternalContext) null, (Dependency<?>) null))
-        .isEqualTo("Hello World");
-    assertThat(callCount[0]).isEqualTo(3);
-  }
+    private static final MethodHandle DETECTS_CYCLE_HANDLE =
+            InternalMethodHandles.findStaticOrDie(
+                    LinkageContextTest.class,
+                    "detectsCycle",
+                    methodType(String.class, InternalContext.class, Dependency.class, int[].class));
 
-  @Keep
-  static String detectsCycle(InternalContext ctx, Dependency<?> ignored, int[] callCount)
-      throws InternalProvisionException {
-    callCount[0]++;
-    var unused = ctx.tryStartConstruction(1, DEP);
-    return "Hello World";
-  }
+    @Test
+    public void testMakeHandle_isRecursive()
+            throws Throwable
+    {
+        LinkageContext context = new LinkageContext();
+        int[] callCount = new int[1];
+        AtomicReference<InternalFactory<String>> factoryReference = new AtomicReference<>();
+        var factory =
+                makeFactory(
+                        () -> {
+                            var recursiveHandle = context.makeHandle(factoryReference.get(), false).methodHandle();
 
-  private static final MethodHandle DETECTS_CYCLE_HANDLE =
-      InternalMethodHandles.findStaticOrDie(
-          LinkageContextTest.class,
-          "detectsCycle",
-          methodType(String.class, InternalContext.class, Dependency.class, int[].class));
-
-  @Test
-  public void testMakeHandle_isRecursive() throws Throwable {
-    LinkageContext context = new LinkageContext();
-    int[] callCount = new int[1];
-    AtomicReference<InternalFactory<String>> factoryReference = new AtomicReference<>();
-    var factory =
-        makeFactory(
-            () -> {
-              var recursiveHandle = context.makeHandle(factoryReference.get(), false).methodHandle();
-
-              // This calls `detectsCycle` and then the recursive handle.
-              return castReturnToObject(
-                  MethodHandles.foldArguments(
-                      recursiveHandle,
-                      InternalMethodHandles.dropReturn(
-                          MethodHandles.insertArguments(DETECTS_CYCLE_HANDLE, 2, callCount))));
-            });
-    factoryReference.set(factory);
-    MethodHandle handle = context.makeHandle(factory, false).methodHandle();
-    var ipe =
-        assertThrows(
-            InternalProvisionException.class,
-            () -> {
-              var unused =
-                  (Object)
-                      handle.invokeExact(
-                          InternalContext.create(
-                              /* disableCircularProxies= */ true, new Object[] {null}),
-                          (Dependency<?>) null);
-            });
-    // It throws on the second call, so we should have called it twice.
-    assertThat(callCount[0]).isEqualTo(2);
-  }
+                            // This calls `detectsCycle` and then the recursive handle.
+                            return castReturnToObject(
+                                    MethodHandles.foldArguments(
+                                            recursiveHandle,
+                                            InternalMethodHandles.dropReturn(
+                                                    MethodHandles.insertArguments(DETECTS_CYCLE_HANDLE, 2, callCount))));
+                        });
+        factoryReference.set(factory);
+        MethodHandle handle = context.makeHandle(factory, false).methodHandle();
+        var ipe =
+                assertThrows(
+                        InternalProvisionException.class,
+                        () -> {
+                            var unused =
+                                    (Object)
+                                            handle.invokeExact(
+                                                    InternalContext.create(
+                                                            /* disableCircularProxies= */ true,
+                                                            new Object[] {null}),
+                                                    (Dependency<?>) null);
+                        });
+        // It throws on the second call, so we should have called it twice.
+        assertThat(callCount[0]).isEqualTo(2);
+    }
 }

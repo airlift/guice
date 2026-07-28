@@ -25,14 +25,15 @@ import com.google.inject.Binding;
  * @author bojand@google.com (Bojan Djordjevic)
  * @since 4.0
  */
-public interface AliasCreator {
-  /**
-   * Returns aliases for the given dependency graph. The aliases do not need to be transitively
-   * resolved, i.e. it is valid to return an alias (X to Y) and an alias (Y to Z). It is the
-   * responsibility of the caller to resolve this to (X to Z) and (Y to Z).
-   *
-   * @param bindings bindings that make up the dependency graph
-   * @return aliases that should be applied on the graph
-   */
-  Iterable<Alias> createAliases(Iterable<Binding<?>> bindings);
+public interface AliasCreator
+{
+    /**
+     * Returns aliases for the given dependency graph. The aliases do not need to be transitively
+     * resolved, i.e. it is valid to return an alias (X to Y) and an alias (Y to Z). It is the
+     * responsibility of the caller to resolve this to (X to Z) and (Y to Z).
+     *
+     * @param bindings bindings that make up the dependency graph
+     * @return aliases that should be applied on the graph
+     */
+    Iterable<Alias> createAliases(Iterable<Binding<?>> bindings);
 }

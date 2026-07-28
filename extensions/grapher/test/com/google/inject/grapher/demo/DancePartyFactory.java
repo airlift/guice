@@ -21,6 +21,7 @@ package com.google.inject.grapher.demo;
  *
  * @author phopkins@gmail.com (Pete Hopkins)
  */
-interface DancePartyFactory {
-  DanceParty newDanceParty(String thatNewSound);
+interface DancePartyFactory
+{
+    DanceParty newDanceParty(String thatNewSound);
 }

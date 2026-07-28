@@ -24,12 +24,12 @@ package com.google.inject.spi;
  * @author jessewilson@google.com (Jesse Wilson)
  * @since 2.0
  */
-public interface InjectionListener<I> {
-
-  /**
-   * Invoked by Guice after it injects the fields and methods of instance.
-   *
-   * @param injectee instance that Guice injected dependencies into
-   */
-  void afterInjection(I injectee);
+public interface InjectionListener<I>
+{
+    /**
+     * Invoked by Guice after it injects the fields and methods of instance.
+     *
+     * @param injectee instance that Guice injected dependencies into
+     */
+    void afterInjection(I injectee);
 }

@@ -23,21 +23,24 @@ package com.google.inject.grapher.graphviz;
  *
  * @author phopkins@gmail.com (Pete Hopkins)
  */
-public enum EdgeStyle {
-  BOLD("bold"),
-  DASHED("dashed"),
-  DOTTED("dotted"),
-  INVISIBLE("invis"),
-  SOLID("solid");
+public enum EdgeStyle
+{
+    BOLD("bold"),
+    DASHED("dashed"),
+    DOTTED("dotted"),
+    INVISIBLE("invis"),
+    SOLID("solid");
 
-  private final String name;
+    private final String name;
 
-  EdgeStyle(String name) {
-    this.name = name;
-  }
+    EdgeStyle(String name)
+    {
+        this.name = name;
+    }
 
-  @Override
-  public String toString() {
-    return name;
-  }
+    @Override
+    public String toString()
+    {
+        return name;
+    }
 }

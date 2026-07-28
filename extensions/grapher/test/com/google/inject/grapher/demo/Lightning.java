@@ -19,8 +19,10 @@ package com.google.inject.grapher.demo;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
-class Lightning implements EnergySource {
-  @Inject
-  @Named("year")
-  String yearOfStrike;
+class Lightning
+        implements EnergySource
+{
+    @Inject
+    @Named("year")
+    String yearOfStrike;
 }

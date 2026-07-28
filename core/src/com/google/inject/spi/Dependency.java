@@ -16,16 +16,16 @@
 
 package com.google.inject.spi;
 
-
-import static java.util.Objects.requireNonNull;
-
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Key;
 import com.google.inject.internal.MoreTypes;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A variable that can be resolved by an injector.
@@ -37,90 +37,108 @@ import java.util.Set;
  * @author jessewilson@google.com (Jesse Wilson)
  * @since 2.0
  */
-public final class Dependency<T> {
-  private final InjectionPoint injectionPoint;
-  private final Key<T> key;
-  private final boolean nullable;
-  private final int parameterIndex;
+public final class Dependency<T>
+{
+    private final InjectionPoint injectionPoint;
+    private final Key<T> key;
+    private final boolean nullable;
+    private final int parameterIndex;
 
-  Dependency(InjectionPoint injectionPoint, Key<T> key, boolean nullable, int parameterIndex) {
-    this.injectionPoint = injectionPoint;
-    this.key = requireNonNull(key, "key");
-    this.nullable = nullable;
-    this.parameterIndex = parameterIndex;
-  }
-
-  /**
-   * Returns a new dependency that is not attached to an injection point. The returned dependency is
-   * nullable.
-   */
-  public static <T> Dependency<T> get(Key<T> key) {
-    return new Dependency<T>(null, MoreTypes.canonicalizeKey(key), true, -1);
-  }
-
-  /** Returns the dependencies from the given injection points. */
-  public static Set<Dependency<?>> forInjectionPoints(Set<InjectionPoint> injectionPoints) {
-    List<Dependency<?>> dependencies = new ArrayList<>();
-    for (InjectionPoint injectionPoint : injectionPoints) {
-      dependencies.addAll(injectionPoint.getDependencies());
+    Dependency(InjectionPoint injectionPoint, Key<T> key, boolean nullable, int parameterIndex)
+    {
+        this.injectionPoint = injectionPoint;
+        this.key = requireNonNull(key, "key");
+        this.nullable = nullable;
+        this.parameterIndex = parameterIndex;
     }
-    return ImmutableSet.copyOf(dependencies);
-  }
 
-  /** Returns the key to the binding that satisfies this dependency. */
-  public Key<T> getKey() {
-    return this.key;
-  }
-
-  /** Returns true if null is a legal value for this dependency. */
-  public boolean isNullable() {
-    return nullable;
-  }
-
-  /**
-   * Returns the injection point to which this dependency belongs, or null if this dependency isn't
-   * attached to a particular injection point.
-   */
-  public InjectionPoint getInjectionPoint() {
-    return injectionPoint;
-  }
-
-  /**
-   * Returns the index of this dependency in the injection point's parameter list, or {@code -1} if
-   * this dependency does not belong to a parameter list. Only method and constructor dependencies
-   * are elements in a parameter list.
-   */
-  public int getParameterIndex() {
-    return parameterIndex;
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(injectionPoint, parameterIndex, key);
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (o instanceof Dependency) {
-      Dependency<?> dependency = (Dependency<?>) o;
-      return Objects.equals(injectionPoint, dependency.injectionPoint)
-          && parameterIndex == dependency.parameterIndex
-          && key.equals(dependency.key);
-    } else {
-      return false;
+    /**
+     * Returns a new dependency that is not attached to an injection point. The returned dependency is
+     * nullable.
+     */
+    public static <T> Dependency<T> get(Key<T> key)
+    {
+        return new Dependency<T>(null, MoreTypes.canonicalizeKey(key), true, -1);
     }
-  }
 
-  @Override
-  public String toString() {
-    StringBuilder builder = new StringBuilder();
-    builder.append(key);
-    if (injectionPoint != null) {
-      builder.append('@').append(injectionPoint);
-      if (parameterIndex != -1) {
-        builder.append('[').append(parameterIndex).append(']');
-      }
+    /**
+     * Returns the dependencies from the given injection points.
+     */
+    public static Set<Dependency<?>> forInjectionPoints(Set<InjectionPoint> injectionPoints)
+    {
+        List<Dependency<?>> dependencies = new ArrayList<>();
+        for (InjectionPoint injectionPoint : injectionPoints) {
+            dependencies.addAll(injectionPoint.getDependencies());
+        }
+        return ImmutableSet.copyOf(dependencies);
     }
-    return builder.toString();
-  }
+
+    /**
+     * Returns the key to the binding that satisfies this dependency.
+     */
+    public Key<T> getKey()
+    {
+        return this.key;
+    }
+
+    /**
+     * Returns true if null is a legal value for this dependency.
+     */
+    public boolean isNullable()
+    {
+        return nullable;
+    }
+
+    /**
+     * Returns the injection point to which this dependency belongs, or null if this dependency isn't
+     * attached to a particular injection point.
+     */
+    public InjectionPoint getInjectionPoint()
+    {
+        return injectionPoint;
+    }
+
+    /**
+     * Returns the index of this dependency in the injection point's parameter list, or {@code -1} if
+     * this dependency does not belong to a parameter list. Only method and constructor dependencies
+     * are elements in a parameter list.
+     */
+    public int getParameterIndex()
+    {
+        return parameterIndex;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(injectionPoint, parameterIndex, key);
+    }
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if (o instanceof Dependency) {
+            Dependency<?> dependency = (Dependency<?>) o;
+            return Objects.equals(injectionPoint, dependency.injectionPoint)
+                    && parameterIndex == dependency.parameterIndex
+                    && key.equals(dependency.key);
+        }
+        else {
+            return false;
+        }
+    }
+
+    @Override
+    public String toString()
+    {
+        StringBuilder builder = new StringBuilder();
+        builder.append(key);
+        if (injectionPoint != null) {
+            builder.append('@').append(injectionPoint);
+            if (parameterIndex != -1) {
+                builder.append('[').append(parameterIndex).append(']');
+            }
+        }
+        return builder.toString();
+    }
 }

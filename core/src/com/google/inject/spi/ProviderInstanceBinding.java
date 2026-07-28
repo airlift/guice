@@ -18,6 +18,7 @@ package com.google.inject.spi;
 
 import com.google.inject.Binding;
 import com.google.inject.Provider;
+
 import java.util.Set;
 
 /**
@@ -27,29 +28,30 @@ import java.util.Set;
  * @author jessewilson@google.com (Jesse Wilson)
  * @since 2.0
  */
-public interface ProviderInstanceBinding<T> extends Binding<T>, HasDependencies {
+public interface ProviderInstanceBinding<T>
+        extends Binding<T>, HasDependencies
+{
+    /**
+     * If the user supplied a JSR330 binding, then this will wrap that one. To always return the
+     * user-supplied provider, use {@link #getUserSuppliedProvider}.
+     *
+     * @deprecated Use {@link #getUserSuppliedProvider} instead.
+     */
+    @Deprecated
+    Provider<? extends T> getProviderInstance();
 
-  /**
-   * If the user supplied a JSR330 binding, then this will wrap that one. To always return the
-   * user-supplied provider, use {@link #getUserSuppliedProvider}.
-   *
-   * @deprecated Use {@link #getUserSuppliedProvider} instead.
-   */
-  @Deprecated
-  Provider<? extends T> getProviderInstance();
+    /**
+     * Returns the user-supplied, unscoped provider.
+     *
+     * @since 4.0
+     */
+    jakarta.inject.Provider<? extends T> getUserSuppliedProvider();
 
-  /**
-   * Returns the user-supplied, unscoped provider.
-   *
-   * @since 4.0
-   */
-  jakarta.inject.Provider<? extends T> getUserSuppliedProvider();
-
-  /**
-   * Returns the field and method injection points of the provider, injected at injector-creation
-   * time only.
-   *
-   * @return a possibly empty set
-   */
-  Set<InjectionPoint> getInjectionPoints();
+    /**
+     * Returns the field and method injection points of the provider, injected at injector-creation
+     * time only.
+     *
+     * @return a possibly empty set
+     */
+    Set<InjectionPoint> getInjectionPoints();
 }

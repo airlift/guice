@@ -14,87 +14,99 @@
 
 package com.google.inject.internal;
 
+import com.google.inject.Injector;
+import com.google.inject.Key;
+
+import java.util.Set;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.google.inject.Injector;
-import com.google.inject.Key;
-import java.util.Set;
-
 /**
  * Utilities for verifying com.google.inject.internal.WeakKeySet is not leaking memory.
  *
  * @author dweis@google.com (Daniel Weis)
  */
-public final class WeakKeySetUtils {
+public final class WeakKeySetUtils
+{
+    private WeakKeySetUtils() {}
 
-  private WeakKeySetUtils() {}
-
-  public static void assertBanned(Injector injector, Key<?> key) {
-    assertBannedState(injector, key, true);
-  }
-
-  public static void assertNotBanned(Injector injector, Key<?> key) {
-    assertBannedState(injector, key, false);
-  }
-
-  public static void assertNotInSet(WeakKeySet set, Key<?> key) {
-    // if we're expecting it to not be in the set, loop around and wait for threads to run.
-    for (int i = 0; i < 10; i++) {
-      if (!set.contains(key)) {
-        break;
-      }
-      sleep();
+    public static void assertBanned(Injector injector, Key<?> key)
+    {
+        assertBannedState(injector, key, true);
     }
-    assertFalse(set.contains(key));
-    assertNull(set.getSources(Key.get(Integer.class)));
-  }
 
-  public static void assertInSet(
-      WeakKeySet set, Key<?> key, int expectedSources, Object... sources) {
-    assertTrue(set.contains(key));
-    assertEquals(expectedSources, set.getSources(key).size());
-    for (Object source : sources) {
-      assertTrue(set.getSources(key).contains(source), "didn't contain source: " + source);
+    public static void assertNotBanned(Injector injector, Key<?> key)
+    {
+        assertBannedState(injector, key, false);
     }
-  }
 
-  public static void assertSourceNotInSet(WeakKeySet set, Key<?> key, Object source) {
-    // if we're expecting it to not be a source, loop around and wait for threads to run.
-    for (int i = 0; i < 10; i++) {
-      Set<Object> sources = set.getSources(key);
-      assertNotNull(source, "expected at least one source");
-      if (!sources.contains(source)) {
-        break;
-      }
-      sleep();
-    }
-    Set<Object> sources = set.getSources(key);
-    assertNotNull(source, "expected at least one source");
-    assertFalse(sources.contains(source));
-  }
-
-  private static void assertBannedState(Injector injector, Key<?> key, boolean isBanned) {
-    // if we're expecting it to not be banned, loop around and wait for threads to run.
-    if (!isBanned) {
-      for (int i = 0; i < 10; i++) {
-        if (!((InjectorImpl) injector).getJitBindingData().isBannedKey(key)) {
-          break;
+    public static void assertNotInSet(WeakKeySet set, Key<?> key)
+    {
+        // if we're expecting it to not be in the set, loop around and wait for threads to run.
+        for (int i = 0; i < 10; i++) {
+            if (!set.contains(key)) {
+                break;
+            }
+            sleep();
         }
-        sleep();
-      }
+        assertFalse(set.contains(key));
+        assertNull(set.getSources(Key.get(Integer.class)));
     }
-    assertEquals(isBanned, ((InjectorImpl) injector).getJitBindingData().isBannedKey(key));
-  }
 
-  private static void sleep() {
-    try {
-      Thread.sleep(1000);
-    } catch (InterruptedException e) {
-      throw new RuntimeException(e);
+    public static void assertInSet(
+            WeakKeySet set,
+            Key<?> key,
+            int expectedSources,
+            Object... sources)
+    {
+        assertTrue(set.contains(key));
+        assertEquals(expectedSources, set.getSources(key).size());
+        for (Object source : sources) {
+            assertTrue(set.getSources(key).contains(source), "didn't contain source: " + source);
+        }
     }
-  }
+
+    public static void assertSourceNotInSet(WeakKeySet set, Key<?> key, Object source)
+    {
+        // if we're expecting it to not be a source, loop around and wait for threads to run.
+        for (int i = 0; i < 10; i++) {
+            Set<Object> sources = set.getSources(key);
+            assertNotNull(source, "expected at least one source");
+            if (!sources.contains(source)) {
+                break;
+            }
+            sleep();
+        }
+        Set<Object> sources = set.getSources(key);
+        assertNotNull(source, "expected at least one source");
+        assertFalse(sources.contains(source));
+    }
+
+    private static void assertBannedState(Injector injector, Key<?> key, boolean isBanned)
+    {
+        // if we're expecting it to not be banned, loop around and wait for threads to run.
+        if (!isBanned) {
+            for (int i = 0; i < 10; i++) {
+                if (!((InjectorImpl) injector).getJitBindingData().isBannedKey(key)) {
+                    break;
+                }
+                sleep();
+            }
+        }
+        assertEquals(isBanned, ((InjectorImpl) injector).getJitBindingData().isBannedKey(key));
+    }
+
+    private static void sleep()
+    {
+        try {
+            Thread.sleep(1000);
+        }
+        catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

@@ -19,6 +19,7 @@ package com.google.inject.internal.aop;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+
 import java.util.logging.Logger;
 
 /**
@@ -26,56 +27,71 @@ import java.util.logging.Logger;
  *
  * @author mcculls@gmail.com (Stuart McCulloch)
  */
-final class ChildClassDefiner implements ClassDefiner {
+final class ChildClassDefiner
+        implements ClassDefiner
+{
+    private static final Logger logger = Logger.getLogger(ChildClassDefiner.class.getName());
 
-  private static final Logger logger = Logger.getLogger(ChildClassDefiner.class.getName());
-
-  // initialization-on-demand...
-  private static class SystemChildLoaderHolder {
-    static final ChildLoader SYSTEM_CHILD_LOADER = new ChildLoader();
-  }
-
-  // initialization-on-demand...
-  private static class ChildLoaderCacheHolder {
-    static final LoadingCache<ClassLoader, ChildLoader> CHILD_LOADER_CACHE =
-        CacheBuilder.newBuilder()
-            .weakKeys()
-            .weakValues()
-            .build(CacheLoader.from(ChildClassDefiner::childLoader));
-  }
-
-  @Override
-  public Class<?> define(Class<?> hostClass, byte[] bytecode) throws Exception {
-    ClassLoader hostLoader = hostClass.getClassLoader();
-
-    ChildLoader childLoader =
-        hostLoader != null
-            ? ChildLoaderCacheHolder.CHILD_LOADER_CACHE.get(hostLoader)
-            : SystemChildLoaderHolder.SYSTEM_CHILD_LOADER;
-
-    return childLoader.defineInChild(bytecode);
-  }
-
-  /** Creates a child loader for the given host loader */
-  static ChildLoader childLoader(ClassLoader hostLoader) {
-    logger.fine("Creating a child loader for " + hostLoader);
-    return hostLoader == null ? new ChildLoader() : new ChildLoader(hostLoader);
-  }
-
-  /** Custom class loader that grants access to defineClass */
-  private static final class ChildLoader extends ClassLoader {
-    ChildLoader(ClassLoader parent) {
-      super(parent);
+    // initialization-on-demand...
+    private static class SystemChildLoaderHolder
+    {
+        static final ChildLoader SYSTEM_CHILD_LOADER = new ChildLoader();
     }
 
-    ChildLoader() {
-      // delegate to system loader
+    // initialization-on-demand...
+    private static class ChildLoaderCacheHolder
+    {
+        static final LoadingCache<ClassLoader, ChildLoader> CHILD_LOADER_CACHE =
+                CacheBuilder.newBuilder()
+                        .weakKeys()
+                        .weakValues()
+                        .build(CacheLoader.from(ChildClassDefiner::childLoader));
     }
 
-    Class<?> defineInChild(byte[] bytecode) {
-      Class<?> type = defineClass(null, bytecode, 0, bytecode.length, null);
-      resolveClass(type);
-      return type;
+    @Override
+    public Class<?> define(Class<?> hostClass, byte[] bytecode)
+            throws Exception
+    {
+        ClassLoader hostLoader = hostClass.getClassLoader();
+
+        ChildLoader childLoader =
+                hostLoader != null
+                        ? ChildLoaderCacheHolder.CHILD_LOADER_CACHE.get(hostLoader)
+                        : SystemChildLoaderHolder.SYSTEM_CHILD_LOADER;
+
+        return childLoader.defineInChild(bytecode);
     }
-  }
+
+    /**
+     * Creates a child loader for the given host loader
+     */
+    static ChildLoader childLoader(ClassLoader hostLoader)
+    {
+        logger.fine("Creating a child loader for " + hostLoader);
+        return hostLoader == null ? new ChildLoader() : new ChildLoader(hostLoader);
+    }
+
+    /**
+     * Custom class loader that grants access to defineClass
+     */
+    private static final class ChildLoader
+            extends ClassLoader
+    {
+        ChildLoader(ClassLoader parent)
+        {
+            super(parent);
+        }
+
+        ChildLoader()
+        {
+            // delegate to system loader
+        }
+
+        Class<?> defineInChild(byte[] bytecode)
+        {
+            Class<?> type = defineClass(null, bytecode, 0, bytecode.length, null);
+            resolveClass(type);
+            return type;
+        }
+    }
 }

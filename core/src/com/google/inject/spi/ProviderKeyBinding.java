@@ -26,12 +26,13 @@ import com.google.inject.Key;
  * @author jessewilson@google.com (Jesse Wilson)
  * @since 2.0
  */
-public interface ProviderKeyBinding<T> extends Binding<T> {
-
-  /**
-   * Returns the key used to resolve the provider's binding. That binding can be retrieved from an
-   * injector using {@link com.google.inject.Injector#getBinding(Key)
-   * Injector.getBinding(providerKey)}
-   */
-  Key<? extends jakarta.inject.Provider<? extends T>> getProviderKey();
+public interface ProviderKeyBinding<T>
+        extends Binding<T>
+{
+    /**
+     * Returns the key used to resolve the provider's binding. That binding can be retrieved from an
+     * injector using {@link com.google.inject.Injector#getBinding(Key)
+     * Injector.getBinding(providerKey)}
+     */
+    Key<? extends jakarta.inject.Provider<? extends T>> getProviderKey();
 }

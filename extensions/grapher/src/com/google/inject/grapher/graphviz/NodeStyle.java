@@ -23,24 +23,27 @@ package com.google.inject.grapher.graphviz;
  *
  * @author phopkins@gmail.com (Pete Hopkins)
  */
-public enum NodeStyle {
-  BOLD("bold"),
-  DASHED("dashed"),
-  DIAGONALS("diagonals"),
-  DOTTED("dotted"),
-  INVISIBLE("invis"),
-  FILLED("filled"),
-  ROUNDED("rounded"),
-  SOLID("solid");
+public enum NodeStyle
+{
+    BOLD("bold"),
+    DASHED("dashed"),
+    DIAGONALS("diagonals"),
+    DOTTED("dotted"),
+    INVISIBLE("invis"),
+    FILLED("filled"),
+    ROUNDED("rounded"),
+    SOLID("solid");
 
-  private final String name;
+    private final String name;
 
-  NodeStyle(String name) {
-    this.name = name;
-  }
+    NodeStyle(String name)
+    {
+        this.name = name;
+    }
 
-  @Override
-  public String toString() {
-    return name;
-  }
+    @Override
+    public String toString()
+    {
+        return name;
+    }
 }

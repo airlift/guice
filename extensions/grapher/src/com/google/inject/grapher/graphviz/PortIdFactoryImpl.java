@@ -23,9 +23,12 @@ import java.lang.reflect.Member;
  *
  * @author phopkins@gmail.com (Pete Hopkins)
  */
-public class PortIdFactoryImpl implements PortIdFactory {
-  @Override
-  public String getPortId(Member member) {
-    return "m_" + Integer.toHexString(member.hashCode());
-  }
+public class PortIdFactoryImpl
+        implements PortIdFactory
+{
+    @Override
+    public String getPortId(Member member)
+    {
+        return "m_" + Integer.toHexString(member.hashCode());
+    }
 }

@@ -18,12 +18,16 @@ package com.google.inject.spi;
 
 import com.google.inject.Module;
 
-/** @author jessewilson@google.com (Jesse Wilson) */
-public class ElementApplyToTest extends ElementsTest {
-
-  @Override
-  protected void checkModule(Module module, ElementVisitor<?>... visitors) {
-    // convert from module to elements and back
-    super.checkModule(Elements.getModule(Elements.getElements(module)), visitors);
-  }
+/**
+ * @author jessewilson@google.com (Jesse Wilson)
+ */
+public class ElementApplyToTest
+        extends ElementsTest
+{
+    @Override
+    protected void checkModule(Module module, ElementVisitor<?>... visitors)
+    {
+        // convert from module to elements and back
+        super.checkModule(Elements.getModule(Elements.getElements(module)), visitors);
+    }
 }

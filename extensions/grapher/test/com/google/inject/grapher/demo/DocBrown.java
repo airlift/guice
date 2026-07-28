@@ -18,7 +18,10 @@ package com.google.inject.grapher.demo;
 
 import com.google.inject.Inject;
 
-class DocBrown implements Person {
-  // handy because it introduces a cycle
-  @Inject DeLorian stylishCar;
+class DocBrown
+        implements Person
+{
+    // handy because it introduces a cycle
+    @Inject
+    DeLorian stylishCar;
 }

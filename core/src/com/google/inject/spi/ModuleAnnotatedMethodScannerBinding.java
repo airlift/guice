@@ -16,11 +16,10 @@
 
 package com.google.inject.spi;
 
-
-import static java.util.Objects.requireNonNull;
-
 import com.google.inject.Binder;
 import com.google.inject.internal.Errors;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Represents a call to {@link Binder#scanModulesForAnnotatedMethods} in a module.
@@ -28,41 +27,49 @@ import com.google.inject.internal.Errors;
  * @author sameb@google.com (Sam Berlin)
  * @since 4.0
  */
-public final class ModuleAnnotatedMethodScannerBinding implements Element {
-  private final Object source;
-  private final ModuleAnnotatedMethodScanner scanner;
+public final class ModuleAnnotatedMethodScannerBinding
+        implements Element
+{
+    private final Object source;
+    private final ModuleAnnotatedMethodScanner scanner;
 
-  public ModuleAnnotatedMethodScannerBinding(Object source, ModuleAnnotatedMethodScanner scanner) {
-    this.source = requireNonNull(source, "source");
-    this.scanner = requireNonNull(scanner, "scanner");
-  }
+    public ModuleAnnotatedMethodScannerBinding(Object source, ModuleAnnotatedMethodScanner scanner)
+    {
+        this.source = requireNonNull(source, "source");
+        this.scanner = requireNonNull(scanner, "scanner");
+    }
 
-  @Override
-  public Object getSource() {
-    return source;
-  }
+    @Override
+    public Object getSource()
+    {
+        return source;
+    }
 
-  public ModuleAnnotatedMethodScanner getScanner() {
-    return scanner;
-  }
+    public ModuleAnnotatedMethodScanner getScanner()
+    {
+        return scanner;
+    }
 
-  @Override
-  public <T> T acceptVisitor(ElementVisitor<T> visitor) {
-    return visitor.visit(this);
-  }
+    @Override
+    public <T> T acceptVisitor(ElementVisitor<T> visitor)
+    {
+        return visitor.visit(this);
+    }
 
-  @Override
-  public void applyTo(Binder binder) {
-    binder.withSource(getSource()).scanModulesForAnnotatedMethods(scanner);
-  }
+    @Override
+    public void applyTo(Binder binder)
+    {
+        binder.withSource(getSource()).scanModulesForAnnotatedMethods(scanner);
+    }
 
-  @Override
-  public String toString() {
-    return scanner
-        + " which scans for "
-        + scanner.annotationClasses()
-        + " (bound at "
-        + Errors.convert(source)
-        + ")";
-  }
+    @Override
+    public String toString()
+    {
+        return scanner
+                + " which scans for "
+                + scanner.annotationClasses()
+                + " (bound at "
+                + Errors.convert(source)
+                + ")";
+    }
 }

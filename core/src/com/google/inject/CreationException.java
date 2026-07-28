@@ -16,12 +16,13 @@
 
 package com.google.inject;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.internal.Messages;
 import com.google.inject.spi.Message;
+
 import java.util.Collection;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Thrown when errors occur while creating a {@link Injector}. Includes a list of encountered
@@ -29,26 +30,34 @@ import java.util.Collection;
  *
  * @author crazybob@google.com (Bob Lee)
  */
-public class CreationException extends RuntimeException {
+public class CreationException
+        extends RuntimeException
+{
+    private final ImmutableSet<Message> messages;
 
-  private final ImmutableSet<Message> messages;
+    /**
+     * Creates a CreationException containing {@code messages}.
+     */
+    public CreationException(Collection<Message> messages)
+    {
+        this.messages = ImmutableSet.copyOf(messages);
+        checkArgument(!this.messages.isEmpty());
+        initCause(Messages.getOnlyCause(this.messages));
+    }
 
-  /** Creates a CreationException containing {@code messages}. */
-  public CreationException(Collection<Message> messages) {
-    this.messages = ImmutableSet.copyOf(messages);
-    checkArgument(!this.messages.isEmpty());
-    initCause(Messages.getOnlyCause(this.messages));
-  }
+    /**
+     * Returns messages for the errors that caused this exception.
+     */
+    public Collection<Message> getErrorMessages()
+    {
+        return messages;
+    }
 
-  /** Returns messages for the errors that caused this exception. */
-  public Collection<Message> getErrorMessages() {
-    return messages;
-  }
+    @Override
+    public String getMessage()
+    {
+        return Messages.formatMessages("Unable to create injector, see the following errors", messages);
+    }
 
-  @Override
-  public String getMessage() {
-    return Messages.formatMessages("Unable to create injector, see the following errors", messages);
-  }
-
-  private static final long serialVersionUID = 0;
+    private static final long serialVersionUID = 0;
 }

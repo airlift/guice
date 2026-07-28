@@ -26,78 +26,91 @@ import com.google.inject.spi.InterceptorBinding;
  *
  * @author jessewilson@google.com (Jesse Wilson)
  */
-final class ConstructorInjectorStore {
-  private final InjectorImpl injector;
+final class ConstructorInjectorStore
+{
+    private final InjectorImpl injector;
 
-  private final FailableCache<InjectionPoint, ConstructorInjector<?>> cache =
-      new FailableCache<InjectionPoint, ConstructorInjector<?>>() {
-        @Override
-        protected ConstructorInjector<?> create(InjectionPoint constructorInjector, Errors errors)
-            throws ErrorsException {
-          return createConstructor(constructorInjector, errors);
-        }
-      };
+    private final FailableCache<InjectionPoint, ConstructorInjector<?>> cache =
+            new FailableCache<InjectionPoint, ConstructorInjector<?>>()
+            {
+                @Override
+                protected ConstructorInjector<?> create(InjectionPoint constructorInjector, Errors errors)
+                        throws ErrorsException
+                {
+                    return createConstructor(constructorInjector, errors);
+                }
+            };
 
-  ConstructorInjectorStore(InjectorImpl injector) {
-    this.injector = injector;
-  }
-
-  /** Returns true if the store is in the process of loading this injection point. */
-  boolean isLoading(InjectionPoint ip) {
-    return cache.isLoading(ip);
-  }
-
-  /** Returns a new complete constructor injector with injection listeners registered. */
-  public ConstructorInjector<?> get(InjectionPoint constructorInjector, Errors errors)
-      throws ErrorsException {
-    return cache.get(constructorInjector, errors);
-  }
-
-  /**
-   * Purges an injection point from the cache. Use this only if the cache is not actually valid and
-   * needs to be purged. (See issue 319 and
-   * ImplicitBindingTest#testCircularJitBindingsLeaveNoResidue and
-   * #testInstancesRequestingProvidersForThemselvesWithChildInjectors for examples of when this is
-   * necessary.)
-   *
-   * <p>Returns true if the injector for that point was stored in the cache, false otherwise.
-   */
-  boolean remove(InjectionPoint ip) {
-    return cache.remove(ip);
-  }
-
-  private <T> ConstructorInjector<T> createConstructor(InjectionPoint injectionPoint, Errors errors)
-      throws ErrorsException {
-    int numErrorsBefore = errors.size();
-
-    SingleParameterInjector<?>[] constructorParameterInjectors =
-        injector.getParametersInjectors(injectionPoint.getDependencies(), errors);
-
-    @SuppressWarnings("unchecked") // the injector type agrees with the injection point type
-    MembersInjectorImpl<T> membersInjector =
-        (MembersInjectorImpl<T>)
-            injector.membersInjectorStore.get(injectionPoint.getDeclaringType(), errors);
-    ConstructionProxyFactory<T> factory = null;
-    if (InternalFlags.isBytecodeGenEnabled()) {
-      ImmutableList<InterceptorBinding> injectorBindings =
-          injector.getBindingData().getInterceptorBindings();
-      ImmutableList<MethodAspect> methodAspects =
-          ImmutableList.<MethodAspect>builder()
-              .addAll(Lists.transform(injectorBindings, MethodAspect::fromBinding))
-              .addAll(membersInjector.getAddedAspects())
-              .build();
-      factory = new ProxyFactory<>(injectionPoint, methodAspects);
-    } else {
-      factory = new DefaultConstructionProxyFactory<>(injectionPoint);
+    ConstructorInjectorStore(InjectorImpl injector)
+    {
+        this.injector = injector;
     }
 
-    errors.throwIfNewErrors(numErrorsBefore);
+    /**
+     * Returns true if the store is in the process of loading this injection point.
+     */
+    boolean isLoading(InjectionPoint ip)
+    {
+        return cache.isLoading(ip);
+    }
 
-    return new ConstructorInjector<T>(
-        membersInjector.getInjectionPoints(),
-        factory.create(),
-        constructorParameterInjectors,
-        membersInjector,
-        injector.circularFactoryIdFactory.next());
-  }
+    /**
+     * Returns a new complete constructor injector with injection listeners registered.
+     */
+    public ConstructorInjector<?> get(InjectionPoint constructorInjector, Errors errors)
+            throws ErrorsException
+    {
+        return cache.get(constructorInjector, errors);
+    }
+
+    /**
+     * Purges an injection point from the cache. Use this only if the cache is not actually valid and
+     * needs to be purged. (See issue 319 and
+     * ImplicitBindingTest#testCircularJitBindingsLeaveNoResidue and
+     * #testInstancesRequestingProvidersForThemselvesWithChildInjectors for examples of when this is
+     * necessary.)
+     *
+     * <p>Returns true if the injector for that point was stored in the cache, false otherwise.
+     */
+    boolean remove(InjectionPoint ip)
+    {
+        return cache.remove(ip);
+    }
+
+    private <T> ConstructorInjector<T> createConstructor(InjectionPoint injectionPoint, Errors errors)
+            throws ErrorsException
+    {
+        int numErrorsBefore = errors.size();
+
+        SingleParameterInjector<?>[] constructorParameterInjectors =
+                injector.getParametersInjectors(injectionPoint.getDependencies(), errors);
+
+        @SuppressWarnings("unchecked") // the injector type agrees with the injection point type
+        MembersInjectorImpl<T> membersInjector =
+                (MembersInjectorImpl<T>)
+                        injector.membersInjectorStore.get(injectionPoint.getDeclaringType(), errors);
+        ConstructionProxyFactory<T> factory = null;
+        if (InternalFlags.isBytecodeGenEnabled()) {
+            ImmutableList<InterceptorBinding> injectorBindings =
+                    injector.getBindingData().getInterceptorBindings();
+            ImmutableList<MethodAspect> methodAspects =
+                    ImmutableList.<MethodAspect>builder()
+                            .addAll(Lists.transform(injectorBindings, MethodAspect::fromBinding))
+                            .addAll(membersInjector.getAddedAspects())
+                            .build();
+            factory = new ProxyFactory<>(injectionPoint, methodAspects);
+        }
+        else {
+            factory = new DefaultConstructionProxyFactory<>(injectionPoint);
+        }
+
+        errors.throwIfNewErrors(numErrorsBefore);
+
+        return new ConstructorInjector<T>(
+                membersInjector.getInjectionPoints(),
+                factory.create(),
+                constructorParameterInjectors,
+                membersInjector,
+                injector.circularFactoryIdFactory.next());
+    }
 }

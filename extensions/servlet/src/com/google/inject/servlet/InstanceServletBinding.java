@@ -24,8 +24,11 @@ import jakarta.servlet.http.HttpServlet;
  * @author sameb@google.com
  * @since 3.0
  */
-public interface InstanceServletBinding extends ServletModuleBinding {
-
-  /** Returns the servlet instance that will be used. */
-  HttpServlet getServletInstance();
+public interface InstanceServletBinding
+        extends ServletModuleBinding
+{
+    /**
+     * Returns the servlet instance that will be used.
+     */
+    HttpServlet getServletInstance();
 }

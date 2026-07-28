@@ -17,6 +17,7 @@
 package com.google.inject.grapher;
 
 import com.google.inject.Key;
+
 import java.lang.reflect.Member;
 
 /**
@@ -25,14 +26,15 @@ import java.lang.reflect.Member;
  *
  * @author phopkins@gmail.com (Pete Hopkins)
  */
-public interface NameFactory {
-  String getMemberName(Member member);
+public interface NameFactory
+{
+    String getMemberName(Member member);
 
-  String getClassName(Key<?> key);
+    String getClassName(Key<?> key);
 
-  String getInstanceName(Object instance);
+    String getInstanceName(Object instance);
 
-  String getAnnotationName(Key<?> key);
+    String getAnnotationName(Key<?> key);
 
-  String getSourceName(Object source);
+    String getSourceName(Object source);
 }

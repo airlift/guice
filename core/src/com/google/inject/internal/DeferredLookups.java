@@ -23,6 +23,7 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.spi.Element;
 import com.google.inject.spi.MembersInjectorLookup;
 import com.google.inject.spi.ProviderLookup;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,33 +33,41 @@ import java.util.List;
  *
  * @author jessewilson@google.com (Jesse Wilson)
  */
-final class DeferredLookups implements Lookups {
-  private final InjectorImpl injector;
-  private final List<Element> lookups = new ArrayList<>();
+final class DeferredLookups
+        implements Lookups
+{
+    private final InjectorImpl injector;
+    private final List<Element> lookups = new ArrayList<>();
 
-  DeferredLookups(InjectorImpl injector) {
-    this.injector = injector;
-  }
+    DeferredLookups(InjectorImpl injector)
+    {
+        this.injector = injector;
+    }
 
-  /** Initialize the specified lookups, either immediately or when the injector is created. */
-  void initialize(Errors errors) {
-    // Since we are initializing the lookups, we can now use the injector as the lookups.
-    injector.lookups = injector;
-    new LookupBindingProcessor(errors).process(injector, lookups);
-    new LookupProcessor(errors).process(injector, lookups);
-  }
+    /**
+     * Initialize the specified lookups, either immediately or when the injector is created.
+     */
+    void initialize(Errors errors)
+    {
+        // Since we are initializing the lookups, we can now use the injector as the lookups.
+        injector.lookups = injector;
+        new LookupBindingProcessor(errors).process(injector, lookups);
+        new LookupProcessor(errors).process(injector, lookups);
+    }
 
-  @Override
-  public <T> Provider<T> getProvider(Key<T> key) {
-    ProviderLookup<T> lookup = new ProviderLookup<>(key, key);
-    lookups.add(lookup);
-    return lookup.getProvider();
-  }
+    @Override
+    public <T> Provider<T> getProvider(Key<T> key)
+    {
+        ProviderLookup<T> lookup = new ProviderLookup<>(key, key);
+        lookups.add(lookup);
+        return lookup.getProvider();
+    }
 
-  @Override
-  public <T> MembersInjector<T> getMembersInjector(TypeLiteral<T> type) {
-    MembersInjectorLookup<T> lookup = new MembersInjectorLookup<>(type, type);
-    lookups.add(lookup);
-    return lookup.getMembersInjector();
-  }
+    @Override
+    public <T> MembersInjector<T> getMembersInjector(TypeLiteral<T> type)
+    {
+        MembersInjectorLookup<T> lookup = new MembersInjectorLookup<>(type, type);
+        lookups.add(lookup);
+        return lookup.getMembersInjector();
+    }
 }

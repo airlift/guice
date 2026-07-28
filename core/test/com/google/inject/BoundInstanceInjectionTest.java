@@ -16,130 +16,158 @@
 
 package com.google.inject;
 
+import com.google.inject.name.Named;
+import org.junit.jupiter.api.Test;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
-import com.google.inject.name.Named;
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
-import org.junit.jupiter.api.Test;
 
-/** @author crazybob@google.com (Bob Lee) */
-public class BoundInstanceInjectionTest {
+/**
+ * @author crazybob@google.com (Bob Lee)
+ */
+public class BoundInstanceInjectionTest
+{
+    @Test
+    public void testInstancesAreInjected()
+            throws CreationException
+    {
+        final O o = new O();
 
-  @Test
-  public void testInstancesAreInjected() throws CreationException {
-    final O o = new O();
-
-    Injector injector =
-        Guice.createInjector(
-            new AbstractModule() {
-              @Override
-              protected void configure() {
-                bind(O.class).toInstance(o);
-                bind(int.class).toInstance(5);
-              }
-            });
-
-    assertEquals(5, o.fromMethod);
-  }
-
-  static class O {
-    int fromMethod;
-
-    @Inject
-    void setInt(int i) {
-      this.fromMethod = i;
-    }
-  }
-
-  @Test
-  public void testProvidersAreInjected() throws CreationException {
-    Injector injector =
-        Guice.createInjector(
-            new AbstractModule() {
-              @Override
-              protected void configure() {
-                bind(O.class)
-                    .toProvider(
-                        new Provider<O>() {
-                          @Inject int i;
-
-                          @Override
-                          public O get() {
-                            O o = new O();
-                            o.setInt(i);
-                            return o;
-                          }
+        Injector injector =
+                Guice.createInjector(
+                        new AbstractModule()
+                        {
+                            @Override
+                            protected void configure()
+                            {
+                                bind(O.class).toInstance(o);
+                                bind(int.class).toInstance(5);
+                            }
                         });
-                bind(int.class).toInstance(5);
-              }
-            });
 
-    assertEquals(5, injector.getInstance(O.class).fromMethod);
-  }
-
-  @Test
-  public void testMalformedInstance() {
-    try {
-      Guice.createInjector(
-          new AbstractModule() {
-            @Override
-            protected void configure() {
-              bind(Object.class).toInstance(new MalformedInjectable());
-            }
-          });
-      fail();
-    } catch (CreationException expected) {
-      Asserts.assertContains(
-          expected.getMessage(),
-          "BoundInstanceInjectionTest$MalformedInjectable.doublyAnnotated() has more than one ",
-          "annotation annotated with @BindingAnnotation: ",
-          "Named and BoundInstanceInjectionTest$Another");
+        assertEquals(5, o.fromMethod);
     }
-  }
 
-  @Test
-  public void testMalformedProvider() {
-    try {
-      Guice.createInjector(
-          new AbstractModule() {
-            @Override
-            protected void configure() {
-              bind(String.class).toProvider(new MalformedProvider());
-            }
-          });
-      fail();
-    } catch (CreationException expected) {
-      Asserts.assertContains(
-          expected.getMessage(),
-          "BoundInstanceInjectionTest$MalformedProvider.doublyAnnotated() has more than one ",
-          "annotation annotated with @BindingAnnotation: ",
-          "Named and BoundInstanceInjectionTest$Another");
+    static class O
+    {
+        int fromMethod;
+
+        @Inject
+        void setInt(int i)
+        {
+            this.fromMethod = i;
+        }
     }
-  }
 
-  static class MalformedInjectable {
-    @Inject
-    void doublyAnnotated(@Named("a") @Another String unused) {}
-  }
+    @Test
+    public void testProvidersAreInjected()
+            throws CreationException
+    {
+        Injector injector =
+                Guice.createInjector(
+                        new AbstractModule()
+                        {
+                            @Override
+                            protected void configure()
+                            {
+                                bind(O.class)
+                                        .toProvider(
+                                                new Provider<O>()
+                                                {
+                                                    @Inject
+                                                    int i;
 
-  static class MalformedProvider implements Provider<String> {
-    @Inject
-    void doublyAnnotated(@Named("a") @Another String s) {}
+                                                    @Override
+                                                    public O get()
+                                                    {
+                                                        O o = new O();
+                                                        o.setInt(i);
+                                                        return o;
+                                                    }
+                                                });
+                                bind(int.class).toInstance(5);
+                            }
+                        });
 
-    @Override
-    public String get() {
-      return "a";
+        assertEquals(5, injector.getInstance(O.class).fromMethod);
     }
-  }
 
-  @BindingAnnotation
-  @Target({FIELD, PARAMETER, METHOD})
-  @Retention(RUNTIME)
-  public @interface Another {}
+    @Test
+    public void testMalformedInstance()
+    {
+        try {
+            Guice.createInjector(
+                    new AbstractModule()
+                    {
+                        @Override
+                        protected void configure()
+                        {
+                            bind(Object.class).toInstance(new MalformedInjectable());
+                        }
+                    });
+            fail();
+        }
+        catch (CreationException expected) {
+            Asserts.assertContains(
+                    expected.getMessage(),
+                    "BoundInstanceInjectionTest$MalformedInjectable.doublyAnnotated() has more than one ",
+                    "annotation annotated with @BindingAnnotation: ",
+                    "Named and BoundInstanceInjectionTest$Another");
+        }
+    }
+
+    @Test
+    public void testMalformedProvider()
+    {
+        try {
+            Guice.createInjector(
+                    new AbstractModule()
+                    {
+                        @Override
+                        protected void configure()
+                        {
+                            bind(String.class).toProvider(new MalformedProvider());
+                        }
+                    });
+            fail();
+        }
+        catch (CreationException expected) {
+            Asserts.assertContains(
+                    expected.getMessage(),
+                    "BoundInstanceInjectionTest$MalformedProvider.doublyAnnotated() has more than one ",
+                    "annotation annotated with @BindingAnnotation: ",
+                    "Named and BoundInstanceInjectionTest$Another");
+        }
+    }
+
+    static class MalformedInjectable
+    {
+        @Inject
+        void doublyAnnotated(@Named("a") @Another String unused) {}
+    }
+
+    static class MalformedProvider
+            implements Provider<String>
+    {
+        @Inject
+        void doublyAnnotated(@Named("a") @Another String s) {}
+
+        @Override
+        public String get()
+        {
+            return "a";
+        }
+    }
+
+    @BindingAnnotation
+    @Target({FIELD, PARAMETER, METHOD})
+    @Retention(RUNTIME)
+    public @interface Another {}
 }

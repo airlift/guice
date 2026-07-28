@@ -18,6 +18,7 @@ package com.google.inject.grapher;
 
 import com.google.inject.Binding;
 import com.google.inject.spi.ProviderBinding;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,18 +29,21 @@ import java.util.List;
  *
  * @author bojand@google.com (Bojan Djordjevic)
  */
-final class ProviderAliasCreator implements AliasCreator {
-  @Override
-  public Iterable<Alias> createAliases(Iterable<Binding<?>> bindings) {
-    List<Alias> aliases = new ArrayList<>();
-    for (Binding<?> binding : bindings) {
-      if (binding instanceof ProviderBinding) {
-        aliases.add(
-            new Alias(
-                NodeId.newTypeId(binding.getKey()),
-                NodeId.newTypeId(((ProviderBinding<?>) binding).getProvidedKey())));
-      }
+final class ProviderAliasCreator
+        implements AliasCreator
+{
+    @Override
+    public Iterable<Alias> createAliases(Iterable<Binding<?>> bindings)
+    {
+        List<Alias> aliases = new ArrayList<>();
+        for (Binding<?> binding : bindings) {
+            if (binding instanceof ProviderBinding) {
+                aliases.add(
+                        new Alias(
+                                NodeId.newTypeId(binding.getKey()),
+                                NodeId.newTypeId(((ProviderBinding<?>) binding).getProvidedKey())));
+            }
+        }
+        return aliases;
     }
-    return aliases;
-  }
 }

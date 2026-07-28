@@ -16,13 +16,14 @@
 
 package com.google.inject.throwingproviders;
 
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
 import com.google.errorprone.annotations.Keep;
+
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Annotates methods of a {@link com.google.inject.Module} to create a {@link CheckedProvider}
@@ -39,17 +40,19 @@ import java.lang.annotation.Target;
 @Target(METHOD)
 @Retention(RUNTIME)
 @Keep
-public @interface CheckedProvides {
+public @interface CheckedProvides
+{
+    /**
+     * The interface that provides this value, a subinterface of {@link CheckedProvider}.
+     */
+    @SuppressWarnings("rawtypes") // Class literal uses raw type.
+    Class<? extends CheckedProvider> value();
 
-  /** The interface that provides this value, a subinterface of {@link CheckedProvider}. */
-  @SuppressWarnings("rawtypes") // Class literal uses raw type.
-  Class<? extends CheckedProvider> value();
-
-  /**
-   * Whether exceptions should be put into the Guice scope. Default behavior is that exceptions are
-   * scoped.
-   *
-   * @since 4.0
-   */
-  boolean scopeExceptions() default true;
+    /**
+     * Whether exceptions should be put into the Guice scope. Default behavior is that exceptions are
+     * scoped.
+     *
+     * @since 4.0
+     */
+    boolean scopeExceptions() default true;
 }
