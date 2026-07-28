@@ -16,7 +16,8 @@
 
 package com.google.inject.internal.util;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+
+import static java.util.Objects.requireNonNull;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -56,7 +57,7 @@ public final class Classes {
 
   /** Returns {@code Field.class}, {@code Method.class} or {@code Constructor.class}. */
   public static Class<? extends Member> memberType(Member member) {
-    checkNotNull(member, "member");
+    requireNonNull(member, "member");
 
     if (member instanceof Field) {
       return Field.class;

@@ -16,6 +16,7 @@
 
 package com.google.inject.spi;
 
+import static com.google.common.collect.MoreCollectors.onlyElement;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.inject.name.Names.named;
 import static java.lang.annotation.ElementType.METHOD;
@@ -23,7 +24,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.inject.AbstractModule;
 import com.google.inject.Binder;
 import com.google.inject.Binding;
@@ -201,13 +201,13 @@ public class ModuleAnnotatedMethodScannerTest {
   public void failingScanner() {
     CreationException creationException =
         assertThatInjectorCreationFails(new SomeModule(), scannerModule(new FailingScanner()));
-    Message m = Iterables.getOnlyElement(creationException.getErrorMessages());
+    Message m = creationException.getErrorMessages().stream().collect(onlyElement());
     assertThat(m.getMessage())
         .isEqualTo("An exception was caught and reported. Message: Failing in the scanner.");
     assertThat(creationException).hasCauseThat().isInstanceOf(IllegalStateException.class);
-    ElementSource source = (ElementSource) Iterables.getOnlyElement(m.getSources());
+    ElementSource source = (ElementSource) m.getSources().stream().collect(onlyElement());
     assertThat(SomeModule.class.getName())
-        .isEqualTo(Iterables.getOnlyElement(source.getModuleClassNames()));
+        .isEqualTo(source.getModuleClassNames().stream().collect(onlyElement()));
     assertThat(String.class.getName() + " " + SomeModule.class.getName() + ".aString()")
         .isEqualTo(source.toString());
   }

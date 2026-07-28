@@ -20,7 +20,6 @@ import static com.google.inject.internal.MoreTypes.getRawType;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.ObjectArrays;
 import com.google.inject.ConfigurationException;
 import com.google.inject.Inject;
@@ -312,7 +311,7 @@ public final class InjectionPoint {
     if (atInjectConstructors.size() > 1) {
       errors.tooManyConstructors(rawType);
     } else {
-      injectableConstructor = Iterables.getOnlyElement(atInjectConstructors, null);
+      injectableConstructor = atInjectConstructors.isEmpty() ? null : atInjectConstructors.get(0);
       if (injectableConstructor != null) {
         checkForMisplacedBindingAnnotations(injectableConstructor, errors);
       }

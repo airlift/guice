@@ -18,6 +18,7 @@ package com.google.inject.throwingproviders;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
+import static com.google.common.collect.MoreCollectors.onlyElement;
 import static com.google.common.truth.Truth.assertThat;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -27,7 +28,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.inject.AbstractModule;
 import com.google.inject.BindingAnnotation;
 import com.google.inject.CreationException;
@@ -361,7 +361,7 @@ public class ThrowingProviderTest {
     } catch (CreationException expected) {
       assertEquals(
           MockRemoteProvider.class.getName() + " must be an interface",
-          Iterables.getOnlyElement(expected.getErrorMessages()).getMessage());
+          expected.getErrorMessages().stream().collect(onlyElement()).getMessage());
     }
   }
 
@@ -385,7 +385,7 @@ public class ThrowingProviderTest {
     } catch (CreationException expected) {
       assertEquals(
           MockRemoteProvider.class.getName() + " must be an interface",
-          Iterables.getOnlyElement(expected.getErrorMessages()).getMessage());
+          expected.getErrorMessages().stream().collect(onlyElement()).getMessage());
     }
   }
 
@@ -406,7 +406,7 @@ public class ThrowingProviderTest {
       assertEquals(
           SubRemoteProvider.class.getName()
               + " must extend CheckedProvider (and only CheckedProvider)",
-          Iterables.getOnlyElement(expected.getErrorMessages()).getMessage());
+          expected.getErrorMessages().stream().collect(onlyElement()).getMessage());
     }
   }
 
@@ -431,7 +431,7 @@ public class ThrowingProviderTest {
       assertEquals(
           SubRemoteProvider.class.getName()
               + " must extend CheckedProvider (and only CheckedProvider)",
-          Iterables.getOnlyElement(expected.getErrorMessages()).getMessage());
+          expected.getErrorMessages().stream().collect(onlyElement()).getMessage());
     }
   }
 
@@ -455,7 +455,7 @@ public class ThrowingProviderTest {
           RemoteProviderWithExtraMethod.class.getName()
               + " may not declare any new methods, but declared "
               + RemoteProviderWithExtraMethod.class.getDeclaredMethods()[0].toGenericString(),
-          Iterables.getOnlyElement(expected.getErrorMessages()).getMessage());
+          expected.getErrorMessages().stream().collect(onlyElement()).getMessage());
     }
   }
 
@@ -481,7 +481,7 @@ public class ThrowingProviderTest {
           RemoteProviderWithExtraMethod.class.getName()
               + " may not declare any new methods, but declared "
               + RemoteProviderWithExtraMethod.class.getDeclaredMethods()[0].toGenericString(),
-          Iterables.getOnlyElement(expected.getErrorMessages()).getMessage());
+          expected.getErrorMessages().stream().collect(onlyElement()).getMessage());
     }
   }
 
@@ -507,11 +507,11 @@ public class ThrowingProviderTest {
     hasDependencies =
         (HasDependencies)
             bindInjector.getBinding(
-                Iterables.getOnlyElement(hasDependencies.getDependencies()).getKey());
+                hasDependencies.getDependencies().stream().collect(onlyElement()).getKey());
     // Make sure that that is dependent on DependentRemoteProvider.
     assertEquals(
         Dependency.get(Key.get(DependentRemoteProvider.class)),
-        Iterables.getOnlyElement(hasDependencies.getDependencies()));
+        hasDependencies.getDependencies().stream().collect(onlyElement()));
     // And make sure DependentRemoteProvider has the proper dependencies.
     hasDependencies = (HasDependencies) bindInjector.getBinding(DependentRemoteProvider.class);
     Set<Key<?>> dependencyKeys =
@@ -554,12 +554,12 @@ public class ThrowingProviderTest {
     hasDependencies =
         (HasDependencies)
             providesInjector.getBinding(
-                Iterables.getOnlyElement(hasDependencies.getDependencies()).getKey());
+                hasDependencies.getDependencies().stream().collect(onlyElement()).getKey());
     // And the provider method has our real dependencies..
     hasDependencies =
         (HasDependencies)
             providesInjector.getBinding(
-                Iterables.getOnlyElement(hasDependencies.getDependencies()).getKey());
+                hasDependencies.getDependencies().stream().collect(onlyElement()).getKey());
     Set<Key<?>> dependencyKeys =
         hasDependencies.getDependencies().stream()
             .map(Dependency::getKey)
@@ -739,7 +739,7 @@ public class ThrowingProviderTest {
               + "]) declared in the CheckedProvider interface ("
               + RemoteProvider.class.getName()
               + ")",
-          Iterables.getOnlyElement(ce.getErrorMessages()).getMessage());
+          ce.getErrorMessages().stream().collect(onlyElement()).getMessage());
     }
   }
 
@@ -797,7 +797,7 @@ public class ThrowingProviderTest {
               + "]) declared in the CheckedProvider interface ("
               + RemoteProvider.class.getName()
               + ")",
-          Iterables.getOnlyElement(ce.getErrorMessages()).getMessage());
+          ce.getErrorMessages().stream().collect(onlyElement()).getMessage());
     }
   }
 
@@ -892,7 +892,7 @@ public class ThrowingProviderTest {
       assertEquals(
           TooManyTypeParameters.class.getName()
               + " has more than one generic type parameter: [T, P]",
-          Iterables.getOnlyElement(ce.getErrorMessages()).getMessage());
+          ce.getErrorMessages().stream().collect(onlyElement()).getMessage());
     }
   }
 
@@ -918,7 +918,7 @@ public class ThrowingProviderTest {
           WrongThrowingProviderType.class.getName()
               + " does not properly extend CheckedProvider, the first type parameter of"
               + " CheckedProvider (java.lang.String) is not a generic type",
-          Iterables.getOnlyElement(ce.getErrorMessages()).getMessage());
+          ce.getErrorMessages().stream().collect(onlyElement()).getMessage());
     }
   }
 
@@ -944,7 +944,7 @@ public class ThrowingProviderTest {
           OneNoneGetMethod.class.getName()
               + " may not declare any new methods, but declared "
               + Classes.toString(OneNoneGetMethod.class.getDeclaredMethods()[0]),
-          Iterables.getOnlyElement(ce.getErrorMessages()).getMessage());
+          ce.getErrorMessages().stream().collect(onlyElement()).getMessage());
     }
   }
 
@@ -970,7 +970,7 @@ public class ThrowingProviderTest {
           ManyMethods.class.getName()
               + " may not declare any new methods, but declared "
               + Arrays.asList(ManyMethods.class.getDeclaredMethods()),
-          Iterables.getOnlyElement(ce.getErrorMessages()).getMessage());
+          ce.getErrorMessages().stream().collect(onlyElement()).getMessage());
     }
   }
 
@@ -997,7 +997,7 @@ public class ThrowingProviderTest {
       assertEquals(
           StringRemoteProvider.class.getName()
               + " expects the value type to be java.lang.String, but it was java.lang.Integer",
-          Iterables.getOnlyElement(ce.getErrorMessages()).getMessage());
+          ce.getErrorMessages().stream().collect(onlyElement()).getMessage());
     }
   }
 
@@ -1022,7 +1022,7 @@ public class ThrowingProviderTest {
       assertEquals(
           StringRemoteProvider.class.getName()
               + " expects the value type to be java.lang.String, but it was java.lang.Integer",
-          Iterables.getOnlyElement(ce.getErrorMessages()).getMessage());
+          ce.getErrorMessages().stream().collect(onlyElement()).getMessage());
     }
   }
 

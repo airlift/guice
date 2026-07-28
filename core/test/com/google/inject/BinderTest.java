@@ -16,12 +16,12 @@
 
 package com.google.inject;
 
+import static com.google.common.collect.MoreCollectors.onlyElement;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.inject.Asserts.assertContains;
 import static com.google.inject.Asserts.assertNotSerializable;
 import static com.google.inject.Asserts.getDeclaringSourcePart;
 
-import com.google.common.collect.Iterables;
 import com.google.inject.internal.Annotations;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
@@ -140,9 +140,8 @@ public class BinderTest {
       String segment2 = "No implementation for Comparator was bound.";
       String segment3 = "No implementation for Callable<String> was bound.";
       String segment4 =
-          String.format(
-              "No implementation for Date annotated with @Named(%s) was bound.",
-              Annotations.memberValueString("value", "date"));
+          "No implementation for Date annotated with @Named(%s) was bound."
+              .formatted(Annotations.memberValueString("value", "date"));
       String sourceFileName = getDeclaringSourcePart(getClass());
       assertContains(
           e.getMessage(),
@@ -518,7 +517,7 @@ public class BinderTest {
           });
       fail();
     } catch (CreationException expected) {
-      assertSame(message, Iterables.getOnlyElement(expected.getErrorMessages()));
+      assertSame(message, expected.getErrorMessages().stream().collect(onlyElement()));
     }
   }
 
@@ -536,7 +535,7 @@ public class BinderTest {
     } catch (CreationException expected) {
     }
 
-    LogRecord logRecord = Iterables.getOnlyElement(this.logRecords);
+    LogRecord logRecord = this.logRecords.stream().collect(onlyElement());
     assertContains(
         logRecord.getMessage(),
         "An exception was caught and reported. Message: java.lang.IllegalArgumentException");

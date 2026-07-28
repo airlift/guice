@@ -229,12 +229,6 @@ See the Apache License Version 2.0 for the specific language governing permissio
                     <configuration>
                         <exclusionPatterns>
                             <!--
-                 | Preconditions.checkNotNull: Objects.requireNonNull is an exact behavioural
-                 | equivalent, so converting the 100+ vendored upstream call sites would be pure
-                 | churn that buys nothing and turns into merge conflicts on every upstream sync.
-                -->
-                            <exclusionPattern>com/google/common/base/Preconditions\.checkNotNull:.*</exclusionPattern>
-                            <!--
                  | "Prefer jakarta.inject.Provider": false positive. com.google.inject.Provider
                  | is Guice's own public API - this codebase defines it and must keep using it.
                 -->
@@ -246,17 +240,6 @@ See the Apache License Version 2.0 for the specific language governing permissio
                  | Optionals. All other Guava Optional usage has been migrated to java.util.
                 -->
                             <exclusionPattern>com/google/common/base/Optional\..*</exclusionPattern>
-                            <!--
-                 | Iterables.getOnlyElement: the suggested replacement,
-                 | stream().collect(MoreCollectors.onlyElement()), is Guava-specific advice and
-                 | not an improvement over the direct call.
-                -->
-                            <exclusionPattern>com/google/common/collect/Iterables\.getOnlyElement:.*</exclusionPattern>
-                            <!--
-                 | String.format is not a legacy API, and it reads better than formatted() when
-                 | the format string spans multiple lines, which is the common case here.
-                -->
-                            <exclusionPattern>java/lang/String\.format:\(Ljava/lang/String;\[Ljava/lang/Object;\)Ljava/lang/String;</exclusionPattern>
                         </exclusionPatterns>
                         <ignoreClassNamePatterns>
                             <!--

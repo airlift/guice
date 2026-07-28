@@ -16,8 +16,8 @@
 
 package com.google.inject.internal;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static java.util.Objects.requireNonNull;
 
 import com.google.inject.Stage;
 import com.google.inject.internal.InjectorImpl.InjectorOptions;
@@ -67,7 +67,7 @@ class InjectorOptionsProcessor extends AbstractProcessor {
   }
 
   InjectorOptions getOptions(Stage stage, InjectorOptions parentOptions) {
-    checkNotNull(stage, "stage must be set");
+    requireNonNull(stage, "stage must be set");
     if (parentOptions == null) {
       return new InjectorOptions(
           stage,

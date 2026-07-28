@@ -17,7 +17,7 @@
 package com.google.inject.matcher;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Objects.requireNonNull;
 
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
@@ -69,7 +69,7 @@ public class Matchers {
     final Matcher<? super T> delegate;
 
     private Not(Matcher<? super T> delegate) {
-      this.delegate = checkNotNull(delegate, "delegate");
+      this.delegate = requireNonNull(delegate, "delegate");
     }
 
     @Override
@@ -114,7 +114,7 @@ public class Matchers {
     private final Class<? extends Annotation> annotationType;
 
     public AnnotatedWithType(Class<? extends Annotation> annotationType) {
-      this.annotationType = checkNotNull(annotationType, "annotation type");
+      this.annotationType = requireNonNull(annotationType, "annotation type");
       checkForRuntimeRetention(annotationType);
     }
 
@@ -152,7 +152,7 @@ public class Matchers {
     private final Annotation annotation;
 
     public AnnotatedWith(Annotation annotation) {
-      this.annotation = checkNotNull(annotation, "annotation");
+      this.annotation = requireNonNull(annotation, "annotation");
       checkForRuntimeRetention(annotation.annotationType());
     }
 
@@ -190,7 +190,7 @@ public class Matchers {
     private final Class<?> superclass;
 
     public SubclassesOf(Class<?> superclass) {
-      this.superclass = checkNotNull(superclass, "superclass");
+      this.superclass = requireNonNull(superclass, "superclass");
     }
 
     @Override
@@ -225,7 +225,7 @@ public class Matchers {
     private final Object value;
 
     public Only(Object value) {
-      this.value = checkNotNull(value, "value");
+      this.value = requireNonNull(value, "value");
     }
 
     @Override
@@ -260,7 +260,7 @@ public class Matchers {
     private final Object value;
 
     public IdenticalTo(Object value) {
-      this.value = checkNotNull(value, "value");
+      this.value = requireNonNull(value, "value");
     }
 
     @Override
@@ -299,7 +299,7 @@ public class Matchers {
     private final String packageName;
 
     public InPackage(Package targetPackage) {
-      this.targetPackage = checkNotNull(targetPackage, "package");
+      this.targetPackage = requireNonNull(targetPackage, "package");
       this.packageName = targetPackage.getName();
     }
 
@@ -382,7 +382,7 @@ public class Matchers {
     private final Matcher<? super Class<?>> returnType;
 
     public Returns(Matcher<? super Class<?>> returnType) {
-      this.returnType = checkNotNull(returnType, "return type matcher");
+      this.returnType = requireNonNull(returnType, "return type matcher");
     }
 
     @Override

@@ -16,7 +16,8 @@
 
 package com.google.inject.spi;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+
+import static java.util.Objects.requireNonNull;
 
 import com.google.inject.Binder;
 
@@ -30,7 +31,7 @@ public final class RequireExactBindingAnnotationsOption implements Element {
   private final Object source;
 
   RequireExactBindingAnnotationsOption(Object source) {
-    this.source = checkNotNull(source, "source");
+    this.source = requireNonNull(source, "source");
   }
 
   @Override
