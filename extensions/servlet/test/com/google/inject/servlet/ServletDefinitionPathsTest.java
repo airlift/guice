@@ -85,7 +85,8 @@ public class ServletDefinitionPathsTest {
                   throws ServletException, IOException {
 
                 final String path = servletRequest.getServletPath();
-                assertEquals(expectedServletPath, path, String.format("expected [%s] but was [%s]", expectedServletPath, path));
+                assertEquals(expectedServletPath, path, "expected [%s] but was [%s]"
+                    .formatted(expectedServletPath, path));
                 run[0] = true;
               }
             });
@@ -174,9 +175,10 @@ public class ServletDefinitionPathsTest {
                 final String path = servletRequest.getPathInfo();
 
                 if (null == expectedPathInfo) {
-                  assertNull(path, String.format("expected [%s] but was [%s]", expectedPathInfo, path));
+                  assertNull(path, "expected [%s] but was [%s]".formatted(expectedPathInfo, path));
                 } else {
-                  assertEquals(expectedPathInfo, path, String.format("expected [%s] but was [%s]", expectedPathInfo, path));
+                  assertEquals(expectedPathInfo, path, "expected [%s] but was [%s]"
+                      .formatted(expectedPathInfo, path));
                 }
 
                 // assert memoizer
@@ -278,9 +280,10 @@ public class ServletDefinitionPathsTest {
                 final String path = servletRequest.getPathInfo();
 
                 if (null == expectedPathInfo) {
-                  assertNull(path, String.format("expected [%s] but was [%s]", expectedPathInfo, path));
+                  assertNull(path, "expected [%s] but was [%s]".formatted(expectedPathInfo, path));
                 } else {
-                  assertEquals(expectedPathInfo, path, String.format("expected [%s] but was [%s]", expectedPathInfo, path));
+                  assertEquals(expectedPathInfo, path, "expected [%s] but was [%s]"
+                      .formatted(expectedPathInfo, path));
                 }
 
                 // assert memoizer
