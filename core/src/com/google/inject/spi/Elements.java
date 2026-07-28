@@ -273,6 +273,14 @@ public final class Elements
         protected ModuleSource moduleSource;
 
         /**
+         * One-slot cache for the traces-OFF module attribution below: every element recorded from
+         * the same module resolves the same synthetic StackTraceElement, and modules commonly record
+         * many elements in a row.
+         */
+        private ModuleSource attributionModuleSource;
+        private Object attribution;
+
+        /**
          * The current scanner.
          *
          * <p>Note that scanners cannot nest, ie. a scanner cannot install a module that requires
@@ -798,7 +806,11 @@ public final class Elements
                 }
                 else {
                     // As neither 'declaring source' nor 'call stack' is available use 'module source'
-                    declaringSource = sourceProvider.getFromClassNames(moduleSource.getModuleClassNames());
+                    if (moduleSource != attributionModuleSource) {
+                        attributionModuleSource = moduleSource;
+                        attribution = sourceProvider.getFromClassNames(moduleSource.getModuleClassNames());
+                    }
+                    declaringSource = attribution;
                 }
             }
             // Build the binding call stack
