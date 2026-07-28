@@ -60,7 +60,8 @@ public final class InternalFlags {
   public enum CustomClassLoadingOption {
     /**
      * Define fast/enhanced types in the same class loader as their original type, never creates
-     * class loaders. Uses {@link sun.misc.Unsafe} to gain access to existing class loaders.
+     * class loaders. Uses {@link java.lang.invoke.MethodHandles.Lookup} to define the type in the
+     * original type's runtime package.
      */
     OFF,
 
@@ -69,6 +70,10 @@ public final class InternalFlags {
      * This is faster than regular class loading and the resulting classes are easier to unload.
      *
      * <p>Note: with this option you cannot look up fast/enhanced types by name or mock/spy them.
+     *
+     * <p>Note: defining hidden classes needs full privilege access to the host, which is only
+     * available when the host is in the same module as Guice. Hosts in other modules fall back to
+     * being defined alongside their original type.
      */
     ANONYMOUS,
 
