@@ -82,7 +82,7 @@ import java.lang.reflect.Type;
  *   {@literal @}Bind private List<Object> listOfObjects = Lists.of();
  *
  *   // private String userName = "string_that_changes_over_time";
- *   // bind(String.class).toProvider(new Provider() { public String get() { return userName; }});
+ *   // bind(String.class).toProvider(() -> userName);
  *   {@literal @}Bind(lazy = true) private String userName;
  *
  *   // bind(SuperClass.class).toInstance(aSubClass);

@@ -95,9 +95,7 @@ public class Annotations {
         Proxy.newProxyInstance(
             annotationType.getClassLoader(),
             new Class<?>[] {annotationType},
-            new InvocationHandler() {
-              @Override
-              public Object invoke(Object proxy, Method method, Object[] args) throws Exception {
+            (proxy, method, args) -> {
                 String name = method.getName();
                 if (name.equals("annotationType")) {
                   return annotationType;
@@ -110,8 +108,7 @@ public class Annotations {
                 } else {
                   return members.get(name);
                 }
-              }
-            }));
+              }));
   }
 
   private static ImmutableMap<String, Object> resolveMembers(

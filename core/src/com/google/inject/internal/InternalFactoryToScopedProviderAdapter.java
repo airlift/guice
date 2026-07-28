@@ -230,43 +230,37 @@ class InternalFactoryToScopedProviderAdapter<T> extends InternalFactory<T> {
         return InternalFactory.makeProviderForNullable(typedValue, this, dependency, source);
       }
       if (dependency.isNullable()) {
-        return new Provider<T>() {
-          @Override
-          public T get() {
-            Object value = ForSingletonScope.this.value;
-            if (value != UNINITIALIZED_VALUE) {
-              // safe because we only store values of T or UNINITIALIZED_VALUE
-              @SuppressWarnings("unchecked")
-              T typedValue = (T) value;
-              return typedValue;
-            }
-            try {
-              return getAndCache(injector, dependency);
-            } catch (InternalProvisionException e) {
-              throw e.addSource(dependency).toProvisionException();
-            }
+        return () -> {
+          Object cached = ForSingletonScope.this.value;
+          if (cached != UNINITIALIZED_VALUE) {
+            // safe because we only store values of T or UNINITIALIZED_VALUE
+            @SuppressWarnings("unchecked")
+            T typedValue = (T) cached;
+            return typedValue;
           }
-        };
-      }
-      return new Provider<T>() {
-        @Override
-        public T get() {
           try {
-            Object value = ForSingletonScope.this.value;
-            if (value != UNINITIALIZED_VALUE) {
-              if (value == null) {
-                InternalProvisionException.onNullInjectedIntoNonNullableDependency(
-                    source, dependency);
-              }
-              // safe because we only store values of T or UNINITIALIZED_VALUE
-              @SuppressWarnings("unchecked")
-              T typedValue = (T) value;
-              return typedValue;
-            }
             return getAndCache(injector, dependency);
           } catch (InternalProvisionException e) {
             throw e.addSource(dependency).toProvisionException();
           }
+        };
+      }
+      return () -> {
+        try {
+          Object cached = ForSingletonScope.this.value;
+          if (cached != UNINITIALIZED_VALUE) {
+            if (cached == null) {
+              InternalProvisionException.onNullInjectedIntoNonNullableDependency(
+                  source, dependency);
+            }
+            // safe because we only store values of T or UNINITIALIZED_VALUE
+            @SuppressWarnings("unchecked")
+            T typedValue = (T) cached;
+            return typedValue;
+          }
+          return getAndCache(injector, dependency);
+        } catch (InternalProvisionException e) {
+          throw e.addSource(dependency).toProvisionException();
         }
       };
     }
