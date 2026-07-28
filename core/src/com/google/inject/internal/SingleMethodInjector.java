@@ -55,7 +55,7 @@ final class SingleMethodInjector implements SingleMemberInjector {
   }
 
   private MethodInvoker createMethodInvoker(final Method method) {
-    if (InternalFlags.getUseMethodHandlesOption()) {
+    if (InternalFlags.getUseMethodHandlesForMemberInjectionOption()) {
       MethodHandle methodHandle = InternalMethodHandles.unreflect(method);
       if (methodHandle != null) {
         methodHandle = InternalMethodHandles.dropReturn(methodHandle);
@@ -119,7 +119,7 @@ final class SingleMethodInjector implements SingleMemberInjector {
         if (fastMethod != null) {
           // (Object receiver, Object[]) -> void
           MethodHandle fastMethodHandle;
-          if (InternalFlags.getUseMethodHandlesOption()) {
+          if (InternalFlags.getUseMethodHandlesForMemberInjectionOption()) {
             var handle =
                 BIFUNCTION_APPLY_HANDLE
                     .bindTo(fastMethod)
