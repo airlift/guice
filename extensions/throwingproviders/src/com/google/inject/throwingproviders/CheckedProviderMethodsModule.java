@@ -16,7 +16,8 @@
 
 package com.google.inject.throwingproviders;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+
+import static java.util.Objects.requireNonNull;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Binder;
@@ -50,7 +51,7 @@ final class CheckedProviderMethodsModule implements Module {
   private final TypeLiteral<?> typeLiteral;
 
   private CheckedProviderMethodsModule(Object delegate) {
-    this.delegate = checkNotNull(delegate, "delegate");
+    this.delegate = requireNonNull(delegate, "delegate");
     this.typeLiteral = TypeLiteral.get(this.delegate.getClass());
   }
 

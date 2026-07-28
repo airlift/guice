@@ -16,7 +16,8 @@
 
 package com.google.inject.spi;
 
-import com.google.common.base.Preconditions;
+import static java.util.Objects.requireNonNull;
+
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -85,8 +86,8 @@ public final class ElementSource {
       Object declaringSource,
       ModuleSource moduleSource,
       ModuleAnnotatedMethodScanner scanner) {
-    Preconditions.checkNotNull(declaringSource, "declaringSource cannot be null.");
-    Preconditions.checkNotNull(moduleSource, "moduleSource cannot be null.");
+    requireNonNull(declaringSource, "declaringSource cannot be null.");
+    requireNonNull(moduleSource, "moduleSource cannot be null.");
     this.originalElementSource = originalSource;
     this.trustedOriginalElementSource = trustedOriginalSource;
     this.declaringSource = declaringSource;

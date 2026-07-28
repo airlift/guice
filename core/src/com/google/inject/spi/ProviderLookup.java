@@ -16,8 +16,8 @@
 
 package com.google.inject.spi;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static java.util.Objects.requireNonNull;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
@@ -46,13 +46,13 @@ public final class ProviderLookup<T> implements Element {
   private Provider<T> delegate;
 
   public ProviderLookup(Object source, Key<T> key) {
-    this(source, Dependency.get(checkNotNull(key, "key")));
+    this(source, Dependency.get(requireNonNull(key, "key")));
   }
 
   /** @since 4.0 */
   public ProviderLookup(Object source, Dependency<T> dependency) {
-    this.source = checkNotNull(source, "source");
-    this.dependency = checkNotNull(dependency, "dependency");
+    this.source = requireNonNull(source, "source");
+    this.dependency = requireNonNull(dependency, "dependency");
   }
 
   @Override
@@ -81,7 +81,7 @@ public final class ProviderLookup<T> implements Element {
    */
   public void initializeDelegate(Provider<T> delegate) {
     checkState(this.delegate == null, "delegate already initialized");
-    this.delegate = checkNotNull(delegate, "delegate");
+    this.delegate = requireNonNull(delegate, "delegate");
   }
 
   @Override

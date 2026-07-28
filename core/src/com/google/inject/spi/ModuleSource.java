@@ -16,7 +16,8 @@
 
 package com.google.inject.spi;
 
-import com.google.common.base.Preconditions;
+import static java.util.Objects.requireNonNull;
+
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Module;
 import java.util.List;
@@ -66,7 +67,7 @@ final class ModuleSource {
       @Nullable ModuleSource parent,
       Class<?> moduleClass,
       BindingSourceRestriction.PermitMap permitMap) {
-    Preconditions.checkNotNull(moduleClass, "module cannot be null.");
+    requireNonNull(moduleClass, "module cannot be null.");
     this.parent = parent;
     this.moduleClassName = moduleClass.getName();
     this.permitMap = permitMap;

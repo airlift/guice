@@ -1,5 +1,7 @@
 package com.google.inject.internal;
 
+import static java.util.Objects.requireNonNull;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.LinkedHashMultimap;
@@ -134,9 +136,9 @@ interface CycleDetectingLock<ID> {
       ReentrantCycleDetectingLock(
           CycleDetectingLockFactory<ID> lockFactory, ID userLockId, Lock lockImplementation) {
         this.lockFactory = lockFactory;
-        this.userLockId = Preconditions.checkNotNull(userLockId, "userLockId");
+        this.userLockId = requireNonNull(userLockId, "userLockId");
         this.lockImplementation =
-            Preconditions.checkNotNull(lockImplementation, "lockImplementation");
+            requireNonNull(lockImplementation, "lockImplementation");
       }
 
       @Override
@@ -285,7 +287,7 @@ interface CycleDetectingLock<ID> {
           ListMultimap<Thread, ID> potentialLocksCycle) {
         boolean found = false;
         Collection<ReentrantCycleDetectingLock<?>> ownedLocks = locksOwnedByThread.get(thread);
-        Preconditions.checkNotNull(
+        requireNonNull(
             ownedLocks, "Internal error: No locks were found taken by a thread");
         for (ReentrantCycleDetectingLock<?> ownedLock : ownedLocks) {
           if (ownedLock == lock) {

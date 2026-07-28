@@ -1,6 +1,6 @@
 package com.google.inject.spi;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -62,7 +62,7 @@ public final class BindingSourceRestriction {
   /** Returns a suggestion for how a restricted binding should be created in case it's missing. */
   public static Optional<String> getMissingImplementationSuggestion(
       GuiceInternal guiceInternal, Key<?> key) {
-    checkNotNull(guiceInternal);
+    requireNonNull(guiceInternal);
     RestrictedBindingSource restriction = getRestriction(key);
     if (restriction == null) {
       return Optional.empty();
@@ -90,7 +90,7 @@ public final class BindingSourceRestriction {
    * </ul>
    */
   public static ImmutableList<Message> check(GuiceInternal guiceInternal, List<Element> elements) {
-    checkNotNull(guiceInternal);
+    requireNonNull(guiceInternal);
     ImmutableList<Message> errorMessages = check(elements);
     // Clear all the permit maps after the checks are done.
     elements.forEach(BindingSourceRestriction::clear);

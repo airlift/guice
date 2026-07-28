@@ -16,8 +16,8 @@
 
 package com.google.inject.servlet;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Objects.requireNonNull;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
@@ -114,8 +114,8 @@ final class ServletUtils {
    */
   private static String lenientDecode(String string, Charset encoding, boolean decodePlus) {
 
-    checkNotNull(string);
-    checkNotNull(encoding);
+    requireNonNull(string);
+    requireNonNull(encoding);
 
     if (decodePlus) {
       string = string.replace('+', ' ');
