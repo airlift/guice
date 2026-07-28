@@ -42,7 +42,6 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -53,7 +52,6 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 /**
  * A constructor, field or method that can receive injections. Typically this is a member with the
@@ -295,16 +293,22 @@ public final class InjectionPoint {
     Class<?> rawType = getRawType(type.getType());
     Errors errors = new Errors(rawType);
 
-    List<Constructor<?>> atInjectConstructors =
-        Arrays.stream(rawType.getDeclaredConstructors())
-            .filter(InjectionPoint::isInjectableConstructor)
-            .collect(Collectors.toList());
+    // This runs for every injectable type, so it avoids building stream pipelines and looks the
+    // @Inject annotation up once per constructor rather than twice.
+    List<Constructor<?>> atInjectConstructors = new ArrayList<>();
+    for (Constructor<?> constructor : rawType.getDeclaredConstructors()) {
+      if (isInjectableConstructor(constructor)) {
+        atInjectConstructors.add(constructor);
+      }
+    }
 
     Constructor<?> injectableConstructor = null;
-    atInjectConstructors.stream()
-        .filter(constructor -> constructor.isAnnotationPresent(Inject.class))
-        .filter(constructor -> constructor.getAnnotation(Inject.class).optional())
-        .forEach(errors::optionalConstructor);
+    for (Constructor<?> constructor : atInjectConstructors) {
+      Inject inject = constructor.getAnnotation(Inject.class);
+      if (inject != null && inject.optional()) {
+        errors.optionalConstructor(constructor);
+      }
+    }
 
     if (atInjectConstructors.size() > 1) {
       errors.tooManyConstructors(rawType);
