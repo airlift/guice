@@ -50,7 +50,7 @@ import static org.objectweb.asm.Opcodes.PUTFIELD;
 import static org.objectweb.asm.Opcodes.PUTSTATIC;
 import static org.objectweb.asm.Opcodes.RETURN;
 import static org.objectweb.asm.Opcodes.SWAP;
-import static org.objectweb.asm.Opcodes.V1_8;
+import static org.objectweb.asm.Opcodes.V25;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Constructor;
@@ -176,7 +176,7 @@ final class Enhancer extends AbstractGlueGenerator {
     ClassWriter cw = new ClassWriter(COMPUTE_MAXS);
 
     // target Java8 because that's all we need for the generated trampoline code
-    cw.visit(V1_8, PUBLIC | ACC_SUPER, proxyName, null, hostName, null);
+    cw.visit(V25, PUBLIC | ACC_SUPER, proxyName, null, hostName, null);
     cw.visitSource(GENERATED_SOURCE, null);
 
     // this shared field either contains the trampoline or glue to make it into an invoker table
