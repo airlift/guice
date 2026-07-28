@@ -126,9 +126,9 @@ public class MoreTypes {
   /** Returns true if {@code type} is free from type variables. */
   private static boolean isFullySpecified(Type type) {
     return switch (type) {
-      case Class<?> c -> true;
+      case Class<?> _ -> true;
       case CompositeType composite -> composite.isFullySpecified();
-      case TypeVariable<?> v -> false;
+      case TypeVariable<?> _ -> false;
       default -> ((CompositeType) canonicalize(type)).isFullySpecified();
     };
   }
@@ -143,7 +143,7 @@ public class MoreTypes {
     return switch (type) {
       case Class<?> c ->
           c.isArray() ? new GenericArrayTypeImpl(canonicalize(c.getComponentType())) : c;
-      case CompositeType composite -> type;
+      case CompositeType _ -> type;
       case ParameterizedType p ->
           new ParameterizedTypeImpl(p.getOwnerType(), p.getRawType(), getSharedTypeArguments(p));
       case GenericArrayType g -> new GenericArrayTypeImpl(g.getGenericComponentType());
@@ -177,10 +177,7 @@ public class MoreTypes {
       }
       // we could use the variable's bounds, but that'll won't work if there are multiple.
       // having a raw type that's more general than necessary is okay
-      case TypeVariable<?> v -> {
-        return Object.class;
-      }
-      case WildcardType w -> {
+      case TypeVariable<?> _, WildcardType _ -> {
         return Object.class;
       }
       default ->
