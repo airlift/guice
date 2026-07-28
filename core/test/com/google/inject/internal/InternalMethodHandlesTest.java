@@ -18,6 +18,7 @@ package com.google.inject.internal;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
+import static com.google.common.collect.MoreCollectors.onlyElement;
 import static com.google.common.truth.Truth.assertThat;
 import static java.lang.invoke.MethodType.methodType;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -25,7 +26,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.inject.Asserts;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -225,9 +225,8 @@ public final class InternalMethodHandlesTest {
   @Test
   public void testNullCheckResult() throws Throwable {
     var nonNullStringDep =
-        Iterables.getOnlyElement(
-            Dependency.forInjectionPoints(
-                ImmutableSet.of(InjectionPoint.forConstructorOf(TestClass.class))));
+        Dependency.forInjectionPoints(
+                ImmutableSet.of(InjectionPoint.forConstructorOf(TestClass.class))).stream().collect(onlyElement());
     var handle =
         InternalMethodHandles.nullCheckResult(
             InternalMethodHandles.constantFactoryGetHandle("Hello World"), "source");

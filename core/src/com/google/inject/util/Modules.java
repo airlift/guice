@@ -16,9 +16,10 @@
 
 package com.google.inject.util;
 
+import static com.google.common.collect.MoreCollectors.onlyElement;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.InlineMe;
 import com.google.inject.AbstractModule;
@@ -222,7 +223,7 @@ public final class Modules {
       // the private elements within that -- so refocus our elements
       // and binder.
       if (baseElements.size() == 1) {
-        Element element = Iterables.getOnlyElement(baseElements);
+        Element element = baseElements.stream().collect(onlyElement());
         if (element instanceof PrivateElements privateElements) {
           PrivateBinder privateBinder =
               baseBinder.newPrivateBinder().withSource(privateElements.getSource());

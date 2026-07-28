@@ -16,12 +16,12 @@
 
 package com.google.inject;
 
+import static com.google.common.collect.MoreCollectors.onlyElement;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.inject.Asserts.assertContains;
 import static com.google.inject.Asserts.assertNotSerializable;
 import static com.google.inject.Asserts.getDeclaringSourcePart;
 
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.internal.Annotations;
 import com.google.inject.name.Named;
@@ -518,7 +518,7 @@ public class BinderTest {
           });
       fail();
     } catch (CreationException expected) {
-      assertSame(message, Iterables.getOnlyElement(expected.getErrorMessages()));
+      assertSame(message, expected.getErrorMessages().stream().collect(onlyElement()));
     }
   }
 
@@ -536,7 +536,7 @@ public class BinderTest {
     } catch (CreationException expected) {
     }
 
-    LogRecord logRecord = Iterables.getOnlyElement(this.logRecords);
+    LogRecord logRecord = this.logRecords.stream().collect(onlyElement());
     assertContains(
         logRecord.getMessage(),
         "An exception was caught and reported. Message: java.lang.IllegalArgumentException");

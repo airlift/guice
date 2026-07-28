@@ -16,6 +16,7 @@
 
 package com.google.inject.internal;
 
+import static com.google.common.collect.MoreCollectors.onlyElement;
 import static com.google.inject.internal.Errors.checkConfiguration;
 import static com.google.inject.internal.InternalMethodHandles.castReturnToObject;
 import static com.google.inject.util.Types.newParameterizedType;
@@ -25,7 +26,6 @@ import static java.util.Objects.requireNonNull;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.inject.Binder;
 import com.google.inject.Binding;
 import com.google.inject.Injector;
@@ -761,7 +761,7 @@ public final class RealOptionalBinder<T> implements Module {
      * returns {@code null}.
      */
     Dependency<?> getDependency() {
-      return Iterables.getOnlyElement(dependencies);
+      return dependencies.stream().collect(onlyElement());
     }
 
     /** Implementation of {@link OptionalBinderBinding#containsElement}. */

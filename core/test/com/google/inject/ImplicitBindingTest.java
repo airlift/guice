@@ -16,11 +16,10 @@
 
 package com.google.inject;
 
-import static com.google.common.collect.Iterables.getOnlyElement;
+import static com.google.common.collect.MoreCollectors.onlyElement;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.google.common.collect.Iterables;
 import com.google.inject.internal.Annotations;
 import com.google.inject.name.Names;
 import com.google.inject.spi.Message;
@@ -182,7 +181,7 @@ public class ImplicitBindingTest {
       injector.getBinding(clazz);
       fail("Shouldn't have been able to get binding of: " + clazz);
     } catch (ConfigurationException expected) {
-      Message msg = Iterables.getOnlyElement(expected.getErrorMessages());
+      Message msg = expected.getErrorMessages().stream().collect(onlyElement());
       Asserts.assertContains(
           msg.getMessage(),
           "No implementation for " + InvalidInterface.class.getName() + " was bound.");
@@ -440,7 +439,7 @@ public class ImplicitBindingTest {
       injector.getInstance(EnumWithImplementedBy.class);
       fail("Expected failure");
     } catch (ConfigurationException expected) {
-      Message msg = Iterables.getOnlyElement(expected.getErrorMessages());
+      Message msg = expected.getErrorMessages().stream().collect(onlyElement());
       Asserts.assertContains(
           msg.getMessage(),
           "No implementation for " + EnumWithImplementedBy.class.getName() + " was bound.");
@@ -511,7 +510,7 @@ public class ImplicitBindingTest {
                       }
                     }));
     assertThat(ce.getErrorMessages()).hasSize(1);
-    assertThat(getOnlyElement(ce.getErrorMessages()).getMessage())
+    assertThat(ce.getErrorMessages().stream().collect(onlyElement()).getMessage())
         .contains("No implementation for " + Unresolved.class.getName() + " was bound.");
   }
 
@@ -521,7 +520,7 @@ public class ImplicitBindingTest {
     ConfigurationException ce =
         assertThrows(ConfigurationException.class, () -> injector.getBinding(Z.class));
     assertThat(ce.getErrorMessages()).hasSize(1);
-    assertThat(getOnlyElement(ce.getErrorMessages()).getMessage())
+    assertThat(ce.getErrorMessages().stream().collect(onlyElement()).getMessage())
         .contains("No implementation for " + Unresolved.class.getName() + " was bound.");
     assertThat(injector.getExistingBinding(Key.get(Z.class))).isNull();
     assertThat(injector.getExistingBinding(Key.get(Y.class))).isNull();
