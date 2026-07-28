@@ -146,9 +146,20 @@ public class TypeLiteral<T> {
   }
 
   /** Gets type literal for the given {@code Class} instance. */
+  @SuppressWarnings("unchecked")
   public static <T> TypeLiteral<T> get(Class<T> type) {
-    return new TypeLiteral<T>(type);
+    // TypeLiteral is immutable and this overload is hot on injector-creation paths, so raw-class
+    // literals are shared per JVM rather than allocated per call.
+    return (TypeLiteral<T>) RAW_TYPE_LITERALS.get(type);
   }
+
+  private static final ClassValue<TypeLiteral<?>> RAW_TYPE_LITERALS =
+      new ClassValue<>() {
+        @Override
+        protected TypeLiteral<?> computeValue(Class<?> type) {
+          return new TypeLiteral<>(type);
+        }
+      };
 
   /** Returns an immutable list of the resolved types. */
   private List<TypeLiteral<?>> resolveAll(Type[] types) {
