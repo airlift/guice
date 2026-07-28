@@ -68,6 +68,6 @@ public final class ProvisionListenerBinding implements Element {
   public void applyTo(Binder binder) {
     binder
         .withSource(getSource())
-        .bindListener(bindingMatcher, listeners.toArray(new ProvisionListener[listeners.size()]));
+        .bindListener(bindingMatcher, listeners.toArray(ProvisionListener[]::new));
   }
 }

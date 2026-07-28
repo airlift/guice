@@ -218,7 +218,7 @@ public final class ClassBuilding {
           }
         });
 
-    return objectMethods.toArray(new Method[0]);
+    return objectMethods.toArray(Method[]::new);
   }
 
   /** Returns true if the given member can be fast-invoked. */

@@ -82,7 +82,7 @@ class ManagedFilterPipeline implements FilterPipeline {
     }
 
     // Copy to a fixed-size array for speed of iteration.
-    return filterDefinitions.toArray(new FilterDefinition[filterDefinitions.size()]);
+    return filterDefinitions.toArray(FilterDefinition[]::new);
   }
 
   @Override

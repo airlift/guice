@@ -52,7 +52,7 @@ final class ProvisionListenerStackCallback<T> {
       this.listeners = EMPTY_LISTENER;
     } else {
       Set<ProvisionListener> deDuplicated = new LinkedHashSet<>(listeners);
-      this.listeners = deDuplicated.toArray(new ProvisionListener[deDuplicated.size()]);
+      this.listeners = deDuplicated.toArray(ProvisionListener[]::new);
     }
   }
 

@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.List;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 /** Error reported by Guice when a key is not bound in the injector. */
 final class MissingImplementationError<T>
@@ -54,13 +53,13 @@ final class MissingImplementationError<T>
     List<List<Object>> sourcesList = new ArrayList<>();
     sourcesList.add(getSources());
     sourcesList.addAll(
-        mergeableErrors.stream().map(ErrorDetail::getSources).collect(Collectors.toList()));
+        mergeableErrors.stream().map(ErrorDetail::getSources).toList());
 
     List<List<Object>> filteredSourcesList =
         sourcesList.stream()
             .map(this::trimSource)
             .filter(sources -> !sources.isEmpty())
-            .collect(Collectors.toList());
+            .toList();
 
     if (!filteredSourcesList.isEmpty()) {
       formatter.format("\n%s\n", Messages.bold("Requested by:"));
@@ -78,6 +77,6 @@ final class MissingImplementationError<T>
 
   /** Omit the key itself in the source list since the information is redundant. */
   private List<Object> trimSource(List<Object> sources) {
-    return sources.stream().filter(source -> !source.equals(this.key)).collect(Collectors.toList());
+    return sources.stream().filter(source -> !source.equals(this.key)).toList();
   }
 }

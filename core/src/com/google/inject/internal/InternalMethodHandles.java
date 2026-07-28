@@ -1067,7 +1067,7 @@ public final class InternalMethodHandles {
       // (InternalContext,... InternalContext) -> ImmutableSet
       immutableSetOf =
           MethodHandles.filterArguments(
-              immutableSetOf, 0, elementHandlesList.toArray(new MethodHandle[0]));
+              immutableSetOf, 0, elementHandlesList.toArray(MethodHandle[]::new));
       // (InternalContext) -> ImmutableSet
       immutableSetOf =
           MethodHandles.permuteArguments(

@@ -88,7 +88,7 @@ final class DuplicateElementError<T> extends InternalErrorDetail<DuplicateElemen
                   }
                   return true;
                 })
-            .collect(Collectors.toList());
+            .toList();
     ErrorFormatter.formatSources(filteredSource, formatter);
   }
 

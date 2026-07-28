@@ -70,7 +70,7 @@ class ManagedServletPipeline {
     }
 
     // Copy to a fixed size array for speed.
-    return servletDefinitions.toArray(new ServletDefinition[servletDefinitions.size()]);
+    return servletDefinitions.toArray(ServletDefinition[]::new);
   }
 
   public void init(ServletContext servletContext, Injector injector) throws ServletException {

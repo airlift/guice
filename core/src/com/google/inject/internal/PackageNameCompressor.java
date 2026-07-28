@@ -33,7 +33,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * Munges an error message to remove/shorten package names and adds a legend at the end.
@@ -129,7 +128,7 @@ final class PackageNameCompressor {
     List<String> shortNames =
         replacementMap.keySet().stream()
             .sorted(Comparator.reverseOrder())
-            .collect(Collectors.toList());
+            .toList();
     Matcher matcher = QUOTED_PATTERN.matcher(input);
     while (matcher.find()) {
       String replaced = matcher.group(1);
@@ -183,7 +182,7 @@ final class PackageNameCompressor {
           .append("\n");
     }
 
-    return legendBuilder.length() == 0
+    return legendBuilder.isEmpty()
         ? ""
         : Messages.bold(LEGEND_HEADER)
             + Messages.faint(legendBuilder.toString())

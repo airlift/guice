@@ -49,7 +49,7 @@ public final class Messages {
     // merging errors.
     if (!sources.isEmpty()
         && !messageSources.isEmpty()
-        && Objects.equals(messageSources.get(0), sources.get(sources.size() - 1))) {
+        && Objects.equals(messageSources.getFirst(), sources.getLast())) {
       messageSources = messageSources.subList(1, messageSources.size());
     }
     return message.withSource(
@@ -74,7 +74,7 @@ public final class Messages {
     boolean displayCauses = getOnlyCause(errorMessages) == null;
 
     List<ErrorDetail<?>> remainingErrors =
-        errorMessages.stream().map(Message::getErrorDetail).collect(Collectors.toList());
+        errorMessages.stream().map(Message::getErrorDetail).toList();
 
     Map<Equivalence.Wrapper<Throwable>, Integer> causes = new HashMap<>();
     while (!remainingErrors.isEmpty()) {
@@ -179,7 +179,7 @@ public final class Messages {
 
   private static Object appendModules(Object source, ElementSource elementSource) {
     String modules = SourceFormatter.getModuleStack(elementSource);
-    if (modules.length() == 0) {
+    if (modules.isEmpty()) {
       return source;
     } else {
       return source + " (installed by: " + modules + ")";
