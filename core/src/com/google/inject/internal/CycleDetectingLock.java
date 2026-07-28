@@ -321,9 +321,9 @@ interface CycleDetectingLock<ID> {
         // no synchronization is used, potentially stale data, should be good enough
         Thread thread = this.lockOwnerThread;
         if (thread != null) {
-          return String.format("%s[%s][locked by %s]", super.toString(), userLockId, thread);
+          return "%s[%s][locked by %s]".formatted(super.toString(), userLockId, thread);
         } else {
-          return String.format("%s[%s][unlocked]", super.toString(), userLockId);
+          return "%s[%s][unlocked]".formatted(super.toString(), userLockId);
         }
       }
     }

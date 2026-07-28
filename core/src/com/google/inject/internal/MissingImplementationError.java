@@ -32,7 +32,7 @@ final class MissingImplementationError<T>
       Key<T> key, Supplier<ImmutableList<String>> suggestionsSupplier, List<Object> sources) {
     super(
         ErrorId.MISSING_IMPLEMENTATION,
-        String.format("No implementation for %s was bound.", Messages.convert(key)),
+        "No implementation for %s was bound.".formatted(Messages.convert(key)),
         sources,
         null);
     this.key = key;

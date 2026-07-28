@@ -316,7 +316,7 @@ public class SingletonScope implements Scope {
 
       @Override
       public String toString() {
-        return String.format("%s[%s]", creator, Scopes.SINGLETON);
+        return "%s[%s]".formatted(creator, Scopes.SINGLETON);
       }
     };
   }

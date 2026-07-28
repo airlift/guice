@@ -14,7 +14,7 @@ final class ScopeNotFoundError extends InternalErrorDetail<ScopeNotFoundError> {
   ScopeNotFoundError(Class<? extends Annotation> scopeAnnotation, List<Object> sources) {
     super(
         ErrorId.SCOPE_NOT_FOUND,
-        String.format("No scope is bound to %s.", Messages.convert(scopeAnnotation)),
+        "No scope is bound to %s.".formatted(Messages.convert(scopeAnnotation)),
         sources,
         null);
     this.scopeAnnotation = scopeAnnotation;

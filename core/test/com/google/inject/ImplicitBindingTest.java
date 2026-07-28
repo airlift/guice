@@ -111,10 +111,9 @@ public class ImplicitBindingTest {
     } catch (ConfigurationException expected) {
       Asserts.assertContains(
           expected.getMessage(),
-          String.format(
-              "No implementation for ImplicitBindingTest$I annotated with @Named(%s) was"
-                  + " bound.",
-              Annotations.memberValueString("value", "i")));
+          ("No implementation for ImplicitBindingTest$I annotated with @Named(%s) was"
+               + " bound.")
+              .formatted(Annotations.memberValueString("value", "i")));
     }
   }
 
