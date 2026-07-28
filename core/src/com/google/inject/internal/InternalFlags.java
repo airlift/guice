@@ -198,9 +198,12 @@ public final class InternalFlags {
    * per member instead, which stays small, and measures about twice as fast as reflection.
    */
   public static boolean getUseMethodHandlesForMemberInjectionOption() {
-    return (USE_METHOD_HANDLES == UseMethodHandlesOption.YES
-            || USE_METHOD_HANDLES_FOR_MEMBER_INJECTION == UseMethodHandlesOption.YES)
-        && isBytecodeGenEnabled();
+    // Deliberately not gated on bytecode generation. Member injection reaches its handles through
+    // MethodHandles.Lookup.unreflect, which generates nothing; BytecodeGen is only a fallback for
+    // when unreflect fails. Gating it here made disabling bytecode generation fall all the way back
+    // to reflection, which cost more than the generation it saved.
+    return USE_METHOD_HANDLES == UseMethodHandlesOption.YES
+        || USE_METHOD_HANDLES_FOR_MEMBER_INJECTION == UseMethodHandlesOption.YES;
   }
 
   /**
