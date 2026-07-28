@@ -1,5 +1,7 @@
 package com.google.inject.internal;
 
+import static java.util.Objects.requireNonNull;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -219,7 +221,7 @@ public class SingletonScope implements Scope {
               if (instance == null) {
                 // creating a proxy to satisfy circular dependency across several threads
                 Dependency<?> dependency =
-                    Preconditions.checkNotNull(
+                    requireNonNull(
                         context.getDependency(), "internalContext.getDependency()");
                 Class<?> rawType = dependency.getKey().getTypeLiteral().getRawType();
 

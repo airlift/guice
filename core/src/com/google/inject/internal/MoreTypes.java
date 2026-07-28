@@ -17,7 +17,7 @@
 package com.google.inject.internal;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.Objects.requireNonNull;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.ConfigurationException;
@@ -386,7 +386,7 @@ public class MoreTypes {
 
       this.typeArguments = new Type[validArgLength];
       for (int t = 0; t < validArgLength; t++) {
-        checkNotNull(clonedTypeArguments[t], "type parameter");
+        requireNonNull(clonedTypeArguments[t], "type parameter");
         checkNotPrimitive(clonedTypeArguments[t], "type parameters");
         this.typeArguments[t] = canonicalize(clonedTypeArguments[t]);
       }
@@ -520,14 +520,14 @@ public class MoreTypes {
       checkArgument(upperBounds.length == 1, "Must have exactly one upper bound.");
 
       if (lowerBounds.length == 1) {
-        checkNotNull(lowerBounds[0], "lowerBound");
+        requireNonNull(lowerBounds[0], "lowerBound");
         checkNotPrimitive(lowerBounds[0], "wildcard bounds");
         checkArgument(upperBounds[0] == Object.class, "bounded both ways");
         this.lowerBound = canonicalize(lowerBounds[0]);
         this.upperBound = Object.class;
 
       } else {
-        checkNotNull(upperBounds[0], "upperBound");
+        requireNonNull(upperBounds[0], "upperBound");
         checkNotPrimitive(upperBounds[0], "wildcard bounds");
         this.lowerBound = null;
         this.upperBound = canonicalize(upperBounds[0]);

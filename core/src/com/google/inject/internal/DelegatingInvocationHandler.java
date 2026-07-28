@@ -16,6 +16,8 @@
 
 package com.google.inject.internal;
 
+import static java.util.Objects.requireNonNull;
+
 import com.google.common.base.Preconditions;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -35,7 +37,7 @@ final class DelegatingInvocationHandler implements InvocationHandler {
             + " circular references. The object we're"
             + " proxying is not constructed yet. Please wait until after"
             + " injection has completed to use this object.");
-      Preconditions.checkNotNull(
+      requireNonNull(
           delegate,
           "This is a proxy used to support"
               + " circular references. The object we're "

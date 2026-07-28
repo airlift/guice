@@ -16,7 +16,8 @@
 
 package com.google.inject.spi;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+
+import static java.util.Objects.requireNonNull;
 
 import com.google.common.base.MoreObjects;
 import com.google.inject.Binder;
@@ -42,9 +43,9 @@ public final class ScopeBinding implements Element {
   private final Scope scope;
 
   ScopeBinding(Object source, Class<? extends Annotation> annotationType, Scope scope) {
-    this.source = checkNotNull(source, "source");
-    this.annotationType = checkNotNull(annotationType, "annotationType");
-    this.scope = checkNotNull(scope, "scope");
+    this.source = requireNonNull(source, "source");
+    this.annotationType = requireNonNull(annotationType, "annotationType");
+    this.scope = requireNonNull(scope, "scope");
   }
 
   @Override

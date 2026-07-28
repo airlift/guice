@@ -16,8 +16,8 @@
 
 package com.google.inject.internal;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static java.util.Objects.requireNonNull;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
@@ -57,7 +57,7 @@ public final class ProviderMethodsModule implements Module {
 
   private ProviderMethodsModule(
       Object delegate, boolean skipFastClassGeneration, ModuleAnnotatedMethodScanner scanner) {
-    this.delegate = checkNotNull(delegate, "delegate");
+    this.delegate = requireNonNull(delegate, "delegate");
     this.typeLiteral = TypeLiteral.get(getDelegateModuleClass());
     this.skipFastClassGeneration = skipFastClassGeneration;
     this.scanner = scanner;

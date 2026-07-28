@@ -16,8 +16,8 @@
 
 package com.google.inject.util;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
+import static java.util.Objects.requireNonNull;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.CheckReturnValue;
@@ -117,7 +117,7 @@ public final class Providers {
       return (Provider<T>) provider;
     }
 
-    jakarta.inject.Provider<T> delegate = checkNotNull(provider, "provider");
+    jakarta.inject.Provider<T> delegate = requireNonNull(provider, "provider");
 
     // Ensure that we inject all injection points from the delegate provider.
     Set<InjectionPoint> injectionPoints =

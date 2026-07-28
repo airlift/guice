@@ -16,7 +16,8 @@
 
 package com.google.inject.spi;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+
+import static java.util.Objects.requireNonNull;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Key;
@@ -44,7 +45,7 @@ public final class Dependency<T> {
 
   Dependency(InjectionPoint injectionPoint, Key<T> key, boolean nullable, int parameterIndex) {
     this.injectionPoint = injectionPoint;
-    this.key = checkNotNull(key, "key");
+    this.key = requireNonNull(key, "key");
     this.nullable = nullable;
     this.parameterIndex = parameterIndex;
   }
