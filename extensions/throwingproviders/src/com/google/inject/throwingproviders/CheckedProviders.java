@@ -2,7 +2,6 @@ package com.google.inject.throwingproviders;
 
 import static com.google.inject.throwingproviders.ProviderChecker.checkInterface;
 
-import com.google.common.base.Optional;
 import com.google.inject.TypeLiteral;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
@@ -10,6 +9,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import javax.annotation.Nullable;
 
 /**
@@ -119,7 +119,7 @@ public final class CheckedProviders {
 
   private static Optional<Class<?>> getClassOptional(Optional<?> value) {
     if (!value.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
     return Optional.<Class<?>>of(value.get().getClass());
   }
@@ -136,7 +136,7 @@ public final class CheckedProviders {
   public static <T, P extends CheckedProvider<? super T>> P of(
       TypeLiteral<P> providerType, @Nullable T instance) {
     return generateProvider(
-        providerType, Optional.fromNullable(instance), new ReturningHandler<T>(instance));
+        providerType, Optional.ofNullable(instance), new ReturningHandler<T>(instance));
   }
 
   /**
@@ -171,7 +171,7 @@ public final class CheckedProviders {
     Class<P> providerRaw = (Class) providerType.getRawType();
     checkThrowable(providerRaw, throwable);
     return generateProvider(
-        providerType, Optional.<T>absent(), ThrowingHandler.forClass(throwable));
+        providerType, Optional.<T>empty(), ThrowingHandler.forClass(throwable));
   }
 
   /**
