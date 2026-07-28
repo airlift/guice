@@ -102,31 +102,34 @@ public final class BindingSourceRestriction {
     return errorMessagesBuilder.build();
   }
 
+  /** Stateless, so one instance serves every element of every injector. */
+  private static final DefaultElementVisitor<ImmutableList<Message>> CHECK_VISITOR =
+      new DefaultElementVisitor<ImmutableList<Message>>() {
+        // Base case.
+        @Override
+        protected ImmutableList<Message> visitOther(Element element) {
+          return ImmutableList.of();
+        }
+
+        // Base case.
+        @Override
+        public <T> ImmutableList<Message> visit(Binding<T> binding) {
+          Optional<Message> errorMessage = check(binding);
+          if (errorMessage.isPresent()) {
+            return ImmutableList.of(errorMessage.orElseThrow());
+          }
+          return ImmutableList.of();
+        }
+
+        // Recursive case.
+        @Override
+        public ImmutableList<Message> visit(PrivateElements privateElements) {
+          return check(privateElements.getElements());
+        }
+      };
+
   private static ImmutableList<Message> check(Element element) {
-    return element.acceptVisitor(
-        new DefaultElementVisitor<ImmutableList<Message>>() {
-          // Base case.
-          @Override
-          protected ImmutableList<Message> visitOther(Element element) {
-            return ImmutableList.of();
-          }
-
-          // Base case.
-          @Override
-          public <T> ImmutableList<Message> visit(Binding<T> binding) {
-            Optional<Message> errorMessage = check(binding);
-            if (errorMessage.isPresent()) {
-              return ImmutableList.of(errorMessage.orElseThrow());
-            }
-            return ImmutableList.of();
-          }
-
-          // Recursive case.
-          @Override
-          public ImmutableList<Message> visit(PrivateElements privateElements) {
-            return check(privateElements.getElements());
-          }
-        });
+    return element.acceptVisitor(CHECK_VISITOR);
   }
 
   private static Optional<Message> check(Binding<?> binding) {
@@ -241,10 +244,24 @@ public final class BindingSourceRestriction {
    * ignored (an annotated type is essentially a new type).
    **/
   private static RestrictedBindingSource getRestriction(Key<?> key) {
-    return key.getAnnotationType() == null
-        ? key.getTypeLiteral().getRawType().getAnnotation(RestrictedBindingSource.class)
-        : key.getAnnotationType().getAnnotation(RestrictedBindingSource.class);
+    return RESTRICTIONS.get(
+        key.getAnnotationType() == null
+            ? key.getTypeLiteral().getRawType()
+            : key.getAnnotationType());
   }
+
+  /**
+   * Almost no class carries the restriction, and this runs for every binding of every injector, so
+   * the annotation lookup result is cached per class. ClassValue caches null values, which is the
+   * overwhelmingly common answer.
+   */
+  private static final ClassValue<RestrictedBindingSource> RESTRICTIONS =
+      new ClassValue<>() {
+        @Override
+        protected RestrictedBindingSource computeValue(Class<?> type) {
+          return type.getAnnotation(RestrictedBindingSource.class);
+        }
+      };
 
   /**
    * Builds the map from each module to all the permit annotations on its module stack.
