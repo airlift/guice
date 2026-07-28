@@ -17,14 +17,13 @@
 package com.google.inject.assistedinject;
 
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.Iterables.getOnlyElement;
+import static com.google.common.collect.MoreCollectors.onlyElement;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.inject.AbstractModule;
 import com.google.inject.Binder;
@@ -553,8 +552,8 @@ final class FactoryProvider2<F>
     Collection<Message> messages = ce.getErrorMessages();
     if (messages.size() == 1) {
       Message msg =
-          Iterables.getOnlyElement(new Errors().keyNotFullySpecified(typeLiteral).getMessages());
-      return msg.getMessage().equals(Iterables.getOnlyElement(messages).getMessage());
+          new Errors().keyNotFullySpecified(typeLiteral).getMessages().stream().collect(onlyElement());
+      return msg.getMessage().equals(messages.stream().collect(onlyElement()).getMessage());
     } else {
       return false;
     }
@@ -906,7 +905,7 @@ final class FactoryProvider2<F>
     } catch (ProvisionException e) {
       // if this is an exception declared by the factory method, throw it as-is
       if (e.getErrorMessages().size() == 1) {
-        Message onlyError = getOnlyElement(e.getErrorMessages());
+        Message onlyError = e.getErrorMessages().stream().collect(onlyElement());
         Throwable cause = onlyError.getCause();
         if (cause != null && canRethrow(method, cause)) {
           throw cause;

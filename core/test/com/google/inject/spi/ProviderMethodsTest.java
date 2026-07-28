@@ -16,6 +16,7 @@
 
 package com.google.inject.spi;
 
+import static com.google.common.collect.MoreCollectors.onlyElement;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.inject.Asserts.assertContains;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -31,7 +32,6 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.AbstractModule;
 import com.google.inject.Binder;
@@ -1067,7 +1067,7 @@ public class ProviderMethodsTest implements Module {
         InjectionPoint.forMethod(
             module.getClass().getDeclaredMethod("fail", String.class),
             TypeLiteral.get(module.getClass()));
-    Dependency<?> fooDependency = Iterables.getOnlyElement(fooPoint.getDependencies());
+    Dependency<?> fooDependency = fooPoint.getDependencies().stream().collect(onlyElement());
 
     runNullableTest(injector, fooDependency, module);
 
@@ -1092,7 +1092,7 @@ public class ProviderMethodsTest implements Module {
     assertEquals(1, injectorBinding.getUserSuppliedProvider().get().intValue());
 
     ProviderInstanceBinding<?> moduleBinding =
-        (ProviderInstanceBinding<?>) Iterables.getOnlyElement(Elements.getElements(module));
+        (ProviderInstanceBinding<?>) Elements.getElements(module).stream().collect(onlyElement());
     try {
       moduleBinding.getUserSuppliedProvider().get();
       fail();
@@ -1201,7 +1201,7 @@ public class ProviderMethodsTest implements Module {
     Logger.getLogger(Guice.class.getName()).addHandler(fakeHandler);
     try {
       injector.getInstance(Integer.class); // no exception, but assert it does log.
-      LogRecord record = Iterables.getOnlyElement(logRecords);
+      LogRecord record = logRecords.stream().collect(onlyElement());
       assertEquals(
           "Guice injected null into {0} (a {1}), please mark it @Nullable."
               + " Use -Dguice_check_nullable_provides_params=ERROR to turn this into an"

@@ -16,11 +16,11 @@
 
 package com.google.inject.assistedinject;
 
+import static com.google.common.collect.MoreCollectors.onlyElement;
 import static com.google.inject.name.Names.named;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.AbstractModule;
@@ -78,7 +78,7 @@ public class ExtensionSpiTest {
     assertEquals(1, visitor.assistedBindingCount);
     List<AssistedMethod> assistedMethods =
         Lists.newArrayList(
-            Iterables.getOnlyElement(visitor.assistedInjectBindings).getAssistedMethods());
+            visitor.assistedInjectBindings.stream().collect(onlyElement()).getAssistedMethods());
     assertEquals(7, assistedMethods.size());
     assertEquals(1, visitor.assistedBindingCount);
     assertEquals(1, visitor.assistedInjectBindings.size());

@@ -1,8 +1,8 @@
 package com.google.inject.spi;
 
+import static com.google.common.collect.MoreCollectors.onlyElement;
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.common.collect.Iterables;
 import com.google.inject.AbstractModule;
 import com.google.inject.Asserts;
 import com.google.inject.Binding;
@@ -353,9 +353,8 @@ public class InjectorSpiTest {
         TypeLiteral.get(ClassWithInjectableField.class);
     assertThat(injectionPoints.keySet()).containsExactly(expectedTypeLiteral);
     Key<?> actualDependencyKey =
-        Iterables.getOnlyElement(
-                Iterables.getOnlyElement(injectionPoints.get(expectedTypeLiteral))
-                    .getDependencies())
+        injectionPoints.get(expectedTypeLiteral).stream().collect(onlyElement())
+                    .getDependencies().stream().collect(onlyElement())
             .getKey();
     assertEquals(Key.get(Integer.class), actualDependencyKey);
   }
@@ -396,9 +395,8 @@ public class InjectorSpiTest {
         TypeLiteral.get(ClassWithInjectableField.class);
     assertThat(injectionPoints.keySet()).containsExactly(expectedTypeLiteral);
     Key<?> actualDependencyKey =
-        Iterables.getOnlyElement(
-                Iterables.getOnlyElement(injectionPoints.get(expectedTypeLiteral))
-                    .getDependencies())
+        injectionPoints.get(expectedTypeLiteral).stream().collect(onlyElement())
+                    .getDependencies().stream().collect(onlyElement())
             .getKey();
     assertEquals(Key.get(Integer.class), actualDependencyKey);
   }
