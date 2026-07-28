@@ -17,9 +17,6 @@ package com.google.inject.servlet;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import java.io.IOException;
-import java.util.List;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -27,6 +24,9 @@ import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A Filter chain impl which basically passes itself to the "current" filter and iterates the chain
@@ -126,7 +126,7 @@ class FilterChainInvocation implements FilterChain {
   private void pruneStacktrace(Throwable throwable) {
     for (Throwable t = throwable; t != null; t = t.getCause()) {
       StackTraceElement[] stackTrace = t.getStackTrace();
-      List<StackTraceElement> pruned = Lists.newArrayList();
+      List<StackTraceElement> pruned = new ArrayList<>();
       for (StackTraceElement element : stackTrace) {
         String name = element.getClassName() + "." + element.getMethodName();
         if (!SERVLET_INTERNAL_METHODS.contains(name)) {

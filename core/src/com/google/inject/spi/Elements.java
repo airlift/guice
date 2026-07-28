@@ -23,9 +23,6 @@ import static com.google.inject.internal.InternalFlags.getIncludeStackTraceOptio
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.inject.AbstractModule;
 import com.google.inject.Binder;
 import com.google.inject.Binding;
@@ -62,9 +59,11 @@ import com.google.inject.multibindings.OptionalBinder;
 import com.google.inject.util.Modules;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -242,14 +241,14 @@ public final class Elements {
 
     private RecordingBinder(Stage stage) {
       this.stage = stage;
-      this.modules = Maps.newLinkedHashMap();
-      this.scanners = Sets.newLinkedHashSet();
-      this.elements = Lists.newArrayList();
+      this.modules = new LinkedHashMap<>();
+      this.scanners = new LinkedHashSet<>();
+      this.elements = new ArrayList<>();
       this.source = null;
       this.sourceProvider = DEFAULT_SOURCE_PROVIDER;
       this.parent = null;
       this.privateElements = null;
-      this.privateBindersForScanning = Lists.newArrayList();
+      this.privateBindersForScanning = new ArrayList<>();
       this.permitMapConstruction = new BindingSourceRestriction.PermitMapConstruction();
     }
 
@@ -280,8 +279,8 @@ public final class Elements {
     /** Creates a private recording binder. */
     private RecordingBinder(RecordingBinder parent, PrivateElementsImpl privateElements) {
       this.stage = parent.stage;
-      this.modules = Maps.newLinkedHashMap();
-      this.scanners = Sets.newLinkedHashSet();
+      this.modules = new LinkedHashMap<>();
+      this.scanners = new LinkedHashSet<>();
       this.currentScanner = parent.currentScanner;
       this.elements = privateElements.getElementsMutable();
       this.source = parent.source;
@@ -364,7 +363,7 @@ public final class Elements {
       Iterable<ModuleAnnotatedMethodScanner> scanners = getAllScanners();
       // Note: we must iterate over a copy of the modules because calling install(..)
       // will mutate modules, otherwise causing a ConcurrentModificationException.
-      for (Map.Entry<Module, ModuleInfo> entry : Maps.newLinkedHashMap(modules).entrySet()) {
+      for (Map.Entry<Module, ModuleInfo> entry : new LinkedHashMap<>(modules).entrySet()) {
         Module module = entry.getKey();
         ModuleInfo info = entry.getValue();
         if (info.skipScanning) {

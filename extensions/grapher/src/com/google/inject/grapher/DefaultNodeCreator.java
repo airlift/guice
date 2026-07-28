@@ -17,7 +17,6 @@
 package com.google.inject.grapher;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.inject.Binding;
 import com.google.inject.spi.ConstructorBinding;
 import com.google.inject.spi.DefaultBindingTargetVisitor;
@@ -27,6 +26,7 @@ import com.google.inject.spi.InjectionPoint;
 import com.google.inject.spi.InstanceBinding;
 import com.google.inject.spi.ProviderInstanceBinding;
 import java.lang.reflect.Member;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -38,7 +38,7 @@ import java.util.List;
 final class DefaultNodeCreator implements NodeCreator {
   @Override
   public Iterable<Node> getNodes(Iterable<Binding<?>> bindings) {
-    List<Node> nodes = Lists.newArrayList();
+    List<Node> nodes = new ArrayList<>();
     NodeVisitor visitor = new NodeVisitor();
     for (Binding<?> binding : bindings) {
       nodes.addAll(binding.acceptTargetVisitor(visitor));
@@ -79,7 +79,7 @@ final class DefaultNodeCreator implements NodeCreator {
      */
     private <T extends Binding<?> & HasDependencies> InstanceNode newInstanceNode(
         T binding, Object instance) {
-      Collection<Member> members = Lists.newArrayList();
+      Collection<Member> members = new ArrayList<>();
       for (Dependency<?> dependency : binding.getDependencies()) {
         InjectionPoint injectionPoint = dependency.getInjectionPoint();
 
@@ -97,7 +97,7 @@ final class DefaultNodeCreator implements NodeCreator {
      */
     @Override
     public Collection<Node> visit(ConstructorBinding<?> binding) {
-      Collection<Member> members = Lists.newArrayList();
+      Collection<Member> members = new ArrayList<>();
       members.add(binding.getConstructor().getMember());
       for (InjectionPoint injectionPoint : binding.getInjectableMembers()) {
         members.add(injectionPoint.getMember());

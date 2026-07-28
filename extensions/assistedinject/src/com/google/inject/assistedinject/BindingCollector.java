@@ -16,12 +16,12 @@
 package com.google.inject.assistedinject;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
 import com.google.inject.ConfigurationException;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
 import com.google.inject.spi.Message;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -31,7 +31,7 @@ import java.util.Map;
  */
 class BindingCollector {
 
-  private final Map<Key<?>, TypeLiteral<?>> bindings = Maps.newHashMap();
+  private final Map<Key<?>, TypeLiteral<?>> bindings = new HashMap<>();
 
   public BindingCollector addBinding(Key<?> key, TypeLiteral<?> target) {
     if (bindings.containsKey(key)) {

@@ -16,7 +16,7 @@
 
 package com.google.inject.internal;
 
-import com.google.common.collect.Lists;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -27,9 +27,9 @@ import java.util.List;
  */
 class ProcessedBindingData {
 
-  private final List<CreationListener> creationListeners = Lists.newArrayList();
-  private final List<Runnable> uninitializedBindings = Lists.newArrayList();
-  private final List<Runnable> delayedUninitializedBindings = Lists.newArrayList();
+  private final List<CreationListener> creationListeners = new ArrayList<>();
+  private final List<Runnable> uninitializedBindings = new ArrayList<>();
+  private final List<Runnable> delayedUninitializedBindings = new ArrayList<>();
 
   void addCreationListener(CreationListener listener) {
     creationListeners.add(listener);

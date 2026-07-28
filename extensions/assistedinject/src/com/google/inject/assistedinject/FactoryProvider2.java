@@ -26,9 +26,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
 import com.google.inject.AbstractModule;
 import com.google.inject.Binder;
 import com.google.inject.Binding;
@@ -65,6 +63,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -299,7 +298,7 @@ final class FactoryProvider2<F>
         List<TypeLiteral<?>> params = factoryType.getParameterTypes(method);
         Annotation[][] paramAnnotations = method.getParameterAnnotations();
         int p = 0;
-        List<Key<?>> keys = Lists.newArrayList();
+        List<Key<?>> keys = new ArrayList<>();
         for (TypeLiteral<?> param : params) {
           Key<?> paramKey = Annotations.getKey(param, method, paramAnnotations[p++], errors);
           Class<?> underlylingType = paramKey.getTypeLiteral().getRawType();
@@ -653,7 +652,7 @@ final class FactoryProvider2<F>
     List<TypeLiteral<?>> params = type.getParameterTypes(constructor);
     Annotation[][] paramAnnotations = constructor.getParameterAnnotations();
     int p = 0;
-    List<Key<?>> constructorKeys = Lists.newArrayList();
+    List<Key<?>> constructorKeys = new ArrayList<>();
     for (TypeLiteral<?> param : params) {
       Key<?> paramKey = Annotations.getKey(param, constructor, paramAnnotations[p++], errors);
       constructorKeys.add(paramKey);
@@ -712,7 +711,7 @@ final class FactoryProvider2<F>
     for (Dependency<?> dep : dependencies) {
       if (isInjectorOrAssistedProvider(dep)) {
         if (badDeps == null) {
-          badDeps = Sets.newHashSet();
+          badDeps = new HashSet<>();
         }
         badDeps.add(dep);
       }

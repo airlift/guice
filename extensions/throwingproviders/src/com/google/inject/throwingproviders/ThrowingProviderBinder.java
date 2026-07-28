@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.google.inject.Binder;
 import com.google.inject.Key;
 import com.google.inject.Module;
@@ -42,6 +41,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -385,7 +385,7 @@ public class ThrowingProviderBinder {
         Method getMethod = interfaceType.getMethod("get");
         List<TypeLiteral<?>> exceptionLiterals =
             TypeLiteral.get(interfaceType).getExceptionTypes(getMethod);
-        List<Class<? extends Throwable>> results = Lists.newArrayList();
+        List<Class<? extends Throwable>> results = new ArrayList<>();
         for (TypeLiteral<?> exLiteral : exceptionLiterals) {
           results.add(exLiteral.getRawType().asSubclass(Throwable.class));
         }

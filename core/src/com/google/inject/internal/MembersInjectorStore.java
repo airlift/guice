@@ -20,14 +20,14 @@ import static com.google.common.collect.ImmutableListMultimap.flatteningToImmuta
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.inject.ConfigurationException;
 import com.google.inject.TypeLiteral;
 import com.google.inject.spi.InjectionPoint;
 import com.google.inject.spi.TypeListener;
 import com.google.inject.spi.TypeListenerBinding;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -98,7 +98,7 @@ final class MembersInjectorStore {
     errors.throwIfNewErrors(numErrorsBefore);
 
     EncounterImpl<T> encounter = new EncounterImpl<>(errors, injector.lookups);
-    Set<TypeListener> alreadySeenListeners = Sets.newHashSet();
+    Set<TypeListener> alreadySeenListeners = new HashSet<>();
     for (TypeListenerBinding binding : typeListenerBindings) {
       TypeListener typeListener = binding.getListener();
       if (!alreadySeenListeners.contains(typeListener) && binding.getTypeMatcher().matches(type)) {
@@ -119,7 +119,7 @@ final class MembersInjectorStore {
   /** Returns the injectors for the specified injection points. */
   ImmutableList<SingleMemberInjector> getInjectors(
       Set<InjectionPoint> injectionPoints, Errors errors) {
-    List<SingleMemberInjector> injectors = Lists.newArrayList();
+    List<SingleMemberInjector> injectors = new ArrayList<>();
     for (InjectionPoint injectionPoint : injectionPoints) {
       try {
         Errors errorsForMember =

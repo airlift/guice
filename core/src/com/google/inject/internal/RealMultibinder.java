@@ -10,8 +10,6 @@ import static java.lang.invoke.MethodType.methodType;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.errorprone.annotations.Keep;
 import com.google.inject.AbstractModule;
 import com.google.inject.Binder;
@@ -36,6 +34,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -548,11 +547,11 @@ public final class RealMultibinder<T> implements Module {
       if (isInitialized) {
         return;
       }
-      List<Binding<T>> bindings = Lists.newArrayList();
-      Set<Indexer.IndexedBinding> index = Sets.newHashSet();
+      List<Binding<T>> bindings = new ArrayList<>();
+      Set<Indexer.IndexedBinding> index = new HashSet<>();
       Indexer indexer = new Indexer(injector);
-      List<Dependency<?>> dependencies = Lists.newArrayList();
-      List<Dependency<?>> providerDependencies = Lists.newArrayList();
+      List<Dependency<?>> dependencies = new ArrayList<>();
+      List<Dependency<?>> providerDependencies = new ArrayList<>();
       for (Binding<?> entry : injector.findBindingsByType(elementType)) {
         if (keyMatches(entry.getKey())) {
           @SuppressWarnings("unchecked") // protected by findBindingsByType()

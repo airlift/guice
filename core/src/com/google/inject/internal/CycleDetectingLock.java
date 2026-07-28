@@ -4,10 +4,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -78,7 +78,7 @@ interface CycleDetectingLock<ID> {
      * <p>Guarded by {@code CycleDetectingLockFactory.class}.
      */
     private static Map<Thread, ReentrantCycleDetectingLock<?>> lockThreadIsWaitingOn =
-        Maps.newHashMap();
+        new HashMap<>();
 
     /**
      * Lists locks that thread owns. Used only to populate locks in a potential cycle when it is

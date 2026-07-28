@@ -23,8 +23,6 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.inject.Binder;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -32,6 +30,8 @@ import com.google.inject.PrivateBinder;
 import com.google.inject.spi.Element;
 import com.google.inject.spi.ElementVisitor;
 import com.google.inject.spi.PrivateElements;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -47,8 +47,8 @@ public final class PrivateElementsImpl implements PrivateElements {
 
   private final Object source;
 
-  private List<Element> elementsMutable = Lists.newArrayList();
-  private List<ExposureBuilder<?>> exposureBuilders = Lists.newArrayList();
+  private List<Element> elementsMutable = new ArrayList<>();
+  private List<ExposureBuilder<?>> exposureBuilders = new ArrayList<>();
 
   /** lazily instantiated */
   private ImmutableList<Element> elements;
@@ -90,7 +90,7 @@ public final class PrivateElementsImpl implements PrivateElements {
   @Override
   public Set<Key<?>> getExposedKeys() {
     if (exposedKeysToSources == null) {
-      Map<Key<?>, Object> exposedKeysToSourcesMutable = Maps.newLinkedHashMap();
+      Map<Key<?>, Object> exposedKeysToSourcesMutable = new LinkedHashMap<>();
       for (ExposureBuilder<?> exposureBuilder : exposureBuilders) {
         exposedKeysToSourcesMutable.put(exposureBuilder.getKey(), exposureBuilder.getSource());
       }

@@ -17,7 +17,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.SetMultimap;
@@ -47,6 +46,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -971,7 +971,7 @@ public final class RealMapBinder<K, V> implements Module {
 
       // Check that there is a 1:1 mapping from keys from the ProviderMapEntrys to the
       // keys from the Bindings.
-      Set<Key<V>> keysFromProviderMapEntrys = Sets.newHashSet(keyToValueKey.values());
+      Set<Key<V>> keysFromProviderMapEntrys = new HashSet<>(keyToValueKey.values());
       Set<Key<V>> keysFromBindings = valueKeyToBinding.keySet();
 
       if (!keysFromProviderMapEntrys.equals(keysFromBindings)) {
@@ -1181,7 +1181,7 @@ public final class RealMapBinder<K, V> implements Module {
             new PerKeyData[bindingSelection.getMapBindings().size()];
         perKeyDatas = typedPerKeyData;
         ImmutableSet.Builder<Dependency<?>> dependenciesBuilder = ImmutableSet.builder();
-        List<Dependency<?>> dependenciesForKey = Lists.newArrayList();
+        List<Dependency<?>> dependenciesForKey = new ArrayList<>();
         int i = 0;
         for (Map.Entry<K, Set<Binding<V>>> entry :
             bindingSelection.getMultimapBindings().entrySet()) {

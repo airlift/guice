@@ -17,7 +17,6 @@
 package com.google.inject.grapher;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import com.google.inject.Binding;
 import com.google.inject.Key;
 import com.google.inject.spi.ConstructorBinding;
@@ -31,6 +30,7 @@ import com.google.inject.spi.ProviderBinding;
 import com.google.inject.spi.ProviderInstanceBinding;
 import com.google.inject.spi.ProviderKeyBinding;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -44,7 +44,7 @@ public class TransitiveDependencyVisitor
     extends DefaultBindingTargetVisitor<Object, Collection<Key<?>>> {
 
   private Collection<Key<?>> visitHasDependencies(HasDependencies hasDependencies) {
-    Set<Key<?>> dependencies = Sets.newHashSet();
+    Set<Key<?>> dependencies = new HashSet<>();
 
     for (Dependency<?> dependency : hasDependencies.getDependencies()) {
       dependencies.add(dependency.getKey());

@@ -20,9 +20,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.google.inject.Key;
 import com.google.inject.internal.MoreTypes;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -59,7 +59,7 @@ public final class Dependency<T> {
 
   /** Returns the dependencies from the given injection points. */
   public static Set<Dependency<?>> forInjectionPoints(Set<InjectionPoint> injectionPoints) {
-    List<Dependency<?>> dependencies = Lists.newArrayList();
+    List<Dependency<?>> dependencies = new ArrayList<>();
     for (InjectionPoint injectionPoint : injectionPoints) {
       dependencies.addAll(injectionPoint.getDependencies());
     }

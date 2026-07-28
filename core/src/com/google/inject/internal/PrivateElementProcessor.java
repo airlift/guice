@@ -16,8 +16,8 @@
 
 package com.google.inject.internal;
 
-import com.google.common.collect.Lists;
 import com.google.inject.spi.PrivateElements;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -27,7 +27,7 @@ import java.util.List;
  */
 final class PrivateElementProcessor extends AbstractProcessor {
 
-  private final List<InjectorShell.Builder> injectorShellBuilders = Lists.newArrayList();
+  private final List<InjectorShell.Builder> injectorShellBuilders = new ArrayList<>();
 
   PrivateElementProcessor(Errors errors) {
     super(errors);

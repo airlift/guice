@@ -16,9 +16,9 @@
 
 package com.google.inject.grapher;
 
-import com.google.common.collect.Lists;
 import com.google.inject.Binding;
 import com.google.inject.spi.ProviderBinding;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -31,7 +31,7 @@ import java.util.List;
 final class ProviderAliasCreator implements AliasCreator {
   @Override
   public Iterable<Alias> createAliases(Iterable<Binding<?>> bindings) {
-    List<Alias> aliases = Lists.newArrayList();
+    List<Alias> aliases = new ArrayList<>();
     for (Binding<?> binding : bindings) {
       if (binding instanceof ProviderBinding) {
         aliases.add(

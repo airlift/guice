@@ -23,11 +23,11 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.RemovalCause;
 import com.google.common.cache.RemovalNotification;
 import com.google.common.collect.LinkedHashMultiset;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multiset;
-import com.google.common.collect.Sets;
 import com.google.inject.Key;
 import com.google.inject.internal.util.SourceProvider;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -78,7 +78,7 @@ final class WeakKeySet {
 
   public void add(Key<?> key, InjectorBindingData state, Object source) {
     if (backingMap == null) {
-      backingMap = Maps.newHashMap();
+      backingMap = new HashMap<>();
     }
     // if it's an instanceof Class, it was a JIT binding, which we don't
     // want to retain.
@@ -92,7 +92,7 @@ final class WeakKeySet {
     if (state.parent().isPresent()) {
       Set<KeyAndSource> keyAndSources = evictionCache.getIfPresent(state);
       if (keyAndSources == null) {
-        evictionCache.put(state, keyAndSources = Sets.newHashSet());
+        evictionCache.put(state, keyAndSources = new HashSet<>());
       }
       keyAndSources.add(new KeyAndSource(key, convertedSource));
     }

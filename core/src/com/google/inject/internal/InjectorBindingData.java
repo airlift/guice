@@ -20,9 +20,6 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.inject.Binding;
 import com.google.inject.Key;
 import com.google.inject.Scope;
@@ -38,8 +35,12 @@ import com.google.inject.spi.StaticInjectionRequest;
 import com.google.inject.spi.TypeConverterBinding;
 import com.google.inject.spi.TypeListenerBinding;
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -57,19 +58,19 @@ class InjectorBindingData {
   private final Optional<InjectorBindingData> parent;
 
   // Must be a linked hashmap in order to preserve order of bindings in Modules.
-  private final Map<Key<?>, Binding<?>> explicitBindingsMutable = Maps.newLinkedHashMap();
+  private final Map<Key<?>, Binding<?>> explicitBindingsMutable = new LinkedHashMap<>();
   private final Map<Key<?>, Binding<?>> explicitBindings =
       Collections.unmodifiableMap(explicitBindingsMutable);
-  private final Map<Class<? extends Annotation>, ScopeBinding> scopes = Maps.newHashMap();
-  private final Set<ProviderLookup<?>> providerLookups = Sets.newLinkedHashSet();
-  private final Set<StaticInjectionRequest> staticInjectionRequests = Sets.newLinkedHashSet();
-  private final Set<MembersInjectorLookup<?>> membersInjectorLookups = Sets.newLinkedHashSet();
-  private final Set<InjectionRequest<?>> injectionRequests = Sets.newLinkedHashSet();
-  private final List<TypeConverterBinding> converters = Lists.newArrayList();
-  private final List<InterceptorBinding> interceptorBindings = Lists.newArrayList();
-  private final List<TypeListenerBinding> typeListenerBindings = Lists.newArrayList();
-  private final List<ProvisionListenerBinding> provisionListenerBindings = Lists.newArrayList();
-  private final List<ModuleAnnotatedMethodScannerBinding> scannerBindings = Lists.newArrayList();
+  private final Map<Class<? extends Annotation>, ScopeBinding> scopes = new HashMap<>();
+  private final Set<ProviderLookup<?>> providerLookups = new LinkedHashSet<>();
+  private final Set<StaticInjectionRequest> staticInjectionRequests = new LinkedHashSet<>();
+  private final Set<MembersInjectorLookup<?>> membersInjectorLookups = new LinkedHashSet<>();
+  private final Set<InjectionRequest<?>> injectionRequests = new LinkedHashSet<>();
+  private final List<TypeConverterBinding> converters = new ArrayList<>();
+  private final List<InterceptorBinding> interceptorBindings = new ArrayList<>();
+  private final List<TypeListenerBinding> typeListenerBindings = new ArrayList<>();
+  private final List<ProvisionListenerBinding> provisionListenerBindings = new ArrayList<>();
+  private final List<ModuleAnnotatedMethodScannerBinding> scannerBindings = new ArrayList<>();
   // The injector's explicit bindings, indexed by the binding's type.
   private final ListMultimap<TypeLiteral<?>, Binding<?>> indexedExplicitBindings =
       ArrayListMultimap.create();
