@@ -27,7 +27,35 @@
         <module>throwingproviders</module>
     </modules>
 
-    <dependencies />
+    <dependencies>
+        <!--
+     | All extensions depend on the core
+    -->
+        <dependency>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <!--
+     | Some extension tests depend on guava test libs which are not inherited
+     | from test scope.
+    -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava-testlib</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!--
+     | Some extension tests depend on the core tests
+    -->
+        <dependency>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
+            <version>${project.version}</version>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 
     <build>
         <plugins>
