@@ -119,7 +119,7 @@ public final class BindingSourceRestriction {
           public <T> ImmutableList<Message> visit(Binding<T> binding) {
             Optional<Message> errorMessage = check(binding);
             if (errorMessage.isPresent()) {
-              return ImmutableList.of(errorMessage.get());
+              return ImmutableList.of(errorMessage.orElseThrow());
             }
             return ImmutableList.of();
           }

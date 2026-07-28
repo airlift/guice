@@ -1,6 +1,5 @@
 package com.google.inject.internal;
 
-import com.google.common.collect.Lists;
 import com.google.inject.spi.ErrorDetail;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -36,7 +35,7 @@ final class ScopeNotFoundError extends InternalErrorDetail<ScopeNotFoundError> {
     formatter.format("\n%s\n", "Used at:");
     int sourceListIndex = 1;
     for (List<Object> sources : sourcesSet) {
-      ErrorFormatter.formatSources(sourceListIndex++, Lists.reverse(sources), formatter);
+      ErrorFormatter.formatSources(sourceListIndex++, sources.reversed(), formatter);
     }
   }
 

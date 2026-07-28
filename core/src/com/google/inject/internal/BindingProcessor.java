@@ -118,7 +118,7 @@ final class BindingProcessor extends AbstractBindingProcessor {
                     errors);
             InternalFactory<? extends T> factory =
                 ref.isPresent()
-                    ? new InitializableFactory<>(ref.get())
+                    ? new InitializableFactory<>(ref.orElseThrow())
                     : ConstantFactory.create(instance, source);
             InternalFactory<? extends T> scopedFactory =
                 Scoping.scope(key, injector, factory, source, scoping);
@@ -158,7 +158,7 @@ final class BindingProcessor extends AbstractBindingProcessor {
             InternalFactory<T> factory =
                 (initializable.isPresent()
                     ? new InternalFactoryToInitializableAdapter<T>(
-                        rawType, initializable.get(), source, listener, circularFactoryId)
+                        rawType, initializable.orElseThrow(), source, listener, circularFactoryId)
                     : new ConstantProviderInternalFactory<T>(
                         rawType, provider, source, listener, circularFactoryId));
 

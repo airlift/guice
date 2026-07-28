@@ -158,7 +158,7 @@ final class PackageNameCompressor {
   private static String buildClassNameLegend(Map<String, String> replacementMap) {
     StringBuilder legendBuilder = new StringBuilder();
     // Find the longest key for building the legend
-    int longestKey = replacementMap.keySet().stream().max(comparing(String::length)).get().length();
+    int longestKey = replacementMap.keySet().stream().max(comparing(String::length)).orElseThrow().length();
     for (Map.Entry<String, String> entry : replacementMap.entrySet()) {
       String shortName = entry.getKey();
       String fullName = entry.getValue();

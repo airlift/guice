@@ -1,6 +1,5 @@
 package com.google.inject.internal;
 
-import com.google.common.collect.Lists;
 import com.google.inject.TypeLiteral;
 import com.google.inject.spi.ErrorDetail;
 import java.lang.reflect.Constructor;
@@ -70,7 +69,7 @@ final class MissingConstructorError extends InternalErrorDetail<MissingConstruct
     formatter.format("%s\n", Messages.bold("Requested by:"));
     int sourceListIndex = 1;
     for (List<Object> sources : sourcesList) {
-      ErrorFormatter.formatSources(sourceListIndex++, Lists.reverse(sources), formatter);
+      ErrorFormatter.formatSources(sourceListIndex++, sources.reversed(), formatter);
     }
   }
 

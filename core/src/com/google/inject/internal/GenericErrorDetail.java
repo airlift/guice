@@ -3,7 +3,6 @@ package com.google.inject.internal;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.google.inject.spi.ErrorDetail;
 import java.io.Serializable;
 import java.util.Formatter;
@@ -21,7 +20,7 @@ public final class GenericErrorDetail extends InternalErrorDetail<GenericErrorDe
   public void formatDetail(List<ErrorDetail<?>> mergeableErrors, Formatter formatter) {
     Preconditions.checkArgument(mergeableErrors.isEmpty(), "Unexpected mergeable errors");
     List<Object> dependencies = getSources();
-    for (Object source : Lists.reverse(dependencies)) {
+    for (Object source : dependencies.reversed()) {
       formatter.format("  ");
       new SourceFormatter(source, formatter, /* omitPreposition= */ false).format();
     }
