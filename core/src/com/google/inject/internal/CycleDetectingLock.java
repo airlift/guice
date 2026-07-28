@@ -1,12 +1,11 @@
 package com.google.inject.internal;
 
 import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 
-import java.util.Collection;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
@@ -98,13 +97,17 @@ interface CycleDetectingLock<ID>
          * is called. Element is removed inside {@link #unlock()} synchronously with {@link
          * Lock#unlock()} call.
          *
-         * <p>Same lock can only be present several times for the same thread as locks are reentrant.
-         * Lock can not be owned by several different threads as the same time.
+         * <p>A lock is pushed once per owning thread on first acquisition; reentrant acquisitions do
+         * not push again. Lock can not be owned by several different threads at the same time.
+         *
+         * <p>A plain map of deques instead of a multimap: singleton provisioning locks and unlocks
+         * here once per singleton, and this bookkeeping runs inside a global monitor, so it must not
+         * allocate more than necessary.
          *
          * <p>Guarded by {@code CycleDetectingLockFactory.class}.
          */
-        private static final Multimap<Thread, ReentrantCycleDetectingLock<?>> locksOwnedByThread =
-                LinkedHashMultimap.create();
+        private static final Map<Thread, ArrayDeque<ReentrantCycleDetectingLock<?>>> locksOwnedByThread =
+                new HashMap<>();
 
         /**
          * Creates new lock within this factory context. We can guarantee that locks created by the same
@@ -195,9 +198,10 @@ interface CycleDetectingLock<ID>
 
                     // mark it as owned by us
                     lockOwnerThread = currentThread;
-                    lockReentranceCount++;
-                    // add this lock to the list of locks owned by a current thread
-                    locksOwnedByThread.put(currentThread, this);
+                    // add this lock to the stack of locks owned by a current thread, once per ownership
+                    if (lockReentranceCount++ == 0) {
+                        locksOwnedByThread.computeIfAbsent(currentThread, _ -> new ArrayDeque<>()).addLast(this);
+                    }
                 }
                 // no deadlock is found, locking successful
                 return ImmutableListMultimap.of();
@@ -223,12 +227,13 @@ interface CycleDetectingLock<ID>
                     if (lockReentranceCount == 0) {
                         // we no longer own this lock
                         lockOwnerThread = null;
+                        Deque<ReentrantCycleDetectingLock<?>> ownedLocks = locksOwnedByThread.get(currentThread);
                         checkState(
-                                locksOwnedByThread.remove(currentThread, this),
+                                ownedLocks != null && ownedLocks.removeLastOccurrence(this),
                                 "Internal error: Can not find this lock in locks owned by a current thread");
-                        if (locksOwnedByThread.get(currentThread).isEmpty()) {
+                        if (ownedLocks.isEmpty()) {
                             // clearing memory
-                            locksOwnedByThread.removeAll(currentThread);
+                            locksOwnedByThread.remove(currentThread);
                         }
                     }
                 }
@@ -249,8 +254,9 @@ interface CycleDetectingLock<ID>
                     checkState(
                             lockReentranceCount >= 0,
                             "Internal error: Lock ownership and reentrance count internal states do not match");
+                    Deque<ReentrantCycleDetectingLock<?>> ownedLocks = locksOwnedByThread.get(lockOwnerThread);
                     checkState(
-                            locksOwnedByThread.get(lockOwnerThread).contains(this),
+                            ownedLocks != null && ownedLocks.contains(this),
                             "Internal error: Set of locks owned by a current thread and lock "
                                     + "ownership status do not match");
                 }
@@ -259,9 +265,11 @@ interface CycleDetectingLock<ID>
                     checkState(
                             lockReentranceCount == 0,
                             "Internal error: Reentrance count of a non locked lock is expect to be zero");
-                    checkState(
-                            !locksOwnedByThread.values().contains(this),
-                            "Internal error: Non locked lock should not be owned by any thread");
+                    for (Deque<ReentrantCycleDetectingLock<?>> ownedLocks : locksOwnedByThread.values()) {
+                        checkState(
+                                !ownedLocks.contains(this),
+                                "Internal error: Non locked lock should not be owned by any thread");
+                    }
                 }
             }
 
@@ -311,7 +319,7 @@ interface CycleDetectingLock<ID>
                     ListMultimap<Thread, ID> potentialLocksCycle)
             {
                 boolean found = false;
-                Collection<ReentrantCycleDetectingLock<?>> ownedLocks = locksOwnedByThread.get(thread);
+                Deque<ReentrantCycleDetectingLock<?>> ownedLocks = locksOwnedByThread.get(thread);
                 requireNonNull(
                         ownedLocks, "Internal error: No locks were found taken by a thread");
                 for (ReentrantCycleDetectingLock<?> ownedLock : ownedLocks) {
