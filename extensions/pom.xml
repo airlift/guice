@@ -18,15 +18,9 @@
 
   <modules>
     <module>assistedinject</module>
-    <module>dagger-adapter</module>
     <module>grapher</module>
     <module>jmx</module>
-    <module>jndi</module>
-    <module>persist</module>
     <module>servlet</module>
-    <module>spring</module>
-    <!-- struts2 doesn't support jakarta.servlet yet, so we can't include it
-    <module>struts2</module> -->
     <module>testlib</module>
     <module>throwingproviders</module>
   </modules>
