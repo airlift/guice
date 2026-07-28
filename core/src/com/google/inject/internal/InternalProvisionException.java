@@ -18,7 +18,6 @@ package com.google.inject.internal;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.inject.Guice;
 import com.google.inject.Key;
 import com.google.inject.MembersInjector;
@@ -239,7 +238,7 @@ public final class InternalProvisionException extends Exception {
     ImmutableList.Builder<Message> builder = ImmutableList.builder();
     // reverse them since sources are added as the exception propagates (so the first source is the
     // last one added)
-    List<Object> newSources = Lists.reverse(sourcesToPrepend);
+    List<Object> newSources = sourcesToPrepend.reversed();
     for (Message error : errors) {
       builder.add(Messages.mergeSources(newSources, error));
     }

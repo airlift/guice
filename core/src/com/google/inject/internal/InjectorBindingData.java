@@ -87,7 +87,7 @@ class InjectorBindingData {
   public <T> BindingImpl<T> getExplicitBinding(Key<T> key) {
     Binding<?> binding = explicitBindings.get(key);
     if (binding == null && parent.isPresent()) {
-      return parent.get().getExplicitBinding(key);
+      return parent.orElseThrow().getExplicitBinding(key);
     }
     return (BindingImpl<T>) binding;
   }
@@ -135,7 +135,7 @@ class InjectorBindingData {
   public ScopeBinding getScopeBinding(Class<? extends Annotation> annotationType) {
     ScopeBinding scopeBinding = scopes.get(annotationType);
     if (scopeBinding == null && parent.isPresent()) {
-      return parent.get().getScopeBinding(annotationType);
+      return parent.orElseThrow().getScopeBinding(annotationType);
     }
     return scopeBinding;
   }
@@ -181,7 +181,7 @@ class InjectorBindingData {
   public ImmutableList<InterceptorBinding> getInterceptorBindings() {
     if (parent.isPresent()) {
       return new ImmutableList.Builder<InterceptorBinding>()
-          .addAll(parent.get().getInterceptorBindings())
+          .addAll(parent.orElseThrow().getInterceptorBindings())
           .addAll(interceptorBindings)
           .build();
     }
@@ -199,7 +199,7 @@ class InjectorBindingData {
   public ImmutableList<TypeListenerBinding> getTypeListenerBindings() {
     if (parent.isPresent()) {
       return new ImmutableList.Builder<TypeListenerBinding>()
-          .addAll(parent.get().getTypeListenerBindings())
+          .addAll(parent.orElseThrow().getTypeListenerBindings())
           .addAll(typeListenerBindings)
           .build();
     }
@@ -217,7 +217,7 @@ class InjectorBindingData {
   public ImmutableList<ProvisionListenerBinding> getProvisionListenerBindings() {
     if (parent.isPresent()) {
       return new ImmutableList.Builder<ProvisionListenerBinding>()
-          .addAll(parent.get().getProvisionListenerBindings())
+          .addAll(parent.orElseThrow().getProvisionListenerBindings())
           .addAll(provisionListenerBindings)
           .build();
     }
@@ -235,7 +235,7 @@ class InjectorBindingData {
   public ImmutableList<ModuleAnnotatedMethodScannerBinding> getScannerBindings() {
     if (parent.isPresent()) {
       return new ImmutableList.Builder<ModuleAnnotatedMethodScannerBinding>()
-          .addAll(parent.get().getScannerBindings())
+          .addAll(parent.orElseThrow().getScannerBindings())
           .addAll(scannerBindings)
           .build();
     }

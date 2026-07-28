@@ -37,7 +37,7 @@ final class InjectorJitBindingData {
 
   InjectorJitBindingData(Optional<InjectorJitBindingData> parent) {
     this.parent = parent;
-    this.lock = parent.isPresent() ? parent.get().lock() : this;
+    this.lock = parent.isPresent() ? parent.orElseThrow().lock() : this;
     this.bannedKeys = new WeakKeySet(lock);
   }
 
@@ -85,7 +85,7 @@ final class InjectorJitBindingData {
    */
   void banKeyInParent(Key<?> key, InjectorBindingData injectorBindingData, Object source) {
     if (parent.isPresent()) {
-      parent.get().banKey(key, injectorBindingData, source);
+      parent.orElseThrow().banKey(key, injectorBindingData, source);
     }
   }
 

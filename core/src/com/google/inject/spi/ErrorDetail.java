@@ -66,7 +66,7 @@ public abstract class ErrorDetail<SelfT extends ErrorDetail<SelfT>> implements S
     Optional<String> learnMoreLink = getLearnMoreLink();
     if (learnMoreLink.isPresent()) {
       formatter.format("\n%s\n", Messages.bold("Learn more:"));
-      formatter.format("  %s\n", Messages.underline(learnMoreLink.get()));
+      formatter.format("  %s\n", Messages.underline(learnMoreLink.orElseThrow()));
     }
   }
 
