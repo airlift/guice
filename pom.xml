@@ -100,13 +100,12 @@ See the Apache License Version 2.0 for the specific language governing permissio
         <air.check.skip-extended>true</air.check.skip-extended>
         <!--
      | Modernizer is the exception: it flags legacy APIs, which we do want to know about.
-     | Reporting only for now, while the existing violations are worked through. Note that
-     | two of its rules do not apply here and must not be "fixed": com.google.inject.Provider
-     | is Guice's own public API, and RealOptionalBinder supports Guava's Optional alongside
-     | java.util.Optional on purpose.
+     | Rules that do not apply to this tree are excluded (with rationale) in the
+     | modernizer-maven-plugin configuration below; everything else is fixed, so violations fail
+     | the build.
     -->
         <air.check.skip-modernizer>${air.check.skip-all}</air.check.skip-modernizer>
-        <air.check.fail-modernizer>false</air.check.fail-modernizer>
+        <air.check.fail-modernizer>true</air.check.fail-modernizer>
     </properties>
 
     <dependencyManagement>
@@ -219,6 +218,55 @@ See the Apache License Version 2.0 for the specific language governing permissio
         </testResources>
         <pluginManagement>
             <plugins>
+                <!--
+         | Modernizer runs with the version and executions that airbase declares; this entry only
+         | adds exclusions for rules that do not apply to this vendored tree. Every remaining
+         | finding has been fixed, so failures are real regressions.
+        -->
+                <plugin>
+                    <groupId>org.gaul</groupId>
+                    <artifactId>modernizer-maven-plugin</artifactId>
+                    <configuration>
+                        <exclusionPatterns>
+                            <!--
+                 | Preconditions.checkNotNull: Objects.requireNonNull is an exact behavioural
+                 | equivalent, so converting the 100+ vendored upstream call sites would be pure
+                 | churn that buys nothing and turns into merge conflicts on every upstream sync.
+                -->
+                            <exclusionPattern>com/google/common/base/Preconditions\.checkNotNull:.*</exclusionPattern>
+                            <!--
+                 | "Prefer jakarta.inject.Provider": false positive. com.google.inject.Provider
+                 | is Guice's own public API - this codebase defines it and must keep using it.
+                -->
+                            <exclusionPattern>com/google/inject/Provider.*</exclusionPattern>
+                            <!--
+                 | Guava Optional: false positive. OptionalBinder deliberately binds
+                 | com.google.common.base.Optional alongside java.util.Optional as distinct keys
+                 | for compatibility, so RealOptionalBinder and its tests must keep creating Guava
+                 | Optionals. All other Guava Optional usage has been migrated to java.util.
+                -->
+                            <exclusionPattern>com/google/common/base/Optional\..*</exclusionPattern>
+                            <!--
+                 | Iterables.getOnlyElement: the suggested replacement,
+                 | stream().collect(MoreCollectors.onlyElement()), is Guava-specific advice and
+                 | not an improvement over the direct call.
+                -->
+                            <exclusionPattern>com/google/common/collect/Iterables\.getOnlyElement:.*</exclusionPattern>
+                            <!--
+                 | String.format is not a legacy API, and it reads better than formatted() when
+                 | the format string spans multiple lines, which is the common case here.
+                -->
+                            <exclusionPattern>java/lang/String\.format:\(Ljava/lang/String;\[Ljava/lang/Object;\)Ljava/lang/String;</exclusionPattern>
+                        </exclusionPatterns>
+                        <ignoreClassNamePatterns>
+                            <!--
+                 | HttpServletRequest.getRequestURL() is specified to return StringBuffer, and
+                 | every StringBuffer constructor is flagged, so this wrapper cannot comply.
+                -->
+                            <ignoreClassNamePattern>com/google/inject/servlet/ManagedServletPipeline\$RequestDispatcherRequestWrapper</ignoreClassNamePattern>
+                        </ignoreClassNamePatterns>
+                    </configuration>
+                </plugin>
                 <!--
          | Use 'mvn license:format -N' at top of project to add missing headers
         -->
