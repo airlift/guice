@@ -35,8 +35,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.inject.internal.InternalFlags;
 import com.google.inject.internal.InternalFlags.CustomClassLoadingOption;
-import java.security.AccessController;
-import java.security.PrivilegedExceptionAction;
+import java.util.concurrent.Callable;
 import java.util.function.BiFunction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -45,7 +44,7 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 
 /**
- * {@link ClassDefiner} that defines classes using {@code sun.misc.Unsafe}.
+ * {@link ClassDefiner} that defines classes as hidden nest-mates of the host class.
  *
  * @author mcculls@gmail.com (Stuart McCulloch)
  */
@@ -53,22 +52,10 @@ final class UnsafeClassDefiner implements ClassDefiner {
 
   private static final Logger logger = Logger.getLogger(UnsafeClassDefiner.class.getName());
 
-  private static final ClassDefiner UNSAFE_DEFINER;
-
-  static {
-    ClassDefiner unsafeDefiner =
-        tryPrivileged(AnonymousClassDefiner::new, "Cannot bind Unsafe.defineAnonymousClass");
-
-    if (AnonymousClassDefiner.HAS_ERROR || unsafeDefiner == null) {
-      unsafeDefiner =
-          tryPrivileged(
-              HiddenClassDefiner::new, "Cannot bind MethodHandles.Lookup.defineHiddenClass");
-      if (HiddenClassDefiner.HAS_ERROR) {
-        unsafeDefiner = null;
-      }
-    }
-    UNSAFE_DEFINER = unsafeDefiner;
-  }
+  private static final ClassDefiner UNSAFE_DEFINER =
+      HiddenClassDefiner.HAS_ERROR
+          ? null
+          : tryOrLog(HiddenClassDefiner::new, "Cannot bind MethodHandles.Lookup.defineHiddenClass");
 
   private static final boolean ALWAYS_DEFINE_ANONYMOUSLY =
       InternalFlags.getCustomClassLoadingOption() == CustomClassLoadingOption.ANONYMOUS;
@@ -84,7 +71,7 @@ final class UnsafeClassDefiner implements ClassDefiner {
   // initialization-on-demand...
   private static class ClassLoaderDefineClassHolder {
     static final ClassDefiner CLASS_LOADER_DEFINE_CLASS =
-        tryPrivileged(
+        tryOrLog(
             () -> accessDefineClass(ClassLoader.class), "Cannot access ClassLoader.defineClass");
   }
 
@@ -108,7 +95,7 @@ final class UnsafeClassDefiner implements ClassDefiner {
 
   /** Returns true if it's possible to downcast to proxies defined from the given host. */
   public static boolean canDowncastToProxy(Class<?> hostClass) {
-    return !(findClassDefiner(hostClass.getClassLoader()) instanceof AnonymousClassDefiner);
+    return true;
   }
 
   @Override
@@ -129,9 +116,9 @@ final class UnsafeClassDefiner implements ClassDefiner {
     }
   }
 
-  static <T> T tryPrivileged(PrivilegedExceptionAction<T> action, String errorMessage) {
+  static <T> T tryOrLog(Callable<T> action, String errorMessage) {
     try {
-      return AccessController.doPrivileged(action);
+      return action.call();
     } catch (Throwable e) {
       logger.log(Level.FINE, errorMessage, e);
       return null;
@@ -141,8 +128,7 @@ final class UnsafeClassDefiner implements ClassDefiner {
   static ClassDefiner tryAccessDefineClass(Class<?> loaderClass) {
     try {
       logger.log(Level.FINE, "Accessing defineClass method in %s", loaderClass);
-      return AccessController.doPrivileged(
-          (PrivilegedExceptionAction<ClassDefiner>) () -> accessDefineClass(loaderClass));
+      return accessDefineClass(loaderClass);
     } catch (Throwable e) {
       logger.log(Level.FINE, "Cannot access defineClass method in " + loaderClass, e);
       return UNSAFE_DEFINER;
