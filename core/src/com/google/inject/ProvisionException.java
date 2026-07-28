@@ -70,6 +70,4 @@ public final class ProvisionException
     {
         return Messages.formatMessages("Unable to provision, see the following errors", messages);
     }
-
-    private static final long serialVersionUID = 0;
 }

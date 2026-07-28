@@ -22,7 +22,6 @@ import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
 import com.google.inject.util.Types;
 
-import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.GenericDeclaration;
@@ -142,7 +141,7 @@ public class MoreTypes
 
     /**
      * Returns a type that is functionally equal but not necessarily equal according to {@link
-     * Object#equals(Object) Object.equals()}. The returned type is {@link Serializable}.
+     * Object#equals(Object) Object.equals()}.
      */
     public static Type canonicalize(Type type)
     {
@@ -358,8 +357,7 @@ public class MoreTypes
 
     public static class ParameterizedTypeImpl
             implements CompositeType,
-                       ParameterizedType,
-                       Serializable
+                       ParameterizedType
     {
         private final Type ownerType;
         private final Type rawType;
@@ -484,14 +482,11 @@ public class MoreTypes
                         rawType);
             }
         }
-
-        private static final long serialVersionUID = 0;
     }
 
     public static class GenericArrayTypeImpl
             implements CompositeType,
-                       GenericArrayType,
-                       Serializable
+                       GenericArrayType
     {
         private final Type componentType;
 
@@ -529,8 +524,6 @@ public class MoreTypes
         {
             return typeToString(componentType) + "[]";
         }
-
-        private static final long serialVersionUID = 0;
     }
 
     /**
@@ -540,7 +533,6 @@ public class MoreTypes
      */
     public static class WildcardTypeImpl
             implements CompositeType,
-                       Serializable,
                        WildcardType
     {
         private final Type upperBound;
@@ -611,8 +603,6 @@ public class MoreTypes
                 return "? extends " + typeToString(upperBound);
             }
         }
-
-        private static final long serialVersionUID = 0;
     }
 
     private static void checkNotPrimitive(Type type, String use)

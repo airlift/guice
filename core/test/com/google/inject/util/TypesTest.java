@@ -32,7 +32,6 @@ import java.util.Map;
 import java.util.Set;
 
 import static com.google.inject.Asserts.assertContains;
-import static com.google.inject.Asserts.assertEqualWhenReserialized;
 import static com.google.inject.Asserts.assertEqualsBothWays;
 import static com.google.inject.util.Types.subtypeOf;
 import static com.google.inject.util.Types.supertypeOf;
@@ -139,9 +138,6 @@ public class TypesTest
         assertEquals("? super java.lang.CharSequence", supertypeOf(CharSequence.class).toString());
         assertEquals("? extends java.lang.CharSequence", subtypeOf(CharSequence.class).toString());
         assertEquals("?", subtypeOf(Object.class).toString());
-
-        assertEqualWhenReserialized(supertypeOf(CharSequence.class));
-        assertEqualWhenReserialized(subtypeOf(CharSequence.class));
     }
 
     @Test

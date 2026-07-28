@@ -26,6 +26,4 @@ final class GlueException
     {
         super(message, cause);
     }
-
-    private static final long serialVersionUID = 0;
 }

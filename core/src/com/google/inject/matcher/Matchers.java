@@ -16,7 +16,6 @@
 
 package com.google.inject.matcher;
 
-import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -48,7 +47,6 @@ public class Matchers
 
     private static class Any
             extends AbstractMatcher<Object>
-            implements Serializable
     {
         @Override
         public boolean matches(Object o)
@@ -61,13 +59,6 @@ public class Matchers
         {
             return "any()";
         }
-
-        public Object readResolve()
-        {
-            return any();
-        }
-
-        private static final long serialVersionUID = 0;
     }
 
     /**
@@ -80,7 +71,6 @@ public class Matchers
 
     private static class Not<T>
             extends AbstractMatcher<T>
-            implements Serializable
     {
         final Matcher<? super T> delegate;
 
@@ -112,8 +102,6 @@ public class Matchers
         {
             return "not(" + delegate + ")";
         }
-
-        private static final long serialVersionUID = 0;
     }
 
     private static void checkForRuntimeRetention(Class<? extends Annotation> annotationType)
@@ -136,7 +124,6 @@ public class Matchers
 
     private static class AnnotatedWithType
             extends AbstractMatcher<AnnotatedElement>
-            implements Serializable
     {
         private final Class<? extends Annotation> annotationType;
 
@@ -170,8 +157,6 @@ public class Matchers
         {
             return "annotatedWith(" + annotationType.getSimpleName() + ".class)";
         }
-
-        private static final long serialVersionUID = 0;
     }
 
     /**
@@ -184,7 +169,6 @@ public class Matchers
 
     private static class AnnotatedWith
             extends AbstractMatcher<AnnotatedElement>
-            implements Serializable
     {
         private final Annotation annotation;
 
@@ -219,8 +203,6 @@ public class Matchers
         {
             return "annotatedWith(" + annotation + ")";
         }
-
-        private static final long serialVersionUID = 0;
     }
 
     /**
@@ -233,7 +215,6 @@ public class Matchers
 
     private static class SubclassesOf
             extends AbstractMatcher<Class>
-            implements Serializable
     {
         private final Class<?> superclass;
 
@@ -265,8 +246,6 @@ public class Matchers
         {
             return "subclassesOf(" + superclass.getSimpleName() + ".class)";
         }
-
-        private static final long serialVersionUID = 0;
     }
 
     /**
@@ -279,7 +258,6 @@ public class Matchers
 
     private static class Only
             extends AbstractMatcher<Object>
-            implements Serializable
     {
         private final Object value;
 
@@ -311,8 +289,6 @@ public class Matchers
         {
             return "only(" + value + ")";
         }
-
-        private static final long serialVersionUID = 0;
     }
 
     /**
@@ -325,7 +301,6 @@ public class Matchers
 
     private static class IdenticalTo
             extends AbstractMatcher<Object>
-            implements Serializable
     {
         private final Object value;
 
@@ -357,8 +332,6 @@ public class Matchers
         {
             return "identicalTo(" + value + ")";
         }
-
-        private static final long serialVersionUID = 0;
     }
 
     /**
@@ -372,7 +345,6 @@ public class Matchers
 
     private static class InPackage
             extends AbstractMatcher<Class>
-            implements Serializable
     {
         private final transient Package targetPackage;
         private final String packageName;
@@ -406,13 +378,6 @@ public class Matchers
         {
             return "inPackage(" + targetPackage.getName() + ")";
         }
-
-        public Object readResolve()
-        {
-            return inPackage(Package.getPackage(packageName));
-        }
-
-        private static final long serialVersionUID = 0;
     }
 
     /**
@@ -428,7 +393,6 @@ public class Matchers
 
     private static class InSubpackage
             extends AbstractMatcher<Class>
-            implements Serializable
     {
         private final String targetPackageName;
 
@@ -463,8 +427,6 @@ public class Matchers
         {
             return "inSubpackage(" + targetPackageName + ")";
         }
-
-        private static final long serialVersionUID = 0;
     }
 
     /**
@@ -477,7 +439,6 @@ public class Matchers
 
     private static class Returns
             extends AbstractMatcher<Method>
-            implements Serializable
     {
         private final Matcher<? super Class<?>> returnType;
 
@@ -509,13 +470,10 @@ public class Matchers
         {
             return "returns(" + returnType + ")";
         }
-
-        private static final long serialVersionUID = 0;
     }
 
     static class AndMatcher<T>
             extends AbstractMatcher<T>
-            implements Serializable
     {
         private final Matcher<? super T> a;
         private final Matcher<? super T> b;
@@ -551,13 +509,10 @@ public class Matchers
         {
             return "and(" + a + ", " + b + ")";
         }
-
-        private static final long serialVersionUID = 0;
     }
 
     static class OrMatcher<T>
             extends AbstractMatcher<T>
-            implements Serializable
     {
         private final Matcher<? super T> a;
         private final Matcher<? super T> b;
@@ -593,7 +548,5 @@ public class Matchers
         {
             return "or(" + a + ", " + b + ")";
         }
-
-        private static final long serialVersionUID = 0;
     }
 }

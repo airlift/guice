@@ -38,7 +38,6 @@ import java.util.Arrays;
 
 import static com.google.common.base.StandardSystemProperty.JAVA_CLASS_PATH;
 import static com.google.common.base.StandardSystemProperty.PATH_SEPARATOR;
-import static com.google.common.truth.Truth.assertThat;
 import static com.google.inject.internal.InternalFlags.getIncludeStackTraceOption;
 import static java.util.stream.Collectors.joining;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -134,27 +133,6 @@ public class Asserts
                     "Expected \"%s\" to contain substring \"%s\" only once),"
                             .formatted(text, lastSubstring));
         }
-    }
-
-    /**
-     * Fails unless {@code object} doesn't equal itself when reserialized.
-     */
-    public static void assertEqualWhenReserialized(Object object)
-            throws IOException
-    {
-        Object reserialized = reserialize(object);
-        assertEquals(object, reserialized);
-        assertEquals(object.hashCode(), reserialized.hashCode());
-    }
-
-    /**
-     * Fails unless {@code object} has the same toString value when reserialized.
-     */
-    public static void assertSimilarWhenReserialized(Object object)
-            throws IOException
-    {
-        Object reserialized = reserialize(object);
-        assertThat(reserialized.toString()).isEqualTo(object.toString());
     }
 
     public static <E> E reserialize(E original)
