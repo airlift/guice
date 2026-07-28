@@ -2,7 +2,6 @@ package com.google.inject.throwingproviders;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
-import com.google.common.base.Predicate;
 import com.google.inject.internal.Errors;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
@@ -59,11 +58,11 @@ final class ProviderChecker {
           Arrays.asList(interfaceType.getTypeParameters()));
       if (valueType.isPresent()) {
         checkArgument(
-            genericThrowingProvider.getActualTypeArguments()[0].equals(valueType.get()),
+            genericThrowingProvider.getActualTypeArguments()[0].equals(valueType.orElseThrow()),
             "%s expects the value type to be %s, but it was %s",
             interfaceType,
             genericThrowingProvider.getActualTypeArguments()[0],
-            valueType.get());
+            valueType.orElseThrow());
       }
     }
 
@@ -81,7 +80,7 @@ final class ProviderChecker {
     // just delegates directly to the overridden method.
     List<Method> declaredMethods =
         Arrays.stream(interfaceType.getDeclaredMethods())
-            .filter(NotSyntheticOrBridgePredicate.INSTANCE)
+            .filter(method -> !method.isBridge() && !method.isSynthetic())
             .collect(toImmutableList());
     if (declaredMethods.size() == 1) {
       Method method = declaredMethods.get(0);
@@ -107,15 +106,6 @@ final class ProviderChecker {
   private static void checkArgument(boolean condition, String messageFormat, Object... args) {
     if (!condition) {
       throw new IllegalArgumentException(Errors.format(messageFormat, args));
-    }
-  }
-
-  private static class NotSyntheticOrBridgePredicate implements Predicate<Method> {
-    static final NotSyntheticOrBridgePredicate INSTANCE = new NotSyntheticOrBridgePredicate();
-
-    @Override
-    public boolean apply(Method input) {
-      return !input.isBridge() && !input.isSynthetic();
     }
   }
 }

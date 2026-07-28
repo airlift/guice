@@ -28,7 +28,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.Runnables;
 import com.google.inject.internal.Annotations;
 import com.google.inject.internal.InternalFlags;
@@ -40,6 +39,7 @@ import com.google.inject.spi.TypeListener;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -417,7 +417,7 @@ public class BindingTest {
 
   @Test
   public void testToConstructorSpiData() throws NoSuchMethodException {
-    final Set<TypeLiteral<?>> heardTypes = Sets.newHashSet();
+    final Set<TypeLiteral<?>> heardTypes = new HashSet<>();
 
     final Constructor<D> constructor = D.class.getConstructor(Stage.class);
     final TypeListener listener =

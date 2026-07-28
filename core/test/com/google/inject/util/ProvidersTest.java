@@ -16,12 +16,12 @@
 
 package com.google.inject.util;
 
-import com.google.common.base.Objects;
 import com.google.common.testing.EqualsTester;
 import com.google.inject.Provider;
 import jakarta.inject.Inject;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import java.util.Objects;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -80,7 +80,7 @@ public class ProvidersTest {
 
     @Override
     public int hashCode() {
-      return Objects.hashCode(value);
+      return Objects.hash(value);
     }
 
     @Override

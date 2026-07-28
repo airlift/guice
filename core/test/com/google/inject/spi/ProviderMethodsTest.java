@@ -32,7 +32,6 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.inject.AbstractModule;
 import com.google.inject.Binder;
 import com.google.inject.Binding;
@@ -1184,7 +1183,7 @@ public class ProviderMethodsTest implements Module {
   }
 
   private void validateNullableWarns(Injector injector, Dependency<?> dependency) {
-    final List<LogRecord> logRecords = Lists.newArrayList();
+    final List<LogRecord> logRecords = new ArrayList<>();
     final Handler fakeHandler =
         new Handler() {
           @Override

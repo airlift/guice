@@ -19,7 +19,6 @@ package com.google.inject.spi;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.inject.Binder;
 import com.google.inject.internal.ErrorId;
 import com.google.inject.internal.Errors;
@@ -98,7 +97,7 @@ public final class Message implements Serializable, Element {
     List<Object> sources = errorDetail.getSources();
     return sources.isEmpty()
         ? SourceProvider.UNKNOWN_SOURCE.toString()
-        : Errors.convert(Iterables.getLast(sources)).toString();
+        : Errors.convert(sources.getLast()).toString();
   }
 
   /** @since 2.0 */

@@ -65,7 +65,6 @@ import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -339,7 +338,7 @@ final class FactoryProvider2<F>
         }
 
         Constructor<?> constructor = (Constructor<?>) ctorInjectionPoint.getMember();
-        List<ThreadLocalProvider> providers = Collections.emptyList();
+        List<ThreadLocalProvider> providers = List.of();
         Set<Dependency<?>> deps = getDependencies(ctorInjectionPoint, implementation);
         boolean optimized = false;
         // Now go through all dependencies of the implementation and see if it is OK to

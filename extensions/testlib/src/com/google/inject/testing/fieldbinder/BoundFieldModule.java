@@ -218,7 +218,7 @@ public final class BoundFieldModule implements Module {
         throws BoundFieldException {
       if (naturalType.isPresent()) {
         Class<?> boundRawType = boundKey.getTypeLiteral().getRawType();
-        Class<?> naturalRawType = MoreTypes.canonicalizeForKey(naturalType.get()).getRawType();
+        Class<?> naturalRawType = MoreTypes.canonicalizeForKey(naturalType.orElseThrow()).getRawType();
         if (!boundRawType.isAssignableFrom(naturalRawType)) {
           throw new BoundFieldException(
               new Message(
@@ -322,7 +322,7 @@ public final class BoundFieldModule implements Module {
                   "Non parameterized Provider fields must have an explicit "
                       + "binding class via @Bind(to = Foo.class)"));
         }
-        return naturalType.get();
+        return naturalType.orElseThrow();
       } else {
         return TypeLiteral.get(bindClass);
       }
@@ -390,7 +390,7 @@ public final class BoundFieldModule implements Module {
         Optional<BoundFieldInfo> fieldInfoOpt =
             getBoundFieldInfo(currentClassType, field, deferredErrors);
         if (fieldInfoOpt.isPresent()) {
-          fieldInfos.add(fieldInfoOpt.get());
+          fieldInfos.add(fieldInfoOpt.orElseThrow());
         }
       }
       currentClassType =

@@ -22,13 +22,13 @@ import static com.google.inject.Asserts.assertNotSerializable;
 import static com.google.inject.Asserts.getDeclaringSourcePart;
 
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.inject.internal.Annotations;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.google.inject.spi.Message;
 import com.google.inject.util.Providers;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -53,7 +53,7 @@ public class BinderTest {
 
   private final Logger loggerToWatch = Logger.getLogger(Guice.class.getName());
 
-  private final List<LogRecord> logRecords = Lists.newArrayList();
+  private final List<LogRecord> logRecords = new ArrayList<>();
   private final Handler fakeHandler =
       new Handler() {
         @Override

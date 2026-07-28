@@ -25,7 +25,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.inject.binder.AnnotatedBindingBuilder;
 import com.google.inject.binder.ScopedBindingBuilder;
 import com.google.inject.name.Named;
@@ -33,6 +32,7 @@ import com.google.inject.util.Providers;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -367,15 +367,14 @@ public class BinderSuiteTest {
     private Key<?> key = Key.get(A.class);
     private Class<? extends Injectable> injectsKey = InjectsA.class;
     private List<Module> modules =
-        Lists.<Module>newArrayList(
-            new AbstractModule() {
+        new ArrayList<Module>(Arrays.asList(new AbstractModule() {
               @Override
               protected void configure() {
                 bindScope(TwoAtATimeScoped.class, new TwoAtATimeScope());
               }
-            });
+            }));
     private List<Object> expectedValues =
-        Lists.<Object>newArrayList(new PlainA(201), new PlainA(202), new PlainA(203));
+        new ArrayList<Object>(Arrays.asList(new PlainA(201), new PlainA(202), new PlainA(203)));
     private CreationTime creationTime = CreationTime.LAZY;
     private String creationException;
     private String configurationException;
@@ -479,7 +478,7 @@ public class BinderSuiteTest {
     }
 
     @Override
-    public void test() throws IllegalAccessException, InstantiationException {
+    public void test() throws ReflectiveOperationException {
       Injector injector = newInjector();
       nextId.set(201);
       for (Object value : expectedValues) {
@@ -508,7 +507,7 @@ public class BinderSuiteTest {
       injector = newInjector();
       nextId.set(201);
       for (Object value : expectedValues) {
-        Injectable injectable = injectsKey.newInstance();
+        Injectable injectable = injectsKey.getDeclaredConstructor().newInstance();
         injector.injectMembers(injectable);
         assertEquals(value, injectable.value);
       }
@@ -578,7 +577,7 @@ public class BinderSuiteTest {
     }
 
     @Override
-    public void test() throws IllegalAccessException, InstantiationException {
+    public void test() throws ReflectiveOperationException {
       try {
         newInjector().getProvider(key);
         fail();
@@ -613,7 +612,7 @@ public class BinderSuiteTest {
       }
 
       try {
-        Injectable injectable = injectsKey.newInstance();
+        Injectable injectable = injectsKey.getDeclaredConstructor().newInstance();
         newInjector().injectMembers(injectable);
         fail();
       } catch (ConfigurationException expected) {
@@ -654,7 +653,7 @@ public class BinderSuiteTest {
     }
 
     @Override
-    public void test() throws IllegalAccessException, InstantiationException {
+    public void test() throws ReflectiveOperationException {
       nextId.set(-1);
       try {
         newInjector();
@@ -701,7 +700,7 @@ public class BinderSuiteTest {
       }
 
       nextId.set(201);
-      Injectable injectable = injectsKey.newInstance();
+      Injectable injectable = injectsKey.getDeclaredConstructor().newInstance();
       try {
         nextId.set(-1);
         newInjector().injectMembers(injectable);

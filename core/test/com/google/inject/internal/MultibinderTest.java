@@ -35,8 +35,6 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.inject.AbstractModule;
 import com.google.inject.Binding;
 import com.google.inject.BindingAnnotation;
@@ -77,6 +75,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -333,7 +333,7 @@ public class MultibinderTest {
     Injector injector = Guice.createInjector(module);
 
     Set<String> set = injector.getInstance(Key.get(setOfString));
-    assertEquals(Collections.emptySet(), set);
+    assertEquals(Set.of(), set);
     assertSetVisitor(Key.get(setOfString), stringType, setOf(module), BOTH, false, 0);
   }
 
@@ -715,7 +715,7 @@ public class MultibinderTest {
 
     Binding<Set<String>> binding = injector.getBinding(new Key<Set<String>>() {});
     HasDependencies withDependencies = (HasDependencies) binding;
-    Set<String> elements = Sets.newHashSet();
+    Set<String> elements = new HashSet<>();
     for (Dependency<?> dependency : withDependencies.getDependencies()) {
       elements.add((String) injector.getInstance(dependency.getKey()));
     }
@@ -829,7 +829,7 @@ public class MultibinderTest {
   @interface De {}
 
   private <T> Set<T> setOf(T... elements) {
-    Set<T> result = Sets.newHashSet();
+    Set<T> result = new HashSet<>();
     Collections.addAll(result, elements);
     return result;
   }
@@ -1167,7 +1167,7 @@ public class MultibinderTest {
           protected void configure() {
             Multibinder<List<String>> multibinder =
                 Multibinder.newSetBinder(binder(), listOfStrings);
-            List<String> list = Lists.newArrayList();
+            List<String> list = new ArrayList<>();
             multibinder.addBinding().toInstance(list);
             list.add("A");
             list.add("B");
@@ -1193,7 +1193,7 @@ public class MultibinderTest {
   /** Ensure bindings do not rehash their keys once returned from {@link Elements#getElements}. */
   @Test
   public void testBindingKeysFixedOnReturnFromGetElements() {
-    final List<String> list = Lists.newArrayList();
+    final List<String> list = new ArrayList<>();
     Module ab =
         new AbstractModule() {
           @Override
@@ -1227,8 +1227,8 @@ public class MultibinderTest {
   @Test
   public void testConcurrentMutation_bindingsDiffentAtInjectorCreation() {
     // We initially bind two equal lists
-    final List<String> list1 = Lists.newArrayList();
-    final List<String> list2 = Lists.newArrayList();
+    final List<String> list1 = new ArrayList<>();
+    final List<String> list2 = new ArrayList<>();
     Module module =
         new AbstractModule() {
           @Override
@@ -1273,8 +1273,8 @@ public class MultibinderTest {
   @Test
   public void testConcurrentMutation_bindingsSameAtInjectorCreation() {
     // We initially bind two distinct lists
-    final List<String> list1 = Lists.newArrayList("A");
-    final List<String> list2 = Lists.newArrayList("B");
+    final List<String> list1 = new ArrayList<>(Arrays.asList("A"));
+    final List<String> list2 = new ArrayList<>(Arrays.asList("B"));
     Module module =
         new AbstractModule() {
           @Override
@@ -1514,7 +1514,7 @@ public class MultibinderTest {
         (HasDependencies) injector.getBinding(new Key<Set<String>>(setAnn) {});
     // sanity check the size
     assertEquals(2, setBinding.getDependencies().size(), setBinding.getDependencies().toString());
-    Set<Dependency<?>> expected = Sets.newHashSet();
+    Set<Dependency<?>> expected = new HashSet<>();
     for (Dependency<?> dep : setBinding.getDependencies()) {
       Key<?> key = dep.getKey();
       Dependency<?> providerDependency =
@@ -1695,7 +1695,7 @@ public class MultibinderTest {
   }
 
   private <T> Collection<T> collectValues(Collection<? extends Provider<T>> providers) {
-    Collection<T> values = Lists.newArrayList();
+    Collection<T> values = new ArrayList<>();
     for (Provider<T> provider : providers) {
       values.add(provider.get());
     }
@@ -1704,7 +1704,7 @@ public class MultibinderTest {
 
   private <T> Collection<T> collectValuesJakarta(
       Collection<? extends jakarta.inject.Provider<T>> providers) {
-    Collection<T> values = Lists.newArrayList();
+    Collection<T> values = new ArrayList<>();
     for (jakarta.inject.Provider<T> provider : providers) {
       values.add(provider.get());
     }

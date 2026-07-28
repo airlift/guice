@@ -17,7 +17,6 @@
 package com.google.inject.servlet;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -29,6 +28,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -150,7 +150,7 @@ public class ScopeRequestIntegrationTest {
     }
 
     // Validate that an actual null entry in the map results in a null injected object.
-    Map<Key<?>, Object> map = Maps.newHashMap();
+    Map<Key<?>, Object> map = new HashMap<>();
     map.put(Key.get(SomeObject.class), null);
     callable = ServletScopes.scopeRequest(injector.getInstance(Caller.class), map);
     assertNull(callable.call());

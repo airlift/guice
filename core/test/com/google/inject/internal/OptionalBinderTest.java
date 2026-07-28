@@ -29,8 +29,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.inject.AbstractModule;
 import com.google.inject.Asserts;
 import com.google.inject.Binding;
@@ -63,6 +61,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -828,7 +828,7 @@ public class OptionalBinderTest {
 
     Binding<String> binding = injector.getBinding(Key.get(String.class));
     HasDependencies withDependencies = (HasDependencies) binding;
-    Set<String> elements = Sets.newHashSet();
+    Set<String> elements = new HashSet<>();
     elements.addAll(recurseForDependencies(injector, withDependencies));
     assertEquals(ImmutableSet.of("B"), elements);
   }
@@ -849,7 +849,7 @@ public class OptionalBinderTest {
 
     Binding<String> binding = injector.getBinding(Key.get(String.class));
     HasDependencies withDependencies = (HasDependencies) binding;
-    Set<String> elements = Sets.newHashSet();
+    Set<String> elements = new HashSet<>();
     elements.addAll(recurseForDependencies(injector, withDependencies));
     assertEquals(ImmutableSet.of("B"), elements);
   }
@@ -869,14 +869,14 @@ public class OptionalBinderTest {
 
     Binding<String> binding = injector.getBinding(Key.get(String.class));
     HasDependencies withDependencies = (HasDependencies) binding;
-    Set<String> elements = Sets.newHashSet();
+    Set<String> elements = new HashSet<>();
     elements.addAll(recurseForDependencies(injector, withDependencies));
     assertEquals(ImmutableSet.of("A"), elements);
   }
 
   @SuppressWarnings("rawtypes")
   private Set<String> recurseForDependencies(Injector injector, HasDependencies hasDependencies) {
-    Set<String> elements = Sets.newHashSet();
+    Set<String> elements = new HashSet<>();
     for (Dependency<?> dependency : hasDependencies.getDependencies()) {
       Binding<?> binding = injector.getBinding(dependency.getKey());
       HasDependencies deps = (HasDependencies) binding;
@@ -1114,7 +1114,7 @@ public class OptionalBinderTest {
           protected void configure() {
             OptionalBinder<List<String>> b =
                 OptionalBinder.newOptionalBinder(binder(), listOfStrings);
-            List<String> list = Lists.newArrayList();
+            List<String> list = new ArrayList<>();
             b.setDefault().toInstance(list);
             b.setBinding().toInstance(list);
             list.add("A");
@@ -1141,7 +1141,7 @@ public class OptionalBinderTest {
   /** Ensure bindings do not rehash their keys once returned from {@link Elements#getElements}. */
   @Test
   public void testBindingKeysFixedOnReturnFromGetElements() {
-    final List<String> list = Lists.newArrayList();
+    final List<String> list = new ArrayList<>();
     Module m =
         new AbstractModule() {
           @Override

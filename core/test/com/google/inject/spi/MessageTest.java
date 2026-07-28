@@ -1,6 +1,7 @@
 package com.google.inject.spi;
 
-import com.google.common.collect.Lists;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import org.junit.jupiter.api.Test;
@@ -19,7 +20,7 @@ public class MessageTest {
   @Test
   public void testMessageHashCodeVariesWithCause() {
     String innerMessage = "This is the message.";
-    List<Object> sourceList = Lists.newArrayList(new Object());
+    List<Object> sourceList = new ArrayList<>(Arrays.asList(new Object()));
     // the throwable argument of each Message below do not have value equality
     Message firstMessage = new Message(sourceList, innerMessage, new Exception(innerMessage));
     Message secondMessage = new Message(sourceList, innerMessage, new Exception(innerMessage));

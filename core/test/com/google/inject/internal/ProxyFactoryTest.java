@@ -24,12 +24,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.spi.InjectionPoint;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.List;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
@@ -38,7 +38,7 @@ import org.junit.jupiter.api.Test;
 /** @author crazybob@google.com (Bob Lee) */
 public class ProxyFactoryTest {
 
-  List<MethodAspect> aspects = Lists.newArrayList();
+  List<MethodAspect> aspects = new ArrayList<>();
 
   @Test
   public void testSimpleCase()

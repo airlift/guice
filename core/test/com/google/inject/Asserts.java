@@ -20,20 +20,18 @@ import static com.google.common.base.StandardSystemProperty.JAVA_CLASS_PATH;
 import static com.google.common.base.StandardSystemProperty.PATH_SEPARATOR;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.inject.internal.InternalFlags.getIncludeStackTraceOption;
+import static java.util.stream.Collectors.joining;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.testing.GcFinalization;
 import com.google.inject.internal.InternalFlags.IncludeStackTraceOption;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.NotSerializableException;
 import java.io.ObjectInputStream;
@@ -43,6 +41,8 @@ import java.lang.ref.WeakReference;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Path;
+import java.util.Arrays;
 import junit.framework.Assert;
 
 /** @author jessewilson@google.com (Jesse Wilson) */
@@ -54,12 +54,9 @@ public class Asserts {
    * Returns the String that would appear in an error message for this chain of classes as modules.
    */
   public static String asModuleChain(Class<?>... classes) {
-    return Joiner.on(" -> ")
-        .appendTo(
-            new StringBuilder(" (via modules: "),
-            Iterables.transform(ImmutableList.copyOf(classes), Class::getName))
-        .append(")")
-        .toString();
+    return Arrays.stream(classes)
+        .map(Class::getName)
+        .collect(joining(" -> ", " (via modules: ", ")"));
   }
 
   /**
@@ -205,11 +202,7 @@ public class Asserts {
     ImmutableList.Builder<URL> urls = ImmutableList.builder();
     for (String entry : Splitter.on(PATH_SEPARATOR.value()).split(JAVA_CLASS_PATH.value())) {
       try {
-        try {
-          urls.add(new File(entry).toURI().toURL());
-        } catch (SecurityException e) { // File.toURI checks to see if the file is a directory
-          urls.add(new URL("file", null, new File(entry).getAbsolutePath()));
-        }
+        urls.add(Path.of(entry).toUri().toURL());
       } catch (MalformedURLException e) {
         AssertionError error = new AssertionError("malformed class path entry: " + entry);
         error.initCause(e);

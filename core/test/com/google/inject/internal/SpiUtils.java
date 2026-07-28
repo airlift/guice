@@ -37,6 +37,7 @@ import static com.google.inject.internal.SpiUtils.BindType.PROVIDER_KEY;
 import static com.google.inject.internal.SpiUtils.VisitType.BOTH;
 import static com.google.inject.internal.SpiUtils.VisitType.INJECTOR;
 import static com.google.inject.internal.SpiUtils.VisitType.MODULE;
+import static java.util.stream.Collectors.joining;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -44,16 +45,11 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
-import com.google.common.collect.Sets;
 import com.google.inject.Binding;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -76,9 +72,13 @@ import com.google.inject.spi.ProviderInstanceBinding;
 import com.google.inject.spi.ProviderKeyBinding;
 import com.google.inject.spi.ProviderLookup;
 import com.google.inject.util.Types;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -151,8 +151,8 @@ public class SpiUtils {
     assertEquals(keyType, mapbinder.getKeyTypeLiteral());
     assertEquals(valueType, mapbinder.getValueTypeLiteral());
     assertEquals(allowDuplicates, mapbinder.permitsDuplicates());
-    List<Map.Entry<?, Binding<?>>> entries = Lists.newArrayList(mapbinder.getEntries());
-    List<MapResult<?, ?>> mapResults = Lists.newArrayList(results);
+    List<Map.Entry<?, Binding<?>>> entries = new ArrayList<>(mapbinder.getEntries());
+    List<MapResult<?, ?>> mapResults = new ArrayList<>(Arrays.asList(results));
     assertEquals(mapResults.size(), entries.size(), "wrong entries, expected: " + mapResults + ", but was: " + entries);
 
     for (MapResult<?, ?> result : mapResults) {
@@ -226,8 +226,8 @@ public class SpiUtils {
     boolean mapCollectionJakartaProviderMatch = false;
     boolean collectionOfJakartaProvidersOfEntryOfProviderMatch = false;
 
-    List<Object> otherMapBindings = Lists.newArrayList();
-    List<Binding<?>> otherMatches = Lists.newArrayList();
+    List<Object> otherMapBindings = new ArrayList<>();
+    List<Binding<?>> otherMatches = new ArrayList<>();
     Multimap<Object, IndexedBinding> indexedEntries =
         MultimapBuilder.hashKeys().hashSetValues().build();
     Indexer indexer = new Indexer(injector);
@@ -307,7 +307,7 @@ public class SpiUtils {
     }
     // Multiply by two because each has a value and Map.Entry.
     int expectedSize = 2 * (mapResults.size() + duplicates);
-    assertEquals(expectedSize, sizeOfOther, "Incorrect other matches:\n\t" + Joiner.on("\n\t").join(otherMatches));
+    assertEquals(expectedSize, sizeOfOther, "Incorrect other matches:\n\t" + otherMatches.stream().map(Object::toString).collect(joining("\n\t")));
     assertTrue(entrySetMatch);
     assertTrue(mapProviderMatch);
     assertTrue(collectionOfProvidersOfEntryOfProviderMatch);
@@ -336,7 +336,7 @@ public class SpiUtils {
     Set<Element> elements = ImmutableSet.copyOf(Elements.getElements(modules));
     Visitor<T> visitor = new Visitor<>();
     MapBinderBinding<T> mapbinder = null;
-    Map<Key<?>, Binding<?>> keyMap = Maps.newHashMap();
+    Map<Key<?>, Binding<?>> keyMap = new HashMap<>();
     for (Element element : elements) {
       if (element instanceof Binding) {
         Binding<?> binding = (Binding<?>) element;
@@ -348,14 +348,14 @@ public class SpiUtils {
     }
     assertNotNull(mapbinder);
 
-    List<MapResult<?, ?>> mapResults = Lists.newArrayList(results);
+    List<MapResult<?, ?>> mapResults = new ArrayList<>(Arrays.asList(results));
 
     // Make sure the entries returned from getEntries(elements) are correct.
     // Because getEntries() can return duplicates, make sure to continue searching, even
     // after we find one match.
-    List<Map.Entry<?, Binding<?>>> entries = Lists.newArrayList(mapbinder.getEntries(elements));
+    List<Map.Entry<?, Binding<?>>> entries = new ArrayList<>(mapbinder.getEntries(elements));
     for (MapResult<?, ?> result : mapResults) {
-      List<Map.Entry<?, Binding<?>>> foundEntries = Lists.newArrayList();
+      List<Map.Entry<?, Binding<?>>> foundEntries = new ArrayList<>();
       for (Map.Entry<?, Binding<?>> entry : entries) {
         Object key = entry.getKey();
         Binding<?> value = entry.getValue();
@@ -424,9 +424,9 @@ public class SpiUtils {
     boolean mapCollectionJakartaProviderMatch = false;
     boolean collectionOfJakartaProvidersOfEntryOfProviderMatch = false;
 
-    List<Object> otherMapBindings = Lists.newArrayList();
-    List<Element> otherMatches = Lists.newArrayList();
-    List<Element> otherElements = Lists.newArrayList();
+    List<Object> otherMapBindings = new ArrayList<>();
+    List<Element> otherMatches = new ArrayList<>();
+    List<Element> otherElements = new ArrayList<>();
     Indexer indexer = new Indexer(null);
     Multimap<Object, IndexedBinding> indexedEntries =
         MultimapBuilder.hashKeys().hashSetValues().build();
@@ -540,7 +540,7 @@ public class SpiUtils {
     }
     // Multiply by 2 because each has a value, and Map.Entry
     int expectedSize = (mapResults.size() + duplicates) * 2;
-    assertEquals(expectedSize, otherMatchesSize, "incorrect number of contains, leftover matches:\n" + Joiner.on("\n\t").join(otherMatches));
+    assertEquals(expectedSize, otherMatchesSize, "incorrect number of contains, leftover matches:\n" + otherMatches.stream().map(Object::toString).collect(joining("\n\t")));
 
     assertTrue(entrySetMatch);
     assertTrue(mapProviderMatch);
@@ -623,8 +623,8 @@ public class SpiUtils {
             collectionOfJakartaProvidersKey,
             setOfExtendsKey),
         multibinder.getAlternateSetKeys());
-    List<Binding<?>> elements = Lists.newArrayList(multibinder.getElements());
-    List<BindResult<?>> bindResults = Lists.newArrayList(results);
+    List<Binding<?>> elements = new ArrayList<>(multibinder.getElements());
+    List<BindResult<?>> bindResults = new ArrayList<>(Arrays.asList(results));
     assertEquals(bindResults.size(), elements.size(), "wrong bind elements, expected: " + bindResults + ", but was: " + multibinder.getElements());
 
     for (BindResult<?> result : bindResults) {
@@ -647,14 +647,14 @@ public class SpiUtils {
     }
 
     Set<Binding<?>> setOfElements = new HashSet<>(multibinder.getElements());
-    Set<IndexedBinding> setOfIndexed = Sets.newHashSet();
+    Set<IndexedBinding> setOfIndexed = new HashSet<>();
     Indexer indexer = new Indexer(injector);
     for (Binding<?> oneBinding : setOfElements) {
       setOfIndexed.add(oneBinding.acceptTargetVisitor(indexer));
     }
 
-    List<Object> otherMultibinders = Lists.newArrayList();
-    List<Binding<?>> otherContains = Lists.newArrayList();
+    List<Object> otherMultibinders = new ArrayList<>();
+    List<Binding<?>> otherContains = new ArrayList<>();
     boolean collectionOfProvidersMatch = false;
     boolean collectionOfJakartaProvidersMatch = false;
     boolean setOfExtendsKeyMatch = false;
@@ -710,7 +710,7 @@ public class SpiUtils {
     Key<?> collectionOfJakartaProvidersKey =
         setKey.ofType(collectionOfJakartaProvidersOf(elementType));
     Key<?> setOfExtendsKey = setKey.ofType(setOfExtendsOf(elementType));
-    List<BindResult<?>> bindResults = Lists.newArrayList(results);
+    List<BindResult<?>> bindResults = new ArrayList<>(Arrays.asList(results));
     List<Element> elements = Elements.getElements(modules);
     Visitor<T> visitor = new Visitor<>();
     MultibinderBinding<Set<T>> multibinder = null;
@@ -730,11 +730,11 @@ public class SpiUtils {
             collectionOfJakartaProvidersKey,
             setOfExtendsKey),
         multibinder.getAlternateSetKeys());
-    List<Object> otherMultibinders = Lists.newArrayList();
+    List<Object> otherMultibinders = new ArrayList<>();
     Set<Element> otherContains = new HashSet<>();
-    List<Element> otherElements = Lists.newArrayList();
+    List<Element> otherElements = new ArrayList<>();
     int duplicates = 0;
-    Set<IndexedBinding> setOfIndexed = Sets.newHashSet();
+    Set<IndexedBinding> setOfIndexed = new HashSet<>();
     Indexer indexer = new Indexer(null);
     boolean collectionOfProvidersMatch = false;
     boolean collectionOfJakartaProvidersMatch = false;
@@ -943,8 +943,8 @@ public class SpiUtils {
     boolean javaOptionalProviderKeyMatch = false;
     boolean defaultMatch = false;
     boolean actualMatch = false;
-    List<Object> otherOptionalBindings = Lists.newArrayList();
-    List<Binding> otherMatches = Lists.newArrayList();
+    List<Object> otherOptionalBindings = new ArrayList<>();
+    List<Binding> otherMatches = new ArrayList<>();
     for (Binding b : injector.getAllBindings().values()) {
       boolean contains = optionalBinder.containsElement(b);
       assertEquals(contains, javaOptionalBinder.containsElement(b));
@@ -1073,9 +1073,9 @@ public class SpiUtils {
     boolean javaOptionalProviderKeyMatch = false;
     boolean defaultMatch = false;
     boolean actualMatch = false;
-    List<Object> otherOptionalElements = Lists.newArrayList();
-    List<Element> otherContains = Lists.newArrayList();
-    List<Element> nonContainedElements = Lists.newArrayList();
+    List<Object> otherOptionalElements = new ArrayList<>();
+    List<Element> otherContains = new ArrayList<>();
+    List<Element> nonContainedElements = new ArrayList<>();
     for (Element element : elements) {
       boolean contains = optionalBinder.containsElement(element);
       assertEquals(contains, javaOptionalBinder.containsElement(element));
@@ -1230,7 +1230,7 @@ public class SpiUtils {
         break;
       case PROVIDER_INSTANCE:
         if (item instanceof ProviderInstanceBinding
-            && Objects.equal(
+            && Objects.equals(
                 ((ProviderInstanceBinding) item).getUserSuppliedProvider().get(),
                 result.instance)) {
           return true;

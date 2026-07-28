@@ -16,13 +16,13 @@
 
 package com.google.inject.servlet;
 
-import com.google.common.collect.Lists;
 import com.google.inject.Binding;
 import com.google.inject.CreationException;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.spi.DefaultBindingTargetVisitor;
 import com.google.inject.spi.Elements;
+import java.util.ArrayList;
 import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -95,10 +95,10 @@ public class ServletModuleTest {
 
   private static class Visitor extends DefaultBindingTargetVisitor<Object, Void>
       implements ServletModuleTargetVisitor<Object, Void> {
-    List<LinkedFilterBinding> linkedFilters = Lists.newArrayList();
-    List<LinkedServletBinding> linkedServlets = Lists.newArrayList();
-    List<InstanceFilterBinding> instanceFilters = Lists.newArrayList();
-    List<InstanceServletBinding> instanceServlets = Lists.newArrayList();
+    List<LinkedFilterBinding> linkedFilters = new ArrayList<>();
+    List<LinkedServletBinding> linkedServlets = new ArrayList<>();
+    List<InstanceFilterBinding> instanceFilters = new ArrayList<>();
+    List<InstanceServletBinding> instanceServlets = new ArrayList<>();
 
     @Override
     public Void visit(LinkedFilterBinding binding) {

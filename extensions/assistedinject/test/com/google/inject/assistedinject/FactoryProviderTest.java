@@ -36,7 +36,7 @@ import com.google.inject.name.Names;
 import com.google.inject.spi.Dependency;
 import com.google.inject.spi.HasDependencies;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -330,8 +330,8 @@ public class FactoryProviderTest {
               @Override
               protected void configure() {
                 bind(new TypeLiteral<Set<String>>() {})
-                    .toInstance(Collections.singleton("Flux Capacitor"));
-                bind(new TypeLiteral<Set<Integer>>() {}).toInstance(Collections.singleton(88));
+                    .toInstance(Set.of("Flux Capacitor"));
+                bind(new TypeLiteral<Set<Integer>>() {}).toInstance(Set.of(88));
                 bind(ColoredCarFactory.class)
                     .toProvider(
                         FactoryProvider.newFactory(ColoredCarFactory.class, DeLorean.class));
@@ -366,7 +366,7 @@ public class FactoryProviderTest {
             new AbstractModule() {
               @Override
               protected void configure() {
-                bind(new TypeLiteral<Set<String>>() {}).toInstance(Collections.singleton("Datsun"));
+                bind(new TypeLiteral<Set<String>>() {}).toInstance(Set.of("Datsun"));
                 bind(ColoredCarFactory.class)
                     .toProvider(FactoryProvider.newFactory(ColoredCarFactory.class, Z.class));
               }
@@ -567,7 +567,7 @@ public class FactoryProviderTest {
               }
             });
     WildcardCollection.Factory factory = injector.getInstance(WildcardCollection.Factory.class);
-    factory.create(Collections.emptyList());
+    factory.create(List.of());
   }
 
   public static class SteeringWheel {}

@@ -16,7 +16,6 @@
 
 package com.google.inject.grapher;
 
-import com.google.common.base.Joiner;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
 import com.google.inject.internal.Annotations;
@@ -128,7 +127,7 @@ public class ShortNameFactory implements NameFactory {
       paramStrings.add(paramType.getSimpleName());
     }
 
-    String paramString = Joiner.on(", ").join(paramStrings);
+    String paramString = String.join(", ", paramStrings);
     return "#" + method.getName() + "(" + paramString + ")";
   }
 

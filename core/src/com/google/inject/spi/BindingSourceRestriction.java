@@ -6,7 +6,6 @@ import static java.util.stream.Collectors.toList;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.inject.Binding;
 import com.google.inject.Key;
 import com.google.inject.RestrictedBindingSource;
@@ -26,7 +25,6 @@ import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 /**
  * Contains abstractions for enforcing {@link RestrictedBindingSource}.
@@ -194,18 +192,17 @@ public final class BindingSourceRestriction {
       return false;
     }
     Pattern exemptModulePattern = Pattern.compile(exemptModulesRegex);
-    // TODO(b/156759807): Switch to Streams.stream (instead of inlining it).
-    return StreamSupport.stream(getAllModules(elementSource).spliterator(), false)
+    return getAllModules(elementSource)
         .anyMatch(moduleName -> exemptModulePattern.matcher(moduleName).matches());
   }
 
-  private static Iterable<String> getAllModules(ElementSource elementSource) {
-    List<String> modules = elementSource.getModuleClassNames();
+  private static Stream<String> getAllModules(ElementSource elementSource) {
+    Stream<String> modules = elementSource.getModuleClassNames().stream();
     if (elementSource.getOriginalElementSource() == null
         || !elementSource.trustedOriginalElementSource) {
       return modules;
     }
-    return Iterables.concat(modules, getAllModules(elementSource.getOriginalElementSource()));
+    return Stream.concat(modules, getAllModules(elementSource.getOriginalElementSource()));
   }
 
   private static void clear(Element element) {

@@ -31,7 +31,6 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.inject.internal.InternalFlags;
 import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.matcher.Matcher;
@@ -45,6 +44,7 @@ import java.lang.annotation.Retention;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -415,7 +415,7 @@ public class MethodInterceptionTest {
 
   @Test
   public void testInterceptionOrder() {
-    final List<String> callList = Lists.newArrayList();
+    final List<String> callList = new ArrayList<>();
     Injector injector =
         Guice.createInjector(
             new AbstractModule() {
@@ -472,7 +472,7 @@ public class MethodInterceptionTest {
 
   @Test
   public void testCallLater() {
-    final Queue<Runnable> queue = Lists.newLinkedList();
+    final Queue<Runnable> queue = new LinkedList<>();
     Injector injector =
         Guice.createInjector(
             new AbstractModule() {

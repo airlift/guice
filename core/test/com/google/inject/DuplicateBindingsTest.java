@@ -19,8 +19,6 @@ package com.google.inject;
 import static com.google.inject.Asserts.*;
 import static com.google.inject.name.Names.named;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Lists;
 import com.google.inject.internal.Annotations;
 import com.google.inject.name.Named;
 import com.google.inject.spi.Element;
@@ -28,10 +26,12 @@ import com.google.inject.spi.Elements;
 import com.google.inject.util.Providers;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.logging.Logger;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -57,7 +57,7 @@ public class DuplicateBindingsTest {
         Guice.createInjector(
             new SimpleModule(foo, pFoo, pclFoo, clFoo, cFoo),
             new SimpleModule(foo, pFoo, pclFoo, clFoo, cFoo));
-    List<Key<?>> bindings = Lists.newArrayList(injector.getAllBindings().keySet());
+    List<Key<?>> bindings = new ArrayList<>(injector.getAllBindings().keySet());
     removeBasicBindings(bindings);
 
     // Ensure only one binding existed for each type.
@@ -653,7 +653,7 @@ public class DuplicateBindingsTest {
         if (equality == null && o.equality == null) {
           return this == o;
         } else {
-          return Objects.equal(equality, o.equality);
+          return Objects.equals(equality, o.equality);
         }
       } else {
         return false;

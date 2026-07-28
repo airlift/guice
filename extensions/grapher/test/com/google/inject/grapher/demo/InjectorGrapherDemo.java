@@ -21,8 +21,9 @@ import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.google.inject.grapher.graphviz.GraphvizGrapher;
 import com.google.inject.grapher.graphviz.GraphvizModule;
-import java.io.File;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 
 /**
  * Application that instantiates {@link BackToTheFutureModule} and graphs it, writing the output to
@@ -39,7 +40,7 @@ public class InjectorGrapherDemo {
             new BackToTheFutureModule(),
             new MultibinderModule(),
             new PrivateTestModule());
-    PrintWriter out = new PrintWriter(new File(args[0]), "UTF-8");
+    PrintWriter out = new PrintWriter(Path.of(args[0]).toFile(), StandardCharsets.UTF_8);
 
     Injector injector = Guice.createInjector(new GraphvizModule());
     GraphvizGrapher grapher = injector.getInstance(GraphvizGrapher.class);

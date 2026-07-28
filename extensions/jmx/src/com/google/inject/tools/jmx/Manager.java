@@ -91,7 +91,7 @@ public class Manager {
       System.exit(1);
     }
 
-    Module module = (Module) Class.forName(args[0]).newInstance();
+    Module module = (Module) Class.forName(args[0]).getDeclaredConstructor().newInstance();
     Injector injector = Guice.createInjector(module);
 
     manage(args[0], injector);

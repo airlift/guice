@@ -16,7 +16,6 @@
 
 package com.google.inject.spi;
 
-import com.google.common.collect.Lists;
 import com.google.inject.AbstractModule;
 import com.google.inject.Binding;
 import com.google.inject.ConfigurationException;
@@ -27,6 +26,7 @@ import com.google.inject.Key;
 import com.google.inject.Module;
 import com.google.inject.Provider;
 import com.google.inject.name.Names;
+import java.util.ArrayList;
 import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -51,7 +51,7 @@ public class ModuleRewriterTest {
     List<Element> elements = Elements.getElements(module);
 
     // create a rewriter that rewrites the binding to 'Wine' with a binding to 'Beer'
-    List<Element> rewritten = Lists.newArrayList();
+    List<Element> rewritten = new ArrayList<>();
     for (Element element : elements) {
       element =
           element.acceptVisitor(

@@ -3,11 +3,11 @@
 package com.google.inject.servlet;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import java.io.Serializable;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.HashMap;
 import java.util.Map;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletRequest;
@@ -51,7 +51,7 @@ public class ServletTestUtils {
                 new ThrowingInvocationHandler());
 
     return new HttpServletRequestWrapper(delegate) {
-      final Map<String, Object> attributes = Maps.newHashMap();
+      final Map<String, Object> attributes = new HashMap<>();
       final HttpSession session = newFakeHttpSession();
 
       @Override
@@ -103,7 +103,7 @@ public class ServletTestUtils {
   }
 
   private static class FakeHttpSessionHandler implements InvocationHandler, Serializable {
-    final Map<String, Object> attributes = Maps.newHashMap();
+    final Map<String, Object> attributes = new HashMap<>();
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
