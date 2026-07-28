@@ -24,8 +24,6 @@ import com.google.inject.internal.GenericErrorDetail;
 import com.google.inject.internal.GuiceInternal;
 import com.google.inject.internal.util.SourceProvider;
 
-import java.io.ObjectStreamException;
-import java.io.Serializable;
 import java.util.List;
 
 import static java.util.Objects.requireNonNull;
@@ -45,7 +43,7 @@ import static java.util.Objects.requireNonNull;
  * @author crazybob@google.com (Bob Lee)
  */
 public final class Message
-        implements Element, Serializable
+        implements Element
 {
     private final ErrorId errorId;
     private final ErrorDetail<?> errorDetail;
@@ -195,24 +193,4 @@ public final class Message
     {
         return new Message(errorId, errorDetail.withSources(newSources));
     }
-
-    /**
-     * When serialized, we convert the error detail to a {@link GenericErrorDetail} with string
-     * sources. This hurts our formatting, but it guarantees that the receiving end will be able to
-     * read the message.
-     */
-    private Object writeReplace()
-            throws ObjectStreamException
-    {
-        Object[] sourcesAsStrings = getSources().toArray();
-        for (int i = 0; i < sourcesAsStrings.length; i++) {
-            sourcesAsStrings[i] = Errors.convert(sourcesAsStrings[i]).toString();
-        }
-        return new Message(
-                errorId,
-                new GenericErrorDetail(
-                        errorId, getMessage(), ImmutableList.copyOf(sourcesAsStrings), getCause()));
-    }
-
-    private static final long serialVersionUID = 0;
 }

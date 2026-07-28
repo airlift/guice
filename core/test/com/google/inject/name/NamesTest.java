@@ -24,11 +24,9 @@ import com.google.inject.Key;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.Properties;
 
-import static com.google.inject.Asserts.assertEqualWhenReserialized;
 import static com.google.inject.Asserts.assertEqualsBothWays;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -56,13 +54,6 @@ public class NamesTest
         Named actual = Names.named("foo");
         assertEqualsBothWays(namedFoo, actual);
         assertEquals(namedFoo.toString(), actual.toString());
-    }
-
-    @Test
-    public void testNamedIsSerializable()
-            throws IOException
-    {
-        assertEqualWhenReserialized(Names.named("foo"));
     }
 
     @Test

@@ -92,6 +92,4 @@ public final class ConfigurationException
     {
         return Messages.formatMessages("Guice configuration errors", messages);
     }
-
-    private static final long serialVersionUID = 0;
 }

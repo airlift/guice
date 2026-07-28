@@ -1,7 +1,6 @@
 package com.google.inject.internal;
 
 import com.google.common.collect.ImmutableList;
-import com.google.inject.ProvisionException;
 import com.google.inject.spi.ErrorDetail;
 import com.google.inject.spi.Message;
 import org.junit.jupiter.api.Test;
@@ -10,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.List;
 
-import static com.google.common.testing.SerializableTester.reserialize;
 import static com.google.common.truth.Truth.assertThat;
 
 public final class MessagesTest
@@ -64,22 +62,6 @@ public final class MessagesTest
                                 + "3) b\n"
                                 + "Duplicate count: 1\n\n"
                                 + "3 errors");
-    }
-
-    @Test
-    public void provisionExceptionWithCustomErrorMessageIsSerializable()
-    {
-        Throwable cause = null;
-        ProvisionException exception =
-                new ProvisionException(
-                        ImmutableList.of(exampleError("Custom error"), new Message("Generic error", cause)));
-        assertThat(reserialize(exception))
-                .hasMessageThat()
-                .isEqualTo(
-                        "Unable to provision, see the following errors:\n\n"
-                                + "1) Custom error\n\n"
-                                + "2) Generic error\n\n"
-                                + "2 errors");
     }
 
     private static Message exampleError(String message)

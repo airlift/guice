@@ -3,7 +3,6 @@ package com.google.inject.spi;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.internal.Messages;
 
-import java.io.Serializable;
 import java.util.Formatter;
 import java.util.List;
 import java.util.Objects;
@@ -18,7 +17,6 @@ import java.util.Optional;
  * @since 5.0
  */
 public abstract class ErrorDetail<SelfT extends ErrorDetail<SelfT>>
-        implements Serializable
 {
     private final String message;
     private final ImmutableList<Object> sources;

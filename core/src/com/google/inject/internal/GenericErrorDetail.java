@@ -2,7 +2,6 @@ package com.google.inject.internal;
 
 import com.google.inject.spi.ErrorDetail;
 
-import java.io.Serializable;
 import java.util.Formatter;
 import java.util.List;
 
@@ -14,7 +13,6 @@ import static java.util.Objects.requireNonNull;
  */
 public final class GenericErrorDetail
         extends InternalErrorDetail<GenericErrorDetail>
-        implements Serializable
 {
     public GenericErrorDetail(
             ErrorId errorId,

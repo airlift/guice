@@ -38,7 +38,6 @@ import jakarta.inject.Qualifier;
 
 import javax.annotation.Nullable;
 
-import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.lang.invoke.MethodHandle;
@@ -798,7 +797,7 @@ public final class RealOptionalBinder<T>
     }
 
     abstract static class BaseAnnotation
-            implements Annotation, Serializable
+            implements Annotation
     {
         private final String value;
         private final Class<? extends Annotation> clazz;
@@ -848,7 +847,5 @@ public final class RealOptionalBinder<T>
         {
             return clazz;
         }
-
-        private static final long serialVersionUID = 0;
     }
 }

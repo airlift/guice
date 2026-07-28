@@ -18,13 +18,12 @@ package com.google.inject.name;
 
 import com.google.inject.internal.Annotations;
 
-import java.io.Serializable;
 import java.lang.annotation.Annotation;
 
 import static java.util.Objects.requireNonNull;
 
 class NamedImpl
-        implements Named, Serializable
+        implements Named
 {
     private final String value;
 
@@ -67,6 +66,4 @@ class NamedImpl
     {
         return Named.class;
     }
-
-    private static final long serialVersionUID = 0;
 }

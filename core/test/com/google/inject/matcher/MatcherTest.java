@@ -17,16 +17,12 @@
 package com.google.inject.matcher;
 
 import com.google.inject.name.Named;
-import com.google.inject.name.Names;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Method;
-import java.util.AbstractList;
 
-import static com.google.inject.Asserts.assertEqualWhenReserialized;
 import static com.google.inject.Asserts.assertEqualsBothWays;
 import static com.google.inject.matcher.Matchers.annotatedWith;
 import static com.google.inject.matcher.Matchers.any;
@@ -171,24 +167,6 @@ public class MatcherTest
         assertEquals("returns(only(class java.lang.String))", returns(only(String.class)).toString());
         assertEqualsBothWays(predicate, returns(only(String.class)));
         assertFalse(predicate.equals(returns(only(Integer.class))));
-    }
-
-    @Test
-    public void testSerialization()
-            throws IOException
-    {
-        assertEqualWhenReserialized(any());
-        assertEqualWhenReserialized(not(any()));
-        assertEqualWhenReserialized(annotatedWith(Named.class));
-        assertEqualWhenReserialized(annotatedWith(Names.named("foo")));
-        assertEqualWhenReserialized(only("foo"));
-        assertEqualWhenReserialized(identicalTo(Object.class));
-        assertEqualWhenReserialized(inPackage(String.class.getPackage()));
-        assertEqualWhenReserialized(inSubpackage(String.class.getPackage().getName()));
-        assertEqualWhenReserialized(returns(any()));
-        assertEqualWhenReserialized(subclassesOf(AbstractList.class));
-        assertEqualWhenReserialized(only("a").or(only("b")));
-        assertEqualWhenReserialized(only("a").and(only("b")));
     }
 
     abstract static class MyRunnable

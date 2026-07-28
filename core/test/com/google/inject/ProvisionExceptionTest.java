@@ -21,12 +21,10 @@ import com.google.inject.internal.Annotations;
 import com.google.inject.spi.Message;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 import static com.google.inject.Asserts.assertContains;
-import static com.google.inject.Asserts.reserialize;
 import static java.lang.annotation.ElementType.CONSTRUCTOR;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
@@ -199,30 +197,6 @@ public class ProvisionExceptionTest
         }
         catch (ProvisionException e) {
             assertContains(e.getMessage(), "1) User Exception", "at ProvisionExceptionTest$4.configure");
-        }
-    }
-
-    @Test
-    public void testProvisionExceptionIsSerializable()
-            throws IOException
-    {
-        try {
-            Guice.createInjector().getInstance(A.class);
-            fail();
-        }
-        catch (ProvisionException expected) {
-            ProvisionException reserialized = reserialize(expected);
-            assertContains(
-                    reserialized.getMessage(),
-                    "1) [Guice/ErrorInjectingConstructor]: UnsupportedOperationException",
-                    "at ProvisionExceptionTest$RealD.<init>()",
-                    "at Key[type=ProvisionExceptionTest$RealD, annotation=[none]]",
-                    "@ProvisionExceptionTest$C.setD()[0]",
-                    "at Key[type=ProvisionExceptionTest$C, annotation=[none]]",
-                    "@ProvisionExceptionTest$B.c",
-                    "at Key[type=ProvisionExceptionTest$B, annotation=[none]]",
-                    "@ProvisionExceptionTest$A.<init>()[0]",
-                    "at Key[type=ProvisionExceptionTest$A, annotation=[none]]");
         }
     }
 
