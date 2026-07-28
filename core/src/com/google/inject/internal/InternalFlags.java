@@ -23,9 +23,7 @@ public final class InternalFlags {
   private static final Logger logger = Logger.getLogger(InternalFlags.class.getName());
 
   private static final IncludeStackTraceOption INCLUDE_STACK_TRACES =
-      getSystemOption(
-          "guice_include_stack_traces",
-          IncludeStackTraceOption.ONLY_FOR_DECLARING_SOURCE);
+      getSystemOption("guice_include_stack_traces", IncludeStackTraceOption.OFF);
 
   private static final CustomClassLoadingOption CUSTOM_CLASS_LOADING =
       getSystemOption("guice_custom_class_loading", CustomClassLoadingOption.BRIDGE);
@@ -60,11 +58,24 @@ public final class InternalFlags {
     YES,
   }
 
-  /** The options for Guice stack trace collection. */
+  /**
+   * The options for Guice stack trace collection.
+   *
+   * <p>Despite the name, OFF does not mean errors lose their sources. Element sources fall back to
+   * the module class that made the binding, and injection points always carry their own file and
+   * line, which come from reflection rather than stack walking. What OFF drops is only the file and
+   * line of the {@code bind()} statement itself: an error reads "at FooModule.configure(Unknown
+   * Source)" instead of "at FooModule.configure(FooModule.java:42)".
+   *
+   * <p>Capturing that one line means walking the caller stack for every element of every module,
+   * which is a measurable share of injector creation. OFF is therefore the default here;
+   * set {@code -Dguice_include_stack_traces=ONLY_FOR_DECLARING_SOURCE} to get exact lines back
+   * while debugging a wiring problem.
+   */
   public enum IncludeStackTraceOption {
-    /** No stack trace collection */
+    /** Attribute elements to their module, without walking the stack. (Default) */
     OFF,
-    /** Minimum stack trace collection (Default) */
+    /** Also capture the file and line of each binding statement. */
     ONLY_FOR_DECLARING_SOURCE,
   }
 
