@@ -776,11 +776,10 @@ final class InjectorImpl implements Injector, Lookups {
   private <T> BindingImpl<TypeLiteral<T>> createTypeLiteralBinding(
       Key<TypeLiteral<T>> key, Errors errors) throws ErrorsException {
     Type typeLiteralType = key.getTypeLiteral().getType();
-    if (!(typeLiteralType instanceof ParameterizedType)) {
+    if (!(typeLiteralType instanceof ParameterizedType parameterizedType)) {
       throw errors.cannotInjectRawTypeLiteral().toException();
     }
 
-    ParameterizedType parameterizedType = (ParameterizedType) typeLiteralType;
     Type innerType = parameterizedType.getActualTypeArguments()[0];
 
     // this is unforunate. We don't support building TypeLiterals for type variable like 'T'. If

@@ -178,10 +178,9 @@ public final class StackTraceElements {
       if (obj == this) {
         return true;
       }
-      if (!(obj instanceof InMemoryStackTraceElement)) {
+      if (!(obj instanceof InMemoryStackTraceElement e)) {
         return false;
       }
-      InMemoryStackTraceElement e = (InMemoryStackTraceElement) obj;
       return e.declaringClass.equals(declaringClass)
           && e.lineNumber == lineNumber
           && methodName.equals(e.methodName);

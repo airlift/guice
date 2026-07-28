@@ -151,16 +151,13 @@ public class MoreTypes {
     } else if (type instanceof CompositeType) {
       return type;
 
-    } else if (type instanceof ParameterizedType) {
-      ParameterizedType p = (ParameterizedType) type;
+    } else if (type instanceof ParameterizedType p) {
       return new ParameterizedTypeImpl(p.getOwnerType(), p.getRawType(), getSharedTypeArguments(p));
 
-    } else if (type instanceof GenericArrayType) {
-      GenericArrayType g = (GenericArrayType) type;
+    } else if (type instanceof GenericArrayType g) {
       return new GenericArrayTypeImpl(g.getGenericComponentType());
 
-    } else if (type instanceof WildcardType) {
-      WildcardType w = (WildcardType) type;
+    } else if (type instanceof WildcardType w) {
       return new WildcardTypeImpl(w.getUpperBounds(), w.getLowerBounds());
 
     } else {
@@ -174,8 +171,7 @@ public class MoreTypes {
       // type is a normal class.
       return (Class<?>) type;
 
-    } else if (type instanceof ParameterizedType) {
-      ParameterizedType parameterizedType = (ParameterizedType) type;
+    } else if (type instanceof ParameterizedType parameterizedType) {
 
       // I'm not exactly sure why getRawType() returns Type instead of Class.
       // Neal isn't either but suspects some pathological case related

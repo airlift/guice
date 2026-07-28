@@ -46,10 +46,9 @@ class ParameterListKey {
     if (o == this) {
       return true;
     }
-    if (!(o instanceof ParameterListKey)) {
+    if (!(o instanceof ParameterListKey other)) {
       return false;
     }
-    ParameterListKey other = (ParameterListKey) o;
     return paramList.equals(other.paramList);
   }
 

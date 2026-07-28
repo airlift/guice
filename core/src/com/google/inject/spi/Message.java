@@ -139,10 +139,9 @@ public final class Message implements Serializable, Element {
 
   @Override
   public boolean equals(Object o) {
-    if (!(o instanceof Message)) {
+    if (!(o instanceof Message e)) {
       return false;
     }
-    Message e = (Message) o;
     return errorDetail.equals(e.errorDetail);
   }
 

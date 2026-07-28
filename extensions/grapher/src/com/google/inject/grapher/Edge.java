@@ -43,10 +43,9 @@ public abstract class Edge {
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof Edge)) {
+    if (!(obj instanceof Edge other)) {
       return false;
     }
-    Edge other = (Edge) obj;
     return Objects.equal(fromId, other.fromId) && Objects.equal(toId, other.toId);
   }
 

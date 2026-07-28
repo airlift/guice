@@ -174,14 +174,12 @@ public class TypeLiteral<T> {
           return toResolve;
         }
 
-      } else if (toResolve instanceof GenericArrayType) {
-        GenericArrayType original = (GenericArrayType) toResolve;
+      } else if (toResolve instanceof GenericArrayType original) {
         Type componentType = original.getGenericComponentType();
         Type newComponentType = resolveType(componentType);
         return componentType == newComponentType ? original : Types.arrayOf(newComponentType);
 
-      } else if (toResolve instanceof ParameterizedType) {
-        ParameterizedType original = (ParameterizedType) toResolve;
+      } else if (toResolve instanceof ParameterizedType original) {
         Type ownerType = original.getOwnerType();
         Type newOwnerType = resolveType(ownerType);
         boolean changed = newOwnerType != ownerType;
@@ -202,8 +200,7 @@ public class TypeLiteral<T> {
             ? Types.newParameterizedTypeWithOwner(newOwnerType, original.getRawType(), args)
             : original;
 
-      } else if (toResolve instanceof WildcardType) {
-        WildcardType original = (WildcardType) toResolve;
+      } else if (toResolve instanceof WildcardType original) {
         Type[] originalLowerBound = original.getLowerBounds();
         Type[] originalUpperBound = original.getUpperBounds();
 
@@ -264,8 +261,7 @@ public class TypeLiteral<T> {
   public List<TypeLiteral<?>> getParameterTypes(Member methodOrConstructor) {
     Type[] genericParameterTypes;
 
-    if (methodOrConstructor instanceof Method) {
-      Method method = (Method) methodOrConstructor;
+    if (methodOrConstructor instanceof Method method) {
       checkArgument(
           method.getDeclaringClass().isAssignableFrom(rawType),
           "%s is not defined by a supertype of %s",
@@ -298,8 +294,7 @@ public class TypeLiteral<T> {
   public List<TypeLiteral<?>> getExceptionTypes(Member methodOrConstructor) {
     Type[] genericExceptionTypes;
 
-    if (methodOrConstructor instanceof Method) {
-      Method method = (Method) methodOrConstructor;
+    if (methodOrConstructor instanceof Method method) {
       checkArgument(
           method.getDeclaringClass().isAssignableFrom(rawType),
           "%s is not defined by a supertype of %s",

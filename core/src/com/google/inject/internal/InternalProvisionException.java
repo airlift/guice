@@ -155,8 +155,7 @@ public final class InternalProvisionException extends Exception {
   static void onNullInjectedIntoNonNullableDependency(Object source, Dependency<?> dependency)
       throws InternalProvisionException {
     // Hack to allow null parameters to @Provides methods, for backwards compatibility.
-    if (dependency.getInjectionPoint().getMember() instanceof Method) {
-      Method annotated = (Method) dependency.getInjectionPoint().getMember();
+    if (dependency.getInjectionPoint().getMember() instanceof Method annotated) {
       if (annotated.isAnnotationPresent(Provides.class)) {
         switch (InternalFlags.getNullableProvidesOption()) {
           case ERROR:

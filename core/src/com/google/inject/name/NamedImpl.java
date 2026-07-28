@@ -43,11 +43,10 @@ class NamedImpl implements Named, Serializable {
 
   @Override
   public boolean equals(Object o) {
-    if (!(o instanceof Named)) {
+    if (!(o instanceof Named other)) {
       return false;
     }
 
-    Named other = (Named) o;
     return value.equals(other.value());
   }
 

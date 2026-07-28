@@ -259,8 +259,7 @@ public abstract class Scoping {
 
   @Override
   public boolean equals(Object obj) {
-    if (obj instanceof Scoping) {
-      Scoping o = (Scoping) obj;
+    if (obj instanceof Scoping o) {
       return Objects.equal(getScopeAnnotation(), o.getScopeAnnotation())
           && Objects.equal(getScopeInstance(), o.getScopeInstance());
     } else {
