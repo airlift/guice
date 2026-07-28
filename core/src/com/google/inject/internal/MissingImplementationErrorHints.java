@@ -59,8 +59,8 @@ final class MissingImplementationErrorHints {
 
   /**
    * Returns whether two types look similar (i.e. if you were to ignore their package). This helps
-   * users who, for example, have injected the wrong Optional (java.util.Optional vs
-   * com.google.common.base.Optional). For generic types, the entire structure must mostly match
+   * users who, for example, have injected the wrong Optional (java.util.Optional vs Guava's
+   * Optional). For generic types, the entire structure must mostly match
    * (wildcard types of extends and super can be ignored) in addition to the simple names of the
    * generic arguments (e.g. Optional&lt;String&gt; won't be similar to Optional&lt;Integer&gt;).
    */

@@ -27,7 +27,6 @@ import static com.google.inject.internal.SpiUtils.providerKey;
 import static com.google.inject.name.Names.named;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Asserts;
@@ -65,6 +64,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -80,31 +80,17 @@ public class OptionalBinderTest {
 
   final Key<String> stringKey = Key.get(String.class);
   final TypeLiteral<Optional<String>> optionalOfString = new TypeLiteral<Optional<String>>() {};
-  final TypeLiteral<java.util.Optional<String>> javaOptionalOfString =
-      new TypeLiteral<java.util.Optional<String>>() {};
   final TypeLiteral<Optional<Provider<String>>> optionalOfProviderString =
       new TypeLiteral<Optional<Provider<String>>>() {};
-  final TypeLiteral<java.util.Optional<Provider<String>>> javaOptionalOfProviderString =
-      new TypeLiteral<java.util.Optional<Provider<String>>>() {};
   final TypeLiteral<Optional<jakarta.inject.Provider<String>>> optionalOfJakartaProviderString =
       new TypeLiteral<Optional<jakarta.inject.Provider<String>>>() {};
-  final TypeLiteral<java.util.Optional<jakarta.inject.Provider<String>>>
-      javaOptionalOfJakartaProviderString =
-          new TypeLiteral<java.util.Optional<jakarta.inject.Provider<String>>>() {};
 
   final Key<Integer> intKey = Key.get(Integer.class);
   final TypeLiteral<Optional<Integer>> optionalOfInteger = new TypeLiteral<Optional<Integer>>() {};
-  final TypeLiteral<java.util.Optional<Integer>> javaOptionalOfInteger =
-      new TypeLiteral<java.util.Optional<Integer>>() {};
   final TypeLiteral<Optional<Provider<Integer>>> optionalOfProviderInteger =
       new TypeLiteral<Optional<Provider<Integer>>>() {};
-  final TypeLiteral<java.util.Optional<Provider<Integer>>> javaOptionalOfProviderInteger =
-      new TypeLiteral<java.util.Optional<Provider<Integer>>>() {};
   final TypeLiteral<Optional<jakarta.inject.Provider<Integer>>> optionalOfJakartaProviderInteger =
       new TypeLiteral<Optional<jakarta.inject.Provider<Integer>>>() {};
-  final TypeLiteral<java.util.Optional<jakarta.inject.Provider<Integer>>>
-      javaOptionalOfJakartaProviderInteger =
-          new TypeLiteral<java.util.Optional<jakarta.inject.Provider<Integer>>>() {};
 
   final TypeLiteral<List<String>> listOfStrings = new TypeLiteral<List<String>>() {};
 
@@ -118,7 +104,6 @@ public class OptionalBinderTest {
             requireBinding(new Key<Optional<String>>() {}); // the above specifies this.
             requireBinding(String.class); // but it doesn't specify this.
             binder().requireExplicitBindings(); // need to do this, otherwise String will JIT
-            requireBinding(Key.get(javaOptionalOfString));
           }
         };
 
@@ -206,11 +191,8 @@ public class OptionalBinderTest {
     boolean expectedPresent = valueState == ExpectedValueState.PRESENT;
     Optional<String> optional = injector.getInstance(keyFor(optionalOfString, annotation));
     assertThat(optional.isPresent()).isEqualTo(expectedPresent);
-    optional =
-        Optional.fromJavaUtil(injector.getInstance(keyFor(javaOptionalOfString, annotation)));
-    assertThat(optional.isPresent()).isEqualTo(expectedPresent);
     if (expectedPresent) {
-      assertThat(optional.get()).isEqualTo(expectedValueIfPresent);
+      assertThat(optional.orElseThrow()).isEqualTo(expectedValueIfPresent);
     }
 
     expectedPresent = providerState == ExpectedProviderState.PRESENT;
@@ -218,28 +200,14 @@ public class OptionalBinderTest {
         injector.getInstance(keyFor(optionalOfProviderString, annotation));
     assertThat(optionalP.isPresent()).isEqualTo(expectedPresent);
     if (expectedPresent) {
-      assertThat(optionalP.get().get()).isEqualTo(expectedValueIfPresent);
-    }
-    optionalP =
-        Optional.fromJavaUtil(
-            injector.getInstance(keyFor(javaOptionalOfProviderString, annotation)));
-    assertThat(optionalP.isPresent()).isEqualTo(expectedPresent);
-    if (expectedPresent) {
-      assertThat(optionalP.get().get()).isEqualTo(expectedValueIfPresent);
+      assertThat(optionalP.orElseThrow().get()).isEqualTo(expectedValueIfPresent);
     }
 
     Optional<jakarta.inject.Provider<String>> optionalJkP =
         injector.getInstance(keyFor(optionalOfJakartaProviderString, annotation));
     assertThat(optionalJkP.isPresent()).isEqualTo(expectedPresent);
     if (expectedPresent) {
-      assertThat(optionalJkP.get().get()).isEqualTo(expectedValueIfPresent);
-    }
-    optionalJkP =
-        Optional.fromJavaUtil(
-            injector.getInstance(keyFor(javaOptionalOfJakartaProviderString, annotation)));
-    assertThat(optionalJkP.isPresent()).isEqualTo(expectedPresent);
-    if (expectedPresent) {
-      assertThat(optionalJkP.get().get()).isEqualTo(expectedValueIfPresent);
+      assertThat(optionalJkP.orElseThrow().get()).isEqualTo(expectedValueIfPresent);
     }
   }
 
@@ -375,7 +343,7 @@ public class OptionalBinderTest {
   }
 
   public <T> Key<Optional<T>> optionalKey(Class<T> type) {
-    return Key.get(RealOptionalBinder.optionalOf(TypeLiteral.get(type)));
+    return Key.get(RealOptionalBinder.javaOptionalOf(TypeLiteral.get(type)));
   }
 
   @Test
@@ -680,35 +648,20 @@ public class OptionalBinderTest {
     assertEquals(1, injector.getInstance(Integer.class).intValue());
     assertEquals(2, injector.getInstance(Integer.class).intValue());
 
-    // Calling .get() on an Optional<Integer> multiple times will keep giving the same thing
+    // Unwrapping an Optional<Integer> multiple times will keep giving the same thing
     Optional<Integer> optional = injector.getInstance(Key.get(optionalOfInteger));
-    assertEquals(3, optional.get().intValue());
-    assertEquals(3, optional.get().intValue());
+    assertEquals(3, optional.orElseThrow().intValue());
+    assertEquals(3, optional.orElseThrow().intValue());
     // But getting another Optional<Integer> will give a new one.
-    assertEquals(4, injector.getInstance(Key.get(optionalOfInteger)).get().intValue());
-
-    // and same rules with java.util.Optional
-    optional = Optional.fromJavaUtil(injector.getInstance(Key.get(javaOptionalOfInteger)));
-    assertEquals(5, optional.get().intValue());
-    assertEquals(5, optional.get().intValue());
-    optional = Optional.fromJavaUtil(injector.getInstance(Key.get(javaOptionalOfInteger)));
-    assertEquals(6, optional.get().intValue());
+    assertEquals(4, injector.getInstance(Key.get(optionalOfInteger)).orElseThrow().intValue());
 
     // And the Optional<Provider> will return a provider that gives a new value each time.
-    // (both for guava & java.util Optional)
-    assertEquals(7, optionalP.get().get().intValue());
-    assertEquals(8, optionalP.get().get().intValue());
-    optionalP = Optional.fromJavaUtil(injector.getInstance(Key.get(javaOptionalOfProviderInteger)));
-    assertEquals(9, optionalP.get().get().intValue());
-    assertEquals(10, optionalP.get().get().intValue());
+    assertEquals(5, optionalP.orElseThrow().get().intValue());
+    assertEquals(6, optionalP.orElseThrow().get().intValue());
 
     // Same with jakarta provider.
-    assertEquals(11, optionalJkP.get().get().intValue());
-    assertEquals(12, optionalJkP.get().get().intValue());
-    optionalJkP =
-        Optional.fromJavaUtil(injector.getInstance(Key.get(javaOptionalOfJakartaProviderInteger)));
-    assertEquals(13, optionalJkP.get().get().intValue());
-    assertEquals(14, optionalJkP.get().get().intValue());
+    assertEquals(7, optionalJkP.orElseThrow().get().intValue());
+    assertEquals(8, optionalJkP.orElseThrow().get().intValue());
   }
 
   @Test
@@ -1291,7 +1244,7 @@ public class OptionalBinderTest {
                 })
             .getInstance(new Key<Optional<Provider<Set<String>>>>() {});
     // Check that we are using the optimized path.
-    assertThat(e.get()).isInstanceOf(InternalFactory.InstanceProvider.class);
+    assertThat(e.orElseThrow()).isInstanceOf(InternalFactory.InstanceProvider.class);
     e =
         Guice.createInjector(
                 new AbstractModule() {
@@ -1302,7 +1255,7 @@ public class OptionalBinderTest {
                   }
                 })
             .getInstance(new Key<Optional<Provider<Set<String>>>>() {});
-    assertThat(e.get()).isInstanceOf(InternalFactory.InstanceProvider.class);
+    assertThat(e.orElseThrow()).isInstanceOf(InternalFactory.InstanceProvider.class);
   }
 
   /**

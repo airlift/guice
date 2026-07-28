@@ -233,13 +233,6 @@ See the Apache License Version 2.0 for the specific language governing permissio
                  | is Guice's own public API - this codebase defines it and must keep using it.
                 -->
                             <exclusionPattern>com/google/inject/Provider.*</exclusionPattern>
-                            <!--
-                 | Guava Optional: false positive. OptionalBinder deliberately binds
-                 | com.google.common.base.Optional alongside java.util.Optional as distinct keys
-                 | for compatibility, so RealOptionalBinder and its tests must keep creating Guava
-                 | Optionals. All other Guava Optional usage has been migrated to java.util.
-                -->
-                            <exclusionPattern>com/google/common/base/Optional\..*</exclusionPattern>
                         </exclusionPatterns>
                         <ignoreClassNamePatterns>
                             <!--
