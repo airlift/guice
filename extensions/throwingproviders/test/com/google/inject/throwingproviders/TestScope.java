@@ -47,7 +47,7 @@ class TestScope
         return new Provider<T>()
         {
             @Override
-            @SuppressWarnings({"unchecked"})
+            @SuppressWarnings("unchecked")
             public T get()
             {
                 T t = (T) inScopeObjectsMap.get(key);

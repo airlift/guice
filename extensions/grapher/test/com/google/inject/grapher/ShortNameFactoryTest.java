@@ -152,9 +152,7 @@ public class ShortNameFactoryTest
     }
 
     /**
-     * Tests the case where a provider method is the source of the
-     *
-     * @throws Exception
+     * Tests the case where a provider method is the source of the injection.
      */
     @Test
     public void testGetSourceName_method()

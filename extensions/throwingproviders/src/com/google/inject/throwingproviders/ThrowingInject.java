@@ -38,7 +38,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @author sameb@google.com (Sam Berlin)
  * @since 4.0
  */
-@Target({CONSTRUCTOR})
+@Target(CONSTRUCTOR)
 @Retention(RUNTIME)
 @Documented
 public @interface ThrowingInject {}

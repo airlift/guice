@@ -34,6 +34,8 @@ import java.nio.file.Path;
  */
 public class InjectorGrapherDemo
 {
+    private InjectorGrapherDemo() {}
+
     public static void main(String[] args)
             throws Exception
     {

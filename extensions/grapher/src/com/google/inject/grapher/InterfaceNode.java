@@ -44,6 +44,12 @@ public class InterfaceNode
     }
 
     @Override
+    public int hashCode()
+    {
+        return super.hashCode();
+    }
+
+    @Override
     public String toString()
     {
         return "InterfaceNode{id=" + getId() + " source=" + getSource() + "}";

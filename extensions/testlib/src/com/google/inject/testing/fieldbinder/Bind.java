@@ -39,7 +39,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @author eatnumber1@google.com (Russ Harmon)
  */
 @Retention(RUNTIME)
-@Target({FIELD})
+@Target(FIELD)
 @Keep
 public @interface Bind
 {

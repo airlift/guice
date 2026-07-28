@@ -470,7 +470,7 @@ public class ThrowingProviderBinder
             }
         }
 
-        @SuppressWarnings({"unchecked"})
+        @SuppressWarnings("unchecked")
         private Key<P> createKey()
         {
             TypeLiteral<P> typeLiteral;

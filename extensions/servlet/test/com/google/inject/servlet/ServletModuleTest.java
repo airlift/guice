@@ -41,12 +41,16 @@ public class ServletModuleTest
     public void testServletModuleCallOutsideConfigure()
     {
         try {
-            new ServletModule()
+            class ServesInConstructorModule
+                    extends ServletModule
             {
+                ServesInConstructorModule()
                 {
                     serve("/*").with(DummyServlet.class);
                 }
-            };
+            }
+
+            new ServesInConstructorModule();
             fail();
         }
         catch (IllegalStateException e) {

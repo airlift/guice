@@ -1323,7 +1323,7 @@ public class BoundFieldModuleTest
     @Qualifier
     @RestrictedBindingSource(
             explanation = "",
-            permits = {TestPermit.class})
+            permits = TestPermit.class)
     @Retention(RetentionPolicy.RUNTIME)
     @interface Foo {}
 
