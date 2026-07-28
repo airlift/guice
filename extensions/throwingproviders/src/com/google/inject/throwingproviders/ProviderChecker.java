@@ -2,7 +2,6 @@ package com.google.inject.throwingproviders;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.inject.internal.Errors;
 import java.lang.reflect.Method;
@@ -11,6 +10,7 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 /** Helper methods to verify the correctness of CheckedProvider interfaces. */
 final class ProviderChecker {

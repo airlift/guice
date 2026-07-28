@@ -18,7 +18,6 @@ package com.google.inject.testing.fieldbinder;
 
 import static java.util.Arrays.stream;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -45,6 +44,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Optional;
 
 /**
  * A Guice module that automatically adds Guice bindings into the injector for all {@link Bind}
@@ -332,17 +332,17 @@ public final class BoundFieldModule implements Module {
      *
      * <p>A field's "natural" type specifically ignores the to() method on the @Bind annotation, is
      * the parameterized type if the field's actual type is a parameterized {@link Provider}, is
-     * {@link Optional#absent()} if this field is a non-parameterized {@link Provider} and otherwise
+     * {@link Optional#empty()} if this field is a non-parameterized {@link Provider} and otherwise
      * is the field's actual type.
      *
-     * @return the type this field binds to naturally, or {@link Optional#absent()} if this field is
+     * @return the type this field binds to naturally, or {@link Optional#empty()} if this field is
      *     a non-parameterized {@link Provider}.
      */
     private Optional<TypeLiteral<?>> computeNaturalFieldType() {
       if (isTransparentProvider(fieldType.getRawType())) {
         Type providerType = fieldType.getType();
         if (providerType instanceof Class) {
-          return Optional.absent();
+          return Optional.empty();
         }
         Preconditions.checkState(providerType instanceof ParameterizedType);
         Type[] providerTypeArguments = ((ParameterizedType) providerType).getActualTypeArguments();
@@ -402,7 +402,7 @@ public final class BoundFieldModule implements Module {
    * Retrieve a {@link BoundFieldInfo}.
    *
    * <p>This returns a {@link BoundFieldInfo} if the field has a {@link Bind} annotation. Otherwise
-   * it returns {@link Optional#absent()}.
+   * it returns {@link Optional#empty()}.
    */
   private Optional<BoundFieldInfo> getBoundFieldInfo(
       TypeLiteral<?> containingClassType,
@@ -410,12 +410,12 @@ public final class BoundFieldModule implements Module {
       ImmutableList.Builder<Message> deferredErrors) {
     Bind bindAnnotation = field.getAnnotation(Bind.class);
     if (bindAnnotation == null) {
-      return Optional.absent();
+      return Optional.empty();
     }
     if (hasInject(field)) {
       deferredErrors.add(
           new Message(field, "Fields annotated with both @Bind and @Inject are illegal."));
-      return Optional.absent();
+      return Optional.empty();
     }
     try {
       return Optional.of(
@@ -423,10 +423,10 @@ public final class BoundFieldModule implements Module {
               instance, field, bindAnnotation, containingClassType.getFieldType(field)));
     } catch (ConfigurationException e) { // thrown from Key.get, MoreTypes.canonicalizeForKey
       deferredErrors.addAll(e.getErrorMessages());
-      return Optional.absent();
+      return Optional.empty();
     } catch (BoundFieldException e) {
       deferredErrors.add(e.message);
-      return Optional.absent();
+      return Optional.empty();
     }
   }
 
