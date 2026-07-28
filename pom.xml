@@ -239,26 +239,28 @@ See the Apache License Version 2.0 for the specific language governing permissio
                 <plugin>
                     <groupId>com.mycila</groupId>
                     <artifactId>license-maven-plugin</artifactId>
-                    <version>2.6</version>
+                    <version>5.1.1</version>
                     <configuration>
-                        <encoding>UTF-8</encoding>
-                        <header>${project.basedir}/lib/build/header.txt</header>
-                        <headerDefinitions>
-                            <headerDefinition>${project.basedir}/lib/build/header-definitions.xml</headerDefinition>
-                        </headerDefinitions>
+                        <licenseSets>
+                            <licenseSet>
+                                <header>${project.basedir}/lib/build/header.txt</header>
+                                <headerDefinitions>
+                                    <headerDefinition>${project.basedir}/lib/build/header-definitions.xml</headerDefinition>
+                                </headerDefinitions>
+                                <includes>
+                                    <include>**/*.java</include>
+                                </includes>
+                                <excludes>
+                                    <!-- avoid touching munged/lib/test/example code -->
+                                    <exclude>**/build/**</exclude>
+                                    <exclude>**/target/**</exclude>
+                                    <exclude>**/lib/**</exclude>
+                                    <exclude>**/test/**</exclude>
+                                    <exclude>**/example*/**</exclude>
+                                </excludes>
+                            </licenseSet>
+                        </licenseSets>
                         <skipExistingHeaders>true</skipExistingHeaders>
-                        <aggregate>true</aggregate>
-                        <includes>
-                            <include>**/*.java</include>
-                        </includes>
-                        <excludes>
-                            <!-- avoid touching munged/lib/test/example code -->
-                            <exclude>**/build/**</exclude>
-                            <exclude>**/target/**</exclude>
-                            <exclude>**/lib/**</exclude>
-                            <exclude>**/test/**</exclude>
-                            <exclude>**/example*/**</exclude>
-                        </excludes>
                         <mapping>
                             <java>JAVADOC_STYLE</java>
                         </mapping>
@@ -269,7 +271,7 @@ See the Apache License Version 2.0 for the specific language governing permissio
         -->
                 <plugin>
                     <artifactId>maven-remote-resources-plugin</artifactId>
-                    <version>1.5</version>
+                    <version>3.3.0</version>
                     <executions>
                         <execution>
                             <goals>
@@ -327,7 +329,6 @@ See the Apache License Version 2.0 for the specific language governing permissio
                 </plugin>
                 <plugin>
                     <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>3.2.0</version>
                     <configuration>
                         <doclint>html,syntax</doclint>
                         <source>25</source>
@@ -381,7 +382,6 @@ See the Apache License Version 2.0 for the specific language governing permissio
                 </plugin>
                 <plugin>
                     <artifactId>maven-source-plugin</artifactId>
-                    <version>2.1.2</version>
                     <executions>
                         <execution>
                             <goals>
@@ -393,20 +393,9 @@ See the Apache License Version 2.0 for the specific language governing permissio
                     </executions>
                 </plugin>
                 <plugin>
-                    <artifactId>maven-release-plugin</artifactId>
-                    <version>2.1</version>
-                    <configuration>
-                        <autoVersionSubmodules>true</autoVersionSubmodules>
-                    </configuration>
-                </plugin>
-                <plugin>
-                    <artifactId>maven-deploy-plugin</artifactId>
-                    <version>2.5</version>
-                </plugin>
-                <plugin>
                     <groupId>org.spf4j</groupId>
                     <artifactId>spf4j-jdiff-maven-plugin</artifactId>
-                    <version>8.8.5</version>
+                    <version>8.10.0</version>
                     <configuration>
                         <destDir>${project.reporting.outputDirectory}/api-diffs/${project.artifactId}</destDir>
                         <versionRange>[${guice.lastStableRelease}],[${project.version}]</versionRange>
