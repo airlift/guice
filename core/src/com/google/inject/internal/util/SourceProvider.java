@@ -47,12 +47,13 @@ public final class SourceProvider {
   private SourceProvider(SourceProvider parent, Iterable<String> classesToSkip) {
     this.parent = parent;
 
+    // Flattened, so that testing a frame is one set lookup rather than a walk up the parent
+    // chain. This is on the path taken for every element of every module.
     ImmutableSet.Builder<String> classNamesToSkipBuilder = ImmutableSet.builder();
-    for (String classToSkip : classesToSkip) {
-      if (parent == null || !parent.shouldBeSkipped(classToSkip)) {
-        classNamesToSkipBuilder.add(classToSkip);
-      }
+    if (parent != null) {
+      classNamesToSkipBuilder.addAll(parent.classNamesToSkip);
     }
+    classNamesToSkipBuilder.addAll(classesToSkip);
     this.classNamesToSkip = classNamesToSkipBuilder.build();
   }
 
@@ -63,8 +64,7 @@ public final class SourceProvider {
 
   /** Returns true if the className should be skipped. */
   private boolean shouldBeSkipped(String className) {
-    return (parent != null && parent.shouldBeSkipped(className))
-        || classNamesToSkip.contains(className);
+    return classNamesToSkip.contains(className);
   }
 
   /** Returns the class names as Strings */
