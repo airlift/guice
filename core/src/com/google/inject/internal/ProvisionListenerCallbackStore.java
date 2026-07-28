@@ -21,13 +21,13 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.google.inject.Binding;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Stage;
 import com.google.inject.spi.ProvisionListener;
 import com.google.inject.spi.ProvisionListenerBinding;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -97,7 +97,7 @@ final class ProvisionListenerCallbackStore {
     for (ProvisionListenerBinding provisionBinding : listenerBindings) {
       if (provisionBinding.getBindingMatcher().matches(binding)) {
         if (listeners == null) {
-          listeners = Lists.newArrayList();
+          listeners = new ArrayList<>();
         }
         listeners.addAll(provisionBinding.getListeners());
       }

@@ -15,16 +15,16 @@
  */
 package com.google.inject.servlet;
 
-import com.google.common.collect.Sets;
 import com.google.inject.Binder;
 import com.google.inject.Key;
 import com.google.inject.internal.UniqueAnnotations;
+import jakarta.servlet.http.HttpServlet;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import jakarta.servlet.http.HttpServlet;
 
 /**
  * Builds the guice module that binds configured servlets, with their wrapper ServletDefinitions. Is
@@ -34,7 +34,7 @@ import jakarta.servlet.http.HttpServlet;
  */
 class ServletsModuleBuilder {
 
-  private final Set<String> servletUris = Sets.newHashSet();
+  private final Set<String> servletUris = new HashSet<>();
   private final Binder binder;
 
   public ServletsModuleBuilder(Binder binder) {

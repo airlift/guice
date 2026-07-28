@@ -15,7 +15,6 @@
  */
 package com.google.inject.servlet;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Binding;
 import com.google.inject.Inject;
@@ -23,9 +22,6 @@ import com.google.inject.Injector;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
-import java.io.IOException;
-import java.util.List;
-import java.util.Set;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.RequestDispatcher;
@@ -35,6 +31,10 @@ import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Central routing/dispatch class handles lifecycle of managed filters, and delegates to the servlet
@@ -76,7 +76,7 @@ class ManagedFilterPipeline implements FilterPipeline {
    * preserves insertion order in entry-set iterators.
    */
   private FilterDefinition[] collectFilterDefinitions(Injector injector) {
-    List<FilterDefinition> filterDefinitions = Lists.newArrayList();
+    List<FilterDefinition> filterDefinitions = new ArrayList<>();
     for (Binding<FilterDefinition> entry : injector.findBindingsByType(FILTER_DEFS)) {
       filterDefinitions.add(entry.getProvider().get());
     }

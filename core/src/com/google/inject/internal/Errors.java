@@ -19,7 +19,6 @@ package com.google.inject.internal;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Ordering;
 import com.google.inject.Binding;
@@ -44,6 +43,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Formatter;
 import java.util.List;
@@ -631,7 +631,7 @@ public final class Errors implements Serializable {
   }
 
   private List<Object> getSources() {
-    List<Object> sources = Lists.newArrayList();
+    List<Object> sources = new ArrayList<>();
     for (Errors e = this; e != null; e = e.parent) {
       if (e.source != SourceProvider.UNKNOWN_SOURCE) {
         sources.add(0, e.source);
@@ -672,7 +672,7 @@ public final class Errors implements Serializable {
 
   public Errors addMessage(Message message) {
     if (root.errors == null) {
-      root.errors = Lists.newArrayList();
+      root.errors = new ArrayList<>();
     }
     root.errors.add(message);
     return this;

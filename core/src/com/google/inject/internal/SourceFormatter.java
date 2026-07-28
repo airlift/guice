@@ -16,6 +16,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.List;
 
@@ -107,7 +108,7 @@ final class SourceFormatter {
     if (elementSource == null) {
       return "";
     }
-    List<String> modules = Lists.newArrayList(elementSource.getModuleClassNames());
+    List<String> modules = new ArrayList<>(elementSource.getModuleClassNames());
     // Insert any original element sources w/ module info into the path.
     while (elementSource.getOriginalElementSource() != null) {
       elementSource = elementSource.getOriginalElementSource();

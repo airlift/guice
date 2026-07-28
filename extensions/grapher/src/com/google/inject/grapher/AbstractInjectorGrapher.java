@@ -16,15 +16,15 @@
 
 package com.google.inject.grapher;
 
-import com.google.common.collect.SetMultimap;
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import com.google.common.collect.SetMultimap;
 import com.google.inject.Binding;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -180,7 +180,7 @@ public abstract class AbstractInjectorGrapher implements InjectorGrapher {
    * to Z) and (Y to Z).
    */
   private Map<NodeId, NodeId> resolveAliases(Iterable<Alias> aliases) {
-    Map<NodeId, NodeId> resolved = Maps.newHashMap();
+    Map<NodeId, NodeId> resolved = new HashMap<>();
     SetMultimap<NodeId, NodeId> inverse = HashMultimap.create();
 
     for (Alias alias : aliases) {
@@ -208,9 +208,9 @@ public abstract class AbstractInjectorGrapher implements InjectorGrapher {
 
   /** Returns the bindings for the root keys and their transitive dependencies. */
   private Iterable<Binding<?>> getBindings(Injector injector, Set<Key<?>> root) {
-    Set<Key<?>> keys = Sets.newHashSet(root);
-    Set<Key<?>> visitedKeys = Sets.newHashSet();
-    List<Binding<?>> bindings = Lists.newArrayList();
+    Set<Key<?>> keys = new HashSet<>(root);
+    Set<Key<?>> visitedKeys = new HashSet<>();
+    List<Binding<?>> bindings = new ArrayList<>();
     TransitiveDependencyVisitor keyVisitor = new TransitiveDependencyVisitor();
 
     while (!keys.isEmpty()) {

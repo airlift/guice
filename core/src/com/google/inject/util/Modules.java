@@ -19,9 +19,6 @@ package com.google.inject.util;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.InlineMe;
 import com.google.inject.AbstractModule;
@@ -42,7 +39,10 @@ import com.google.inject.spi.ModuleAnnotatedMethodScannerBinding;
 import com.google.inject.spi.PrivateElements;
 import com.google.inject.spi.ScopeBinding;
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -243,9 +243,9 @@ public final class Modules {
               currentStage(),
               ImmutableList.<Module>builder().addAll(overrides).add(scannersModule).build());
 
-      final Set<Key<?>> overriddenKeys = Sets.newHashSet();
+      final Set<Key<?>> overriddenKeys = new HashSet<>();
       final Map<Class<? extends Annotation>, ScopeBinding> overridesScopeAnnotations =
-          Maps.newHashMap();
+          new HashMap<>();
 
       // execute the overrides module, keeping track of which keys and scopes are bound
       new ModuleWriter(binder) {
@@ -271,8 +271,8 @@ public final class Modules {
       // execute the original module, skipping all scopes and overridden keys. We only skip each
       // overridden binding once so things still blow up if the module binds the same thing
       // multiple times.
-      final Map<Scope, List<Object>> scopeInstancesInUse = Maps.newHashMap();
-      final List<ScopeBinding> scopeBindings = Lists.newArrayList();
+      final Map<Scope, List<Object>> scopeInstancesInUse = new HashMap<>();
+      final List<ScopeBinding> scopeBindings = new ArrayList<>();
       new ModuleWriter(binder) {
         @Override
         public <T> Void visit(Binding<T> binding) {
@@ -283,7 +283,7 @@ public final class Modules {
             Scope scope = getScopeInstanceOrNull(binding);
             if (scope != null) {
               scopeInstancesInUse
-                  .computeIfAbsent(scope, k -> Lists.newArrayList())
+                  .computeIfAbsent(scope, k -> new ArrayList<>())
                   .add(binding.getSource());
             }
           }
@@ -295,7 +295,7 @@ public final class Modules {
           PrivateBinder privateBinder =
               binder.withSource(privateElements.getSource()).newPrivateBinder();
 
-          Set<Key<?>> skippedExposes = Sets.newHashSet();
+          Set<Key<?>> skippedExposes = new HashSet<>();
 
           for (Key<?> key : privateElements.getExposedKeys()) {
             if (keysToSkip.remove(key)) {
@@ -392,7 +392,7 @@ public final class Modules {
   }
 
   private static Module extractScanners(Iterable<Element> elements) {
-    final List<ModuleAnnotatedMethodScannerBinding> scanners = Lists.newArrayList();
+    final List<ModuleAnnotatedMethodScannerBinding> scanners = new ArrayList<>();
     ElementVisitor<Void> visitor =
         new DefaultElementVisitor<Void>() {
           @Override

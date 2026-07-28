@@ -18,10 +18,11 @@ package com.google.inject.grapher.graphviz;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import com.google.inject.grapher.NodeId;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Data object to encapsulate the attributes of Graphviz nodes that we're interested in drawing.
@@ -35,7 +36,7 @@ public class GraphvizNode {
   private NodeShape shape = NodeShape.BOX;
 
   private String title = "";
-  private Map<Integer, String> subtitles = Maps.newTreeMap();
+  private Map<Integer, String> subtitles = new TreeMap<>();
 
   private String headerTextColor = "#000000";
   private String headerBackgroundColor = "#ffffff";
@@ -43,7 +44,7 @@ public class GraphvizNode {
   private String identifier;
 
   /** {@link Map} from port ID to field title */
-  private Map<String, String> fields = Maps.newLinkedHashMap();
+  private Map<String, String> fields = new LinkedHashMap<>();
 
   /** @since 4.0 */
   public GraphvizNode(NodeId nodeId) {

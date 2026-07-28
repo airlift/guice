@@ -26,13 +26,14 @@ import com.google.inject.OutOfScopeException;
 import com.google.inject.Provider;
 import com.google.inject.Scope;
 import com.google.inject.Scopes;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 
 /**
  * Servlet scopes.
@@ -398,7 +399,7 @@ public final class ServletScopes {
   }
 
   private static class Context implements RequestScoper {
-    final Map<Key<?>, Object> map = Maps.newHashMap();
+    final Map<Key<?>, Object> map = new HashMap<>();
 
     // Synchronized to prevent two threads from using the same request
     // scope concurrently.

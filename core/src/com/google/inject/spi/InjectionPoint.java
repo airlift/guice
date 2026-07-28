@@ -21,7 +21,6 @@ import static com.google.inject.internal.MoreTypes.getRawType;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.common.collect.ObjectArrays;
 import com.google.inject.ConfigurationException;
 import com.google.inject.Inject;
@@ -136,7 +135,7 @@ public final class InjectionPoint {
       AnnotatedType[] annotatedTypes,
       Annotation[][] parameterAnnotationsPerParameter,
       Predicate<Integer> isParameterKotlinNullable) {
-    List<Dependency<?>> dependencies = Lists.newArrayList();
+    List<Dependency<?>> dependencies = new ArrayList<>();
     int index = 0;
 
     for (TypeLiteral<?> parameterType : type.getParameterTypes(member)) {

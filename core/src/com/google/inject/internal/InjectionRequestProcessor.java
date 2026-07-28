@@ -17,12 +17,12 @@
 package com.google.inject.internal;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.inject.ConfigurationException;
 import com.google.inject.Stage;
 import com.google.inject.spi.InjectionPoint;
 import com.google.inject.spi.InjectionRequest;
 import com.google.inject.spi.StaticInjectionRequest;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -36,7 +36,7 @@ import java.util.Set;
  */
 final class InjectionRequestProcessor extends AbstractProcessor {
 
-  private final List<StaticInjection> staticInjections = Lists.newArrayList();
+  private final List<StaticInjection> staticInjections = new ArrayList<>();
   private final Initializer initializer;
 
   InjectionRequestProcessor(Errors errors, Initializer initializer) {

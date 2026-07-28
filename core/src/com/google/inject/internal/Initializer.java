@@ -19,8 +19,6 @@ package com.google.inject.internal;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.inject.Binding;
 import com.google.inject.Key;
@@ -28,6 +26,7 @@ import com.google.inject.Stage;
 import com.google.inject.TypeLiteral;
 import com.google.inject.internal.CycleDetectingLock.CycleDetectingLockFactory;
 import com.google.inject.spi.InjectionPoint;
+import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Optional;
@@ -58,14 +57,14 @@ final class Initializer {
    * references added before {@link #validateOustandingInjections}. Cleared up in {@link
    * #injectAll}.
    */
-  private final List<InjectableReference<?>> pendingInjections = Lists.newArrayList();
+  private final List<InjectableReference<?>> pendingInjections = new ArrayList<>();
 
   /**
    * Map that guarantees that no instance would get two references. New references added before
    * {@link #validateOustandingInjections}. Cleared up in {@link #validateOustandingInjections}.
    */
   private final IdentityHashMap<Object, InjectableReference<?>> initializablesCache =
-      Maps.newIdentityHashMap();
+      new IdentityHashMap<>();
 
   /**
    * Registers an instance for member injection when that step is performed.

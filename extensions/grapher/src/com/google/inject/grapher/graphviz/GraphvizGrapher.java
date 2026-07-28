@@ -18,8 +18,6 @@ package com.google.inject.grapher.graphviz;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Key;
 import com.google.inject.grapher.AbstractInjectorGrapher;
@@ -33,6 +31,8 @@ import com.google.inject.grapher.NodeId;
 import com.google.inject.spi.InjectionPoint;
 import java.io.PrintWriter;
 import java.lang.reflect.Member;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -47,8 +47,8 @@ import java.util.Map.Entry;
  * @since 4.0
  */
 public class GraphvizGrapher extends AbstractInjectorGrapher {
-  private final Map<NodeId, GraphvizNode> nodes = Maps.newHashMap();
-  private final List<GraphvizEdge> edges = Lists.newArrayList();
+  private final Map<NodeId, GraphvizNode> nodes = new HashMap<>();
+  private final List<GraphvizEdge> edges = new ArrayList<>();
   private final NameFactory nameFactory;
   private final PortIdFactory portIdFactory;
 
@@ -93,7 +93,7 @@ public class GraphvizGrapher extends AbstractInjectorGrapher {
   }
 
   protected Map<String, String> getGraphAttributes() {
-    Map<String, String> attrs = Maps.newHashMap();
+    Map<String, String> attrs = new HashMap<>();
     attrs.put("rankdir", rankdir);
     return attrs;
   }
@@ -115,7 +115,7 @@ public class GraphvizGrapher extends AbstractInjectorGrapher {
   }
 
   protected Map<String, String> getNodeAttributes(GraphvizNode node) {
-    Map<String, String> attrs = Maps.newHashMap();
+    Map<String, String> attrs = new HashMap<>();
 
     attrs.put("label", getNodeLabel(node));
     // remove most of the margin because the table has internal padding
@@ -183,7 +183,7 @@ public class GraphvizGrapher extends AbstractInjectorGrapher {
   }
 
   protected Map<String, String> getEdgeAttributes(GraphvizEdge edge) {
-    Map<String, String> attrs = Maps.newHashMap();
+    Map<String, String> attrs = new HashMap<>();
 
     attrs.put("arrowhead", getArrowString(edge.getArrowHead()));
     attrs.put("arrowtail", getArrowString(edge.getArrowTail()));
@@ -193,7 +193,7 @@ public class GraphvizGrapher extends AbstractInjectorGrapher {
   }
 
   private String getAttrString(Map<String, String> attrs) {
-    List<String> attrList = Lists.newArrayList();
+    List<String> attrList = new ArrayList<>();
 
     for (Entry<String, String> attr : attrs.entrySet()) {
       String value = attr.getValue();
@@ -215,7 +215,8 @@ public class GraphvizGrapher extends AbstractInjectorGrapher {
   }
 
   protected String getEdgeEndPoint(String nodeId, String portId, CompassPoint compassPoint) {
-    List<String> portStrings = Lists.newArrayList(nodeId);
+    List<String> portStrings = new ArrayList<>();
+    portStrings.add(nodeId);
 
     if (portId != null) {
       portStrings.add(portId);
@@ -233,7 +234,7 @@ public class GraphvizGrapher extends AbstractInjectorGrapher {
   }
 
   protected List<String> htmlEscape(List<String> elements) {
-    List<String> escaped = Lists.newArrayList();
+    List<String> escaped = new ArrayList<>();
     for (String element : elements) {
       escaped.add(htmlEscape(element));
     }

@@ -26,7 +26,6 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimaps;
-import com.google.common.collect.Sets;
 import com.google.inject.Binder;
 import com.google.inject.Binding;
 import com.google.inject.ConfigurationException;
@@ -60,6 +59,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
 
@@ -123,7 +123,7 @@ final class InjectorImpl implements Injector, Lookups {
   Lookups lookups = new DeferredLookups(this);
 
   /** The set of types passed to {@link #getMembersInjector} and {@link #injectMembers}. */
-  final Set<TypeLiteral<?>> userRequestedMembersInjectorTypes = Sets.newConcurrentHashSet();
+  final Set<TypeLiteral<?>> userRequestedMembersInjectorTypes = ConcurrentHashMap.newKeySet();
 
   InjectorImpl(
       InjectorImpl parent,

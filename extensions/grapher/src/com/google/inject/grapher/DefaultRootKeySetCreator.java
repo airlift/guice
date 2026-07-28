@@ -16,10 +16,10 @@
 
 package com.google.inject.grapher;
 
-import com.google.common.collect.Sets;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -35,7 +35,7 @@ public class DefaultRootKeySetCreator implements RootKeySetCreator {
 
   @Override
   public Set<Key<?>> getRootKeys(Injector injector) {
-    Set<Key<?>> root = Sets.newHashSet();
+    Set<Key<?>> root = new HashSet<>();
     for (Key<?> key : injector.getBindings().keySet()) {
       if (key.getTypeLiteral().getRawType().getPackage() != Guice.class.getPackage()
           && !loggerKey.equals(key)) {

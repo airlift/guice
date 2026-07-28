@@ -17,11 +17,11 @@
 package com.google.inject.internal;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.google.inject.Binding;
 import com.google.inject.spi.Dependency;
 import com.google.inject.spi.ProvisionListener;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -51,7 +51,7 @@ final class ProvisionListenerStackCallback<T> {
     if (listeners.isEmpty()) {
       this.listeners = EMPTY_LISTENER;
     } else {
-      Set<ProvisionListener> deDuplicated = Sets.newLinkedHashSet(listeners);
+      Set<ProvisionListener> deDuplicated = new LinkedHashSet<>(listeners);
       this.listeners = deDuplicated.toArray(new ProvisionListener[deDuplicated.size()]);
     }
   }

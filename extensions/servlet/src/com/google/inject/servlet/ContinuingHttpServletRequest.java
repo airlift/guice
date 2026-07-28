@@ -16,15 +16,15 @@
 
 package com.google.inject.servlet;
 
-import com.google.common.collect.Maps;
 import com.google.inject.OutOfScopeException;
-import java.io.IOException;
-import java.util.Map;
 import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpSession;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A wrapper for requests that makes requests immutable, taking a snapshot of the original request.
@@ -34,7 +34,7 @@ import jakarta.servlet.http.HttpSession;
 class ContinuingHttpServletRequest extends HttpServletRequestWrapper {
 
   // We clear out the attributes as they are mutable and not thread-safe.
-  private final Map<String, Object> attributes = Maps.newHashMap();
+  private final Map<String, Object> attributes = new HashMap<>();
   private final Cookie[] cookies;
 
   public ContinuingHttpServletRequest(HttpServletRequest request) {

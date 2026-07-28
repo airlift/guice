@@ -17,7 +17,6 @@
 package com.google.inject.grapher;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.inject.Binding;
 import com.google.inject.spi.ConstructorBinding;
 import com.google.inject.spi.ConvertedConstantBinding;
@@ -29,6 +28,7 @@ import com.google.inject.spi.LinkedKeyBinding;
 import com.google.inject.spi.ProviderBinding;
 import com.google.inject.spi.ProviderInstanceBinding;
 import com.google.inject.spi.ProviderKeyBinding;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -41,7 +41,7 @@ final class DefaultEdgeCreator implements EdgeCreator {
 
   @Override
   public Iterable<Edge> getEdges(Iterable<Binding<?>> bindings) {
-    List<Edge> edges = Lists.newArrayList();
+    List<Edge> edges = new ArrayList<>();
     EdgeVisitor visitor = new EdgeVisitor();
     for (Binding<?> binding : bindings) {
       edges.addAll(binding.acceptTargetVisitor(visitor));

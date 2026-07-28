@@ -21,8 +21,6 @@ import static com.google.inject.internal.Annotations.getKey;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.inject.ConfigurationException;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -40,6 +38,8 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -267,7 +267,7 @@ public class FactoryProvider<F> implements Provider<F>, HasDependencies {
 
   private static Map<Method, AssistedConstructor<?>> createMethodMapping(
       TypeLiteral<?> factoryType, TypeLiteral<?> implementationType) {
-    List<AssistedConstructor<?>> constructors = Lists.newArrayList();
+    List<AssistedConstructor<?>> constructors = new ArrayList<>();
 
     for (Constructor<?> constructor : implementationType.getRawType().getDeclaredConstructors()) {
       if (constructor.isAnnotationPresent(AssistedInject.class)) {
@@ -291,7 +291,7 @@ public class FactoryProvider<F> implements Provider<F>, HasDependencies {
           implementationType, constructors.size(), factoryType, factoryMethods.length);
     }
 
-    Map<ParameterListKey, AssistedConstructor<?>> paramsToConstructor = Maps.newHashMap();
+    Map<ParameterListKey, AssistedConstructor<?>> paramsToConstructor = new HashMap<>();
 
     for (AssistedConstructor<?> c : constructors) {
       if (paramsToConstructor.containsKey(c.getAssistedParameters())) {
@@ -300,14 +300,14 @@ public class FactoryProvider<F> implements Provider<F>, HasDependencies {
       paramsToConstructor.put(c.getAssistedParameters(), c);
     }
 
-    Map<Method, AssistedConstructor<?>> result = Maps.newHashMap();
+    Map<Method, AssistedConstructor<?>> result = new HashMap<>();
     for (Method method : factoryMethods) {
       if (!method.getReturnType().isAssignableFrom(implementationType.getRawType())) {
         throw newConfigurationException(
             "Return type of method %s is not assignable from %s", method, implementationType);
       }
 
-      List<Type> parameterTypes = Lists.newArrayList();
+      List<Type> parameterTypes = new ArrayList<>();
       for (TypeLiteral<?> parameterType : factoryType.getParameterTypes(method)) {
         parameterTypes.add(parameterType.getType());
       }
@@ -342,7 +342,7 @@ public class FactoryProvider<F> implements Provider<F>, HasDependencies {
 
   @Override
   public Set<Dependency<?>> getDependencies() {
-    List<Dependency<?>> dependencies = Lists.newArrayList();
+    List<Dependency<?>> dependencies = new ArrayList<>();
     for (AssistedConstructor<?> constructor : factoryMethodToConstructor.values()) {
       for (Parameter parameter : constructor.getAllParameters()) {
         if (!parameter.isProvidedByFactory()) {

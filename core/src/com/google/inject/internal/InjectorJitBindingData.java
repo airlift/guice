@@ -1,9 +1,9 @@
 package com.google.inject.internal;
 
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.inject.Key;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -15,12 +15,12 @@ import java.util.Set;
  */
 final class InjectorJitBindingData {
   /** Just-in-time binding cache. Guarded by {@link #lock}. */
-  private final Map<Key<?>, BindingImpl<?>> jitBindings = Maps.newHashMap();
+  private final Map<Key<?>, BindingImpl<?>> jitBindings = new HashMap<>();
   /**
    * Cache of Keys that we were unable to create JIT bindings for, so we don't keep trying. Guarded
    * by {@link #lock}.
    */
-  private final Set<Key<?>> failedJitBindings = Sets.newHashSet();
+  private final Set<Key<?>> failedJitBindings = new HashSet<>();
 
   // The set of JIT binding keys that are banned for this particular injector, because a binding
   // already exists in a child injector. Guarded by {@link #lock}.

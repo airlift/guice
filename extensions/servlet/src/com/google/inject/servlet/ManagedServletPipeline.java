@@ -16,16 +16,12 @@
 package com.google.inject.servlet;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Binding;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
-import java.io.IOException;
-import java.util.List;
-import java.util.Set;
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
@@ -34,6 +30,10 @@ import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 /**
  * A wrapping dispatcher for servlets, in much the same way as {@link ManagedFilterPipeline} is for
@@ -64,7 +64,7 @@ class ManagedServletPipeline {
    * preserves insertion order in entry-set iterators.
    */
   private ServletDefinition[] collectServletDefinitions(Injector injector) {
-    List<ServletDefinition> servletDefinitions = Lists.newArrayList();
+    List<ServletDefinition> servletDefinitions = new ArrayList<>();
     for (Binding<ServletDefinition> entry : injector.findBindingsByType(SERVLET_DEFS)) {
       servletDefinitions.add(entry.getProvider().get());
     }

@@ -23,7 +23,6 @@ import static com.google.inject.internal.InternalMethodHandles.castReturnToObjec
 import static java.lang.invoke.MethodType.methodType;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.google.inject.Binder;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -45,6 +44,7 @@ import com.google.inject.spi.ProvisionListenerBinding;
 import com.google.inject.spi.TypeListenerBinding;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
@@ -83,8 +83,8 @@ final class InjectorShell {
   }
 
   static class Builder {
-    private final List<Element> elements = Lists.newArrayList();
-    private final List<Module> modules = Lists.newArrayList();
+    private final List<Element> elements = new ArrayList<>();
+    private final List<Module> modules = new ArrayList<>();
 
     // lazily constructed fields
     private InjectorBindingData bindingData;
@@ -227,7 +227,7 @@ final class InjectorShell {
       new ModuleAnnotatedMethodScannerProcessor(errors).process(injector, elements);
       stopwatch.resetAndLog("Module annotated method scanners creation");
 
-      List<InjectorShell> injectorShells = Lists.newArrayList();
+      List<InjectorShell> injectorShells = new ArrayList<>();
       injectorShells.add(new InjectorShell(elements, injector));
 
       // recursively build child shells

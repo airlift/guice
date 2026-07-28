@@ -18,10 +18,10 @@ package com.google.inject.internal;
 
 import static com.google.inject.internal.BytecodeGen.ENHANCER_BY_GUICE_MARKER;
 
-import com.google.common.collect.Lists;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 import org.aopalliance.intercept.MethodInterceptor;
@@ -108,7 +108,7 @@ final class InterceptorStackCallback implements InvocationHandler {
   private void pruneStacktrace(Throwable throwable) {
     for (Throwable t = throwable; t != null; t = t.getCause()) {
       StackTraceElement[] stackTrace = t.getStackTrace();
-      List<StackTraceElement> pruned = Lists.newArrayList();
+      List<StackTraceElement> pruned = new ArrayList<>();
       for (StackTraceElement element : stackTrace) {
         String className = element.getClassName();
         if (!className.startsWith(InterceptorStackCallback.class.getName())

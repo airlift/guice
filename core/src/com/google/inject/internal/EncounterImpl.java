@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.google.inject.Key;
 import com.google.inject.MembersInjector;
 import com.google.inject.Provider;
@@ -31,6 +30,7 @@ import com.google.inject.spi.InjectionListener;
 import com.google.inject.spi.Message;
 import com.google.inject.spi.TypeEncounter;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.List;
 
 /** @author jessewilson@google.com (Jesse Wilson) */
@@ -64,7 +64,7 @@ final class EncounterImpl<T> implements TypeEncounter<T> {
 
     // make sure the applicable aspects is mutable
     if (aspects == null) {
-      aspects = Lists.newArrayList();
+      aspects = new ArrayList<>();
     }
 
     aspects.add(new MethodAspect(Matchers.any(), methodMatcher, interceptors));
@@ -87,7 +87,7 @@ final class EncounterImpl<T> implements TypeEncounter<T> {
     checkState(valid, "Encounters may not be used after hear() returns.");
 
     if (membersInjectors == null) {
-      membersInjectors = Lists.newArrayList();
+      membersInjectors = new ArrayList<>();
     }
 
     membersInjectors.add(membersInjector);
@@ -98,7 +98,7 @@ final class EncounterImpl<T> implements TypeEncounter<T> {
     checkState(valid, "Encounters may not be used after hear() returns.");
 
     if (injectionListeners == null) {
-      injectionListeners = Lists.newArrayList();
+      injectionListeners = new ArrayList<>();
     }
 
     injectionListeners.add(injectionListener);

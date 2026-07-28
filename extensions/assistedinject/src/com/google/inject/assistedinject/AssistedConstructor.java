@@ -16,7 +16,6 @@
 
 package com.google.inject.assistedinject;
 
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.TypeLiteral;
 import java.lang.annotation.Annotation;
@@ -51,7 +50,7 @@ class AssistedConstructor<T> {
 
     Annotation[][] annotations = constructor.getParameterAnnotations();
 
-    List<Type> typeList = Lists.newArrayList();
+    List<Type> typeList = new ArrayList<>();
     allParameters = new ArrayList<>();
 
     // categorize params as @Assisted or @Injected

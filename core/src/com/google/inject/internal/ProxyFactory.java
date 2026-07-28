@@ -21,7 +21,6 @@ import static java.lang.invoke.MethodType.methodType;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.inject.spi.InjectionPoint;
 import java.lang.invoke.MethodHandle;
@@ -30,6 +29,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
 import java.util.function.BiFunction;
@@ -61,7 +61,7 @@ final class ProxyFactory<T> implements ConstructionProxyFactory<T> {
     Class<?> hostClass = injectionPoint.getMember().getDeclaringClass();
 
     // Find applicable aspects. Bow out if none are applicable to this class.
-    List<MethodAspect> applicableAspects = Lists.newArrayList();
+    List<MethodAspect> applicableAspects = new ArrayList<>();
     for (MethodAspect methodAspect : methodAspects) {
       if (methodAspect.matches(hostClass)) {
         applicableAspects.add(methodAspect);

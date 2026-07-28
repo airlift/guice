@@ -21,7 +21,6 @@ import com.google.common.base.Equivalence;
 import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Maps;
 import com.google.inject.Key;
 import com.google.inject.internal.util.Classes;
 import com.google.inject.spi.ElementSource;
@@ -31,6 +30,7 @@ import java.lang.reflect.Member;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Formatter;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -76,7 +76,7 @@ public final class Messages {
     List<ErrorDetail<?>> remainingErrors =
         errorMessages.stream().map(Message::getErrorDetail).collect(Collectors.toList());
 
-    Map<Equivalence.Wrapper<Throwable>, Integer> causes = Maps.newHashMap();
+    Map<Equivalence.Wrapper<Throwable>, Integer> causes = new HashMap<>();
     while (!remainingErrors.isEmpty()) {
       ErrorDetail<?> currentError = remainingErrors.get(0);
       // Split the remaining errors into 2 groups, one that contains mergeable errors with

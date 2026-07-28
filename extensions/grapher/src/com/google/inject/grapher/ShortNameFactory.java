@@ -17,7 +17,6 @@
 package com.google.inject.grapher;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
 import com.google.inject.internal.Annotations;
@@ -28,6 +27,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -123,7 +123,7 @@ public class ShortNameFactory implements NameFactory {
   }
 
   protected String getMethodString(Method method) {
-    List<String> paramStrings = Lists.newArrayList();
+    List<String> paramStrings = new ArrayList<>();
     for (Class<?> paramType : method.getParameterTypes()) {
       paramStrings.add(paramType.getSimpleName());
     }

@@ -19,13 +19,13 @@ package com.google.inject.internal.util;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -50,7 +50,7 @@ final class LineNumbers {
   private static final int ASM_API_LEVEL = Opcodes.ASM9;
 
   private final Class<?> type;
-  private final Map<String, Integer> lines = Maps.newHashMap();
+  private final Map<String, Integer> lines = new HashMap<>();
   private String source;
   private int firstLine = Integer.MAX_VALUE;
 
