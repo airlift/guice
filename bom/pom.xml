@@ -35,11 +35,6 @@
       </dependency>
       <dependency>
         <groupId>com.google.inject.extensions</groupId>
-        <artifactId>guice-dagger-adapter</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.inject.extensions</groupId>
         <artifactId>guice-grapher</artifactId>
         <version>${project.version}</version>
       </dependency>
@@ -50,31 +45,9 @@
       </dependency>
       <dependency>
         <groupId>com.google.inject.extensions</groupId>
-        <artifactId>guice-jndi</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.inject.extensions</groupId>
-        <artifactId>guice-persist</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.google.inject.extensions</groupId>
         <artifactId>guice-servlet</artifactId>
         <version>${project.version}</version>
       </dependency>
-      <dependency>
-        <groupId>com.google.inject.extensions</groupId>
-        <artifactId>guice-spring</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <!-- struts2 doesn't support jakarta.servlet yet, so we don't include it.
-      <dependency>
-        <groupId>com.google.inject.extensions</groupId>
-        <artifactId>guice-struts2</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      -->
       <dependency>
         <groupId>com.google.inject.extensions</groupId>
         <artifactId>guice-testlib</artifactId>

@@ -17,12 +17,6 @@ See the Apache License Version 2.0 for the specific language governing permissio
 
   <modelVersion>4.0.0</modelVersion>
 
-  <parent>
-    <groupId>com.google</groupId>
-    <artifactId>google</artifactId>
-    <version>5</version>
-  </parent>
-
   <packaging>pom</packaging>
 
   <groupId>com.google.inject</groupId>
@@ -76,18 +70,6 @@ See the Apache License Version 2.0 for the specific language governing permissio
       <distribution>repo</distribution>
     </license>
   </licenses>
-
-  <distributionManagement>
-    <!-- override the parent's directory to point to the canonical place, and use https. -->
-    <repository>
-      <id>google-releases</id>
-      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-    </repository>
-    <snapshotRepository>
-      <id>google-snapshots</id>
-      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-    </snapshotRepository>
-  </distributionManagement>
 
   <modules>
     <module>bom</module>
@@ -398,9 +380,6 @@ See the Apache License Version 2.0 for the specific language governing permissio
                 <title>AssistedInject Extension</title>
                 <packages>com.google.inject.assistedinject</packages>
               </group>
-              <group><title>Dagger Adapter</title>
-                <packages>com.google.inject.daggeradapter</packages>
-              </group>
               <group><title>ThrowingProviders Extension</title>
                 <packages>com.google.inject.throwingproviders</packages>
               </group>
@@ -409,20 +388,6 @@ See the Apache License Version 2.0 for the specific language governing permissio
               </group>
               <group><title>Grapher Extension</title>
                 <packages>com.google.inject.grapher:com.google.inject.grapher.*</packages>
-              </group>
-              <group><title>Persist Extension</title>
-                <packages>com.google.inject.persist:com.google.inject.persist.*</packages>
-              </group>
-              <group><title>Spring Extension</title>
-                <packages>com.google.inject.spring</packages>
-              </group>
-              <!-- struts2 doesn't support jakarta.servlet yet, so we can't release it
-              <group><title>Struts2 Extension</title>
-                <packages>com.google.inject.struts2</packages>
-              </group>
-              -->
-              <group><title>JNDI Extension</title>
-                <packages>com.google.inject.jndi</packages>
               </group>
               <group><title>JMX Extension</title>
                 <packages>com.google.inject.tools.jmx</packages>

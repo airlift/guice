@@ -47,8 +47,8 @@ Guice Extension (Maven)
 ```xml
 <dependency>
   <groupId>com.google.inject.extensions</groupId>
-  <!-- {extension-name} can be one of: assistedinject, dagger-adapter,
-       grapher, jmx, jndi, persist, spring, testlib or throwingproviders -->
+  <!-- {extension-name} can be one of: assistedinject, grapher, jmx,
+       servlet, testlib or throwingproviders -->
   <artifactId>guice-{extension-name}</artifactId>
   <!-- {version} must match the guice core version. -->
   <version>{version}</version>
