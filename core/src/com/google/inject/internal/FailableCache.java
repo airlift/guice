@@ -16,87 +16,122 @@
 
 package com.google.inject.internal;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 
 import java.util.Map;
-import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Lazily creates (and caches) values for keys. If creating the value fails (with errors), an
- * exception is thrown on retrieval.
+ * exception is thrown on retrieval, and the failure is cached just like a success would be.
+ *
+ * <p>This sits on the injector-creation hot path: one instance backs the constructor-injector
+ * store and another the members-injector store, and every binding of every injector misses both
+ * exactly once. It is a plain ConcurrentHashMap with an in-flight marker per computing key, which
+ * keeps the compute-once guarantee without Guava's segment locks or its per-load bookkeeping
+ * allocations. Loads may recurse through the cache for other keys, as constructor injectors do for
+ * their dependencies; only re-entering the same key on the same thread is broken, exactly as it
+ * was with the previous LoadingCache.
  *
  * @author jessewilson@google.com (Jesse Wilson)
  */
 public abstract class FailableCache<K, V>
 {
-    private final Set<K> loadingSet = ConcurrentHashMap.newKeySet();
+    /**
+     * Marks a key whose value is being computed; other threads wait on {@link #result}.
+     */
+    private static final class InFlight
+    {
+        final Thread owner = Thread.currentThread();
+        final CompletableFuture<Object> result = new CompletableFuture<>();
+    }
 
-    private final LoadingCache<K, Object> delegate =
-            CacheBuilder.newBuilder()
-                    .build(
-                            new CacheLoader<K, Object>()
-                            {
-                                @Override
-                                public Object load(K key)
-                                {
-                                    loadingSet.add(key);
-                                    Errors errors = new Errors();
-                                    V result = null;
-                                    try {
-                                        result = FailableCache.this.create(key, errors);
-                                    }
-                                    catch (ErrorsException e) {
-                                        errors.merge(e.getErrors());
-                                    }
-                                    finally {
-                                        loadingSet.remove(key);
-                                    }
-                                    return errors.hasErrors() ? errors : result;
-                                }
-                            });
+    private final ConcurrentHashMap<K, Object> map = new ConcurrentHashMap<>();
 
     protected abstract V create(K key, Errors errors) throws ErrorsException;
 
     public V get(K key, Errors errors)
             throws ErrorsException
     {
-        Object resultOrError = delegate.getUnchecked(key);
-        if (resultOrError instanceof Errors) {
-            errors.merge((Errors) resultOrError);
+        Object value = map.get(key);
+        if (value == null) {
+            InFlight inFlight = new InFlight();
+            Object race = map.putIfAbsent(key, inFlight);
+            if (race == null) {
+                value = load(key, inFlight);
+            }
+            else {
+                value = race;
+            }
+        }
+        if (value instanceof InFlight otherInFlight) {
+            if (otherInFlight.owner == Thread.currentThread()) {
+                throw new IllegalStateException("Recursive load of " + key);
+            }
+            value = otherInFlight.result.join();
+        }
+        if (value instanceof Errors cachedErrors) {
+            errors.merge(cachedErrors);
             throw errors.toException();
         }
-        else {
-            @SuppressWarnings("unchecked") // create returned a non-error result, so this is safe
-            V result = (V) resultOrError;
-            return result;
+        @SuppressWarnings("unchecked") // create returned a non-error result, so this is safe
+        V result = (V) value;
+        return result;
+    }
+
+    private Object load(K key, InFlight inFlight)
+    {
+        Object computed = null;
+        try {
+            Errors loadErrors = new Errors();
+            V created = null;
+            try {
+                created = create(key, loadErrors);
+            }
+            catch (ErrorsException e) {
+                loadErrors.merge(e.getErrors());
+            }
+            computed = loadErrors.hasErrors() ? loadErrors : created;
+            return computed;
+        }
+        finally {
+            if (computed != null) {
+                map.put(key, computed);
+                inFlight.result.complete(computed);
+            }
+            else {
+                // create threw an unchecked exception; drop the entry so waiters fail rather than
+                // hang, and a later get can retry, matching the previous LoadingCache behaviour
+                map.remove(key, inFlight);
+                inFlight.result.completeExceptionally(
+                        new IllegalStateException("Creation failed for " + key));
+            }
         }
     }
 
     boolean remove(K key)
     {
-        return delegate.asMap().remove(key) != null;
+        Object value = map.get(key);
+        return !(value instanceof InFlight) && value != null && map.remove(key, value);
     }
 
     boolean isLoading(K key)
     {
-        return loadingSet.contains(key);
+        return map.get(key) instanceof InFlight;
     }
 
     Map<K, V> asMap()
     {
-        return Maps.transformValues(
-                Maps.filterValues(
-                        ImmutableMap.copyOf(delegate.asMap()),
-                        resultOrError -> !(resultOrError instanceof Errors)),
-                resultOrError -> {
-                    @SuppressWarnings("unchecked") // create returned a non-error result, so this is safe
-                    V result = (V) resultOrError;
-                    return result;
-                });
+        ImmutableMap.Builder<K, V> builder = ImmutableMap.builder();
+        for (Map.Entry<K, Object> entry : map.entrySet()) {
+            Object value = entry.getValue();
+            if (!(value instanceof InFlight) && !(value instanceof Errors)) {
+                @SuppressWarnings("unchecked") // create returned a non-error result, so this is safe
+                V result = (V) value;
+                builder.put(entry.getKey(), result);
+            }
+        }
+        return builder.buildKeepingLast();
     }
 }
