@@ -134,7 +134,7 @@ public final class ServletScopes {
 
         @Override
         public String toString() {
-          return "%s[%s]".formatted(creator, REQUEST);
+          return String.format("%s[%s]", creator, REQUEST);
         }
       };
     }
@@ -175,7 +175,7 @@ public final class ServletScopes {
 
         @Override
         public String toString() {
-          return "%s[%s]".formatted(creator, SESSION);
+          return String.format("%s[%s]", creator, SESSION);
         }
       };
     }

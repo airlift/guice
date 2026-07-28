@@ -16,8 +16,7 @@
 
 package com.google.inject.spi;
 
-
-import static java.util.Objects.requireNonNull;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.inject.Binder;
 import com.google.inject.Inject;
@@ -32,7 +31,7 @@ public final class RequireAtInjectOnConstructorsOption implements Element {
   private final Object source;
 
   RequireAtInjectOnConstructorsOption(Object source) {
-    this.source = requireNonNull(source, "source");
+    this.source = checkNotNull(source, "source");
   }
 
   @Override

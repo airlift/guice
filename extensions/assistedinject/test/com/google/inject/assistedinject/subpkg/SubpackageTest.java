@@ -1,11 +1,11 @@
 package com.google.inject.assistedinject.subpkg;
 
-import static com.google.common.collect.MoreCollectors.onlyElement;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.google.common.base.StandardSystemProperty;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.AbstractModule;
 import com.google.inject.CreationException;
@@ -140,10 +140,10 @@ public final class SubpackageTest {
             });
         fail("Expected CreationException");
       } catch (CreationException ce) {
-        assertThat(ce.getErrorMessages().stream().collect(onlyElement()).getMessage())
+        assertThat(Iterables.getOnlyElement(ce.getErrorMessages()).getMessage())
             .contains("Please call FactoryModuleBuilder.withLookups");
       }
-      LogRecord record = logRecords.stream().collect(onlyElement());
+      LogRecord record = Iterables.getOnlyElement(logRecords);
       assertThat(record.getMessage()).contains("Please pass a `MethodHandles.lookup()`");
     } else {
       // 1.8 & below will succeed, because that's the only way they can work.
@@ -156,7 +156,7 @@ public final class SubpackageTest {
                       new FactoryModuleBuilder().build(ConcreteAssistedWithOverride.Factory.class));
                 }
               });
-      LogRecord record = logRecords.stream().collect(onlyElement());
+      LogRecord record = Iterables.getOnlyElement(logRecords);
       assertThat(record.getMessage()).contains("Please pass a `MethodHandles.lookup()`");
 
       ConcreteAssistedWithOverride.Factory factory =
@@ -180,7 +180,7 @@ public final class SubpackageTest {
                     new FactoryModuleBuilder().build(ConcreteAssistedWithOverride.Factory.class));
               }
             });
-    LogRecord record = logRecords.stream().collect(onlyElement());
+    LogRecord record = Iterables.getOnlyElement(logRecords);
     assertThat(record.getMessage()).contains("Please pass a `MethodHandles.lookup()`");
 
     ConcreteAssistedWithOverride.Factory factory =

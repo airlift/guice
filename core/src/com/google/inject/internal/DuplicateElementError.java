@@ -29,7 +29,7 @@ final class DuplicateElementError<T> extends InternalErrorDetail<DuplicateElemen
       Key<Set<T>> setKey, ImmutableMultimap<T, Element<T>> elements, List<Object> sources) {
     super(
         ErrorId.DUPLICATE_ELEMENT,
-        "Duplicate elements found in Multibinder %s.".formatted(Messages.convert(setKey)),
+        String.format("Duplicate elements found in Multibinder %s.", Messages.convert(setKey)),
         sources,
         null);
     this.setKey = setKey;

@@ -16,7 +16,6 @@
 
 package com.google.inject.internal;
 
-import static com.google.common.collect.MoreCollectors.onlyElement;
 import static java.util.Comparator.comparing;
 
 import com.google.common.base.Joiner;
@@ -24,6 +23,7 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 import java.util.ArrayList;
@@ -244,7 +244,7 @@ final class PackageNameCompressor {
         : shortNameToPartsMap.asMap().entrySet()) {
       replacementMap.put(
           entry.getKey(),
-          PACKAGE_JOINER.join(entry.getValue().stream().collect(onlyElement())) + "." + entry.getKey());
+          PACKAGE_JOINER.join(Iterables.getOnlyElement(entry.getValue())) + "." + entry.getKey());
     }
     return replacementMap;
   }

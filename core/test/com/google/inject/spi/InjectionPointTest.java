@@ -16,7 +16,7 @@
 
 package com.google.inject.spi;
 
-import static com.google.common.collect.MoreCollectors.onlyElement;
+import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.inject.Asserts.assertContains;
 import static com.google.inject.Asserts.assertEqualsBothWays;
@@ -74,7 +74,7 @@ public class InjectionPointTest {
     assertEqualsBothWays(injectionPoint, new InjectionPoint(typeLiteral, fooField, false));
     assertNotSerializable(injectionPoint);
 
-    Dependency<?> dependency = injectionPoint.getDependencies().stream().collect(onlyElement());
+    Dependency<?> dependency = getOnlyElement(injectionPoint.getDependencies());
     assertEquals(
         "Key[type=java.lang.String, annotation="
             + named("a")
@@ -89,7 +89,7 @@ public class InjectionPointTest {
     assertNotSerializable(dependency);
     assertEqualsBothWays(
         dependency,
-        new InjectionPoint(typeLiteral, fooField, false).getDependencies().stream().collect(onlyElement()));
+        getOnlyElement(new InjectionPoint(typeLiteral, fooField, false).getDependencies()));
   }
 
   @Test
@@ -104,7 +104,7 @@ public class InjectionPointTest {
     assertEqualsBothWays(injectionPoint, new InjectionPoint(typeLiteral, barMethod, false));
     assertNotSerializable(injectionPoint);
 
-    Dependency<?> dependency = injectionPoint.getDependencies().stream().collect(onlyElement());
+    Dependency<?> dependency = getOnlyElement(injectionPoint.getDependencies());
     assertEquals(
         "Key[type=java.lang.String, annotation="
             + named("b")
@@ -119,7 +119,7 @@ public class InjectionPointTest {
     assertNotSerializable(dependency);
     assertEqualsBothWays(
         dependency,
-        new InjectionPoint(typeLiteral, barMethod, false).getDependencies().stream().collect(onlyElement()));
+        getOnlyElement(new InjectionPoint(typeLiteral, barMethod, false).getDependencies()));
   }
 
   @Test
@@ -135,7 +135,7 @@ public class InjectionPointTest {
     assertEqualsBothWays(injectionPoint, new InjectionPoint(typeLiteral, constructor));
     assertNotSerializable(injectionPoint);
 
-    Dependency<?> dependency = injectionPoint.getDependencies().stream().collect(onlyElement());
+    Dependency<?> dependency = getOnlyElement(injectionPoint.getDependencies());
     assertEquals(
         "Key[type=java.lang.String, annotation="
             + named("c")
@@ -149,7 +149,7 @@ public class InjectionPointTest {
     assertFalse(dependency.isNullable());
     assertNotSerializable(dependency);
     assertEqualsBothWays(
-        dependency, new InjectionPoint(typeLiteral, constructor).getDependencies().stream().collect(onlyElement()));
+        dependency, getOnlyElement(new InjectionPoint(typeLiteral, constructor).getDependencies()));
   }
 
   @Test
@@ -351,10 +351,10 @@ public class InjectionPointTest {
 
     InjectionPoint constructor = InjectionPoint.forConstructorOf(type);
     assertEquals(
-        new Key<Map<String, String>>() {}, constructor.getDependencies().stream().collect(onlyElement()).getKey());
+        new Key<Map<String, String>>() {}, getOnlyElement(constructor.getDependencies()).getKey());
 
-    InjectionPoint field = InjectionPoint.forInstanceMethodsAndFields(type).stream().collect(onlyElement());
-    assertEquals(new Key<Set<String>>() {}, field.getDependencies().stream().collect(onlyElement()).getKey());
+    InjectionPoint field = getOnlyElement(InjectionPoint.forInstanceMethodsAndFields(type));
+    assertEquals(new Key<Set<String>>() {}, getOnlyElement(field.getDependencies()).getKey());
   }
 
   static class ParameterizedInjections<T> {

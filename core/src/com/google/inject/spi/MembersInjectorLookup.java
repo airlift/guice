@@ -16,8 +16,8 @@
 
 package com.google.inject.spi;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static java.util.Objects.requireNonNull;
 
 import com.google.inject.Binder;
 import com.google.inject.ConfigurationException;
@@ -44,8 +44,8 @@ public final class MembersInjectorLookup<T> implements Element {
   private MembersInjector<T> delegate;
 
   public MembersInjectorLookup(Object source, TypeLiteral<T> type) {
-    this.source = requireNonNull(source, "source");
-    this.type = requireNonNull(type, "type");
+    this.source = checkNotNull(source, "source");
+    this.type = checkNotNull(type, "type");
   }
 
   @Override
@@ -70,7 +70,7 @@ public final class MembersInjectorLookup<T> implements Element {
    */
   public void initializeDelegate(MembersInjector<T> delegate) {
     checkState(this.delegate == null, "delegate already initialized");
-    this.delegate = requireNonNull(delegate, "delegate");
+    this.delegate = checkNotNull(delegate, "delegate");
   }
 
   @Override

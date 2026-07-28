@@ -223,9 +223,10 @@ public final class BoundFieldModule implements Module {
           throw new BoundFieldException(
               new Message(
                   field,
-                  ("Requested binding type \"%s\" is not assignable "
-                       + "from field binding type \"%s\"")
-                      .formatted(boundRawType.getName(), naturalRawType.getName())));
+                  String.format(
+                      "Requested binding type \"%s\" is not assignable "
+                          + "from field binding type \"%s\"",
+                      boundRawType.getName(), naturalRawType.getName())));
         }
       }
     }

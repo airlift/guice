@@ -16,8 +16,7 @@
 
 package com.google.inject.internal;
 
-
-import static java.util.Objects.requireNonNull;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Binder;
@@ -71,7 +70,7 @@ public class BindingBuilder<T> extends AbstractBindingBuilder<T>
 
   @Override
   public BindingBuilder<T> to(Key<? extends T> linkedKey) {
-    requireNonNull(linkedKey, "linkedKey");
+    checkNotNull(linkedKey, "linkedKey");
     checkNotTargetted();
     BindingImpl<T> base = getBinding();
     setBinding(
@@ -110,7 +109,7 @@ public class BindingBuilder<T> extends AbstractBindingBuilder<T>
 
   @Override
   public BindingBuilder<T> toProvider(jakarta.inject.Provider<? extends T> provider) {
-    requireNonNull(provider, "provider");
+    checkNotNull(provider, "provider");
     checkNotTargetted();
 
     // lookup the injection points, adding any errors to the binder's errors list
@@ -144,7 +143,7 @@ public class BindingBuilder<T> extends AbstractBindingBuilder<T>
   @Override
   public BindingBuilder<T> toProvider(
       Key<? extends jakarta.inject.Provider<? extends T>> providerKey) {
-    requireNonNull(providerKey, "providerKey");
+    checkNotNull(providerKey, "providerKey");
     checkNotTargetted();
 
     BindingImpl<T> base = getBinding();
@@ -162,8 +161,8 @@ public class BindingBuilder<T> extends AbstractBindingBuilder<T>
   @Override
   public <S extends T> ScopedBindingBuilder toConstructor(
       Constructor<S> constructor, TypeLiteral<? extends S> type) {
-    requireNonNull(constructor, "constructor");
-    requireNonNull(type, "type");
+    checkNotNull(constructor, "constructor");
+    checkNotNull(type, "type");
     checkNotTargetted();
 
     BindingImpl<T> base = getBinding();

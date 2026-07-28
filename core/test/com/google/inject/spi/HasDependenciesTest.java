@@ -17,6 +17,7 @@
 package com.google.inject.spi;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -24,7 +25,6 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Provider;
 import java.util.Set;
-import static com.google.common.collect.MoreCollectors.onlyElement;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
 
@@ -61,7 +61,7 @@ public class HasDependenciesTest {
             });
 
     InstanceBinding<?> binding = (InstanceBinding<?>) injector.getBinding(A.class);
-    Dependency<?> onlyDependency = binding.getDependencies().stream().collect(onlyElement());
+    Dependency<?> onlyDependency = Iterables.getOnlyElement(binding.getDependencies());
     assertEquals(Key.get(String.class), onlyDependency.getKey());
   }
 
@@ -77,7 +77,7 @@ public class HasDependenciesTest {
             });
 
     ProviderInstanceBinding<?> binding = (ProviderInstanceBinding<?>) injector.getBinding(A.class);
-    Dependency<?> onlyDependency = binding.getDependencies().stream().collect(onlyElement());
+    Dependency<?> onlyDependency = Iterables.getOnlyElement(binding.getDependencies());
     assertEquals(Key.get(String.class), onlyDependency.getKey());
   }
 

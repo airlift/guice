@@ -16,11 +16,11 @@
 
 package com.google.inject.testing.fieldbinder;
 
-import static com.google.common.collect.MoreCollectors.onlyElement;
 import static com.google.inject.Asserts.assertContains;
 import static java.lang.annotation.ElementType.TYPE_USE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+import com.google.common.collect.Iterables;
 import com.google.inject.BindingAnnotation;
 import com.google.inject.ConfigurationException;
 import com.google.inject.CreationException;
@@ -1048,7 +1048,7 @@ public class BoundFieldModuleTest {
     BoundFieldModule module = BoundFieldModule.of(instance);
     Guice.createInjector(module);
 
-    BoundFieldInfo info = module.getBoundFields().stream().collect(onlyElement());
+    BoundFieldInfo info = Iterables.getOnlyElement(module.getBoundFields());
     assertEquals(1, info.getValue());
   }
 
@@ -1062,7 +1062,7 @@ public class BoundFieldModuleTest {
     BoundFieldModule module = BoundFieldModule.of(instance);
     Injector injector = Guice.createInjector(module);
 
-    BoundFieldInfo info = module.getBoundFields().stream().collect(onlyElement());
+    BoundFieldInfo info = Iterables.getOnlyElement(module.getBoundFields());
     String value = "value";
     info.getField().set(instance, value);
 
@@ -1077,7 +1077,7 @@ public class BoundFieldModuleTest {
         };
     BoundFieldModule module = BoundFieldModule.of(instance);
     Guice.createInjector(module);
-    BoundFieldInfo info = module.getBoundFields().stream().collect(onlyElement());
+    BoundFieldInfo info = Iterables.getOnlyElement(module.getBoundFields());
 
     assertEquals(Key.get(String.class, SomeBindingAnnotation.class), info.getBoundKey());
   }
@@ -1092,7 +1092,7 @@ public class BoundFieldModuleTest {
         };
     BoundFieldModule module = BoundFieldModule.of(instance);
     Guice.createInjector(module);
-    BoundFieldInfo info = module.getBoundFields().stream().collect(onlyElement());
+    BoundFieldInfo info = Iterables.getOnlyElement(module.getBoundFields());
 
     assertTrue(info.getBindAnnotation().lazy());
   }

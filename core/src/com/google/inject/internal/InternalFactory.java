@@ -17,7 +17,7 @@
 package com.google.inject.internal;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static java.util.Objects.requireNonNull;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.inject.Provider;
 import com.google.inject.spi.Dependency;
@@ -153,7 +153,7 @@ abstract class InternalFactory<T> {
 
   /** Returns a provider for the object to be injected, handling non-nullable values. */
   static <T> Provider<T> makeProviderFor(T instance, InternalFactory<T> factory) {
-    requireNonNull(instance);
+    checkNotNull(instance);
     return new InstanceProvider<>(instance, factory);
   }
 

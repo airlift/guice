@@ -87,7 +87,7 @@ public final class DuplicateElementErrorTest {
     public String toString() {
       // Return different value for different instance even when they equal to one and other.
       // This is used to test when duplicate elements have different string representation.
-      return "IntWrapper(%s)".formatted(id);
+      return String.format("IntWrapper(%s)", id);
     }
   }
 

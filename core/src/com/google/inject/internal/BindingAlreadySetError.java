@@ -16,7 +16,7 @@ final class BindingAlreadySetError extends InternalErrorDetail<BindingAlreadySet
   BindingAlreadySetError(Binding<?> binding, Binding<?> original, List<Object> sources) {
     super(
         ErrorId.BINDING_ALREADY_SET,
-        "%s was bound multiple times.".formatted(Messages.convert(binding.getKey())),
+        String.format("%s was bound multiple times.", Messages.convert(binding.getKey())),
         sources,
         null);
     this.binding = binding;

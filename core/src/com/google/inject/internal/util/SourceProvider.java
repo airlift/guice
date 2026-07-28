@@ -16,8 +16,7 @@
 
 package com.google.inject.internal.util;
 
-import static java.util.Objects.requireNonNull;
-
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import java.util.ArrayList;
 import java.util.List;
@@ -87,7 +86,7 @@ public final class SourceProvider {
 
   /** Returns the non-skipped module class name. */
   public Object getFromClassNames(List<String> moduleClassNames) {
-    requireNonNull(moduleClassNames, "The list of module class names cannot be null.");
+    Preconditions.checkNotNull(moduleClassNames, "The list of module class names cannot be null.");
     for (final String moduleClassName : moduleClassNames) {
       if (!shouldBeSkipped(moduleClassName)) {
         return new StackTraceElement(moduleClassName, "configure", null, -1);

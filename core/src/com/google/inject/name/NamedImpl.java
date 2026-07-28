@@ -16,8 +16,7 @@
 
 package com.google.inject.name;
 
-
-import static java.util.Objects.requireNonNull;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.inject.internal.Annotations;
 import java.io.Serializable;
@@ -28,7 +27,7 @@ class NamedImpl implements Named, Serializable {
   private final String value;
 
   public NamedImpl(String value) {
-    this.value = requireNonNull(value, "name");
+    this.value = checkNotNull(value, "name");
   }
 
   @Override

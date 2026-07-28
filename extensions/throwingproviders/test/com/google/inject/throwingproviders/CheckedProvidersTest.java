@@ -86,10 +86,10 @@ public final class CheckedProvidersTest {
   public void testUnsupportedMethods_otherMethod_throwsIllegalArgumentException()
       throws NoSuchMethodException {
     String message =
-        "%s may not declare any new methods, but declared %s"
-            .formatted(
-                MoreMethodsCheckedProvider.class.getName(),
-                Arrays.toString(MoreMethodsCheckedProvider.class.getDeclaredMethods()));
+        String.format(
+            "%s may not declare any new methods, but declared %s",
+            MoreMethodsCheckedProvider.class.getName(),
+            Arrays.toString(MoreMethodsCheckedProvider.class.getDeclaredMethods()));
 
     try {
       CheckedProviders.of(
@@ -107,8 +107,9 @@ public final class CheckedProvidersTest {
   @Test
   public void testCheckThrowable_unsupportedThrowableConstructor_throwsIllegalArgumentException() {
     String message =
-        "Thrown exception <%s> must have a no-argument constructor"
-            .formatted(StringException.class.getName());
+        String.format(
+            "Thrown exception <%s> must have a no-argument constructor",
+            StringException.class.getName());
 
     try {
       CheckedProviders.throwing(FooCheckedProvider.class, StringException.class);
@@ -127,8 +128,9 @@ public final class CheckedProvidersTest {
   public void testCheckThrowable_checkedExceptionNotDeclared_throwsIllegalArgumentException()
       throws Exception {
     String message =
-        "Thrown exception <%s> is not declared to be thrown by <%s>"
-            .formatted(BarException.class.getName(), FooCheckedProvider.class.getMethod("get"));
+        String.format(
+            "Thrown exception <%s> is not declared to be thrown by <%s>",
+            BarException.class.getName(), FooCheckedProvider.class.getMethod("get"));
 
     try {
       CheckedProviders.throwing(FooCheckedProvider.class, BarException.class);

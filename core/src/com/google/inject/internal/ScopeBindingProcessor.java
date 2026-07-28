@@ -16,8 +16,7 @@
 
 package com.google.inject.internal;
 
-
-import static java.util.Objects.requireNonNull;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.inject.Scope;
 import com.google.inject.spi.ScopeBinding;
@@ -37,9 +36,9 @@ final class ScopeBindingProcessor extends AbstractProcessor {
 
   @Override
   public Boolean visit(ScopeBinding command) {
-    Scope scope = requireNonNull(command.getScope(), "scope");
+    Scope scope = checkNotNull(command.getScope(), "scope");
     Class<? extends Annotation> annotationType =
-        requireNonNull(command.getAnnotationType(), "annotation type");
+        checkNotNull(command.getAnnotationType(), "annotation type");
 
     if (!Annotations.isScopeAnnotation(annotationType)) {
       errors.missingScopeAnnotation(annotationType);

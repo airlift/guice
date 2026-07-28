@@ -16,9 +16,9 @@
 
 package com.google.inject.internal;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.inject.internal.InternalMethodHandles.castReturnTo;
 import static java.lang.invoke.MethodType.methodType;
-import static java.util.Objects.requireNonNull;
 
 import com.google.errorprone.annotations.Keep;
 import com.google.inject.spi.Dependency;
@@ -39,7 +39,7 @@ abstract class ProviderInternalFactory<T> extends InternalFactory<T> {
 
   ProviderInternalFactory(Class<?> providedRawType, Object source, int circularFactoryId) {
     this.providedRawType = providedRawType;
-    this.source = requireNonNull(source, "source");
+    this.source = checkNotNull(source, "source");
     this.circularFactoryId = circularFactoryId;
   }
 
