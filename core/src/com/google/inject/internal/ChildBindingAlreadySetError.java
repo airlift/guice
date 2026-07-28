@@ -7,7 +7,6 @@ import com.google.inject.spi.ErrorDetail;
 import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Error reported by Guice when a key is already bound in one or more child injectors or private
@@ -31,7 +30,7 @@ final class ChildBindingAlreadySetError extends InternalErrorDetail<ChildBinding
         ImmutableList.copyOf(
             Streams.stream(existingSoruces)
                 .map(source -> source == null ? "" : source)
-                .collect(Collectors.toList()));
+                .toList());
   }
 
   @Override
@@ -60,7 +59,7 @@ final class ChildBindingAlreadySetError extends InternalErrorDetail<ChildBinding
         sourcesList.stream()
             .map(this::trimSource)
             .filter(list -> !list.isEmpty())
-            .collect(Collectors.toList());
+            .toList();
     if (!filteredSources.isEmpty()) {
       formatter.format("\n%s\n", Messages.bold("Requested by:"));
       for (int i = 0; i < sourcesList.size(); i++) {
@@ -79,6 +78,6 @@ final class ChildBindingAlreadySetError extends InternalErrorDetail<ChildBinding
 
   /** Omit the key itself in the source list since the information is redundant. */
   private List<Object> trimSource(List<Object> sources) {
-    return sources.stream().filter(source -> !source.equals(this.key)).collect(Collectors.toList());
+    return sources.stream().filter(source -> !source.equals(this.key)).toList();
   }
 }

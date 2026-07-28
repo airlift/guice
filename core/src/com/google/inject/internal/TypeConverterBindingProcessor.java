@@ -193,7 +193,7 @@ final class TypeConverterBindingProcessor extends AbstractProcessor {
   }
 
   private static String capitalize(String s) {
-    if (s.length() == 0) {
+    if (s.isEmpty()) {
       return s;
     }
     char first = s.charAt(0);

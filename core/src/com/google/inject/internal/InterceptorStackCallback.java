@@ -46,7 +46,7 @@ final class InterceptorStackCallback implements InvocationHandler {
       List<MethodInterceptor> interceptors,
       BiFunction<Object, Object[], Object> superInvoker) {
     this.method = method;
-    this.interceptors = interceptors.toArray(new MethodInterceptor[interceptors.size()]);
+    this.interceptors = interceptors.toArray(MethodInterceptor[]::new);
     this.superInvoker = superInvoker;
   }
 
@@ -117,7 +117,7 @@ final class InterceptorStackCallback implements InvocationHandler {
           pruned.add(element);
         }
       }
-      t.setStackTrace(pruned.toArray(new StackTraceElement[pruned.size()]));
+      t.setStackTrace(pruned.toArray(StackTraceElement[]::new));
     }
   }
 }

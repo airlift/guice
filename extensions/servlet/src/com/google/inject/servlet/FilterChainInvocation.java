@@ -133,7 +133,7 @@ class FilterChainInvocation implements FilterChain {
           pruned.add(element);
         }
       }
-      t.setStackTrace(pruned.toArray(new StackTraceElement[pruned.size()]));
+      t.setStackTrace(pruned.toArray(StackTraceElement[]::new));
     }
   }
 }

@@ -65,7 +65,7 @@ final class EnhancerBuilderImpl implements BytecodeGen.EnhancerBuilder {
       Map<Method, Method> bridgeDelegates) {
 
     this.hostClass = hostClass;
-    this.enhanceableMethods = enhanceableMethods.toArray(new Method[0]);
+    this.enhanceableMethods = enhanceableMethods.toArray(Method[]::new);
     this.bridgeDelegates = ImmutableMap.copyOf(bridgeDelegates);
   }
 

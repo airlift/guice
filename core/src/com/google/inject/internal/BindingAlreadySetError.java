@@ -6,7 +6,6 @@ import com.google.inject.spi.ErrorDetail;
 import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /** Error reported by Guice when a key is bound at multiple places the injector. */
 final class BindingAlreadySetError extends InternalErrorDetail<BindingAlreadySetError> {
@@ -38,7 +37,7 @@ final class BindingAlreadySetError extends InternalErrorDetail<BindingAlreadySet
         mergeableErrors.stream()
             .map(e -> ((BindingAlreadySetError) e).binding.getSource())
             .map(ImmutableList::of)
-            .collect(Collectors.toList()));
+            .toList());
     formatter.format("\n%s\n", Messages.bold("Bound at:"));
     for (int i = 0; i < sourcesList.size(); i++) {
       ErrorFormatter.formatSources(i + 1, sourcesList.get(i), formatter);

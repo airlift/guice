@@ -209,7 +209,7 @@ public final class Elements {
 
     private static final SourceProvider DEFAULT_SOURCE_PROVIDER =
         SourceProvider.DEFAULT_INSTANCE.plusSkippedClasses(
-            CLASSES_TO_SKIP.toArray(new Class<?>[0]));
+            CLASSES_TO_SKIP.toArray(Class<?>[]::new));
 
     private final Stage stage;
     private final Map<Module, ModuleInfo> modules;

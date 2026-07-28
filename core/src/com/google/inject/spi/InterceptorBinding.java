@@ -88,6 +88,6 @@ public final class InterceptorBinding implements Element {
         .bindInterceptor(
             classMatcher,
             methodMatcher,
-            interceptors.toArray(new MethodInterceptor[interceptors.size()]));
+            interceptors.toArray(MethodInterceptor[]::new));
   }
 }

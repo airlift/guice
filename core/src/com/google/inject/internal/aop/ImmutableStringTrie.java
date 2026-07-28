@@ -167,7 +167,7 @@ final class ImmutableStringTrie implements ToIntFunction<String> {
   public static ToIntFunction<String> buildTrie(Collection<String> table) {
     int numRows = table.size();
     if (numRows > 1) {
-      return buildTrie(new StringBuilder(), table.toArray(new String[numRows]), 0, numRows);
+      return buildTrie(new StringBuilder(), table.toArray(String[]::new), 0, numRows);
     }
     return ImmutableStringTrie::singletonTrie;
   }
