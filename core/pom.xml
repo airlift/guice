@@ -124,13 +124,13 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <id>without-bytecode-generation</id>
+                        <id>with-bytecode-generation</id>
                         <goals>
                             <goal>test</goal>
                         </goals>
                         <phase>test</phase>
                         <configuration>
-                            <argLine>-Dguice_bytecode_gen_option=DISABLED</argLine>
+                            <argLine>-Dguice_bytecode_gen_option=ENABLED</argLine>
                         </configuration>
                     </execution>
                     <execution>
