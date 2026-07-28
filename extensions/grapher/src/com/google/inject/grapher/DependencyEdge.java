@@ -16,8 +16,8 @@
 
 package com.google.inject.grapher;
 
-import com.google.common.base.Objects;
 import com.google.inject.spi.InjectionPoint;
+import java.util.Objects;
 
 /**
  * Edge from a class or {@link InjectionPoint} to the interface node that will satisfy the
@@ -47,12 +47,12 @@ public class DependencyEdge extends Edge {
     if (!(obj instanceof DependencyEdge other)) {
       return false;
     }
-    return super.equals(other) && Objects.equal(injectionPoint, other.injectionPoint);
+    return super.equals(other) && Objects.equals(injectionPoint, other.injectionPoint);
   }
 
   @Override
   public int hashCode() {
-    return 31 * super.hashCode() + Objects.hashCode(injectionPoint);
+    return 31 * super.hashCode() + Objects.hash(injectionPoint);
   }
 
   @Override

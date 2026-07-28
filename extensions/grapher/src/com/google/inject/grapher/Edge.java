@@ -16,7 +16,7 @@
 
 package com.google.inject.grapher;
 
-import com.google.common.base.Objects;
+import java.util.Objects;
 
 /**
  * Edge in a guice dependency graph.
@@ -46,12 +46,12 @@ public abstract class Edge {
     if (!(obj instanceof Edge other)) {
       return false;
     }
-    return Objects.equal(fromId, other.fromId) && Objects.equal(toId, other.toId);
+    return Objects.equals(fromId, other.fromId) && Objects.equals(toId, other.toId);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(fromId, toId);
+    return Objects.hash(fromId, toId);
   }
 
   /**

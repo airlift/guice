@@ -9,7 +9,6 @@ import static com.google.inject.util.Types.newParameterizedType;
 import static com.google.inject.util.Types.newParameterizedTypeWithOwner;
 import static java.lang.invoke.MethodType.methodType;
 
-import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
@@ -50,6 +49,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -1337,7 +1337,7 @@ public final class RealMapBinder<K, V> implements Module {
 
     @Override
     public int hashCode() {
-      return Objects.hashCode(key, valueKey);
+      return Objects.hash(key, valueKey);
     }
 
     @Override
