@@ -19,6 +19,7 @@ package com.google.inject.internal.util;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import com.google.common.base.Stopwatch;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.concurrent.NotThreadSafe;
 
@@ -29,7 +30,8 @@ import javax.annotation.concurrent.NotThreadSafe;
  */
 @NotThreadSafe
 public final class ContinuousStopwatch {
-  private final Logger logger = Logger.getLogger(ContinuousStopwatch.class.getName());
+  private static final Logger logger =
+      Logger.getLogger(ContinuousStopwatch.class.getName());
   private final Stopwatch stopwatch;
 
   /**
@@ -50,8 +52,15 @@ public final class ContinuousStopwatch {
     return elapsedTimeMs;
   }
 
-  /** Resets and logs elapsed time in milliseconds. */
+  /**
+   * Resets and logs elapsed time in milliseconds.
+   *
+   * <p>Injector creation calls this about ten times, so the message is only built when it would
+   * actually be logged.
+   */
   public void resetAndLog(String label) {
-    logger.fine(label + ": " + reset() + "ms");
+    if (logger.isLoggable(Level.FINE)) {
+      logger.fine(label + ": " + reset() + "ms");
+    }
   }
 }
