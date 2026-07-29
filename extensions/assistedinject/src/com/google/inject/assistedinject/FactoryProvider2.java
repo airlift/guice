@@ -407,9 +407,12 @@ final class FactoryProvider2<F>
                 // or an Injector), because it caches a single child injector and mutates the Provider
                 // of the arguments in a ScopedValue.
                 if (isValidForOptimizedAssistedInject(deps, implementation.getRawType(), factoryType)) {
+                    // One scoped value carries the whole invocation's argument array; each provider
+                    // reads its own index. One binding per call instead of one per parameter.
+                    ScopedValue<Object[]> assistedArgs = ScopedValue.newInstance();
                     ImmutableList.Builder<ScopedValueProvider> providerListBuilder = ImmutableList.builder();
                     for (int i = 0; i < params.size(); i++) {
-                        providerListBuilder.add(new ScopedValueProvider());
+                        providerListBuilder.add(new ScopedValueProvider(assistedArgs, i));
                     }
                     providers = providerListBuilder.build();
                     optimized = true;
@@ -1021,13 +1024,12 @@ final class FactoryProvider2<F>
             provider = getBindingFromNewInjector(method, args, data).getProvider();
         }
         try {
-            ScopedValue.Carrier carrier = null;
-            int p = 0;
-            for (ScopedValueProvider svp : data.providers) {
-                Object arg = args[p++];
-                carrier = carrier == null ? ScopedValue.where(svp.value, arg) : carrier.where(svp.value, arg);
-            }
-            return carrier == null ? provider.get() : carrier.call(() -> provider.get());
+            List<ScopedValueProvider> providers = data.providers;
+            // The proxy's argument array is bound as-is - factory methods take exactly the
+            // assisted parameters, in order, so provider i reads args[i].
+            return providers.isEmpty()
+                    ? provider.get()
+                    : ScopedValue.where(providers.get(0).args, args).call(() -> provider.get());
         }
         catch (ProvisionException e) {
             // if this is an exception declared by the factory method, throw it as-is
@@ -1083,27 +1085,36 @@ final class FactoryProvider2<F>
     }
 
     /**
-     * Carries one assisted argument of the optimized path, bound for exactly the extent of the
-     * construction instead of set on a ThreadLocal and cleared in a finally block. Behaviour is
-     * unchanged: nested use of the same factory method, the one case where the two mechanisms would
-     * differ, is structurally impossible either way, because the optimized path reuses a single
-     * binding per method and circular-dependency detection rejects the re-entry first.
+     * Serves one assisted argument of the optimized path from the invocation's argument array,
+     * bound for exactly the extent of the construction instead of set on a ThreadLocal and cleared
+     * in a finally block. All providers of a factory method share one scoped value holding the
+     * argument array, so an invocation binds once regardless of arity. Behaviour is unchanged:
+     * nested use of the same factory method, the one case where the mechanisms would differ, is
+     * structurally impossible either way, because the optimized path reuses a single binding per
+     * method and circular-dependency detection rejects the re-entry first.
      */
     // not <T> because we'll never know and this is easier than suppressing warnings.
     private static final class ScopedValueProvider
             implements Provider<Object>
     {
-        final ScopedValue<Object> value = ScopedValue.newInstance();
+        final ScopedValue<Object[]> args;
+        final int index;
+
+        ScopedValueProvider(ScopedValue<Object[]> args, int index)
+        {
+            this.args = args;
+            this.index = index;
+        }
 
         @Override
         public Object get()
         {
-            if (!value.isBound()) {
+            if (!args.isBound()) {
                 throw new IllegalStateException(
                         "Cannot use optimized @Assisted provider outside the scope of the constructor."
                                 + " (This should never happen.  If it does, please report it.)");
             }
-            return value.get();
+            return args.get()[index];
         }
     }
 
