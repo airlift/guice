@@ -392,13 +392,17 @@ public class Annotations
         private final Collection<Class<? extends Annotation>> annotationTypes;
 
         /**
-         * Returns true if the given class has one of the desired annotations.
+         * Whether the annotation type carries one of the desired annotations. A ClassValue rather
+         * than a Guava cache: every binding creation consults this, and the shared cache's
+         * per-segment read bookkeeping contends when injectors are created on many threads.
+         * ClassValue reads are per-Class with no shared state, and entries die with their class
+         * like the weak-keyed cache they replace.
          */
-        private CacheLoader<Class<? extends Annotation>, Boolean> hasAnnotations =
-                new CacheLoader<Class<? extends Annotation>, Boolean>()
+        private final ClassValue<Boolean> cache =
+                new ClassValue<>()
                 {
                     @Override
-                    public Boolean load(Class<? extends Annotation> annotationType)
+                    protected Boolean computeValue(Class<?> annotationType)
                     {
                         for (Annotation annotation : annotationType.getAnnotations()) {
                             if (annotationTypes.contains(annotation.annotationType())) {
@@ -408,9 +412,6 @@ public class Annotations
                         return false;
                     }
                 };
-
-        final LoadingCache<Class<? extends Annotation>, Boolean> cache =
-                CacheBuilder.newBuilder().weakKeys().build(hasAnnotations);
 
         /**
          * Constructs a new checker that looks for annotations of the given types.
@@ -425,7 +426,7 @@ public class Annotations
          */
         boolean hasAnnotations(Class<? extends Annotation> annotated)
         {
-            return cache.getUnchecked(annotated);
+            return cache.get(annotated);
         }
     }
 
