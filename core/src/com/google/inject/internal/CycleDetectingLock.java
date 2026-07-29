@@ -240,11 +240,23 @@ interface CycleDetectingLock<ID>
             }
 
             /**
+             * Runs the internal-consistency checks only when assertions are enabled: they guard
+             * against bugs in this class, not user error, and they run under the global factory
+             * monitor twice per singleton lock and once per unlock. Surefire enables assertions by
+             * default, so every test execution still exercises them.
+             */
+            private static final boolean CHECK_INVARIANTS =
+                    CycleDetectingLock.class.desiredAssertionStatus();
+
+            /**
              * Check consistency of an internal state.
              */
             void checkInvariants()
                     throws IllegalStateException
             {
+                if (!CHECK_INVARIANTS) {
+                    return;
+                }
                 final Thread currentThread = Thread.currentThread();
                 checkState(
                         !lockThreadIsWaitingOn.containsKey(currentThread),
