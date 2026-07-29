@@ -1410,10 +1410,14 @@ final class InjectorImpl
             localContext.set(reference);
         }
         InternalContext ctx = (InternalContext) reference[0];
-        if (ctx == null) {
+        if (ctx == null
+                || (ctx.isIdle()
+                && ctx.areCircularProxiesEnabled() == options.disableCircularProxies)) {
             // Construction depends on the `disableCircularProxies` option which means that every factory
             // that shares the context will also share the same value for `disableCircularProxies`
-            // regardless of the options of the injector that created the factory.
+            // regardless of the options of the injector that created the factory. An idle context
+            // cached from a previous top-level provision is only reusable when its proxy option
+            // matches this injector's; parent and child injectors share the slot and may disagree.
             ctx = InternalContext.create(options.disableCircularProxies, reference);
             reference[0] = ctx;
         }

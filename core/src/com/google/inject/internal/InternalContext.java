@@ -139,6 +139,15 @@ public abstract class InternalContext
     }
 
     /**
+     * True when this is a reusable context cached between top-level provisions rather than one
+     * that is currently in use. Should only be called by InjectorImpl.enterContext().
+     */
+    boolean isIdle()
+    {
+        return enterCount == 0;
+    }
+
+    /**
      * Should be called any any method that received an instance via InjectorImpl.enterContext().
      */
     @Override
@@ -149,9 +158,25 @@ public abstract class InternalContext
             throw new IllegalStateException("Called close() too many times");
         }
         if (newCount == 0) {
-            toClear[0] = null;
+            // A clean context is left in the thread local for the next top-level provision: every
+            // getInstance and factory call otherwise re-allocates the context and its tables. Only
+            // contexts whose tables are empty (all constructions finished - an exception unwind can
+            // leave entries behind) and still at their initial size (bounding what a thread
+            // retains) are kept; anything else is discarded exactly as before.
+            if (isReusable()) {
+                setDependency(null);
+            }
+            else {
+                toClear[0] = null;
+            }
         }
     }
+
+    /**
+     * Returns true if this context holds no in-flight construction state and may be reused for the
+     * next top-level provision on this thread.
+     */
+    abstract boolean isReusable();
 
     /**
      * Returns true if circular proxies are enabled.
@@ -242,6 +267,12 @@ public abstract class InternalContext
         WithoutProxySupport(Object[] toClear)
         {
             super(toClear);
+        }
+
+        @Override
+        boolean isReusable()
+        {
+            return tableSize == 0 && table.length == INITIAL_TABLE_SIZE;
         }
 
         @Override
@@ -443,6 +474,12 @@ public abstract class InternalContext
         WithProxySupport(Object[] toClear)
         {
             super(toClear);
+        }
+
+        @Override
+        boolean isReusable()
+        {
+            return tableSize == 0 && table.length == INITIAL_TABLE_SIZE;
         }
 
         @Override
