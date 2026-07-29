@@ -228,6 +228,18 @@ public final class ProviderMethodsModule
 
     private List<MethodAndAnnotation> getDeclaredProviderAnnotatedMethods(Class<?> c, Binder binder)
     {
+        // The default scanner's result depends only on the class, and modules are re-scanned on
+        // every injector creation, cloning Method arrays and annotation arrays each time. Cache per
+        // class; duplicate-claim errors are part of the cached result and are re-reported to every
+        // binder so repeated creations fail the same way. Custom scanners keep the live path: their
+        // annotation sets are not known to be stable.
+        if (scanner == ProvidesMethodScanner.INSTANCE) {
+            DefaultScan scan = DEFAULT_SCAN.get(c);
+            for (Method method : scan.duplicateClaims) {
+                addDuplicateClaimError(binder, method);
+            }
+            return scan.methods;
+        }
         List<MethodAndAnnotation> result = new ArrayList<>();
         for (Method method : c.getDeclaredMethods()) {
             Annotation annotation = getAnnotation(binder, method);
@@ -238,6 +250,62 @@ public final class ProviderMethodsModule
         result.sort(METHOD_AND_ANNOTATION_COMPARATOR);
         return result;
     }
+
+    private void addDuplicateClaimError(Binder binder, Method method)
+    {
+        binder.addError(
+                "More than one annotation claimed by %s on method %s."
+                        + " Methods can only have one annotation claimed per scanner.",
+                scanner,
+                method);
+    }
+
+    private static final class DefaultScan
+    {
+        final ImmutableList<MethodAndAnnotation> methods;
+        final ImmutableList<Method> duplicateClaims;
+
+        DefaultScan(ImmutableList<MethodAndAnnotation> methods, ImmutableList<Method> duplicateClaims)
+        {
+            this.methods = methods;
+            this.duplicateClaims = duplicateClaims;
+        }
+    }
+
+    private static final ClassValue<DefaultScan> DEFAULT_SCAN =
+            new ClassValue<>()
+            {
+                @Override
+                protected DefaultScan computeValue(Class<?> c)
+                {
+                    List<MethodAndAnnotation> methods = new ArrayList<>();
+                    ImmutableList.Builder<Method> duplicates = ImmutableList.builder();
+                    for (Method method : c.getDeclaredMethods()) {
+                        if (method.isBridge() || method.isSynthetic()) {
+                            continue;
+                        }
+                        Annotation annotation = null;
+                        boolean duplicate = false;
+                        for (Class<? extends Annotation> annotationClass :
+                                ProvidesMethodScanner.INSTANCE.annotationClasses()) {
+                            Annotation found = method.getAnnotation(annotationClass);
+                            if (found != null) {
+                                if (annotation != null) {
+                                    duplicates.add(method);
+                                    duplicate = true;
+                                    break;
+                                }
+                                annotation = found;
+                            }
+                        }
+                        if (!duplicate && annotation != null) {
+                            methods.add(new MethodAndAnnotation(method, annotation));
+                        }
+                    }
+                    methods.sort(METHOD_AND_ANNOTATION_COMPARATOR);
+                    return new DefaultScan(ImmutableList.copyOf(methods), duplicates.build());
+                }
+            };
 
     private static class MethodAndAnnotation
     {
