@@ -791,10 +791,16 @@ public final class RealMultibinder<T>
 
         private boolean keyMatches(Key<?> key)
         {
-            return key.getTypeLiteral().equals(elementType)
-                    && key.getAnnotation() instanceof Element
-                    && ((Element) key.getAnnotation()).setName().equals(getSetName())
-                    && ((Element) key.getAnnotation()).type() == MULTIBINDER;
+            // Annotation checks first: candidates from the initialize scan already share the
+            // element type (findBindingsByType filtered by it), so the TypeLiteral comparison -
+            // a deep walk for parameterized types like MapBinder's entry type - discriminates
+            // nothing there and only needs to run for full matches. Several binders with the same
+            // element type each scan all of that type's bindings, so the per-candidate filter is
+            // what keeps that scan cheap.
+            return key.getAnnotation() instanceof Element element
+                    && element.setName().equals(getSetName())
+                    && element.type() == MULTIBINDER
+                    && key.getTypeLiteral().equals(elementType);
         }
 
         @Override
