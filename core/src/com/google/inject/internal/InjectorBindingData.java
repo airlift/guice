@@ -16,8 +16,8 @@
 
 package com.google.inject.internal;
 
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ListMultimap;
 import com.google.inject.Binding;
@@ -72,9 +72,11 @@ class InjectorBindingData
     private final List<TypeListenerBinding> typeListenerBindings = new ArrayList<>();
     private final List<ProvisionListenerBinding> provisionListenerBindings = new ArrayList<>();
     private final List<ModuleAnnotatedMethodScannerBinding> scannerBindings = new ArrayList<>();
-    // The injector's explicit bindings, indexed by the binding's type.
-    private final ListMultimap<TypeLiteral<?>, Binding<?>> indexedExplicitBindings =
-            ArrayListMultimap.create();
+    // The injector's explicit bindings, indexed by the binding's type. Built lazily on first use:
+    // only multibinders, the servlet pipelines, and the public findBindingsByType API consult it,
+    // and all of them run after the explicit-binding set is final, so most injectors never pay for
+    // indexing every binding. Benign race: concurrent first calls build identical immutable maps.
+    private volatile ImmutableListMultimap<TypeLiteral<?>, Binding<?>> indexedExplicitBindings;
 
     InjectorBindingData(Optional<InjectorBindingData> parent)
     {
@@ -290,19 +292,18 @@ class InjectorBindingData
         return builder.buildOrThrow();
     }
 
-    /**
-     * Once the injector's explicit bindings are finalized, this method is called to index all
-     * explicit bindings by their return type.
-     */
-    void indexBindingsByType()
-    {
-        for (Binding<?> binding : getExplicitBindingsThisLevel().values()) {
-            indexedExplicitBindings.put(binding.getKey().getTypeLiteral(), binding);
-        }
-    }
-
     public ListMultimap<TypeLiteral<?>, Binding<?>> getIndexedExplicitBindings()
     {
-        return indexedExplicitBindings;
+        ImmutableListMultimap<TypeLiteral<?>, Binding<?>> index = indexedExplicitBindings;
+        if (index == null) {
+            ImmutableListMultimap.Builder<TypeLiteral<?>, Binding<?>> builder =
+                    ImmutableListMultimap.builder();
+            for (Binding<?> binding : getExplicitBindingsThisLevel().values()) {
+                builder.put(binding.getKey().getTypeLiteral(), binding);
+            }
+            index = builder.build();
+            indexedExplicitBindings = index;
+        }
+        return index;
     }
 }
