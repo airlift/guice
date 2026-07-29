@@ -173,6 +173,25 @@ interface CycleDetectingLock<ID>
             public ListMultimap<Thread, ID> lockOrDetectPotentialLocksCycle()
             {
                 final Thread currentThread = Thread.currentThread();
+                // Fast path: an uncontended (or reentrant) acquisition cannot create a lock cycle -
+                // nobody else owns the lock, so no thread can be waiting on us through it. Skip the
+                // waiting-mark and cycle walk, and take the global monitor once for ownership
+                // bookkeeping instead of twice. Threads that fail the tryLock are genuinely
+                // contended and take the slow path below, so cycle detection sees every waiter.
+                // The window in which the underlying lock is held but lockOwnerState is not yet
+                // published is identical to the one the slow path always had between acquiring the
+                // lock and entering its second synchronized block.
+                if (lockImplementation.tryLock()) {
+                    synchronized (CycleDetectingLockFactory.class) {
+                        checkInvariants();
+                        ThreadState current = THREAD_STATE.get();
+                        lockOwnerState = current;
+                        if (lockReentranceCount++ == 0) {
+                            current.ownedLocks.addLast(this);
+                        }
+                    }
+                    return ImmutableListMultimap.of();
+                }
                 synchronized (CycleDetectingLockFactory.class) {
                     checkInvariants();
                     // Only do work if this thread doesn't already own the lock.
