@@ -29,10 +29,15 @@ final class ChildBindingAlreadySetError
                 null);
         this.key = key;
         // Can't use ImmutableList.toImmutableList here because of b/156759807.
+        // Sources arrive raw from WeakKeySet and are converted to their display form here, on the
+        // error path; convert is idempotent for already-converted values passed by withSources.
+        // distinct() restores the dedupe that previously happened by converted-string equality in
+        // the WeakKeySet multiset: distinct raw sources can render identically.
         this.existingSources =
                 ImmutableList.copyOf(
                         Streams.stream(existingSoruces)
-                                .map(source -> source == null ? "" : source)
+                                .map(source -> source == null ? "" : Messages.convert(source))
+                                .distinct()
                                 .toList());
     }
 
