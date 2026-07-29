@@ -136,11 +136,6 @@ public final class InternalInjectorCreator
         processedBindingData.initializeBindings();
         stopwatch.resetAndLog("Binding initialization");
 
-        for (InjectorShell shell : shells) {
-            shell.getInjector().getBindingData().indexBindingsByType();
-        }
-        stopwatch.resetAndLog("Binding indexing");
-
         injectionRequestProcessor.process(shells);
         stopwatch.resetAndLog("Collecting injection requests");
 
