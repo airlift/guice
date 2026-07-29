@@ -107,6 +107,11 @@ public final class InternalInjectorCreator
             throw new AssertionError("Already built, builders are not reusable.");
         }
 
+        // Record the modules' elements before taking the family lock: running user configure()
+        // methods needs nothing from the parent, and it is often the bulk of child-injector
+        // creation, so concurrent children of one parent can at least record in parallel.
+        shellBuilder.recordElements(errors);
+
         // Synchronize while we're building up the bindings and other injector data. This ensures that
         // the JIT bindings in the parent injector don't change while we're being built
         synchronized (shellBuilder.lock()) {

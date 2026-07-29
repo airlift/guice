@@ -797,7 +797,7 @@ public final class Elements
                     if (callingSource
                             .getClassName()
                             .equals("com.google.inject.internal.InjectorShell$Builder")
-                            && callingSource.getMethodName().equals("build")) {
+                            && callingSource.getMethodName().equals("recordElements")) {
                         declaringSource = SourceProvider.UNKNOWN_SOURCE;
                     }
                     else {
