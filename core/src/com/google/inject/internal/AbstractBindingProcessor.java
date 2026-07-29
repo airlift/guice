@@ -104,10 +104,11 @@ abstract class AbstractBindingProcessor
             }
         }
 
-        // prevent the parent from creating a JIT binding for this key
-        injector
-                .getJitBindingData()
-                .banKeyInParent(key, injector.getBindingData(), binding.getSource());
+        // prevent the parent from creating a JIT binding for this key; ancestors still under
+        // construction are banned immediately, completed ancestors under the family creation lock,
+        // since processing runs outside it
+        processedBindingData.banKeyInParentOrDefer(
+                injector.getJitBindingData(), key, injector.getBindingData(), binding.getSource());
         injector.getBindingData().putBinding(key, binding);
     }
 

@@ -3,11 +3,11 @@ package com.google.inject.internal;
 import com.google.inject.Key;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A container for most just-in-time (JIT) binding data corresponding to an Injector. It
@@ -19,7 +19,9 @@ final class InjectorJitBindingData
     /**
      * Just-in-time binding cache. Guarded by {@link #lock}.
      */
-    private final Map<Key<?>, BindingImpl<?>> jitBindings = new HashMap<>();
+    // ConcurrentHashMap so that element processing, which runs outside the family creation lock,
+    // can read the family's JIT bindings safely; writes remain serialized by the creation lock.
+    private final Map<Key<?>, BindingImpl<?>> jitBindings = new ConcurrentHashMap<>();
     /**
      * Cache of Keys that we were unable to create JIT bindings for, so we don't keep trying. Guarded
      * by {@link #lock}.
@@ -95,6 +97,40 @@ final class InjectorJitBindingData
      * binding at the parent level. This is used to prevent JIT bindings in the parent injector from
      * overriding explicit bindings declared in a child injector.
      */
+    /**
+     * True once the creation that built this injector has finished. Bans recorded while processing
+     * a new injector family may be applied immediately to ancestors still under construction (their
+     * state is local to the creating thread) but must be deferred and applied under the family
+     * creation lock for completed ancestors, whose banned-key set is shared. Volatile because other
+     * creations read it outside the lock.
+     */
+    private volatile boolean creationComplete;
+
+    void markCreationComplete()
+    {
+        creationComplete = true;
+    }
+
+    boolean isCreationComplete()
+    {
+        return creationComplete;
+    }
+
+    java.util.Optional<InjectorJitBindingData> parentJitData()
+    {
+        return parent;
+    }
+
+    /**
+     * Bans the key at this level only, without walking further ancestors. Callers own the walk and
+     * the locking discipline: creation-local levels are thread-confined, completed levels require
+     * the family creation lock.
+     */
+    void banKeyLocally(Key<?> key, InjectorBindingData injectorBindingData, Object source)
+    {
+        bannedKeys.add(key, injectorBindingData, source);
+    }
+
     void banKeyInParent(Key<?> key, InjectorBindingData injectorBindingData, Object source)
     {
         if (parent.isPresent()) {
