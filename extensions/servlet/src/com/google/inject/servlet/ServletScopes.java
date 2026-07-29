@@ -69,19 +69,24 @@ public final class ServletScopes
     private static final class RequestScope
             implements Scope
     {
+        /**
+         * Keys bound in request-scope which are handled directly by GuiceFilter.
+         */
+        private static final ImmutableSet<Key<?>> REQUEST_CONTEXT_KEYS =
+                ImmutableSet.of(
+                        Key.get(HttpServletRequest.class),
+                        Key.get(HttpServletResponse.class),
+                        new Key<Map<String, String[]>>(RequestParameters.class) {});
+
         @Override
         public <T> Provider<T> scope(final Key<T> key, final Provider<T> creator)
         {
             return new Provider<T>()
             {
-                /**
-                 * Keys bound in request-scope which are handled directly by GuiceFilter.
-                 */
-                private final ImmutableSet<Key<?>> requestContextKeys =
-                        ImmutableSet.of(
-                                Key.get(HttpServletRequest.class),
-                                Key.get(HttpServletResponse.class),
-                                new Key<Map<String, String[]>>(RequestParameters.class) {});
+                // Both are fixed for this provider's key; resolving them here keeps the per-request
+                // fast path to a field read instead of a set lookup and string build per get.
+                private final boolean handledByGuiceFilter = REQUEST_CONTEXT_KEYS.contains(key);
+                private final String name = key.toString();
 
                 @Override
                 public T get()
@@ -121,12 +126,11 @@ public final class ServletScopes
                     //
                     // This _correctly_ throws up if the thread is out of scope.
                     HttpServletRequest request = GuiceFilter.getOriginalRequest(key);
-                    if (requestContextKeys.contains(key)) {
+                    if (handledByGuiceFilter) {
                         // Don't store these keys as attributes, since they are handled by
                         // GuiceFilter itself.
                         return creator.get();
                     }
-                    String name = key.toString();
                     synchronized (request) {
                         Object obj = request.getAttribute(name);
                         if (NullObject.INSTANCE == obj) {
