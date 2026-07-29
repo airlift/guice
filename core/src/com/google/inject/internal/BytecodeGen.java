@@ -55,8 +55,7 @@ public final class BytecodeGen
      */
     public static boolean isCircularProxy(Object object)
     {
-        return object instanceof Proxy
-                && Proxy.getInvocationHandler(object) instanceof DelegatingInvocationHandler;
+        return CircularProxies.isCircularProxy(object);
     }
 
     /**
