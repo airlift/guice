@@ -50,10 +50,11 @@ final class WeakKeySet
 
     /**
      * Tracks child injector lifetimes and evicts banned keys/sources after the child injector is
-     * garbage collected.
+     * garbage collected. Created on first use: only keys banned by a child injector land here, and
+     * a root injector with no children never bans any, yet paid for a full Guava cache per
+     * injector. Guarded by {@link #lock}, like the rest of the mutable state.
      */
-    private final Cache<InjectorBindingData, Set<KeyAndSource>> evictionCache =
-            CacheBuilder.newBuilder().weakKeys().removalListener(this::cleanupOnRemoval).build();
+    private Cache<InjectorBindingData, Set<KeyAndSource>> evictionCache;
 
     private void cleanupOnRemoval(
             RemovalNotification<InjectorBindingData, Set<KeyAndSource>> notification)
@@ -95,6 +96,10 @@ final class WeakKeySet
 
         // Avoid all the extra work if we can.
         if (state.parent().isPresent()) {
+            if (evictionCache == null) {
+                evictionCache =
+                        CacheBuilder.newBuilder().weakKeys().removalListener(this::cleanupOnRemoval).build();
+            }
             Set<KeyAndSource> keyAndSources = evictionCache.getIfPresent(state);
             if (keyAndSources == null) {
                 keyAndSources = new HashSet<>();
@@ -106,13 +111,17 @@ final class WeakKeySet
 
     public boolean contains(Key<?> key)
     {
-        evictionCache.cleanUp();
+        if (evictionCache != null) {
+            evictionCache.cleanUp();
+        }
         return backingMap != null && backingMap.containsKey(key);
     }
 
     public Set<Object> getSources(Key<?> key)
     {
-        evictionCache.cleanUp();
+        if (evictionCache != null) {
+            evictionCache.cleanUp();
+        }
         Multiset<Object> sources = (backingMap == null) ? null : backingMap.get(key);
         return (sources == null) ? null : sources.elementSet();
     }
