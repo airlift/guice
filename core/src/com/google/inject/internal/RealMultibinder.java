@@ -622,6 +622,9 @@ public final class RealMultibinder<T>
             Indexer indexer = new Indexer(injector);
             List<Dependency<?>> dependencies = new ArrayList<>();
             List<Dependency<?>> providerDependencies = new ArrayList<>();
+            // Every element key shares this selection's element type, so the Provider<T> type is
+            // built once instead of re-deriving the parameterized type per element.
+            TypeLiteral<?> providerType = TypeLiteral.get(Types.providerOf(elementType.getType()));
             for (Binding<?> entry : injector.findBindingsByType(elementType)) {
                 if (keyMatches(entry.getKey())) {
                     @SuppressWarnings("unchecked") // protected by findBindingsByType()
@@ -639,8 +642,7 @@ public final class RealMultibinder<T>
                         // Add a dependency on Key<T>
                         dependencies.add(Dependency.get(key));
                         // and add a dependency on Key<Provider<T>>
-                        providerDependencies.add(
-                                Dependency.get(key.ofType(Types.providerOf(key.getTypeLiteral().getType()))));
+                        providerDependencies.add(Dependency.get(key.ofType(providerType)));
                     }
                 }
             }
