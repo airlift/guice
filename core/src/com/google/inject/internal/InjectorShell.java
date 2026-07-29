@@ -158,15 +158,24 @@ final class InjectorShell
          * returned if any modules contain {@link Binder#newPrivateBinder private environments}. The
          * primary injector will be first in the returned list.
          */
-        List<InjectorShell> build(
-                Initializer initializer,
-                ProcessedBindingData processedBindingData,
-                ContinuousStopwatch stopwatch,
-                Errors errors)
+        private boolean elementsRecorded;
+
+        /**
+         * Records the modules' elements. This is where user configure() methods run, and none of it
+         * touches the injector family's shared state (a parent's scanner bindings are immutable
+         * once the parent is built), so the creator calls this before taking the family creation
+         * lock - child injectors of one parent can then record their modules in parallel instead of
+         * serializing the whole creation. Idempotent: private-element child shells are built inside
+         * the parent's locked build and record here inline.
+         */
+        void recordElements(Errors errors)
         {
+            if (elementsRecorded) {
+                return;
+            }
+            elementsRecorded = true;
             checkState(stage != null, "Stage not initialized");
             checkState(privateElements == null || parent != null, "PrivateElements with no parent");
-            checkState(bindingData != null, "no binding data. Did you remember to lock() ?");
             checkState(
                     (privateElements == null && elements.isEmpty()) || modules.isEmpty(),
                     "The shell is either built from modules (root) or from PrivateElements (children).");
@@ -192,6 +201,16 @@ final class InjectorShell
             InjectorOptionsProcessor optionsProcessor = new InjectorOptionsProcessor(errors);
             optionsProcessor.process(null, elements);
             options = optionsProcessor.getOptions(stage, options);
+        }
+
+        List<InjectorShell> build(
+                Initializer initializer,
+                ProcessedBindingData processedBindingData,
+                ContinuousStopwatch stopwatch,
+                Errors errors)
+        {
+            checkState(bindingData != null, "no binding data. Did you remember to lock() ?");
+            recordElements(errors);
 
             InjectorImpl injector = new InjectorImpl(parent, bindingData, jitBindingData, options);
             if (privateElements != null) {
