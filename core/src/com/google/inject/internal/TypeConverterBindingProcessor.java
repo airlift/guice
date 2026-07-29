@@ -16,6 +16,7 @@
 
 package com.google.inject.internal;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.TypeLiteral;
 import com.google.inject.internal.util.SourceProvider;
 import com.google.inject.matcher.AbstractMatcher;
@@ -47,17 +48,33 @@ final class TypeConverterBindingProcessor
      */
     static void prepareBuiltInConverters(InjectorImpl injector)
     {
+        for (TypeConverterBinding builtIn : BUILT_IN_CONVERTERS) {
+            injector.getBindingData().addConverter(builtIn);
+        }
+    }
+
+    /**
+     * The built-in converter bindings are identical for every injector: the converters and matchers
+     * are stateless, TypeConverterBinding is immutable, and the source is the shared unknown-source
+     * constant. Building them per injector cost seven reflective parse-method lookups and a dozen
+     * allocations per creation.
+     */
+    private static final ImmutableList<TypeConverterBinding> BUILT_IN_CONVERTERS = buildBuiltInConverters();
+
+    private static ImmutableList<TypeConverterBinding> buildBuiltInConverters()
+    {
+        ImmutableList.Builder<TypeConverterBinding> builtIn = ImmutableList.builder();
         // Configure type converters.
-        convertToPrimitiveType(injector, int.class, Integer.class);
-        convertToPrimitiveType(injector, long.class, Long.class);
-        convertToPrimitiveType(injector, boolean.class, Boolean.class);
-        convertToPrimitiveType(injector, byte.class, Byte.class);
-        convertToPrimitiveType(injector, short.class, Short.class);
-        convertToPrimitiveType(injector, float.class, Float.class);
-        convertToPrimitiveType(injector, double.class, Double.class);
+        convertToPrimitiveType(builtIn, int.class, Integer.class);
+        convertToPrimitiveType(builtIn, long.class, Long.class);
+        convertToPrimitiveType(builtIn, boolean.class, Boolean.class);
+        convertToPrimitiveType(builtIn, byte.class, Byte.class);
+        convertToPrimitiveType(builtIn, short.class, Short.class);
+        convertToPrimitiveType(builtIn, float.class, Float.class);
+        convertToPrimitiveType(builtIn, double.class, Double.class);
 
         convertToClass(
-                injector,
+                builtIn,
                 Character.class,
                 new TypeConverter()
                 {
@@ -79,7 +96,7 @@ final class TypeConverterBindingProcessor
                 });
 
         convertToClasses(
-                injector,
+                builtIn,
                 Matchers.subclassesOf(Enum.class),
                 new TypeConverter()
                 {
@@ -98,7 +115,7 @@ final class TypeConverterBindingProcessor
                 });
 
         internalConvertToTypes(
-                injector,
+                builtIn,
                 new AbstractMatcher<TypeLiteral<?>>()
                 {
                     @Override
@@ -132,10 +149,11 @@ final class TypeConverterBindingProcessor
                         return "TypeConverter<Class<?>>";
                     }
                 });
+        return builtIn.build();
     }
 
     private static <T> void convertToPrimitiveType(
-            InjectorImpl injector,
+            ImmutableList.Builder<TypeConverterBinding> builtIn,
             Class<T> primitiveType,
             final Class<T> wrapperType)
     {
@@ -167,7 +185,7 @@ final class TypeConverterBindingProcessor
                         }
                     };
 
-            convertToClass(injector, wrapperType, typeConverter);
+            convertToClass(builtIn, wrapperType, typeConverter);
         }
         catch (NoSuchMethodException e) {
             throw new AssertionError(e);
@@ -175,20 +193,20 @@ final class TypeConverterBindingProcessor
     }
 
     private static <T> void convertToClass(
-            InjectorImpl injector,
+            ImmutableList.Builder<TypeConverterBinding> builtIn,
             Class<T> type,
             TypeConverter converter)
     {
-        convertToClasses(injector, Matchers.identicalTo(type), converter);
+        convertToClasses(builtIn, Matchers.identicalTo(type), converter);
     }
 
     private static void convertToClasses(
-            InjectorImpl injector,
+            ImmutableList.Builder<TypeConverterBinding> builtIn,
             final Matcher<? super Class<?>> typeMatcher,
             TypeConverter converter)
     {
         internalConvertToTypes(
-                injector,
+                builtIn,
                 new AbstractMatcher<TypeLiteral<?>>()
                 {
                     @Override
@@ -212,14 +230,11 @@ final class TypeConverterBindingProcessor
     }
 
     private static void internalConvertToTypes(
-            InjectorImpl injector,
+            ImmutableList.Builder<TypeConverterBinding> builtIn,
             Matcher<? super TypeLiteral<?>> typeMatcher,
             TypeConverter converter)
     {
-        injector
-                .getBindingData()
-                .addConverter(
-                        new TypeConverterBinding(SourceProvider.UNKNOWN_SOURCE, typeMatcher, converter));
+        builtIn.add(new TypeConverterBinding(SourceProvider.UNKNOWN_SOURCE, typeMatcher, converter));
     }
 
     @Override
