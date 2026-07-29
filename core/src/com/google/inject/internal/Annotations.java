@@ -53,24 +53,46 @@ public class Annotations
 {
     private Annotations() {}
 
+    private enum AnnotationShape
+    {
+        MARKER,
+        ALL_DEFAULT_METHODS,
+        HAS_ATTRIBUTES,
+    }
+
+    /**
+     * Method-shape of an annotation type. Key construction consults this for every annotated key,
+     * and getDeclaredMethods clones the method array on every call, so the answer is cached per
+     * annotation class.
+     */
+    private static final ClassValue<AnnotationShape> SHAPES =
+            new ClassValue<>()
+            {
+                @Override
+                protected AnnotationShape computeValue(Class<?> annotationType)
+                {
+                    boolean hasMethods = false;
+                    for (Method m : annotationType.getDeclaredMethods()) {
+                        hasMethods = true;
+                        if (m.getDefaultValue() == null) {
+                            return AnnotationShape.HAS_ATTRIBUTES;
+                        }
+                    }
+                    return hasMethods ? AnnotationShape.ALL_DEFAULT_METHODS : AnnotationShape.MARKER;
+                }
+            };
+
     /**
      * Returns {@code true} if the given annotation type has no attributes.
      */
     public static boolean isMarker(Class<? extends Annotation> annotationType)
     {
-        return annotationType.getDeclaredMethods().length == 0;
+        return SHAPES.get(annotationType) == AnnotationShape.MARKER;
     }
 
     public static boolean isAllDefaultMethods(Class<? extends Annotation> annotationType)
     {
-        boolean hasMethods = false;
-        for (Method m : annotationType.getDeclaredMethods()) {
-            hasMethods = true;
-            if (m.getDefaultValue() == null) {
-                return false;
-            }
-        }
-        return hasMethods;
+        return SHAPES.get(annotationType) == AnnotationShape.ALL_DEFAULT_METHODS;
     }
 
     private static final LoadingCache<Class<? extends Annotation>, Annotation> cache =
