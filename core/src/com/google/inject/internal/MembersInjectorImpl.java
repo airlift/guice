@@ -57,7 +57,16 @@ class MembersInjectorImpl<T>
                 (InternalFlags.isBytecodeGenEnabled() && !encounter.getAspects().isEmpty())
                         ? encounter.getAspects()
                         : null;
-        if (InternalFlags.getUseMethodHandlesForMemberInjectionOption()) {
+        // A type with nothing to inject gets the plain variant regardless of the method-handle
+        // option: there is no member-injection work for handles to speed up, and touching the
+        // method-handle variant would drag InternalMethodHandles and the JDK's method-handle
+        // compilation machinery onto the cold path of member-injection-free graphs.
+        boolean hasWork =
+                memberInjectors != null
+                        || userMembersInjectors != null
+                        || injectionListeners != null
+                        || addedAspects != null;
+        if (hasWork && InternalFlags.getUseMethodHandlesForMemberInjectionOption()) {
             return new MethodHandleMembersInjectorImpl<>(
                     injector,
                     typeLiteral,

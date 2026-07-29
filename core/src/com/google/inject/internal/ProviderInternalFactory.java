@@ -172,14 +172,20 @@ abstract class ProviderInternalFactory<T>
     {
         return MethodHandles.filterReturnValue(
                 resultHandle,
-                MethodHandles.insertArguments(CHECK_SUBTYPE_NOT_PROVIDED_MH, 1, source, providedRawType));
+                MethodHandles.insertArguments(CheckSubtypeNotProvidedHandle.HANDLE, 1, source, providedRawType));
     }
 
-    private static final MethodHandle CHECK_SUBTYPE_NOT_PROVIDED_MH =
-            InternalMethodHandles.findStaticOrDie(
-                    ProviderInternalFactory.class,
-                    "doCheckSubtypeNotProvided",
-                    methodType(Object.class, Object.class, Object.class, Class.class));
+    /**
+     * Lazy holder: see SetDependencyHandle in InternalFactoryToScopedProviderAdapter.
+     */
+    private static final class CheckSubtypeNotProvidedHandle
+    {
+        static final MethodHandle HANDLE =
+                InternalMethodHandles.findStaticOrDie(
+                        ProviderInternalFactory.class,
+                        "doCheckSubtypeNotProvided",
+                        methodType(Object.class, Object.class, Object.class, Class.class));
+    }
 
     @Keep
     static Object doCheckSubtypeNotProvided(Object result, Object source, Class<?> providedType)

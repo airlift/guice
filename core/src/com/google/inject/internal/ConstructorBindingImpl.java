@@ -351,7 +351,7 @@ final class ConstructorBindingImpl<T>
                 var throwHandle =
                         MethodHandles.foldArguments(
                                 MethodHandles.throwException(Object.class, InternalProvisionException.class),
-                                MethodHandles.insertArguments(JIT_DISABLED_HANDLE, 0, key));
+                                MethodHandles.insertArguments(JitDisabledHandle.HANDLE, 0, key));
                 return makeCachableOnLinkedSetting(
                         MethodHandles.dropArguments(throwHandle, 0, InternalContext.class, Dependency.class));
             }
@@ -362,10 +362,16 @@ final class ConstructorBindingImpl<T>
             return makeCachable(handle);
         }
 
-        private static final MethodHandle JIT_DISABLED_HANDLE =
-                InternalMethodHandles.findStaticOrDie(
-                        InternalProvisionException.class,
-                        "jitDisabled",
-                        methodType(InternalProvisionException.class, Key.class));
+        /**
+         * Lazy holder: see SetDependencyHandle in InternalFactoryToScopedProviderAdapter.
+         */
+        private static final class JitDisabledHandle
+        {
+            static final MethodHandle HANDLE =
+                    InternalMethodHandles.findStaticOrDie(
+                            InternalProvisionException.class,
+                            "jitDisabled",
+                            methodType(InternalProvisionException.class, Key.class));
+        }
     }
 }
