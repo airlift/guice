@@ -16,9 +16,6 @@
 
 package com.google.inject.internal;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Binding;
@@ -30,6 +27,7 @@ import com.google.inject.spi.ProvisionListenerBinding;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 /**
@@ -46,17 +44,14 @@ final class ProvisionListenerCallbackStore
 
     private final ImmutableList<ProvisionListenerBinding> listenerBindings;
 
-    private final LoadingCache<KeyBinding, ProvisionListenerStackCallback<?>> cache =
-            CacheBuilder.newBuilder()
-                    .build(
-                            new CacheLoader<KeyBinding, ProvisionListenerStackCallback<?>>()
-                            {
-                                @Override
-                                public ProvisionListenerStackCallback<?> load(KeyBinding key)
-                                {
-                                    return create(key.binding);
-                                }
-                            });
+    /**
+     * Plain map instead of a LoadingCache: this store is per injector and get() runs once per
+     * binding during injector creation, so during creation every lookup is a cold miss and the
+     * LoadingCache machinery (entry future, load stopwatch, key wrapper) was pure overhead. A racy
+     * duplicate compute is harmless - callbacks are stateless wrappers over the same listeners.
+     */
+    private final ConcurrentHashMap<Key<?>, ProvisionListenerStackCallback<?>> cache =
+            new ConcurrentHashMap<>();
 
     ProvisionListenerCallbackStore(List<ProvisionListenerBinding> listenerBindings)
     {
@@ -67,17 +62,26 @@ final class ProvisionListenerCallbackStore
      * Returns a new {@link ProvisionListenerStackCallback} for the key or {@code null} if there are
      * no listeners
      */
-    @SuppressWarnings(
-            "unchecked")
-        // the ProvisionListenerStackCallback type always agrees with the passed type
     public <T> ProvisionListenerStackCallback<T> get(Binding<T> binding)
     {
+        // With no listeners bound, every callback would be the empty one; skip the cache entirely.
+        if (listenerBindings.isEmpty()) {
+            return null;
+        }
         // Never notify any listeners for internal bindings.
         if (!INTERNAL_BINDINGS.contains(binding.getKey())) {
-            ProvisionListenerStackCallback<T> callback =
-                    (ProvisionListenerStackCallback<T>)
-                            cache.getUnchecked(new KeyBinding(binding.getKey(), binding));
-            return callback.hasListeners() ? callback : null;
+            ProvisionListenerStackCallback<?> callback = cache.get(binding.getKey());
+            if (callback == null) {
+                callback = create(binding);
+                ProvisionListenerStackCallback<?> race = cache.putIfAbsent(binding.getKey(), callback);
+                if (race != null) {
+                    callback = race;
+                }
+            }
+            @SuppressWarnings("unchecked")
+            // the ProvisionListenerStackCallback type always agrees with the passed type
+            ProvisionListenerStackCallback<T> typed = (ProvisionListenerStackCallback<T>) callback;
+            return typed.hasListeners() ? typed : null;
         }
         return null;
     }
@@ -93,7 +97,7 @@ final class ProvisionListenerCallbackStore
      */
     boolean remove(Binding<?> type)
     {
-        return cache.asMap().remove(type) != null;
+        return cache.remove(type.getKey()) != null;
     }
 
     /**
@@ -116,32 +120,5 @@ final class ProvisionListenerCallbackStore
             return ProvisionListenerStackCallback.emptyListener();
         }
         return new ProvisionListenerStackCallback<T>(binding, listeners);
-    }
-
-    /**
-     * A struct that holds key and binding but uses just key for equality/hashcode.
-     */
-    private static class KeyBinding
-    {
-        final Key<?> key;
-        final Binding<?> binding;
-
-        KeyBinding(Key<?> key, Binding<?> binding)
-        {
-            this.key = key;
-            this.binding = binding;
-        }
-
-        @Override
-        public boolean equals(Object obj)
-        {
-            return obj instanceof KeyBinding && key.equals(((KeyBinding) obj).key);
-        }
-
-        @Override
-        public int hashCode()
-        {
-            return key.hashCode();
-        }
     }
 }
