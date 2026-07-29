@@ -91,8 +91,11 @@ final class WeakKeySet
         if (source instanceof Class || source == SourceProvider.UNKNOWN_SOURCE) {
             source = null;
         }
-        Object convertedSource = Errors.convert(source);
-        backingMap.computeIfAbsent(key, _ -> LinkedHashMultiset.create()).add(convertedSource);
+        // The source is stored raw and only converted to its display form if the ban is ever
+        // reported (ChildBindingAlreadySetError). Converting here formatted the module stack into a
+        // string for every binding of every child injector; the raw source is already retained by
+        // the binding itself, so this holds no extra memory.
+        backingMap.computeIfAbsent(key, _ -> LinkedHashMultiset.create()).add(source);
 
         // Avoid all the extra work if we can.
         if (state.parent().isPresent()) {
@@ -105,7 +108,7 @@ final class WeakKeySet
                 keyAndSources = new HashSet<>();
                 evictionCache.put(state, keyAndSources);
             }
-            keyAndSources.add(new KeyAndSource(key, convertedSource));
+            keyAndSources.add(new KeyAndSource(key, source));
         }
     }
 
