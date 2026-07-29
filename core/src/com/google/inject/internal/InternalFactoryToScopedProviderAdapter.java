@@ -170,7 +170,7 @@ class InternalFactoryToScopedProviderAdapter<T>
                 return typedValue;
             }
             T t = super.get(context, dependency, linked);
-            if (!context.areCircularProxiesEnabled() || !BytecodeGen.isCircularProxy(t)) {
+            if (!context.areCircularProxiesEnabled() || !CircularProxies.isCircularProxy(t)) {
                 // Avoid caching circular proxies.
                 this.value = t;
             }
@@ -234,7 +234,7 @@ class InternalFactoryToScopedProviderAdapter<T>
             Object boostrapCallSite(Object result, InternalContext context, Dependency<?> dependency)
             {
                 // Don't cache circular, proxies.
-                if (!context.areCircularProxiesEnabled() || !BytecodeGen.isCircularProxy(result)) {
+                if (!context.areCircularProxiesEnabled() || !CircularProxies.isCircularProxy(result)) {
                     setTarget(getHandleForConstant(source, result));
                     // This ensures that other threads will see the new target.  This isn't strictly necessary
                     // since the underlying provider is both ThreadSafe and idempotent, but it should improve
