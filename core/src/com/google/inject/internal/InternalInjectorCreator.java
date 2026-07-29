@@ -107,18 +107,26 @@ public final class InternalInjectorCreator
             throw new AssertionError("Already built, builders are not reusable.");
         }
 
-        // Record the modules' elements before taking the family lock: running user configure()
-        // methods needs nothing from the parent, and it is often the bulk of child-injector
-        // creation, so concurrent children of one parent can at least record in parallel.
+        // Record the modules' elements and process them before taking the family lock. Recording
+        // runs user configure() methods and needs nothing from the parent. Processing writes only
+        // this child's own binding data: ancestor explicit bindings and scopes are immutable once
+        // the ancestor is built, the family's JIT bindings are read through a concurrent map, and
+        // parent key bans are deferred and applied under the lock below. Concurrent children of one
+        // parent therefore only serialize for initialization.
         shellBuilder.recordElements(errors);
+        Object familyLock = shellBuilder.lock();
+        shells = shellBuilder.build(initializer, processedBindingData, stopwatch, errors);
+        stopwatch.resetAndLog("Injector construction");
 
-        // Synchronize while we're building up the bindings and other injector data. This ensures that
-        // the JIT bindings in the parent injector don't change while we're being built
-        synchronized (shellBuilder.lock()) {
-            shells = shellBuilder.build(initializer, processedBindingData, stopwatch, errors);
-            stopwatch.resetAndLog("Injector construction");
-
+        // Synchronize while we're initializing bindings and touching shared family state. This
+        // ensures the JIT bindings in the parent injector don't change while we resolve against
+        // them, and that bans recorded during processing are re-checked and applied atomically.
+        synchronized (familyLock) {
+            processedBindingData.applyDeferredParentBans(errors);
             initializeStatically();
+            for (InjectorShell shell : shells) {
+                shell.getInjector().getJitBindingData().markCreationComplete();
+            }
         }
 
         injectDynamically();
