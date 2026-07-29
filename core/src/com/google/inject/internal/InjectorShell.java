@@ -370,26 +370,35 @@ final class InjectorShell
         @Override
         MethodHandleResult makeHandle(LinkageContext context, boolean linked)
         {
-            return makeCachable(MAKE_LOGGER_MH);
+            return makeCachable(MakeLoggerHandle.HANDLE);
         }
 
-        private static final MethodHandle MAKE_LOGGER_MH;
+        /**
+         * Lazy holder: LoggerFactory itself is initialized by every injector creation (bindLogger),
+         * and building this handle eagerly dragged InternalMethodHandles and the JDK's
+         * method-handle compilation machinery onto the default cold path, where the handle is never
+         * used. The holder initializes only when the method-handle factory path runs.
+         */
+        private static final class MakeLoggerHandle
+        {
+            static final MethodHandle HANDLE;
 
-        static {
-            try {
-                MAKE_LOGGER_MH =
-                        castReturnToObject(
-                                MethodHandles.dropArguments(
-                                        MethodHandles.lookup()
-                                                .findStatic(
-                                                        LoggerFactory.class,
-                                                        "makeLogger",
-                                                        methodType(Logger.class, Dependency.class)),
-                                        0,
-                                        InternalContext.class));
-            }
-            catch (ReflectiveOperationException e) {
-                throw new LinkageError("Failed to find makeLogger function", e);
+            static {
+                try {
+                    HANDLE =
+                            castReturnToObject(
+                                    MethodHandles.dropArguments(
+                                            MethodHandles.lookup()
+                                                    .findStatic(
+                                                            LoggerFactory.class,
+                                                            "makeLogger",
+                                                            methodType(Logger.class, Dependency.class)),
+                                            0,
+                                            InternalContext.class));
+                }
+                catch (ReflectiveOperationException e) {
+                    throw new LinkageError("Failed to find makeLogger function", e);
+                }
             }
         }
 

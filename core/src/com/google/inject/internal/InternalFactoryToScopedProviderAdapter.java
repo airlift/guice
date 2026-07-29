@@ -109,13 +109,21 @@ class InternalFactoryToScopedProviderAdapter<T>
         // We need to call 'setDependency' so it is available to scope implementations and scope
         // delegate providers. See comment in `get` method for more details.
         invokeProvider =
-                MethodHandles.foldArguments(invokeProvider, INTERNAL_CONTEXT_SET_DEPENDENCY_HANDLE);
+                MethodHandles.foldArguments(invokeProvider, SetDependencyHandle.HANDLE);
         return makeCachable(invokeProvider);
     }
 
-    private static final MethodHandle INTERNAL_CONTEXT_SET_DEPENDENCY_HANDLE =
-            InternalMethodHandles.findVirtualOrDie(
-                    InternalContext.class, "setDependency", methodType(void.class, Dependency.class));
+    /**
+     * Lazy holder: built only when the method-handle factory path runs, so the default
+     * configuration does not class-load InternalMethodHandles and the JDK's method-handle
+     * compilation machinery during cold start.
+     */
+    private static final class SetDependencyHandle
+    {
+        static final MethodHandle HANDLE =
+                InternalMethodHandles.findVirtualOrDie(
+                        InternalContext.class, "setDependency", methodType(void.class, Dependency.class));
+    }
 
     @Override
     public String toString()
