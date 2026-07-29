@@ -4,7 +4,8 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.MultimapBuilder;
 
-import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.locks.Lock;
@@ -60,6 +61,24 @@ interface CycleDetectingLock<ID>
      * Guice are provided.
      *
      * <p>Instances of these locks are not intended to be exposed outside of {@link SingletonScope}.
+     *
+     * <h2>Concurrency design</h2>
+     *
+     * <p>Uncontended acquisition and release - the entirety of eager singleton creation when
+     * injectors are built on independent threads - runs without the global monitor. That is safe
+     * because cycle <i>detection</i> (only reachable once a lock is contended) follows exactly two
+     * kinds of edges: a lock's {@link ReentrantCycleDetectingLock#lockOwnerState} (volatile) and a
+     * thread's {@link ThreadState#waitingOn} (only ever written under the global monitor, because
+     * only contended threads wait). The per-thread owned-locks chain is intrusive
+     * ({@link ThreadState#topOwned} / {@link ReentrantCycleDetectingLock#prevOwned}) and written
+     * only by its owner thread with a publication discipline walkers can rely on: a lock is linked
+     * into the chain <i>before</i> its owner is published, and its owner is cleared <i>before</i>
+     * it is unlinked. A walker that read a lock's owner therefore always finds the lock in that
+     * owner's chain, unless the lock was concurrently released - in which case the deadlock premise
+     * has vanished and the walk simply stops. The chain contents only decorate the reported cycle.
+     *
+     * <p>When assertions are enabled every path takes the global monitor, keeping the internal
+     * invariant checks exact for tests.
      */
     class CycleDetectingLockFactory<ID>
     {
@@ -73,11 +92,7 @@ interface CycleDetectingLock<ID>
         /**
          * Lock-graph state of the current thread. A ThreadLocal rather than a shared map: the cycle
          * walk follows {@code lockOwnerState} and {@code waitingOn} references directly and never
-         * looks a thread up, so per-singleton bookkeeping is field writes and deque pushes with no
-         * map churn under the global monitor. State dies with its thread.
-         *
-         * <p>The state's mutable fields are still guarded by {@code CycleDetectingLockFactory.class};
-         * only the lookup is thread-local.
+         * looks a thread up. State dies with its thread.
          */
         private static final ThreadLocal<ThreadState> THREAD_STATE =
                 ThreadLocal.withInitial(
@@ -92,7 +107,9 @@ interface CycleDetectingLock<ID>
                         });
 
         /**
-         * Lock-graph state of one thread. Guarded by {@code CycleDetectingLockFactory.class}.
+         * Lock-graph state of one thread. {@link #waitingOn} is guarded by {@code
+         * CycleDetectingLockFactory.class}; {@link #topOwned} is written only by the owning thread,
+         * volatile so walkers see a consistently linked chain.
          */
         private static final class ThreadState
         {
@@ -100,19 +117,78 @@ interface CycleDetectingLock<ID>
 
             /**
              * Lock this thread is blocked on, if any. Set before {@link Lock#lock} is called and
-             * cleared after it returns. The same lock can be waited on by several threads.
+             * cleared after it returns. The same lock can be waited on by several threads. Guarded
+             * by {@code CycleDetectingLockFactory.class}: only contended acquisitions ever wait.
              */
             ReentrantCycleDetectingLock<?> waitingOn;
 
             /**
-             * Stack of locks this thread owns, pushed once per ownership on first acquisition;
-             * reentrant acquisitions do not push again.
+             * Head (most recently acquired) of the intrusive chain of locks this thread owns,
+             * linked through {@link ReentrantCycleDetectingLock#prevOwned}. Pushed once per
+             * ownership on first acquisition; reentrant acquisitions do not push again. Written
+             * only by the owning thread.
              */
-            final ArrayDeque<ReentrantCycleDetectingLock<?>> ownedLocks = new ArrayDeque<>();
+            volatile ReentrantCycleDetectingLock<?> topOwned;
 
             ThreadState(Thread thread)
             {
                 this.thread = thread;
+            }
+
+            /**
+             * Owner thread only. Links before the caller publishes ownership.
+             */
+            void push(ReentrantCycleDetectingLock<?> lock)
+            {
+                lock.prevOwned = topOwned;
+                topOwned = lock;
+            }
+
+            /**
+             * Owner thread only. The caller has already cleared the lock's ownership. Releases are
+             * nested in practice, so the lock is almost always the head; the fallback handles any
+             * out-of-order release.
+             */
+            void unlink(ReentrantCycleDetectingLock<?> lock)
+            {
+                if (topOwned == lock) {
+                    topOwned = lock.prevOwned;
+                }
+                else {
+                    ReentrantCycleDetectingLock<?> node = topOwned;
+                    while (node != null && node.prevOwned != lock) {
+                        node = node.prevOwned;
+                    }
+                    checkState(
+                            node != null,
+                            "Internal error: Can not find this lock in locks owned by a current thread");
+                    node.prevOwned = lock.prevOwned;
+                }
+                lock.prevOwned = null;
+            }
+
+            /**
+             * Snapshot of the owned chain, oldest acquisition first. Safe to call from walker
+             * threads; may reflect a mix of before and after states of concurrent releases, which
+             * the caller must tolerate.
+             */
+            List<ReentrantCycleDetectingLock<?>> ownedOldestFirst()
+            {
+                List<ReentrantCycleDetectingLock<?>> owned = new ArrayList<>();
+                for (ReentrantCycleDetectingLock<?> node = topOwned; node != null; node = node.prevOwned) {
+                    owned.add(node);
+                }
+                return owned.reversed();
+            }
+
+            boolean owns(ReentrantCycleDetectingLock<?> lock)
+            {
+                for (ReentrantCycleDetectingLock<?> node = topOwned; node != null; node = node.prevOwned) {
+                    if (node == lock) {
+                        return true;
+                    }
+                }
+                return false;
             }
         }
 
@@ -146,15 +222,20 @@ interface CycleDetectingLock<ID>
              */
             private final CycleDetectingLockFactory<ID> lockFactory;
             /**
-             * State of the thread that owns this lock. Nullable. Guarded by {@code
-             * CycleDetectingLockFactory.class}. Holding the state instead of the thread lets the
-             * cycle walk follow owner references without map lookups.
+             * State of the thread that owns this lock. Nullable. Published after the lock is linked
+             * into the owner's chain and cleared before it is unlinked; volatile so the cycle walk
+             * can follow it without the monitor.
              */
-            private ThreadState lockOwnerState;
+            private volatile ThreadState lockOwnerState;
 
             /**
-             * Number of times that thread owned this lock. Guarded by {@code
-             * CycleDetectingLockFactory.this}.
+             * Next-older link of the owner's intrusive owned-locks chain. Written only by the owner
+             * thread; see {@link ThreadState#topOwned}.
+             */
+            ReentrantCycleDetectingLock<?> prevOwned;
+
+            /**
+             * Number of times that thread owned this lock. Written only by the owner thread.
              */
             private int lockReentranceCount;
 
@@ -174,24 +255,18 @@ interface CycleDetectingLock<ID>
             {
                 final Thread currentThread = Thread.currentThread();
                 // Fast path: an uncontended (or reentrant) acquisition cannot create a lock cycle -
-                // nobody else owns the lock, so no thread can be waiting on us through it. Skip the
-                // waiting-mark and cycle walk, and take the global monitor once for ownership
-                // bookkeeping instead of twice. Threads that fail the tryLock are genuinely
-                // contended and take the slow path below, so cycle detection sees every waiter.
-                // The window in which the underlying lock is held but lockOwnerState is not yet
-                // published is identical to the one the slow path always had between acquiring the
-                // lock and entering its second synchronized block.
-                if (lockImplementation.tryLock()) {
-                    synchronized (CycleDetectingLockFactory.class) {
-                        checkInvariants();
+                // nobody else can be waiting through this lock. Publish ownership with the
+                // chain-first ordering the cycle walk relies on; no monitor needed. With assertions
+                // enabled the monitor path below runs instead so invariant checks stay exact.
+                if (!CHECK_INVARIANTS && lockImplementation.tryLock()) {
+                    if (lockReentranceCount++ == 0) {
                         ThreadState current = THREAD_STATE.get();
+                        current.push(this);
                         lockOwnerState = current;
-                        if (lockReentranceCount++ == 0) {
-                            current.ownedLocks.addLast(this);
-                        }
                     }
                     return ImmutableListMultimap.of();
                 }
+
                 synchronized (CycleDetectingLockFactory.class) {
                     checkInvariants();
                     // Only do work if this thread doesn't already own the lock.
@@ -226,11 +301,10 @@ interface CycleDetectingLock<ID>
                     current.waitingOn = null;
                     checkInvariants();
 
-                    // mark it as owned by us
-                    lockOwnerState = current;
-                    // add this lock to the stack of locks owned by a current thread, once per ownership
+                    // mark it as owned by us, chain first so walkers that see the owner see the link
                     if (lockReentranceCount++ == 0) {
-                        current.ownedLocks.addLast(this);
+                        current.push(this);
+                        lockOwnerState = current;
                     }
                 }
                 // no deadlock is found, locking successful
@@ -241,40 +315,54 @@ interface CycleDetectingLock<ID>
             public void unlock()
             {
                 final Thread currentThread = Thread.currentThread();
+                if (!CHECK_INVARIANTS) {
+                    ThreadState owner = lockOwnerState;
+                    checkState(
+                            owner != null, "Thread is trying to unlock a lock that is not locked");
+                    checkState(
+                            owner.thread == currentThread,
+                            "Thread is trying to unlock a lock owned by another thread");
+                    lockImplementation.unlock();
+                    if (--lockReentranceCount == 0) {
+                        // we no longer own this lock; clear ownership before unlinking so walkers
+                        // that still see the chain link no longer see an owner
+                        lockOwnerState = null;
+                        owner.unlink(this);
+                    }
+                    return;
+                }
                 synchronized (CycleDetectingLockFactory.class) {
                     checkInvariants();
+                    ThreadState owner = lockOwnerState;
                     checkState(
-                            lockOwnerState != null, "Thread is trying to unlock a lock that is not locked");
+                            owner != null, "Thread is trying to unlock a lock that is not locked");
                     checkState(
-                            lockOwnerState.thread == currentThread,
+                            owner.thread == currentThread,
                             "Thread is trying to unlock a lock owned by another thread");
 
                     // releasing underlying lock
                     lockImplementation.unlock();
 
                     // be sure to release the lock synchronously with updating internal state
-                    lockReentranceCount--;
-                    if (lockReentranceCount == 0) {
+                    if (--lockReentranceCount == 0) {
                         // we no longer own this lock
-                        ThreadState owner = lockOwnerState;
                         lockOwnerState = null;
-                        checkState(
-                                owner.ownedLocks.removeLastOccurrence(this),
-                                "Internal error: Can not find this lock in locks owned by a current thread");
+                        owner.unlink(this);
                     }
                 }
             }
 
             private Thread ownerThread()
             {
-                return lockOwnerState == null ? null : lockOwnerState.thread;
+                ThreadState owner = lockOwnerState;
+                return owner == null ? null : owner.thread;
             }
 
             /**
              * Runs the internal-consistency checks only when assertions are enabled: they guard
-             * against bugs in this class, not user error, and they run under the global factory
-             * monitor twice per singleton lock and once per unlock. Surefire enables assertions by
-             * default, so every test execution still exercises them.
+             * against bugs in this class, not user error. When enabled, all lock and unlock paths
+             * take the global factory monitor so the checks observe exact state. Surefire enables
+             * assertions by default, so every test execution exercises them.
              */
             private static final boolean CHECK_INVARIANTS =
                     CycleDetectingLock.class.desiredAssertionStatus();
@@ -292,13 +380,14 @@ interface CycleDetectingLock<ID>
                 checkState(
                         current.waitingOn == null,
                         "Internal error: Thread should not be in a waiting thread on a lock now");
-                if (lockOwnerState != null) {
+                ThreadState owner = lockOwnerState;
+                if (owner != null) {
                     // check state of a locked lock
                     checkState(
                             lockReentranceCount >= 0,
                             "Internal error: Lock ownership and reentrance count internal states do not match");
                     checkState(
-                            lockOwnerState.ownedLocks.contains(this),
+                            owner.owns(this),
                             "Internal error: Set of locks owned by a current thread and lock "
                                     + "ownership status do not match");
                 }
@@ -309,7 +398,7 @@ interface CycleDetectingLock<ID>
                             "Internal error: Reentrance count of a non locked lock is expect to be zero");
                     for (ThreadState state : allThreadStates.values()) {
                         checkState(
-                                !state.ownedLocks.contains(this),
+                                !state.owns(this),
                                 "Internal error: Non locked lock should not be owned by any thread");
                     }
                 }
@@ -325,7 +414,8 @@ interface CycleDetectingLock<ID>
              */
             private ListMultimap<Thread, ID> detectPotentialLocksCycle(Thread currentThread)
             {
-                if (lockOwnerState == null || lockOwnerState.thread == currentThread) {
+                ThreadState firstOwner = lockOwnerState;
+                if (firstOwner == null || firstOwner.thread == currentThread) {
                     // if nobody owns this lock, lock cycle is impossible
                     // if a current thread owns this lock, we let Guice to handle it
                     return ImmutableListMultimap.of();
@@ -336,8 +426,12 @@ interface CycleDetectingLock<ID>
                 // lock that is a part of a potential locks cycle, starts with current lock
                 ReentrantCycleDetectingLock<?> lockOwnerWaitingOn = this;
                 // try to find a dependency path between lock's owner thread and a current thread
-                while (lockOwnerWaitingOn != null && lockOwnerWaitingOn.lockOwnerState != null) {
+                while (lockOwnerWaitingOn != null) {
                     ThreadState ownerState = lockOwnerWaitingOn.lockOwnerState;
+                    if (ownerState == null) {
+                        // The lock was released while we walked - the deadlock premise vanished.
+                        break;
+                    }
                     // in case locks cycle exists lock we're waiting for is part of it
                     lockOwnerWaitingOn =
                             addAllLockIdsAfter(ownerState, lockOwnerWaitingOn, potentialLocksCycle);
@@ -362,7 +456,7 @@ interface CycleDetectingLock<ID>
                 boolean found = false;
                 requireNonNull(
                         state, "Internal error: No locks were found taken by a thread");
-                for (ReentrantCycleDetectingLock<?> ownedLock : state.ownedLocks) {
+                for (ReentrantCycleDetectingLock<?> ownedLock : state.ownedOldestFirst()) {
                     if (ownedLock == lock) {
                         found = true;
                     }
@@ -376,8 +470,11 @@ interface CycleDetectingLock<ID>
                         potentialLocksCycle.put(state.thread, userLockId);
                     }
                 }
-                checkState(
-                        found, "Internal error: We can not find locks that created a cycle that we detected");
+                if (!found) {
+                    // The lock was released between reading its owner and walking the owner's
+                    // chain; without the lock still held there is no deadlock through it.
+                    return null;
+                }
                 ReentrantCycleDetectingLock<?> unownedLock = state.waitingOn;
                 // If this thread is waiting for a lock add it to the cycle and return it
                 if (unownedLock != null && unownedLock.lockFactory == this.lockFactory) {
