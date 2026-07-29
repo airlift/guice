@@ -18,6 +18,7 @@ package com.google.inject.internal;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.inject.Binder;
@@ -25,6 +26,7 @@ import com.google.inject.Key;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.TypeLiteral;
+import com.google.inject.spi.Dependency;
 import com.google.inject.spi.InjectionPoint;
 import com.google.inject.spi.Message;
 import com.google.inject.spi.ModuleAnnotatedMethodScanner;
@@ -251,6 +253,72 @@ public final class ProviderMethodsModule
         return result;
     }
 
+    /**
+     * Class-stable derivation for one default-scanner provider method: everything
+     * createProviderMethod computes before the scanner's prepareMethod runs. prepareMethod itself
+     * must stay live because multibinding scanners mint unique keys per call. Keyed by the concrete
+     * module class because generic return and parameter types resolve against it, not against the
+     * declaring class.
+     */
+    private static final class ProviderMethodMeta
+    {
+        final InjectionPoint injectionPoint;
+        final Key<?> baseKey;
+        final Class<? extends Annotation> scopeAnnotation;
+        final ImmutableSet<Dependency<?>> dependencies;
+        final ImmutableList<Message> messages;
+
+        ProviderMethodMeta(
+                InjectionPoint injectionPoint,
+                Key<?> baseKey,
+                Class<? extends Annotation> scopeAnnotation,
+                ImmutableSet<Dependency<?>> dependencies,
+                ImmutableList<Message> messages)
+        {
+            this.injectionPoint = injectionPoint;
+            this.baseKey = baseKey;
+            this.scopeAnnotation = scopeAnnotation;
+            this.dependencies = dependencies;
+            this.messages = messages;
+        }
+    }
+
+    private static final ClassValue<ImmutableMap<Method, ProviderMethodMeta>> PROVIDER_METHOD_METAS =
+            new ClassValue<>()
+            {
+                @Override
+                protected ImmutableMap<Method, ProviderMethodMeta> computeValue(Class<?> concreteClass)
+                {
+                    TypeLiteral<?> typeLiteral = TypeLiteral.get(concreteClass);
+                    ImmutableMap.Builder<Method, ProviderMethodMeta> metas = ImmutableMap.builder();
+                    for (Class<?> c = concreteClass; c != Object.class && c != null; c = c.getSuperclass()) {
+                        for (MethodAndAnnotation methodAndAnnotation : DEFAULT_SCAN.get(c).methods) {
+                            Method method = methodAndAnnotation.method;
+                            Errors errors = new Errors(method);
+                            InjectionPoint point = InjectionPoint.forMethod(method, typeLiteral);
+                            TypeLiteral<?> returnType = typeLiteral.getReturnType(method);
+                            Annotation bindingAnnotation =
+                                    Annotations.findBindingAnnotation(errors, method, method.getAnnotations());
+                            Key<?> baseKey =
+                                    bindingAnnotation == null
+                                            ? Key.get(returnType)
+                                            : Key.get(returnType, bindingAnnotation);
+                            Class<? extends Annotation> scopeAnnotation =
+                                    Annotations.findScopeAnnotation(errors, method.getAnnotations());
+                            metas.put(
+                                    method,
+                                    new ProviderMethodMeta(
+                                            point,
+                                            baseKey,
+                                            scopeAnnotation,
+                                            ImmutableSet.copyOf(point.getDependencies()),
+                                            ImmutableList.copyOf(errors.getMessages())));
+                        }
+                    }
+                    return metas.buildOrThrow();
+                }
+            };
+
     private void addDuplicateClaimError(Binder binder, Method method)
     {
         binder.addError(
@@ -407,13 +475,33 @@ public final class ProviderMethodsModule
             Annotation annotation)
     {
         binder = binder.withSource(method);
-        Errors errors = new Errors(method);
 
-        // prepare the parameter providers
-        InjectionPoint point = InjectionPoint.forMethod(method, typeLiteral);
-        @SuppressWarnings("unchecked") // Define T as the method's return type.
-        TypeLiteral<T> returnType = (TypeLiteral<T>) typeLiteral.getReturnType(method);
-        Key<T> key = getKey(errors, returnType, method, method.getAnnotations());
+        InjectionPoint point;
+        Key<T> key;
+        Class<? extends Annotation> scopeAnnotation;
+        ImmutableSet<Dependency<?>> dependencies;
+        ImmutableList<Message> messages;
+        if (scanner == ProvidesMethodScanner.INSTANCE) {
+            // Everything before prepareMethod is class-stable and shared across creations.
+            ProviderMethodMeta meta = PROVIDER_METHOD_METAS.get(getDelegateModuleClass()).get(method);
+            point = meta.injectionPoint;
+            @SuppressWarnings("unchecked") // Define T as the method's return type.
+            Key<T> metaKey = (Key<T>) meta.baseKey;
+            key = metaKey;
+            scopeAnnotation = meta.scopeAnnotation;
+            dependencies = meta.dependencies;
+            messages = meta.messages;
+        }
+        else {
+            Errors errors = new Errors(method);
+            point = InjectionPoint.forMethod(method, typeLiteral);
+            @SuppressWarnings("unchecked") // Define T as the method's return type.
+            TypeLiteral<T> returnType = (TypeLiteral<T>) typeLiteral.getReturnType(method);
+            key = getKey(errors, returnType, method, method.getAnnotations());
+            scopeAnnotation = Annotations.findScopeAnnotation(errors, method.getAnnotations());
+            dependencies = ImmutableSet.copyOf(point.getDependencies());
+            messages = ImmutableList.copyOf(errors.getMessages());
+        }
         boolean prepareMethodError = false;
         try {
             key =
@@ -439,9 +527,7 @@ public final class ProviderMethodsModule
             return null;
         }
 
-        Class<? extends Annotation> scopeAnnotation =
-                Annotations.findScopeAnnotation(errors, method.getAnnotations());
-        for (Message message : errors.getMessages()) {
+        for (Message message : messages) {
             binder.addError(message);
         }
 
@@ -449,7 +535,7 @@ public final class ProviderMethodsModule
                 key,
                 method,
                 isStaticModule() || Modifier.isStatic(method.getModifiers()) ? null : delegate,
-                ImmutableSet.copyOf(point.getDependencies()),
+                dependencies,
                 scopeAnnotation,
                 skipFastClassGeneration,
                 annotation);
