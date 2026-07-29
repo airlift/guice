@@ -232,31 +232,36 @@ public final class BindingSourceRestriction
         return Stream.concat(modules, getAllModules(elementSource.getOriginalElementSource()));
     }
 
+    /**
+     * Stateless, so one instance serves every element of every injector.
+     */
+    private static final DefaultElementVisitor<Void> CLEAR_VISITOR =
+            new DefaultElementVisitor<Void>()
+            {
+                // Base case.
+                @Override
+                protected Void visitOther(Element element)
+                {
+                    Object source = element.getSource();
+                    // Some Module Elements, like Message, don't always have an ElementSource.
+                    if (source instanceof ElementSource) {
+                        clear((ElementSource) source);
+                    }
+                    return null;
+                }
+
+                // Recursive case.
+                @Override
+                public Void visit(PrivateElements privateElements)
+                {
+                    privateElements.getElements().forEach(BindingSourceRestriction::clear);
+                    return null;
+                }
+            };
+
     private static void clear(Element element)
     {
-        element.acceptVisitor(
-                new DefaultElementVisitor<Void>()
-                {
-                    // Base case.
-                    @Override
-                    protected Void visitOther(Element element)
-                    {
-                        Object source = element.getSource();
-                        // Some Module Elements, like Message, don't always have an ElementSource.
-                        if (source instanceof ElementSource) {
-                            clear((ElementSource) source);
-                        }
-                        return null;
-                    }
-
-                    // Recursive case.
-                    @Override
-                    public Void visit(PrivateElements privateElements)
-                    {
-                        privateElements.getElements().forEach(BindingSourceRestriction::clear);
-                        return null;
-                    }
-                });
+        element.acceptVisitor(CLEAR_VISITOR);
     }
 
     private static void clear(ElementSource elementSource)
