@@ -47,6 +47,21 @@ final class EncounterImpl<T>
     private List<MethodAspect> aspects; // lazy
     private boolean valid = true;
 
+    /**
+     * Shared invalidated encounter with nothing registered, for types heard by no listener.
+     */
+    private static final EncounterImpl<Object> EMPTY = new EncounterImpl<>(null, null);
+
+    static {
+        EMPTY.invalidate();
+    }
+
+    @SuppressWarnings("unchecked") // safe: an empty encounter never touches T
+    static <T> EncounterImpl<T> empty()
+    {
+        return (EncounterImpl<T>) EMPTY;
+    }
+
     EncounterImpl(Errors errors, Lookups lookups)
     {
         this.errors = errors;

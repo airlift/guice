@@ -112,6 +112,12 @@ final class MembersInjectorStore
         ImmutableList<SingleMemberInjector> injectors = getInjectors(injectionPoints, errors);
         errors.throwIfNewErrors(numErrorsBefore);
 
+        // With no type listeners bound, the encounter would be created, never spoken to, and
+        // discarded - once per injected type per injector.
+        if (typeListenerBindings.isEmpty()) {
+            return MembersInjectorImpl.create(injector, type, EncounterImpl.empty(), injectors);
+        }
+
         EncounterImpl<T> encounter = new EncounterImpl<>(errors, injector.lookups);
         Set<TypeListener> alreadySeenListeners = new HashSet<>();
         for (TypeListenerBinding binding : typeListenerBindings) {
