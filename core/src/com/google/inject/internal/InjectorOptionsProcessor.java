@@ -19,6 +19,7 @@ package com.google.inject.internal;
 import com.google.inject.Stage;
 import com.google.inject.internal.InjectorImpl.InjectorOptions;
 import com.google.inject.spi.DisableCircularProxiesOption;
+import com.google.inject.spi.Element;
 import com.google.inject.spi.RequireAtInjectOnConstructorsOption;
 import com.google.inject.spi.RequireExactBindingAnnotationsOption;
 import com.google.inject.spi.RequireExplicitBindingsOption;
@@ -42,6 +43,15 @@ class InjectorOptionsProcessor
     InjectorOptionsProcessor(Errors errors)
     {
         super(errors);
+    }
+
+    @Override
+    protected boolean handles(Element element)
+    {
+        return element instanceof DisableCircularProxiesOption
+                || element instanceof RequireExplicitBindingsOption
+                || element instanceof RequireAtInjectOnConstructorsOption
+                || element instanceof RequireExactBindingAnnotationsOption;
     }
 
     @Override

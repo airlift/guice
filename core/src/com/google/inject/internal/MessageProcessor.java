@@ -17,6 +17,7 @@
 package com.google.inject.internal;
 
 import com.google.inject.Guice;
+import com.google.inject.spi.Element;
 import com.google.inject.spi.Message;
 
 import java.util.logging.Level;
@@ -36,6 +37,12 @@ final class MessageProcessor
     MessageProcessor(Errors errors)
     {
         super(errors);
+    }
+
+    @Override
+    protected boolean handles(Element element)
+    {
+        return element instanceof Message;
     }
 
     @Override

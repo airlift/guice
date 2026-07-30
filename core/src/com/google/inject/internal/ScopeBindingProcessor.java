@@ -17,6 +17,7 @@
 package com.google.inject.internal;
 
 import com.google.inject.Scope;
+import com.google.inject.spi.Element;
 import com.google.inject.spi.ScopeBinding;
 
 import java.lang.annotation.Annotation;
@@ -35,6 +36,12 @@ final class ScopeBindingProcessor
     ScopeBindingProcessor(Errors errors)
     {
         super(errors);
+    }
+
+    @Override
+    protected boolean handles(Element element)
+    {
+        return element instanceof ScopeBinding;
     }
 
     @Override

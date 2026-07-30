@@ -22,6 +22,7 @@ import com.google.inject.internal.util.SourceProvider;
 import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
+import com.google.inject.spi.Element;
 import com.google.inject.spi.TypeConverter;
 import com.google.inject.spi.TypeConverterBinding;
 
@@ -235,6 +236,12 @@ final class TypeConverterBindingProcessor
             TypeConverter converter)
     {
         builtIn.add(new TypeConverterBinding(SourceProvider.UNKNOWN_SOURCE, typeMatcher, converter));
+    }
+
+    @Override
+    protected boolean handles(Element element)
+    {
+        return element instanceof TypeConverterBinding;
     }
 
     @Override

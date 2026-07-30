@@ -17,6 +17,7 @@
 package com.google.inject.internal;
 
 import com.google.inject.Binding;
+import com.google.inject.spi.Element;
 import com.google.inject.spi.UntargettedBinding;
 
 /**
@@ -30,6 +31,12 @@ class UntargettedBindingProcessor
     UntargettedBindingProcessor(Errors errors, ProcessedBindingData processedBindingData)
     {
         super(errors, processedBindingData);
+    }
+
+    @Override
+    protected boolean handles(Element element)
+    {
+        return element instanceof Binding;
     }
 
     @Override

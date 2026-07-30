@@ -21,6 +21,7 @@ import com.google.inject.Key;
 import com.google.inject.Provider;
 import com.google.inject.spi.ConstructorBinding;
 import com.google.inject.spi.ConvertedConstantBinding;
+import com.google.inject.spi.Element;
 import com.google.inject.spi.ExposedBinding;
 import com.google.inject.spi.InjectionPoint;
 import com.google.inject.spi.InstanceBinding;
@@ -282,6 +283,12 @@ final class BindingProcessor
                         throw new IllegalStateException("BindingProcessor should override all visitations");
                     }
                 });
+    }
+
+    @Override
+    protected boolean handles(Element element)
+    {
+        return element instanceof Binding || element instanceof PrivateElements;
     }
 
     @Override

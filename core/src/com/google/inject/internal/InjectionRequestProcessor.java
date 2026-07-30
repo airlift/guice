@@ -19,6 +19,7 @@ package com.google.inject.internal;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.ConfigurationException;
 import com.google.inject.Stage;
+import com.google.inject.spi.Element;
 import com.google.inject.spi.InjectionPoint;
 import com.google.inject.spi.InjectionRequest;
 import com.google.inject.spi.StaticInjectionRequest;
@@ -44,6 +45,12 @@ final class InjectionRequestProcessor
     {
         super(errors);
         this.initializer = initializer;
+    }
+
+    @Override
+    protected boolean handles(Element element)
+    {
+        return element instanceof InjectionRequest || element instanceof StaticInjectionRequest;
     }
 
     @Override

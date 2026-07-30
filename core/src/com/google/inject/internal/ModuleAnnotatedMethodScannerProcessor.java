@@ -16,6 +16,7 @@
 
 package com.google.inject.internal;
 
+import com.google.inject.spi.Element;
 import com.google.inject.spi.ModuleAnnotatedMethodScannerBinding;
 
 /**
@@ -29,6 +30,12 @@ final class ModuleAnnotatedMethodScannerProcessor
     ModuleAnnotatedMethodScannerProcessor(Errors errors)
     {
         super(errors);
+    }
+
+    @Override
+    protected boolean handles(Element element)
+    {
+        return element instanceof ModuleAnnotatedMethodScannerBinding;
     }
 
     @Override
