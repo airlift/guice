@@ -18,6 +18,7 @@ package com.google.inject.internal;
 
 import com.google.inject.MembersInjector;
 import com.google.inject.Provider;
+import com.google.inject.spi.Element;
 import com.google.inject.spi.MembersInjectorLookup;
 import com.google.inject.spi.ProviderLookup;
 
@@ -34,6 +35,12 @@ final class LookupProcessor
     LookupProcessor(Errors errors)
     {
         super(errors);
+    }
+
+    @Override
+    protected boolean handles(Element element)
+    {
+        return element instanceof MembersInjectorLookup || element instanceof ProviderLookup;
     }
 
     @Override

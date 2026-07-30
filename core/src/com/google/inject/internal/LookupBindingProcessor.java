@@ -17,6 +17,7 @@
 package com.google.inject.internal;
 
 import com.google.inject.internal.InjectorImpl.JitLimitation;
+import com.google.inject.spi.Element;
 import com.google.inject.spi.MembersInjectorLookup;
 import com.google.inject.spi.ProviderLookup;
 
@@ -29,6 +30,12 @@ final class LookupBindingProcessor
     LookupBindingProcessor(Errors errors)
     {
         super(errors);
+    }
+
+    @Override
+    protected boolean handles(Element element)
+    {
+        return element instanceof MembersInjectorLookup || element instanceof ProviderLookup;
     }
 
     @Override

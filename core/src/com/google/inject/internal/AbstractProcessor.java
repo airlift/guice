@@ -54,6 +54,11 @@ abstract class AbstractProcessor
         try {
             elements.removeIf(
                     e -> {
+                        // Skip the per-element error scoping and double dispatch for element kinds
+                        // this processor never claims; visitOther would just return false.
+                        if (!handles(e)) {
+                            return false;
+                        }
                         this.errors = errorsAnyElement.withSource(e.getSource());
                         return e.acceptVisitor(this);
                     });
@@ -62,6 +67,17 @@ abstract class AbstractProcessor
             this.errors = errorsAnyElement;
             this.injector = null;
         }
+    }
+
+    /**
+     * Returns true if this processor's visit methods may claim the element. Must be at least as
+     * wide as the processor's visit overrides: skipping an element a visit method would have
+     * claimed leaves it unprocessed. Purely an allocation filter - handled-but-declined elements
+     * behave identically either way.
+     */
+    protected boolean handles(Element element)
+    {
+        return true;
     }
 
     @Override

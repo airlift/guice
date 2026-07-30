@@ -16,6 +16,7 @@
 
 package com.google.inject.internal;
 
+import com.google.inject.spi.Element;
 import com.google.inject.spi.PrivateElements;
 
 import java.util.ArrayList;
@@ -34,6 +35,12 @@ final class PrivateElementProcessor
     PrivateElementProcessor(Errors errors)
     {
         super(errors);
+    }
+
+    @Override
+    protected boolean handles(Element element)
+    {
+        return element instanceof PrivateElements;
     }
 
     @Override

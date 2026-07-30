@@ -16,6 +16,7 @@
 
 package com.google.inject.internal;
 
+import com.google.inject.spi.Element;
 import com.google.inject.spi.InterceptorBinding;
 
 /**
@@ -30,6 +31,12 @@ final class InterceptorBindingProcessor
     InterceptorBindingProcessor(Errors errors)
     {
         super(errors);
+    }
+
+    @Override
+    protected boolean handles(Element element)
+    {
+        return element instanceof InterceptorBinding;
     }
 
     @Override
