@@ -259,11 +259,7 @@ interface CycleDetectingLock<ID>
                 // chain-first ordering the cycle walk relies on; no monitor needed. With assertions
                 // enabled the monitor path below runs instead so invariant checks stay exact.
                 if (!CHECK_INVARIANTS && lockImplementation.tryLock()) {
-                    if (lockReentranceCount++ == 0) {
-                        ThreadState current = THREAD_STATE.get();
-                        current.push(this);
-                        lockOwnerState = current;
-                    }
+                    publishOwnership();
                     return ImmutableListMultimap.of();
                 }
 
@@ -301,54 +297,56 @@ interface CycleDetectingLock<ID>
                     current.waitingOn = null;
                     checkInvariants();
 
-                    // mark it as owned by us, chain first so walkers that see the owner see the link
-                    if (lockReentranceCount++ == 0) {
-                        current.push(this);
-                        lockOwnerState = current;
-                    }
+                    // mark it as owned by us
+                    publishOwnership();
                 }
                 // no deadlock is found, locking successful
                 return ImmutableListMultimap.of();
             }
 
+            /**
+             * Owner thread only. Records one acquisition and, on the first one, publishes
+             * ownership chain-first, the ordering the cycle walk relies on.
+             */
+            private void publishOwnership()
+            {
+                if (lockReentranceCount++ == 0) {
+                    ThreadState current = THREAD_STATE.get();
+                    current.push(this);
+                    lockOwnerState = current;
+                }
+            }
+
             @Override
             public void unlock()
             {
-                final Thread currentThread = Thread.currentThread();
                 if (!CHECK_INVARIANTS) {
-                    ThreadState owner = lockOwnerState;
-                    checkState(
-                            owner != null, "Thread is trying to unlock a lock that is not locked");
-                    checkState(
-                            owner.thread == currentThread,
-                            "Thread is trying to unlock a lock owned by another thread");
-                    lockImplementation.unlock();
-                    if (--lockReentranceCount == 0) {
-                        // we no longer own this lock; clear ownership before unlinking so walkers
-                        // that still see the chain link no longer see an owner
-                        lockOwnerState = null;
-                        owner.unlink(this);
-                    }
+                    releaseOwnership();
                     return;
                 }
+                // be sure to release the lock synchronously with updating internal state
                 synchronized (CycleDetectingLockFactory.class) {
                     checkInvariants();
-                    ThreadState owner = lockOwnerState;
-                    checkState(
-                            owner != null, "Thread is trying to unlock a lock that is not locked");
-                    checkState(
-                            owner.thread == currentThread,
-                            "Thread is trying to unlock a lock owned by another thread");
+                    releaseOwnership();
+                }
+            }
 
-                    // releasing underlying lock
-                    lockImplementation.unlock();
-
-                    // be sure to release the lock synchronously with updating internal state
-                    if (--lockReentranceCount == 0) {
-                        // we no longer own this lock
-                        lockOwnerState = null;
-                        owner.unlink(this);
-                    }
+            /**
+             * Owner thread only. Records one release and, on the last one, clears ownership
+             * before unlinking so walkers that still see the chain link no longer see an owner.
+             */
+            private void releaseOwnership()
+            {
+                ThreadState owner = lockOwnerState;
+                checkState(
+                        owner != null, "Thread is trying to unlock a lock that is not locked");
+                checkState(
+                        owner.thread == Thread.currentThread(),
+                        "Thread is trying to unlock a lock owned by another thread");
+                lockImplementation.unlock();
+                if (--lockReentranceCount == 0) {
+                    lockOwnerState = null;
+                    owner.unlink(this);
                 }
             }
 
@@ -454,8 +452,6 @@ interface CycleDetectingLock<ID>
                     ListMultimap<Thread, ID> potentialLocksCycle)
             {
                 boolean found = false;
-                requireNonNull(
-                        state, "Internal error: No locks were found taken by a thread");
                 for (ReentrantCycleDetectingLock<?> ownedLock : state.ownedOldestFirst()) {
                     if (ownedLock == lock) {
                         found = true;
