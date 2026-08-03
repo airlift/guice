@@ -94,7 +94,7 @@ public final class InternalContextTest
         assertThat(context.tryStartConstruction(1, PROXYABLE_DEP)).isNull();
         Runnable proxy = context.tryStartConstruction(1, PROXYABLE_DEP);
         Runnable proxy2 = context.tryStartConstruction(1, PROXYABLE_DEP);
-        assertThat(BytecodeGen.isCircularProxy(proxy)).isTrue();
+        assertThat(CircularProxies.isCircularProxy(proxy)).isTrue();
         int[] called = new int[1];
         context.finishConstruction(1, (Runnable) () -> called[0]++);
         proxy.run(); // The proxy should call the real thing
@@ -120,9 +120,9 @@ public final class InternalContextTest
         Runnable proxy1 = context.tryStartConstruction(1, PROXYABLE_DEP);
         Runnable proxy2 = context.tryStartConstruction(17, PROXYABLE_DEP);
         Runnable proxy3 = context.tryStartConstruction(33, PROXYABLE_DEP);
-        assertThat(BytecodeGen.isCircularProxy(proxy1)).isTrue();
-        assertThat(BytecodeGen.isCircularProxy(proxy2)).isTrue();
-        assertThat(BytecodeGen.isCircularProxy(proxy3)).isTrue();
+        assertThat(CircularProxies.isCircularProxy(proxy1)).isTrue();
+        assertThat(CircularProxies.isCircularProxy(proxy2)).isTrue();
+        assertThat(CircularProxies.isCircularProxy(proxy3)).isTrue();
         // Now force the table to resize.  It resizes to 32 after it is 2/3 full.
         for (int i = 2; i < 12; i++) {
             assertThat(context.tryStartConstruction(i, DEP)).isNull();

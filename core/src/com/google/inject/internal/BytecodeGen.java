@@ -51,14 +51,6 @@ import static com.google.inject.internal.aop.ClassBuilding.signature;
 public final class BytecodeGen
 {
     /**
-     * Returns true if the given object is a circular proxy.
-     */
-    public static boolean isCircularProxy(Object object)
-    {
-        return CircularProxies.isCircularProxy(object);
-    }
-
-    /**
      * Creates a new circular proxy for the given type.
      */
     static <T> T newCircularProxy(Class<T> type, DelegatingInvocationHandler handler)
