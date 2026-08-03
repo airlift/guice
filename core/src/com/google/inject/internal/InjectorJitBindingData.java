@@ -89,7 +89,7 @@ final class InjectorJitBindingData
     void banKey(Key<?> key, InjectorBindingData injectorBindingData, Object source)
     {
         banKeyInParent(key, injectorBindingData, source);
-        bannedKeys.add(key, injectorBindingData, source);
+        banKeyLocally(key, injectorBindingData, source);
     }
 
     /**
@@ -97,6 +97,23 @@ final class InjectorJitBindingData
      * binding at the parent level. This is used to prevent JIT bindings in the parent injector from
      * overriding explicit bindings declared in a child injector.
      */
+    void banKeyInParent(Key<?> key, InjectorBindingData injectorBindingData, Object source)
+    {
+        if (parent.isPresent()) {
+            parent.orElseThrow().banKey(key, injectorBindingData, source);
+        }
+    }
+
+    /**
+     * Bans the key at this level only, without walking further ancestors. Callers own the walk and
+     * the locking discipline: creation-local levels are thread-confined, completed levels require
+     * the family creation lock.
+     */
+    void banKeyLocally(Key<?> key, InjectorBindingData injectorBindingData, Object source)
+    {
+        bannedKeys.add(key, injectorBindingData, source);
+    }
+
     /**
      * True once the creation that built this injector has finished. Bans recorded while processing
      * a new injector family may be applied immediately to ancestors still under construction (their
@@ -116,26 +133,9 @@ final class InjectorJitBindingData
         return creationComplete;
     }
 
-    java.util.Optional<InjectorJitBindingData> parentJitData()
+    Optional<InjectorJitBindingData> parentJitData()
     {
         return parent;
-    }
-
-    /**
-     * Bans the key at this level only, without walking further ancestors. Callers own the walk and
-     * the locking discipline: creation-local levels are thread-confined, completed levels require
-     * the family creation lock.
-     */
-    void banKeyLocally(Key<?> key, InjectorBindingData injectorBindingData, Object source)
-    {
-        bannedKeys.add(key, injectorBindingData, source);
-    }
-
-    void banKeyInParent(Key<?> key, InjectorBindingData injectorBindingData, Object source)
-    {
-        if (parent.isPresent()) {
-            parent.orElseThrow().banKey(key, injectorBindingData, source);
-        }
     }
 
     /**

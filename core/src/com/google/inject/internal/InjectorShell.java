@@ -153,11 +153,6 @@ final class InjectorShell
             return jitBindingData.lock();
         }
 
-        /**
-         * Creates and returns the injector shells for the current modules. Multiple shells will be
-         * returned if any modules contain {@link Binder#newPrivateBinder private environments}. The
-         * primary injector will be first in the returned list.
-         */
         private boolean elementsRecorded;
 
         /**
@@ -203,6 +198,11 @@ final class InjectorShell
             options = optionsProcessor.getOptions(stage, options);
         }
 
+        /**
+         * Creates and returns the injector shells for the current modules. Multiple shells will be
+         * returned if any modules contain {@link Binder#newPrivateBinder private environments}. The
+         * primary injector will be first in the returned list.
+         */
         List<InjectorShell> build(
                 Initializer initializer,
                 ProcessedBindingData processedBindingData,
