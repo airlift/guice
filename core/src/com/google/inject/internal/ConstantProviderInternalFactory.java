@@ -18,8 +18,7 @@ package com.google.inject.internal;
 
 import com.google.inject.spi.Dependency;
 import jakarta.inject.Provider;
-
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import static java.util.Objects.requireNonNull;
 

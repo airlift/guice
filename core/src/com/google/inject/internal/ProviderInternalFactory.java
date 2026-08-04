@@ -19,8 +19,7 @@ package com.google.inject.internal;
 import com.google.errorprone.annotations.Keep;
 import com.google.inject.spi.Dependency;
 import jakarta.inject.Provider;
-
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;

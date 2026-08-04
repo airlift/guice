@@ -18,8 +18,7 @@ package com.google.inject.spi;
 
 import com.google.inject.Binder;
 import com.google.inject.Key;
-
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
 import java.util.Set;

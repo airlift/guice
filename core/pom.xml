@@ -21,10 +21,6 @@
             <artifactId>aopalliance</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.google.code.findbugs</groupId>
-            <artifactId>jsr305</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.google.errorprone</groupId>
             <artifactId>error_prone_annotations</artifactId>
             <optional>true</optional>
@@ -32,6 +28,13 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
+            <exclusions>
+                <exclusion>
+                    <!-- annotations-only, not needed at runtime or compile -->
+                    <groupId>com.google.j2objc</groupId>
+                    <artifactId>j2objc-annotations</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>jakarta.inject</groupId>
@@ -42,11 +45,13 @@
             <artifactId>jspecify</artifactId>
         </dependency>
         <!--
-     | ASM is embedded by default by the JarJar build profile
+     | Optional: needed only when bytecode generation is enabled (guice_bytecode_gen_option) or for
+     | line numbers in error messages; absent ASM degrades gracefully.
     -->
         <dependency>
             <groupId>org.ow2.asm</groupId>
             <artifactId>asm</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -173,81 +178,6 @@
     </build>
 
     <profiles>
-        <profile>
-            <!--
-       | JarJar build profile: Embed ASM classes under a Guice namespace
-      -->
-            <id>guice.with.jarjar</id>
-            <activation>
-                <property>
-                    <name>guice.with.jarjar</name>
-                    <value>!false</value>
-                </property>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.sonatype.plugins</groupId>
-                        <artifactId>jarjar-maven-plugin</artifactId>
-                        <version>1.9</version>
-                        <configuration>
-                            <overwrite>true</overwrite>
-                            <includes>
-                                <include>*:asm*</include>
-                            </includes>
-                            <rules>
-                                <rule>
-                                    <pattern>org.objectweb.asm.*</pattern>
-                                    <result>com.google.inject.internal.asm.$@1</result>
-                                </rule>
-                                <rule>
-                                    <pattern>org.objectweb.asm.**.*</pattern>
-                                    <result>com.google.inject.internal.asm.@1.$@2</result>
-                                </rule>
-                                <keep>
-                                    <pattern>com.google.inject.**</pattern>
-                                </keep>
-                                <keep>
-                                    <pattern>com.googlecode.**</pattern>
-                                </keep>
-                            </rules>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>jarjar</id>
-                                <goals>
-                                    <goal>jarjar</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <!--
-             | Attach the original non-JarJar'd classes so extensions can compile against them
-            -->
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>build-helper-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>classes</id>
-                                <goals>
-                                    <goal>attach-artifact</goal>
-                                </goals>
-                                <phase>package</phase>
-                                <configuration>
-                                    <artifacts>
-                                        <artifact>
-                                            <file>${project.build.directory}/original-${project.build.finalName}.jar</file>
-                                            <classifier>classes</classifier>
-                                        </artifact>
-                                    </artifacts>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
         <profile>
             <!--
        | m2e profile - enable use of JarJar inside Eclipse

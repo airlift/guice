@@ -31,8 +31,7 @@ import com.google.inject.spi.InjectionPoint;
 import com.google.inject.spi.Message;
 import com.google.inject.spi.ModuleAnnotatedMethodScanner;
 import com.google.inject.util.Modules;
-
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Member;

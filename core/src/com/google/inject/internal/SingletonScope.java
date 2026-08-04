@@ -12,8 +12,7 @@ import com.google.inject.Singleton;
 import com.google.inject.internal.CycleDetectingLock.CycleDetectingLockFactory;
 import com.google.inject.spi.Dependency;
 import com.google.inject.spi.Message;
-
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Formatter;
 import java.util.List;
