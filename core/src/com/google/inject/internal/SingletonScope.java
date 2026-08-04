@@ -252,7 +252,7 @@ public class SingletonScope
                                     }
 
                                     @SuppressWarnings("unchecked")
-                                    T proxy = (T) BytecodeGen.newCircularProxy(rawType, invocationHandler);
+                                    T proxy = (T) CircularProxies.newCircularProxy(rawType, invocationHandler);
                                     return proxy;
                                 }
                                 catch (InternalProvisionException e) {

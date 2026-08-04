@@ -132,9 +132,6 @@ abstract class InternalFactory<T>
             InjectorImpl injector,
             Dependency<?> dependency)
     {
-        if (InternalFlags.getUseMethodHandlesOption()) {
-            return InternalMethodHandles.makeProvider(factory, injector, dependency);
-        }
         return new DefaultProvider<>(factory, injector, dependency);
     }
 

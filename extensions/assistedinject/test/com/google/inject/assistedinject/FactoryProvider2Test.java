@@ -29,18 +29,13 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.assistedinject.FactoryProvider2Test.Equals.ComparisonMethod;
 import com.google.inject.assistedinject.FactoryProvider2Test.Equals.Impl;
 import com.google.inject.internal.Annotations;
-import com.google.inject.internal.InternalFlags;
-import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
-import org.aopalliance.intercept.MethodInterceptor;
-import org.aopalliance.intercept.MethodInvocation;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.google.inject.Asserts.assertContains;
 import static com.google.inject.Asserts.assertEqualsBothWays;
@@ -50,7 +45,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.fail;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @SuppressWarnings("deprecation")
 public class FactoryProvider2Test
@@ -1091,44 +1085,6 @@ public class FactoryProvider2Test
                             + Annotations.memberValueString("value", "paint")
                             + ") was bound multiple times.");
         }
-    }
-
-    @Test
-    public void testMethodInterceptorsOnAssistedTypes()
-    {
-        assumeTrue(InternalFlags.isBytecodeGenEnabled());
-        final AtomicInteger invocationCount = new AtomicInteger();
-        final MethodInterceptor interceptor =
-                new MethodInterceptor()
-                {
-                    @Override
-                    public Object invoke(MethodInvocation methodInvocation)
-                            throws Throwable
-                    {
-                        invocationCount.incrementAndGet();
-                        return methodInvocation.proceed();
-                    }
-                };
-
-        Injector injector =
-                Guice.createInjector(
-                        new AbstractModule()
-                        {
-                            @Override
-                            protected void configure()
-                            {
-                                bindInterceptor(Matchers.any(), Matchers.any(), interceptor);
-                                bind(Double.class).toInstance(5.0d);
-                                bind(ColoredCarFactory.class)
-                                        .toProvider(FactoryProvider.newFactory(ColoredCarFactory.class, Mustang.class));
-                            }
-                        });
-
-        ColoredCarFactory factory = injector.getInstance(ColoredCarFactory.class);
-        Mustang mustang = (Mustang) factory.create(Color.GREEN);
-        assertEquals(0, invocationCount.get());
-        mustang.drive();
-        assertEquals(1, invocationCount.get());
     }
 
     /**

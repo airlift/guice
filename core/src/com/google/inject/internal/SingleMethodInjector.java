@@ -24,9 +24,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
-import java.util.function.BiFunction;
 
-import static com.google.inject.internal.InternalMethodHandles.BIFUNCTION_APPLY_HANDLE;
 import static com.google.inject.internal.InternalMethodHandles.castReturnTo;
 import static java.lang.invoke.MethodType.methodType;
 
@@ -126,67 +124,6 @@ final class SingleMethodInjector
                         return handle;
                     }
                 };
-            }
-        }
-        if (InternalFlags.isBytecodeGenEnabled()) {
-            try {
-                BiFunction<Object, Object[], Object> fastMethod = BytecodeGen.fastMethod(method);
-                if (fastMethod != null) {
-                    // (Object receiver, Object[]) -> void
-                    MethodHandle fastMethodHandle;
-                    if (InternalFlags.getUseMethodHandlesForMemberInjectionOption()) {
-                        var handle =
-                                BIFUNCTION_APPLY_HANDLE
-                                        .bindTo(fastMethod)
-                                        // Cast the first parameter to `Object[]`
-                                        .asType(methodType(Object.class, Object[].class, Object.class));
-                        handle = InternalMethodHandles.dropReturn(handle);
-                        // Swap so the receiver is first
-                        handle =
-                                MethodHandles.permuteArguments(
-                                        handle,
-                                        methodType(void.class, Object.class, InternalContext.class),
-                                        new int[] {1, 0});
-                        fastMethodHandle = handle;
-                    }
-                    else {
-                        fastMethodHandle = null;
-                    }
-                    return new MethodInvoker()
-                    {
-                        @Override
-                        public Object invoke(Object target, Object... parameters)
-                                throws InvocationTargetException
-                        {
-                            try {
-                                return fastMethod.apply(target, parameters);
-                            }
-                            catch (Throwable e) {
-                                throw new InvocationTargetException(e); // match JDK reflection behaviour
-                            }
-                        }
-
-                        @Override
-                        public MethodHandle getInjectHandle(
-                                LinkageContext linkageContext,
-                                MethodHandle[] parameterHandles)
-                        {
-                            // Invoke the handle with the parameters.
-                            // The signature is now:
-                            // (InternalContext, Object reciever)-R
-                            var handle =
-                                    InternalMethodHandles.catchErrorInMethodAndRethrowWithSource(
-                                            fastMethodHandle, injectionPoint);
-                            handle =
-                                    MethodHandles.filterArguments(
-                                            handle, 1, InternalMethodHandles.buildObjectArrayFactory(parameterHandles));
-                            return handle;
-                        }
-                    };
-                }
-            }
-            catch (Exception | LinkageError e) {
-                /* fall-through */
             }
         }
 

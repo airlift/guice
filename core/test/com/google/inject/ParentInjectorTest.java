@@ -17,7 +17,6 @@ limitations under the License.
 package com.google.inject;
 
 import com.google.common.collect.ImmutableList;
-import com.google.inject.internal.InternalFlags;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
 import com.google.inject.spi.TypeConverter;
@@ -38,7 +37,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.fail;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * @author jessewilson@google.com (Jesse Wilson)
@@ -57,8 +55,8 @@ public class ParentInjectorTest
             assertContains(
                     e.getMessage(),
                     "ParentInjectorTest$A was bound multiple times.",
-                    "1  : ParentInjectorTest$9.configure",
-                    "2  : ParentInjectorTest$9.configure");
+                    "1  : ParentInjectorTest$7.configure",
+                    "2  : ParentInjectorTest$7.configure");
         }
     }
 
@@ -76,7 +74,7 @@ public class ParentInjectorTest
                     e.getMessage(),
                     "Unable to create binding for ParentInjectorTest$A because it was already configured on"
                             + " one or more child injectors or private modules.",
-                    "ParentInjectorTest$9.configure");
+                    "ParentInjectorTest$7.configure");
         }
     }
 
@@ -179,38 +177,6 @@ public class ParentInjectorTest
                     return null;
                 }
             };
-
-    @Test
-    public void testInterceptorsInherited()
-    {
-        assumeTrue(InternalFlags.isBytecodeGenEnabled());
-        Injector parent =
-                Guice.createInjector(
-                        new AbstractModule()
-                        {
-                            @Override
-                            protected void configure()
-                            {
-                                super.bindInterceptor(
-                                        Matchers.any(),
-                                        Matchers.returns(Matchers.identicalTo(A.class)),
-                                        returnNullInterceptor);
-                            }
-                        });
-
-        Injector child =
-                parent.createChildInjector(
-                        new AbstractModule()
-                        {
-                            @Override
-                            protected void configure()
-                            {
-                                bind(C.class);
-                            }
-                        });
-
-        assertNull(child.getInstance(C.class).interceptedMethod());
-    }
 
     @Test
     public void testTypeConvertersInherited()

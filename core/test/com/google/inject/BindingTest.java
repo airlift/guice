@@ -19,14 +19,11 @@ package com.google.inject;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Runnables;
 import com.google.inject.internal.Annotations;
-import com.google.inject.internal.InternalFlags;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Named;
 import com.google.inject.spi.InjectionPoint;
 import com.google.inject.spi.TypeEncounter;
 import com.google.inject.spi.TypeListener;
-import org.aopalliance.intercept.MethodInterceptor;
-import org.aopalliance.intercept.MethodInvocation;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Constructor;
@@ -48,7 +45,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * @author crazybob@google.com (Bob Lee)
@@ -404,44 +400,6 @@ public class BindingTest
                     "T cannot be used as a key; It is not fully specified.",
                     "at BindingTest$C.anotherT(BindingTest.java:");
         }
-    }
-
-    @Test
-    public void testToConstructorAndMethodInterceptors()
-            throws NoSuchMethodException
-    {
-        assumeTrue(InternalFlags.isBytecodeGenEnabled());
-
-        final Constructor<D> constructor = D.class.getConstructor(Stage.class);
-        final AtomicInteger count = new AtomicInteger();
-        final MethodInterceptor countingInterceptor =
-                new MethodInterceptor()
-                {
-                    @Override
-                    public Object invoke(MethodInvocation methodInvocation)
-                            throws Throwable
-                    {
-                        count.incrementAndGet();
-                        return methodInvocation.proceed();
-                    }
-                };
-
-        Injector injector =
-                Guice.createInjector(
-                        new AbstractModule()
-                        {
-                            @Override
-                            protected void configure()
-                            {
-                                bind(Object.class).toConstructor(constructor);
-                                bindInterceptor(Matchers.any(), Matchers.any(), countingInterceptor);
-                            }
-                        });
-
-        D d = (D) injector.getInstance(Object.class);
-        d.hashCode();
-        d.hashCode();
-        assertEquals(2, count.get());
     }
 
     @Test
@@ -843,7 +801,7 @@ public class BindingTest
                     msg,
                     "Unable to create injector, see the following errors:",
                     "Did you mean?",
-                    "List<BindingTest$Butter> bound at BindingTest$24.configure");
+                    "List<BindingTest$Butter> bound at BindingTest$22.configure");
         }
     }
 

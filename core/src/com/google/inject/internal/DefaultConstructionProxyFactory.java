@@ -58,28 +58,6 @@ final class DefaultConstructionProxyFactory<T>
         @SuppressWarnings("unchecked") // the injection point is for a constructor of T
         final Constructor<T> constructor = (Constructor<T>) injectionPoint.getMember();
 
-        if (InternalFlags.getUseMethodHandlesOption()) {
-            MethodHandle target = InternalMethodHandles.unreflectConstructor(constructor);
-            // If construction fails fall through to the fastclass approach which can
-            // access more constructors.  See comments in ProviderMethod on how to change
-            // Guice APIs to better support this.
-            if (target != null) {
-                return new MethodHandleProxy<T>(injectionPoint, constructor, target);
-            }
-        }
-
-        if (InternalFlags.isBytecodeGenEnabled()) {
-            try {
-                BiFunction<Object, Object[], Object> fastConstructor =
-                        BytecodeGen.fastConstructor(constructor);
-                if (fastConstructor != null) {
-                    return new FastClassProxy<T>(injectionPoint, constructor, fastConstructor);
-                }
-            }
-            catch (Exception | LinkageError e) {
-                /* fall-through */
-            }
-        }
         if (!Modifier.isPublic(constructor.getDeclaringClass().getModifiers())
                 || !Modifier.isPublic(constructor.getModifiers())) {
             constructor.setAccessible(true);

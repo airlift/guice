@@ -16,8 +16,6 @@
 
 package com.google.inject.util;
 
-import com.google.inject.internal.BytecodeGen;
-
 import java.util.Optional;
 
 /**
@@ -34,7 +32,7 @@ public final class Enhanced
      */
     public static boolean isEnhanced(Class<?> clazz)
     {
-        return clazz.getSimpleName().contains(BytecodeGen.ENHANCER_BY_GUICE_MARKER);
+        return clazz.getSimpleName().contains("$$EnhancerByGuice$$");
     }
 
     /**

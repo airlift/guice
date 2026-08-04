@@ -564,7 +564,7 @@ public abstract class InternalContext
                         current = new DelegatingInvocationHandler();
                         this.constructionContexts[index] = current;
                     }
-                    return BytecodeGen.newCircularProxy(raw, (DelegatingInvocationHandler) current);
+                    return CircularProxies.newCircularProxy(raw, (DelegatingInvocationHandler) current);
                 }
                 // See how far is the current key from its ideal slot in the table.
                 int cDistance = distance(c, index, len);

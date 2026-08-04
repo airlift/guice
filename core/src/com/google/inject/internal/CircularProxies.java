@@ -35,4 +35,20 @@ public final class CircularProxies
         return object instanceof Proxy
                 && Proxy.getInvocationHandler(object) instanceof DelegatingInvocationHandler;
     }
+
+    /**
+     * Creates a new circular proxy for the given type.
+     */
+    static <T> T newCircularProxy(Class<T> type, DelegatingInvocationHandler handler)
+    {
+        // Ideally we would add a marker interface to the list of interfaces to implement so that
+        // `isCircularProxy` could just use an instanceof test, but this does not work if the type
+        // in question is owned by a classloader that isn't ours or a descendant of ours.
+        // The other option is something like ClassValue, but it is difficult to bootstrap and would
+        // consume memory for every class passed to `isCircularProxy` which is much larger than the
+        // number of circular proxies.
+        @SuppressWarnings("unchecked") // This is guaranteed by the contract on newProxyInstance
+        T proxy = (T) Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[] {type}, handler);
+        return proxy;
+    }
 }

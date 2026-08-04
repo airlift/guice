@@ -52,10 +52,7 @@ class MembersInjectorImpl<T>
                 encounter.getInjectionListeners().isEmpty()
                         ? null
                         : encounter.getInjectionListeners().asList();
-        var addedAspects =
-                (InternalFlags.isBytecodeGenEnabled() && !encounter.getAspects().isEmpty())
-                        ? encounter.getAspects()
-                        : null;
+
         // A type with nothing to inject gets the plain variant regardless of the method-handle
         // option: there is no member-injection work for handles to speed up, and touching the
         // method-handle variant would drag InternalMethodHandles and the JDK's method-handle
@@ -64,23 +61,21 @@ class MembersInjectorImpl<T>
                 memberInjectors != null
                         || userMembersInjectors != null
                         || injectionListeners != null
-                        || addedAspects != null;
+;
         if (hasWork && InternalFlags.getUseMethodHandlesForMemberInjectionOption()) {
             return new MethodHandleMembersInjectorImpl<>(
                     injector,
                     typeLiteral,
                     memberInjectors,
                     userMembersInjectors,
-                    injectionListeners,
-                    addedAspects);
+                    injectionListeners);
         }
         return new MembersInjectorImpl<>(
                 injector,
                 typeLiteral,
                 memberInjectors,
                 userMembersInjectors,
-                injectionListeners,
-                addedAspects);
+                injectionListeners);
     }
 
     protected final TypeLiteral<T> typeLiteral;
@@ -93,23 +88,21 @@ class MembersInjectorImpl<T>
     protected final ImmutableList<MembersInjector<? super T>> userMembersInjectors;
     @Nullable
     protected final ImmutableList<InjectionListener<? super T>> injectionListeners;
+
     @Nullable
-    protected final ImmutableList<MethodAspect> addedAspects;
 
     private MembersInjectorImpl(
             InjectorImpl injector,
             TypeLiteral<T> typeLiteral,
             ImmutableList<SingleMemberInjector> memberInjectors,
             ImmutableList<MembersInjector<? super T>> userMembersInjectors,
-            ImmutableList<InjectionListener<? super T>> injectionListeners,
-            ImmutableList<MethodAspect> addedAspects)
+            ImmutableList<InjectionListener<? super T>> injectionListeners)
     {
         this.injector = injector;
         this.typeLiteral = typeLiteral;
         this.memberInjectors = memberInjectors;
         this.userMembersInjectors = userMembersInjectors;
         this.injectionListeners = injectionListeners;
-        this.addedAspects = addedAspects;
     }
 
     public ImmutableList<SingleMemberInjector> getMemberInjectors()
@@ -256,11 +249,6 @@ class MembersInjectorImpl<T>
         return ImmutableSet.of();
     }
 
-    public ImmutableList<MethodAspect> getAddedAspects()
-    {
-        return addedAspects == null ? ImmutableList.<MethodAspect>of() : addedAspects;
-    }
-
     /**
      * A specialized implementation that is implemented in terms of MethodHandles.
      */
@@ -277,15 +265,13 @@ class MembersInjectorImpl<T>
                 TypeLiteral<T> typeLiteral,
                 ImmutableList<SingleMemberInjector> memberInjectors,
                 ImmutableList<MembersInjector<? super T>> userMembersInjectors,
-                ImmutableList<InjectionListener<? super T>> injectionListeners,
-                ImmutableList<MethodAspect> addedAspects)
+                ImmutableList<InjectionListener<? super T>> injectionListeners)
         {
             super(injector,
                     typeLiteral,
                     memberInjectors,
                     userMembersInjectors,
-                    injectionListeners,
-                    addedAspects);
+                    injectionListeners);
         }
 
         @Override

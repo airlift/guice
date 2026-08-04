@@ -43,10 +43,6 @@ public class ProviderToInternalFactoryAdapter<T>
             InjectorImpl injector,
             InternalFactory<? extends T> internalFactory)
     {
-        if (InternalFlags.getUseMethodHandlesOption()) {
-            return InternalMethodHandles.makeScopedProvider(internalFactory, injector);
-        }
-
         return new ProviderToInternalFactoryAdapter<>(injector, internalFactory);
     }
 

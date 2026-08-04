@@ -20,11 +20,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.CreationException;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.internal.InternalFlags;
-import com.google.inject.matcher.Matchers;
 import jakarta.inject.Inject;
-import org.aopalliance.intercept.MethodInterceptor;
-import org.aopalliance.intercept.MethodInvocation;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Modifier;
@@ -32,7 +28,6 @@ import java.lang.reflect.Modifier;
 import static com.google.inject.Asserts.assertContains;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * @author jessewilson@google.com (Jesse Wilson)
@@ -71,44 +66,6 @@ public class LineNumbersTest
 
     public interface B {}
 
-    @Test
-    public void testCanHandleLineNumbersForGuiceGeneratedClasses()
-    {
-        assumeTrue(InternalFlags.isBytecodeGenEnabled());
-
-        try {
-            Guice.createInjector(
-                    new AbstractModule()
-                    {
-                        @Override
-                        protected void configure()
-                        {
-                            bindInterceptor(
-                                    Matchers.only(A.class),
-                                    Matchers.any(),
-                                    new MethodInterceptor()
-                                    {
-                                        @Override
-                                        public Object invoke(MethodInvocation methodInvocation)
-                                        {
-                                            return null;
-                                        }
-                                    });
-
-                            bind(A.class);
-                        }
-                    });
-            fail();
-        }
-        catch (CreationException expected) {
-            assertContains(
-                    expected.getMessage(),
-                    "No implementation for LineNumbersTest$B was bound.",
-                    "for 1st parameter b",
-                    "at LineNumbersTest$2.configure");
-        }
-    }
-
     static class GeneratingClassLoader
             extends ClassLoader
     {
@@ -121,35 +78,37 @@ public class LineNumbersTest
 
         Class<?> generate()
         {
-            org.objectweb.asm.ClassWriter cw =
-                    new org.objectweb.asm.ClassWriter(org.objectweb.asm.ClassWriter.COMPUTE_MAXS);
-            cw.visit(
-                    org.objectweb.asm.Opcodes.V1_5,
-                    Modifier.PUBLIC,
-                    name,
-                    null,
-                    org.objectweb.asm.Type.getInternalName(Object.class),
-                    null);
-
-            String sig = "(" + org.objectweb.asm.Type.getDescriptor(B.class) + ")V";
-
-            org.objectweb.asm.MethodVisitor mv =
-                    cw.visitMethod(Modifier.PUBLIC, "<init>", sig, null, null);
-
-            mv.visitAnnotation(org.objectweb.asm.Type.getDescriptor(Inject.class), true);
-            mv.visitCode();
-            mv.visitVarInsn(org.objectweb.asm.Opcodes.ALOAD, 0);
-            mv.visitMethodInsn(
-                    org.objectweb.asm.Opcodes.INVOKESPECIAL,
-                    org.objectweb.asm.Type.getInternalName(Object.class),
-                    "<init>",
-                    "()V");
-            mv.visitInsn(org.objectweb.asm.Opcodes.RETURN);
-            mv.visitMaxs(0, 0);
-            mv.visitEnd();
-            cw.visitEnd();
-
-            byte[] buf = cw.toByteArray();
+            // A public class with an @Inject constructor and no debug info, written with the JDK
+            // class-file API.
+            java.lang.constant.ClassDesc generated = java.lang.constant.ClassDesc.of(name);
+            java.lang.constant.MethodTypeDesc ctorType =
+                    java.lang.constant.MethodTypeDesc.ofDescriptor(
+                            "(" + B.class.descriptorString() + ")V");
+            byte[] buf =
+                    java.lang.classfile.ClassFile.of()
+                            .build(
+                                    generated,
+                                    classBuilder -> {
+                                        classBuilder.withFlags(Modifier.PUBLIC);
+                                        classBuilder.withMethod(
+                                                "<init>",
+                                                ctorType,
+                                                Modifier.PUBLIC,
+                                                methodBuilder -> {
+                                                    methodBuilder.with(
+                                                            java.lang.classfile.attribute.RuntimeVisibleAnnotationsAttribute.of(
+                                                                    java.lang.classfile.Annotation.of(
+                                                                            java.lang.constant.ClassDesc.ofDescriptor(
+                                                                                    Inject.class.descriptorString()))));
+                                                    methodBuilder.withCode(
+                                                            code -> code.aload(0)
+                                                                    .invokespecial(
+                                                                            java.lang.constant.ConstantDescs.CD_Object,
+                                                                            "<init>",
+                                                                            java.lang.constant.MethodTypeDesc.ofDescriptor("()V"))
+                                                                    .return_());
+                                                });
+                                    });
 
             return defineClass(name.replace('/', '.'), buf, 0, buf.length);
         }
@@ -175,7 +134,7 @@ public class LineNumbersTest
                     expected.getMessage(),
                     "No implementation for LineNumbersTest$B was bound.",
                     "for 1st parameter",
-                    "at LineNumbersTest$3.configure");
+                    "at LineNumbersTest$2.configure");
         }
     }
 
