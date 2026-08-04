@@ -17,7 +17,6 @@
 package com.google.inject;
 
 import com.google.common.collect.ImmutableList;
-import com.google.inject.internal.InternalFlags;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.spi.InjectionListener;
@@ -42,7 +41,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * @author jessewilson@google.com (Jesse Wilson)
@@ -203,44 +201,6 @@ public class TypeListenerTest
                 return prefix + methodInvocation.proceed();
             }
         };
-    }
-
-    @Test
-    public void testAddingInterceptors()
-            throws NoSuchMethodException
-    {
-        assumeTrue(InternalFlags.isBytecodeGenEnabled());
-
-        final Matcher<Object> buzz = only(C.class.getMethod("buzz"));
-
-        Injector injector =
-                Guice.createInjector(
-                        new AbstractModule()
-                        {
-                            @Override
-                            protected void configure()
-                            {
-                                bindInterceptor(any(), buzz, prefixInterceptor("ka"));
-                                bindInterceptor(any(), any(), prefixInterceptor("fe"));
-
-                                bindListener(
-                                        onlyAbcd,
-                                        new TypeListener()
-                                        {
-                                            @Override
-                                            public <I> void hear(TypeLiteral<I> type, TypeEncounter<I> encounter)
-                                            {
-                                                encounter.bindInterceptor(any(), prefixInterceptor("li"));
-                                                encounter.bindInterceptor(buzz, prefixInterceptor("no"));
-                                            }
-                                        });
-                            }
-                        });
-
-        // interceptors must be invoked in the order they're bound.
-        C c = injector.getInstance(C.class);
-        assertEquals("kafelinobuzz", c.buzz());
-        assertEquals("felibeep", c.beep());
     }
 
     class OuterThrowsModule
@@ -408,7 +368,7 @@ public class TypeListenerTest
         catch (CreationException expected) {
             assertContains(
                     expected.getMessage(),
-                    "Error notifying TypeListener clumsy (bound at TypeListenerTest$16.configure",
+                    "Error notifying TypeListener clumsy (bound at TypeListenerTest$15.configure",
                     "of TypeListenerTest$A",
                     " Reason: ClassCastException: whoops, failure #1");
         }

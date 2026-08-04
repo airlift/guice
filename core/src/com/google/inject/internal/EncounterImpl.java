@@ -16,14 +16,12 @@
 
 package com.google.inject.internal;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Key;
 import com.google.inject.MembersInjector;
 import com.google.inject.Provider;
 import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.Matcher;
-import com.google.inject.matcher.Matchers;
 import com.google.inject.spi.InjectionListener;
 import com.google.inject.spi.Message;
 import com.google.inject.spi.TypeEncounter;
@@ -44,7 +42,6 @@ final class EncounterImpl<T>
     private final Lookups lookups;
     private List<MembersInjector<? super T>> membersInjectors; // lazy
     private List<InjectionListener<? super T>> injectionListeners; // lazy
-    private List<MethodAspect> aspects; // lazy
     private boolean valid = true;
 
     /**
@@ -73,24 +70,15 @@ final class EncounterImpl<T>
         valid = false;
     }
 
-    ImmutableList<MethodAspect> getAspects()
-    {
-        return aspects == null ? ImmutableList.<MethodAspect>of() : ImmutableList.copyOf(aspects);
-    }
-
     @Override
     public void bindInterceptor(
             Matcher<? super Method> methodMatcher,
             org.aopalliance.intercept.MethodInterceptor... interceptors)
     {
         checkState(valid, "Encounters may not be used after hear() returns.");
-
-        // make sure the applicable aspects is mutable
-        if (aspects == null) {
-            aspects = new ArrayList<>();
-        }
-
-        aspects.add(new MethodAspect(Matchers.any(), methodMatcher, interceptors));
+        // Method interception was removed along with bytecode generation; fail the creation loudly
+        // rather than silently ignoring the interceptors.
+        errors.aopDisabled(methodMatcher, interceptors);
     }
 
     ImmutableSet<MembersInjector<? super T>> getMembersInjectors()

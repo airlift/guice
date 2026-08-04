@@ -28,14 +28,8 @@ public final class InternalFlags
     private static final IncludeStackTraceOption INCLUDE_STACK_TRACES =
             getSystemOption("guice_include_stack_traces", IncludeStackTraceOption.OFF);
 
-    private static final CustomClassLoadingOption CUSTOM_CLASS_LOADING =
-            getSystemOption("guice_custom_class_loading", CustomClassLoadingOption.BRIDGE);
-
     private static final NullableProvidesOption NULLABLE_PROVIDES =
             getSystemOption("guice_check_nullable_provides_params", NullableProvidesOption.ERROR);
-
-    private static final BytecodeGenOption BYTECODE_GEN_OPTION =
-            getSystemOption("guice_bytecode_gen_option", BytecodeGenOption.DISABLED);
 
     private static final ColorizeOption COLORIZE_OPTION =
             getSystemOption("guice_colorize_error_messages", ColorizeOption.OFF);
@@ -47,14 +41,7 @@ public final class InternalFlags
             getSystemOption("guice_use_method_handles_for_member_injection", UseMethodHandlesOption.YES);
 
     /**
-     * The options for using `MethodHandles`.
-     *
-     * <p>YES builds MethodHandle chains at injector creation time and provisions through them instead
-     * of reflection. It is a win for shallow graphs and member injection, but it does not scale: the
-     * composed handle chains outgrow the JIT's inlining budget, so the cost grows with the size of the
-     * graph being provisioned. Measured on a 300-binding graph, PRODUCTION-stage injector creation was
-     * roughly twice as slow and provisioning the deepest type roughly four times as slow as the
-     * reflective path. NO is therefore the default; turn it on only for small, shallow injectors.
+     * Whether member injection goes through MethodHandles (via Lookup.unreflect) or reflection.
      */
     public enum UseMethodHandlesOption
     {
@@ -89,44 +76,6 @@ public final class InternalFlags
     }
 
     /**
-     * The options for Guice custom class loading.
-     */
-    public enum CustomClassLoadingOption
-    {
-        /**
-         * Define fast/enhanced types in the same class loader as their original type, never creates
-         * class loaders. Uses {@link java.lang.invoke.MethodHandles.Lookup} to define the type in the
-         * original type's runtime package.
-         */
-        OFF,
-
-        /**
-         * Define fast/enhanced types anonymously as hidden nest-mates, never creates class loaders.
-         * This is faster than regular class loading and the resulting classes are easier to unload.
-         *
-         * <p>Note: with this option you cannot look up fast/enhanced types by name or mock/spy them.
-         *
-         * <p>Note: defining hidden classes needs full privilege access to the host, which is only
-         * available when the host is in the same module as Guice. Hosts in other modules fall back to
-         * being defined alongside their original type.
-         */
-        ANONYMOUS,
-
-        /**
-         * Attempt to define fast/enhanced types in the same class loader as their original type.
-         * Otherwise creates a child class loader whose parent is the original class loader. (Default)
-         */
-        BRIDGE,
-
-        /**
-         * Define fast/enhanced types in a child class loader whose parent is the original class loader.
-         *
-         * <p>Note: with this option you cannot intercept package-private methods.
-         */
-        CHILD,
-    }
-
-    /**
      * Options for handling nullable parameters used in provides methods.
      */
     public enum NullableProvidesOption
@@ -143,36 +92,6 @@ public final class InternalFlags
          * Error if null parameters are passed to non-@Nullable parameters of provides parameters
          */
         ERROR,
-    }
-
-    /**
-     * Options for controlling whether Guice uses bytecode generation at runtime. When bytecode
-     * generation is enabled, the following features will be enabled in Guice:
-     *
-     * <ul>
-     *   <li>Runtime bytecode generation (instead of reflection) will be used when Guice need to
-     *       invoke application code.
-     *   <li>Method interception.
-     * </ul>
-     *
-     * <p>Generating those classes costs about 22% of cold injector creation, measured on graphs of
-     * 300 to 3000 bindings, and buys nothing measurable back: with member injection going through
-     * MethodHandles rather than BytecodeGen, provisioning is the same either way. So this defaults to
-     * DISABLED here, and the only thing given up is method interception.
-     *
-     * <p>Set {@code -Dguice_bytecode_gen_option=ENABLED} to get interception back.
-     */
-    public enum BytecodeGenOption
-    {
-        /**
-         * Bytecode generation is disabled and using features that require it such as method
-         * interception will throw errors at run time.
-         */
-        DISABLED,
-        /**
-         * Bytecode generation is enabled.
-         */
-        ENABLED,
     }
 
     /**
@@ -210,19 +129,9 @@ public final class InternalFlags
         return INCLUDE_STACK_TRACES;
     }
 
-    public static CustomClassLoadingOption getCustomClassLoadingOption()
-    {
-        return CUSTOM_CLASS_LOADING;
-    }
-
     public static NullableProvidesOption getNullableProvidesOption()
     {
         return NULLABLE_PROVIDES;
-    }
-
-    public static boolean isBytecodeGenEnabled()
-    {
-        return BYTECODE_GEN_OPTION == BytecodeGenOption.ENABLED;
     }
 
     public static boolean enableColorizeErrorMessages()
@@ -231,31 +140,15 @@ public final class InternalFlags
     }
 
     /**
-     * Whether to construct instances through MethodHandle chains rather than reflection.
-     */
-    public static boolean getUseMethodHandlesOption()
-    {
-        return USE_METHOD_HANDLES
-                == UseMethodHandlesOption.YES
-                && isBytecodeGenEnabled();
-    }
-
-    /**
      * Whether to inject members through MethodHandles.
      *
-     * <p>This is separate from {@link #getUseMethodHandlesOption} because the two paths behave very
-     * differently. Handles do not scale for construction: the composed chains outgrow the JIT's
-     * inlining budget, so cost grows with the size of the graph. Member injection composes a handle
-     * per member instead, which stays small, and measures about twice as fast as reflection.
+     * <p>Member injection composes one handle per member through Lookup.unreflect, which generates
+     * nothing, stays within the JIT's inlining budget, and measures about twice as fast as
+     * reflection.
      */
     public static boolean getUseMethodHandlesForMemberInjectionOption()
     {
-        // Deliberately not gated on bytecode generation. Member injection reaches its handles through
-        // MethodHandles.Lookup.unreflect, which generates nothing; BytecodeGen is only a fallback for
-        // when unreflect fails. Gating it here made disabling bytecode generation fall all the way back
-        // to reflection, which cost more than the generation it saved.
-        return USE_METHOD_HANDLES == UseMethodHandlesOption.YES
-                || USE_METHOD_HANDLES_FOR_MEMBER_INJECTION == UseMethodHandlesOption.YES;
+        return USE_METHOD_HANDLES_FOR_MEMBER_INJECTION == UseMethodHandlesOption.YES;
     }
 
     /**

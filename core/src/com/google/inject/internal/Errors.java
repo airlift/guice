@@ -148,9 +148,19 @@ public final class Errors
     {
         return addMessage(
                 ErrorId.AOP_DISABLED,
-                "Binding interceptor is not supported when bytecode generation is disabled. \nInterceptor"
+                "Method interception is not supported by this Guice build. \nInterceptor"
                         + " bound at: %s",
                 binding.getSource());
+    }
+
+    public Errors aopDisabled(Object methodMatcher, Object[] interceptors)
+    {
+        return addMessage(
+                ErrorId.AOP_DISABLED,
+                "Method interception is not supported by this Guice build. \nInterceptors"
+                        + " %s bound via a TypeListener for methods matching %s",
+                java.util.Arrays.asList(interceptors),
+                methodMatcher);
     }
 
     /**

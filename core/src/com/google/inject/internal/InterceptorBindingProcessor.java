@@ -42,13 +42,7 @@ final class InterceptorBindingProcessor
     @Override
     public Boolean visit(InterceptorBinding command)
     {
-        if (InternalFlags.isBytecodeGenEnabled()) {
-            injector.getBindingData().addInterceptorBinding(command);
-        }
-        else {
-            errors.aopDisabled(command);
-        }
-
+        errors.aopDisabled(command);
         return true;
     }
 }

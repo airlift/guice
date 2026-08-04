@@ -36,7 +36,6 @@ import com.google.inject.Stage;
 import com.google.inject.TypeLiteral;
 import com.google.inject.internal.Errors;
 import com.google.inject.internal.InternalFlags;
-import com.google.inject.internal.InternalFlags.CustomClassLoadingOption;
 import com.google.inject.internal.ProviderMethod;
 import com.google.inject.internal.ProviderMethodsModule;
 import com.google.inject.name.Named;
@@ -64,14 +63,12 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.inject.Asserts.assertContains;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * @author crazybob@google.com (Bob Lee)
@@ -720,25 +717,6 @@ public class ProviderMethodsTest
         }
     }
 
-    @Test
-    public void testShareFastClass()
-    {
-        if (InternalFlags.getUseMethodHandlesOption()) {
-            // This test is not relevant for method handles.
-            return;
-        }
-        // FastClass is only used when bytecode generation is enabled and this test relies on package
-        // access which CHILD loading doesn't have.
-        assumeTrue(
-                InternalFlags.isBytecodeGenEnabled()
-                        && InternalFlags.getCustomClassLoadingOption() != CustomClassLoadingOption.CHILD);
-
-        CallerInspecterModule module = new CallerInspecterModule();
-        Guice.createInjector(Stage.PRODUCTION, module);
-        assertEquals(module.fooCallerClass, module.barCallerClass);
-        assertTrue(module.fooCallerClass.contains("$$FastClassByGuice$$"));
-    }
-
     private static class CallerInspecterModule
             extends AbstractModule
     {
@@ -761,25 +739,6 @@ public class ProviderMethodsTest
             this.barCallerClass = new Exception().getStackTrace()[1].getClassName();
             return 42L;
         }
-    }
-
-    @Test
-    public void testShareFastClassWithSuperClass()
-    {
-        if (InternalFlags.getUseMethodHandlesOption()) {
-            return;
-        }
-        // FastClass is only used when bytecode generation is enabled and this test relies on package
-        // access which CHILD loading doesn't have.
-        assumeTrue(
-                InternalFlags.isBytecodeGenEnabled()
-                        && InternalFlags.getCustomClassLoadingOption() != CustomClassLoadingOption.CHILD);
-
-        CallerInspecterSubClassModule module = new CallerInspecterSubClassModule();
-        Guice.createInjector(Stage.PRODUCTION, module);
-        assertEquals(module.fooCallerClass, module.barCallerClass, "Expected provider methods in the same class to share fastclass classes");
-        assertFalse(module.bazCallerClass.equals(module.barCallerClass), "Did not expect provider methods in the subclasses to share fastclass classes "
-                + "with their parent classes");
     }
 
     private static class CallerInspecterSubClassModule
