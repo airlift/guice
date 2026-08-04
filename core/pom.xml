@@ -67,6 +67,26 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <!--
+                     | Stock Guice publishes an unshaded "classes" classifier that airlift's poms depend
+                     | on. Our main jar IS the unshaded classes, so attach it under that classifier too,
+                     | letting ecosystem builds resolve this fork without coordinate changes.
+                    -->
+                        <id>classes-classifier</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>classes</classifier>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <!--
        | Add standard LICENSE and NOTICE files
       -->
