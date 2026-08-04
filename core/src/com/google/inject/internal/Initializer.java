@@ -23,8 +23,7 @@ import com.google.inject.Stage;
 import com.google.inject.TypeLiteral;
 import com.google.inject.internal.CycleDetectingLock.CycleDetectingLockFactory;
 import com.google.inject.spi.InjectionPoint;
-
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.IdentityHashMap;

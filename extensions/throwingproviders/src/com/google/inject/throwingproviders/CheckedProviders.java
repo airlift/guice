@@ -1,8 +1,7 @@
 package com.google.inject.throwingproviders;
 
 import com.google.inject.TypeLiteral;
-
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;

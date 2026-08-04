@@ -18,19 +18,17 @@ package com.google.inject.internal.util;
 
 import com.google.common.base.Stopwatch;
 
-import javax.annotation.concurrent.NotThreadSafe;
-
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 /**
- * A continuously timing stopwatch that is used for simple performance monitoring.
+ * A continuously timing stopwatch that is used for simple performance monitoring. Not
+ * thread-safe.
  *
  * @author crazybob@google.com (Bob Lee)
  */
-@NotThreadSafe
 public final class ContinuousStopwatch
 {
     private static final Logger logger =

@@ -45,8 +45,7 @@ import com.google.inject.spi.InstanceBinding;
 import com.google.inject.spi.ProviderBinding;
 import com.google.inject.spi.TypeConverterBinding;
 import com.google.inject.util.Providers;
-
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.GenericArrayType;

@@ -18,8 +18,7 @@ package com.google.inject.spi;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Module;
-
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 

@@ -4,8 +4,7 @@ import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
 import com.google.common.truth.ThrowableSubject;
 import com.google.inject.throwingproviders.CheckedProvider;
-
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import static com.google.common.truth.Fact.fact;
 import static com.google.common.truth.Fact.simpleFact;

@@ -19,8 +19,7 @@ package com.google.inject.internal;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.errorprone.annotations.Keep;
 import com.google.inject.spi.Dependency;
-
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
