@@ -4,13 +4,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.google.inject</groupId>
+        <groupId>io.airlift</groupId>
         <artifactId>guice-parent</artifactId>
         <version>7.0.1-SNAPSHOT</version>
     </parent>
 
-    <groupId>com.google.inject.extensions</groupId>
-    <artifactId>extensions-parent</artifactId>
+    <groupId>io.airlift</groupId>
+    <artifactId>guice-extensions-parent</artifactId>
 
     <packaging>pom</packaging>
 
@@ -32,7 +32,7 @@
      | All extensions depend on the core
     -->
         <dependency>
-            <groupId>com.google.inject</groupId>
+            <groupId>io.airlift</groupId>
             <artifactId>guice</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -49,7 +49,7 @@
      | Some extension tests depend on the core tests
     -->
         <dependency>
-            <groupId>com.google.inject</groupId>
+            <groupId>io.airlift</groupId>
             <artifactId>guice</artifactId>
             <version>${project.version}</version>
             <classifier>tests</classifier>

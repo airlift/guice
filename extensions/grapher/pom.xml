@@ -4,8 +4,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.google.inject.extensions</groupId>
-        <artifactId>extensions-parent</artifactId>
+        <groupId>io.airlift</groupId>
+        <artifactId>guice-extensions-parent</artifactId>
         <version>7.0.1-SNAPSHOT</version>
     </parent>
 
@@ -25,7 +25,7 @@
             <artifactId>jakarta.inject-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.google.inject.extensions</groupId>
+            <groupId>io.airlift</groupId>
             <artifactId>guice-assistedinject</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>

@@ -21,7 +21,7 @@ See the Apache License Version 2.0 for the specific language governing permissio
         <version>399</version>
     </parent>
 
-    <groupId>com.google.inject</groupId>
+    <groupId>io.airlift</groupId>
     <artifactId>guice-parent</artifactId>
     <version>7.0.1-SNAPSHOT</version>
 
