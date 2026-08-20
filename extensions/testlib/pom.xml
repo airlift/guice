@@ -4,8 +4,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.google.inject.extensions</groupId>
-        <artifactId>extensions-parent</artifactId>
+        <groupId>io.airlift</groupId>
+        <artifactId>guice-extensions-parent</artifactId>
         <version>7.0.1-SNAPSHOT</version>
     </parent>
 
@@ -25,14 +25,14 @@
             <artifactId>guava</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.google.inject.extensions</groupId>
-            <artifactId>guice-throwingproviders</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
             <groupId>com.google.truth</groupId>
             <artifactId>truth</artifactId>
             <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.airlift</groupId>
+            <artifactId>guice-throwingproviders</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>jakarta.inject</groupId>
