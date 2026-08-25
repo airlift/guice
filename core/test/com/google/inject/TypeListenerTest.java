@@ -23,8 +23,6 @@ import com.google.inject.spi.InjectionListener;
 import com.google.inject.spi.Message;
 import com.google.inject.spi.TypeEncounter;
 import com.google.inject.spi.TypeListener;
-import org.aopalliance.intercept.MethodInterceptor;
-import org.aopalliance.intercept.MethodInvocation;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -188,19 +186,6 @@ public class TypeListenerTest
         A a3 = aProvider.get();
         A a4 = aProvider.get();
         assertEquals(ImmutableList.of(a1, a2, b1, a3, a4), injectees);
-    }
-
-    private static MethodInterceptor prefixInterceptor(final String prefix)
-    {
-        return new MethodInterceptor()
-        {
-            @Override
-            public Object invoke(MethodInvocation methodInvocation)
-                    throws Throwable
-            {
-                return prefix + methodInvocation.proceed();
-            }
-        };
     }
 
     class OuterThrowsModule
@@ -368,7 +353,7 @@ public class TypeListenerTest
         catch (CreationException expected) {
             assertContains(
                     expected.getMessage(),
-                    "Error notifying TypeListener clumsy (bound at TypeListenerTest$15.configure",
+                    "Error notifying TypeListener clumsy (bound at TypeListenerTest$14.configure",
                     "of TypeListenerTest$A",
                     " Reason: ClassCastException: whoops, failure #1");
         }
@@ -749,23 +734,6 @@ public class TypeListenerTest
                     {
                         @Override
                         public void afterInjection(Object injectee) {}
-                    });
-            fail();
-        }
-        catch (IllegalStateException expected) {
-        }
-
-        try {
-            encounter.bindInterceptor(
-                    any(),
-                    new MethodInterceptor()
-                    {
-                        @Override
-                        public Object invoke(MethodInvocation methodInvocation)
-                                throws Throwable
-                        {
-                            return methodInvocation.proceed();
-                        }
                     });
             fail();
         }

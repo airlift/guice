@@ -16,17 +16,13 @@
 
 package com.google.inject.internal;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.spi.InjectionPoint;
-import org.aopalliance.intercept.MethodInterceptor;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.List;
 import java.util.function.BiFunction;
 import java.util.stream.IntStream;
 
@@ -87,12 +83,6 @@ final class DefaultConstructionProxyFactory<T>
         public Constructor<T> getConstructor()
         {
             return constructor;
-        }
-
-        @Override
-        public ImmutableMap<Method, List<MethodInterceptor>> getMethodInterceptors()
-        {
-            return ImmutableMap.of();
         }
     }
 

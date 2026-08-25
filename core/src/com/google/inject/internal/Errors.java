@@ -30,7 +30,6 @@ import com.google.inject.Scope;
 import com.google.inject.TypeLiteral;
 import com.google.inject.internal.util.SourceProvider;
 import com.google.inject.spi.ElementSource;
-import com.google.inject.spi.InterceptorBinding;
 import com.google.inject.spi.Message;
 import com.google.inject.spi.ScopeBinding;
 import com.google.inject.spi.TypeConverterBinding;
@@ -142,25 +141,6 @@ public final class Errors
         return source == this.source || source == SourceProvider.UNKNOWN_SOURCE
                 ? this
                 : new Errors(this, source);
-    }
-
-    public Errors aopDisabled(InterceptorBinding binding)
-    {
-        return addMessage(
-                ErrorId.AOP_DISABLED,
-                "Method interception is not supported by this Guice build. \nInterceptor"
-                        + " bound at: %s",
-                binding.getSource());
-    }
-
-    public Errors aopDisabled(Object methodMatcher, Object[] interceptors)
-    {
-        return addMessage(
-                ErrorId.AOP_DISABLED,
-                "Method interception is not supported by this Guice build. \nInterceptors"
-                        + " %s bound via a TypeListener for methods matching %s",
-                java.util.Arrays.asList(interceptors),
-                methodMatcher);
     }
 
     /**

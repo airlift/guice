@@ -27,7 +27,6 @@ import com.google.inject.Key;
 import com.google.inject.Scope;
 import com.google.inject.TypeLiteral;
 import com.google.inject.spi.InjectionRequest;
-import com.google.inject.spi.InterceptorBinding;
 import com.google.inject.spi.MembersInjectorLookup;
 import com.google.inject.spi.ModuleAnnotatedMethodScannerBinding;
 import com.google.inject.spi.ProviderLookup;
@@ -636,18 +635,6 @@ public class WeakKeySetTest
         public Iterable<TypeConverterBinding> getConvertersThisLevel()
         {
             return ImmutableSet.of();
-        }
-
-        @Override
-        public void addInterceptorBinding(InterceptorBinding interceptorBinding)
-        {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public ImmutableList<InterceptorBinding> getInterceptorBindings()
-        {
-            return ImmutableList.of();
         }
 
         @Override

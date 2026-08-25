@@ -16,7 +16,6 @@
 
 package com.google.inject.spi;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Binding;
@@ -41,8 +40,6 @@ import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.google.inject.util.Providers;
-import org.aopalliance.intercept.MethodInterceptor;
-import org.aopalliance.intercept.MethodInvocation;
 import org.junit.jupiter.api.Test;
 
 import java.lang.annotation.Annotation;
@@ -52,7 +49,6 @@ import java.lang.annotation.Target;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -906,44 +902,6 @@ public class ElementsTest
     }
 
     @Test
-    public void testBindIntercepor()
-    {
-        @SuppressWarnings("rawtypes") // Unavoidable since subclassesOf returns raw type
-        final Matcher<Class> classMatcher = Matchers.subclassesOf(List.class);
-        final Matcher<Object> methodMatcher = Matchers.any();
-        final MethodInterceptor methodInterceptor =
-                new MethodInterceptor()
-                {
-                    @Override
-                    public Object invoke(MethodInvocation methodInvocation)
-                    {
-                        return null;
-                    }
-                };
-
-        checkModule(
-                new AbstractModule()
-                {
-                    @Override
-                    protected void configure()
-                    {
-                        bindInterceptor(classMatcher, methodMatcher, methodInterceptor);
-                    }
-                },
-                new FailingElementVisitor()
-                {
-                    @Override
-                    public Void visit(InterceptorBinding command)
-                    {
-                        assertSame(classMatcher, command.getClassMatcher());
-                        assertSame(methodMatcher, command.getMethodMatcher());
-                        assertEquals(Arrays.asList(methodInterceptor), command.getInterceptors());
-                        return null;
-                    }
-                });
-    }
-
-    @Test
     public void testBindScope()
     {
         checkModule(
@@ -1588,7 +1546,6 @@ public class ElementsTest
                                                 field,
                                                 constructorBinding.getInjectableMembers().stream().collect(onlyElement()).getMember());
                                         assertEquals(2, constructorBinding.getDependencies().size());
-                                        assertEquals(ImmutableMap.of(), constructorBinding.getMethodInterceptors());
                                         return null;
                                     }
                                 });

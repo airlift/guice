@@ -52,10 +52,8 @@ import com.google.inject.multibindings.MapBinder;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.OptionalBinder;
 import com.google.inject.util.Modules;
-import org.aopalliance.intercept.MethodInterceptor;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -351,16 +349,6 @@ public final class Elements
             this.privateBindersForScanning = parent.privateBindersForScanning;
             this.permitMapConstruction = parent.permitMapConstruction;
             this.scannerSource = parent.scannerSource;
-        }
-
-        @Override
-        public void bindInterceptor(
-                Matcher<? super Class<?>> classMatcher,
-                Matcher<? super Method> methodMatcher,
-                MethodInterceptor... interceptors)
-        {
-            elements.add(
-                    new InterceptorBinding(getElementSource(), classMatcher, methodMatcher, interceptors));
         }
 
         @Override

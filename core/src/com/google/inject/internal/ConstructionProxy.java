@@ -16,15 +16,11 @@
 
 package com.google.inject.internal;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.spi.InjectionPoint;
-import org.aopalliance.intercept.MethodInterceptor;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.List;
 
 /**
  * Proxies calls to a {@link java.lang.reflect.Constructor} for a class {@code T}.
@@ -57,9 +53,4 @@ interface ConstructionProxy<T>
      * code for method interception), the natural constructor is returned.
      */
     Constructor<T> getConstructor();
-
-    /**
-     * Returns the interceptors applied to each method, in order of invocation.
-     */
-    ImmutableMap<Method, List<MethodInterceptor>> getMethodInterceptors();
 }

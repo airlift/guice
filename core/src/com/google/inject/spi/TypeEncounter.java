@@ -37,6 +37,21 @@ import java.lang.reflect.Method;
 public interface TypeEncounter<I>
 {
     /**
+     * Binary-compatibility shim: method interception was removed from this Guice build. Records a
+     * creation error instead of failing to link.
+     */
+    default void bindInterceptor(
+            Matcher<? super Method> methodMatcher,
+            MethodInterceptor... interceptors)
+    {
+        addError(
+                "Method interception is not supported by this Guice build (interceptors %s for"
+                        + " methods matching %s, bound via a TypeListener)",
+                java.util.Arrays.asList(interceptors),
+                methodMatcher);
+    }
+
+    /**
      * Records an error message for type {@code I} which will be presented to the user at a later
      * time. Unlike throwing an exception, this enable us to continue configuring the Injector and
      * discover more errors. Uses {@link String#format(String, Object[])} to insert the arguments into
@@ -101,20 +116,4 @@ public interface TypeEncounter<I>
      * injections have been performed on an instance of {@code I}.
      */
     void register(InjectionListener<? super I> listener);
-
-    /**
-     * Binds method interceptor[s] to methods matched in type {@code I} and its supertypes. A method
-     * is eligible for interception if:
-     *
-     * <ul>
-     *   <li>Guice created the instance the method is on
-     *   <li>Neither the enclosing type nor the method is final
-     *   <li>And the method is package-private or more accessible
-     * </ul>
-     *
-     * @param methodMatcher matches methods the interceptor should apply to. For example: {@code
-     *         annotatedWith(Transactional.class)}.
-     * @param interceptors to bind
-     */
-    void bindInterceptor(Matcher<? super Method> methodMatcher, MethodInterceptor... interceptors);
 }
