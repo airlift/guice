@@ -23,10 +23,8 @@ import com.google.inject.TypeLiteral;
  * one situation but only its methods and fields injected in another, Guice will notify this
  * listener once.
  *
- * <p>Useful for extra type checking, {@linkplain TypeEncounter#register(InjectionListener)
- * registering injection listeners}, and {@linkplain TypeEncounter#bindInterceptor(
- * com.google.inject.matcher.Matcher, org.aopalliance.intercept.MethodInterceptor[]) binding method
- * interceptors}.
+ * <p>Useful for extra type checking and {@linkplain TypeEncounter#register(InjectionListener)
+ * registering injection listeners}.
  *
  * @since 2.0
  */

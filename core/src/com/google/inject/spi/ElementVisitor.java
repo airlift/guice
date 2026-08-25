@@ -30,15 +30,20 @@ import com.google.inject.Inject;
 public interface ElementVisitor<V>
 {
     /**
+     * Binary-compatibility shim for the removed interception SPI. The injector never produces
+     * {@link InterceptorBinding} elements; this exists so visitors compiled against stock Guice
+     * keep linking.
+     */
+    default V visit(InterceptorBinding binding)
+    {
+        return null;
+    }
+
+    /**
      * Visit a mapping from a key (type and optional annotation) to the strategy for getting instances
      * of the type.
      */
     <T> V visit(Binding<T> binding);
-
-    /**
-     * Visit a registration of interceptors for matching methods of matching classes.
-     */
-    V visit(InterceptorBinding binding);
 
     /**
      * Visit a registration of a scope annotation with the scope that implements it.

@@ -30,6 +30,12 @@ import com.google.inject.Binding;
 public abstract class DefaultElementVisitor<V>
         implements ElementVisitor<V>
 {
+    @Override
+    public V visit(InterceptorBinding interceptorBinding)
+    {
+        return visitOther(interceptorBinding);
+    }
+
     /**
      * Default visit implementation. Returns {@code null}.
      */
@@ -48,12 +54,6 @@ public abstract class DefaultElementVisitor<V>
     public <T> V visit(Binding<T> binding)
     {
         return visitOther(binding);
-    }
-
-    @Override
-    public V visit(InterceptorBinding interceptorBinding)
-    {
-        return visitOther(interceptorBinding);
     }
 
     @Override

@@ -49,9 +49,11 @@ public interface ConstructorBinding<T>
     Set<InjectionPoint> getInjectableMembers();
 
     /**
-     * Returns the interceptors applied to each method, in the order that they will be applied.
-     *
-     * @return a possibly empty map
+     * Binary-compatibility shim: method interception was removed from this Guice build, so no
+     * binding carries interceptors.
      */
-    Map<Method, List<MethodInterceptor>> getMethodInterceptors();
+    default Map<Method, List<MethodInterceptor>> getMethodInterceptors()
+    {
+        return java.util.Map.of();
+    }
 }

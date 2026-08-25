@@ -247,8 +247,7 @@ public abstract class PrivateModule
     }
 
     /**
-     * @see Binder#bindInterceptor(com.google.inject.matcher.Matcher,
-     *         com.google.inject.matcher.Matcher, org.aopalliance.intercept.MethodInterceptor[])
+     * @see Binder#bindInterceptor
      */
     protected final void bindInterceptor(
             Matcher<? super Class<?>> classMatcher,

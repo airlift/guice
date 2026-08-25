@@ -21,12 +21,10 @@ import com.google.inject.Key;
 import com.google.inject.MembersInjector;
 import com.google.inject.Provider;
 import com.google.inject.TypeLiteral;
-import com.google.inject.matcher.Matcher;
 import com.google.inject.spi.InjectionListener;
 import com.google.inject.spi.Message;
 import com.google.inject.spi.TypeEncounter;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -68,17 +66,6 @@ final class EncounterImpl<T>
     void invalidate()
     {
         valid = false;
-    }
-
-    @Override
-    public void bindInterceptor(
-            Matcher<? super Method> methodMatcher,
-            org.aopalliance.intercept.MethodInterceptor... interceptors)
-    {
-        checkState(valid, "Encounters may not be used after hear() returns.");
-        // Method interception was removed along with bytecode generation; fail the creation loudly
-        // rather than silently ignoring the interceptors.
-        errors.aopDisabled(methodMatcher, interceptors);
     }
 
     ImmutableSet<MembersInjector<? super T>> getMembersInjectors()

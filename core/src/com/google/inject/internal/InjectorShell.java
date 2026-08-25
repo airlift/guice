@@ -226,7 +226,6 @@ final class InjectorShell
 
             new MessageProcessor(errors).process(injector, elements);
 
-            new InterceptorBindingProcessor(errors).process(injector, elements);
             stopwatch.resetAndLog("Interceptors creation");
 
             new ListenerBindingProcessor(errors).process(injector, elements);

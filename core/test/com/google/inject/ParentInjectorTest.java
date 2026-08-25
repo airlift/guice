@@ -20,8 +20,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
 import com.google.inject.spi.TypeConverter;
-import org.aopalliance.intercept.MethodInterceptor;
-import org.aopalliance.intercept.MethodInvocation;
 import org.junit.jupiter.api.Test;
 
 import java.lang.annotation.Retention;
@@ -55,8 +53,8 @@ public class ParentInjectorTest
             assertContains(
                     e.getMessage(),
                     "ParentInjectorTest$A was bound multiple times.",
-                    "1  : ParentInjectorTest$7.configure",
-                    "2  : ParentInjectorTest$7.configure");
+                    "1  : ParentInjectorTest$6.configure",
+                    "2  : ParentInjectorTest$6.configure");
         }
     }
 
@@ -74,7 +72,7 @@ public class ParentInjectorTest
                     e.getMessage(),
                     "Unable to create binding for ParentInjectorTest$A because it was already configured on"
                             + " one or more child injectors or private modules.",
-                    "ParentInjectorTest$7.configure");
+                    "ParentInjectorTest$6.configure");
         }
     }
 
@@ -167,16 +165,6 @@ public class ParentInjectorTest
                         });
         assertSame(child.getInstance(A.class), child.getInstance(A.class));
     }
-
-    private final MethodInterceptor returnNullInterceptor =
-            new MethodInterceptor()
-            {
-                @Override
-                public Object invoke(MethodInvocation methodInvocation)
-                {
-                    return null;
-                }
-            };
 
     @Test
     public void testTypeConvertersInherited()

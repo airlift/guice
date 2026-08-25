@@ -178,7 +178,7 @@ import java.lang.reflect.Method;
  * few cases Guice will let something bogus slip by, and will then inform you of the problems at
  * runtime, as soon as you try to create your Injector.
  *
- * <p>The other methods of Binder such as {@link #bindScope}, {@link #bindInterceptor}, {@link
+ * <p>The other methods of Binder such as {@link #bindScope}, {@link
  * #install}, {@link #requestStaticInjection}, {@link #addError} and {@link #currentStage} are not
  * part of the Binding EDSL; you can learn how to use these in the usual way, from the method
  * documentation.
@@ -190,27 +190,22 @@ import java.lang.reflect.Method;
 public interface Binder
 {
     /**
-     * Binds method interceptor[s] to methods matched by class and method matchers. A method is
-     * eligible for interception if:
-     *
-     * <ul>
-     *   <li>Guice created the instance the method is on
-     *   <li>Neither the enclosing type nor the method is final
-     *   <li>And the method is package-private, protected, or public
-     * </ul>
-     *
-     * <p>Note: this API only works if {@code guice_bytecode_gen_option} is set to {@code ENABLED}.
-     *
-     * @param classMatcher matches classes the interceptor should apply to. For example: {@code
-     *         only(Runnable.class)}.
-     * @param methodMatcher matches methods the interceptor should apply to. For example: {@code
-     *         annotatedWith(Transactional.class)}.
-     * @param interceptors to bind. The interceptors are called in the order they are given.
+     * Binary-compatibility shim: method interception was removed from this Guice build along with
+     * bytecode generation. This records a creation error so modules compiled against stock Guice
+     * fail loudly at injector creation instead of failing to link.
      */
-    void bindInterceptor(
+    default void bindInterceptor(
             Matcher<? super Class<?>> classMatcher,
             Matcher<? super Method> methodMatcher,
-            MethodInterceptor... interceptors);
+            MethodInterceptor... interceptors)
+    {
+        addError(
+                "Method interception is not supported by this Guice build (interceptors %s for"
+                        + " methods matching %s in classes matching %s)",
+                java.util.Arrays.asList(interceptors),
+                methodMatcher,
+                classMatcher);
+    }
 
     /**
      * Binds a scope to an annotation.

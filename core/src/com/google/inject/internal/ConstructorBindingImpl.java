@@ -26,16 +26,12 @@ import com.google.inject.spi.BindingTargetVisitor;
 import com.google.inject.spi.ConstructorBinding;
 import com.google.inject.spi.Dependency;
 import com.google.inject.spi.InjectionPoint;
-import org.aopalliance.intercept.MethodInterceptor;
 
 import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -234,13 +230,6 @@ final class ConstructorBindingImpl<T>
     {
         checkState(factory.constructorInjector != null, "Binding is not ready");
         return factory.constructorInjector.getInjectableMembers();
-    }
-
-    @Override
-    public Map<Method, List<MethodInterceptor>> getMethodInterceptors()
-    {
-        checkState(factory.constructorInjector != null, "Binding is not ready");
-        return factory.constructorInjector.getConstructionProxy().getMethodInterceptors();
     }
 
     @Override
