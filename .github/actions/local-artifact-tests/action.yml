@@ -20,12 +20,12 @@ runs:
       run: rm -rf ~/.m2/repository/com/google/inject
       shell: bash
     - name: 'Install artifacts to the local repository'
-      run: mvn -B install -DskipTests=true -Dsource.skip=true -Dmaven.javadoc.skip=true
+      run: ./mvnw -B install -DskipTests=true -Dsource.skip=true -Dmaven.javadoc.skip=true
       shell: bash
     - name: 'Maven Java local tests'
       run: |
-        version=$(mvn -B -q -DforceStdout help:evaluate -Dexpression=project.version)
-        mvn -B -f examples/guice-demo/pom.xml verify -Dguice.version="$version" --fail-at-end
+        version=$(./mvnw -B -q -DforceStdout help:evaluate -Dexpression=project.version)
+        ./mvnw -B -f examples/guice-demo/pom.xml verify -Dguice.version="$version" --fail-at-end
       shell: bash
     - name: 'Clean up Maven cache'
       run: rm -rf ~/.m2/repository/com/google/inject
