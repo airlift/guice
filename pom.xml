@@ -64,9 +64,10 @@ See the Apache License Version 2.0 for the specific language governing permissio
     </modules>
 
     <scm>
-        <connection>scm:git:git://github.com/google/guice.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com/google/guice.git</developerConnection>
-        <url>https://github.com/google/guice</url>
+        <connection>scm:git:git://github.com/airlift/guice.git</connection>
+        <developerConnection>scm:git:git@github.com:airlift/guice.git</developerConnection>
+        <tag>HEAD</tag>
+        <url>https://github.com/airlift/guice/tree/master</url>
     </scm>
 
     <issueManagement>
@@ -105,6 +106,9 @@ See the Apache License Version 2.0 for the specific language governing permissio
         <guice.lastStableRelease>7.0.0</guice.lastStableRelease>
         <air.check.fail-modernizer>true</air.check.fail-modernizer>
         <air.check.skip-license>true</air.check.skip-license>
+
+        <!-- do not run tests on release -->
+        <air.release.preparation-goals>clean verify -DskipTests</air.release.preparation-goals>
     </properties>
 
     <dependencyManagement>
