@@ -156,7 +156,7 @@ public class GraphvizGrapher
         html.append("<tr>").append("<td align=\"left\" port=\"header\" ");
         html.append("bgcolor=\"" + node.getHeaderBackgroundColor() + "\">");
 
-        String subtitle = String.join("<br align=\"left\"/>", node.getSubtitles());
+        String subtitle = String.join("<br align=\"left\"/>", htmlEscape(node.getSubtitles()));
         if (subtitle.length() != 0) {
             html.append("<font color=\"").append(node.getHeaderTextColor());
             html.append("\" point-size=\"10\">");
