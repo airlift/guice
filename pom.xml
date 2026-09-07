@@ -18,7 +18,7 @@ See the Apache License Version 2.0 for the specific language governing permissio
     <parent>
         <groupId>io.airlift</groupId>
         <artifactId>airbase</artifactId>
-        <version>405</version>
+        <version>409</version>
     </parent>
 
     <groupId>io.airlift</groupId>
