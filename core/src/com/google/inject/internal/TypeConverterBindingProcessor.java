@@ -26,9 +26,8 @@ import com.google.inject.spi.Element;
 import com.google.inject.spi.TypeConverter;
 import com.google.inject.spi.TypeConverterBinding;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.util.function.Function;
 
 /**
  * Handles {@code Binder.convertToTypes} commands.
@@ -65,14 +64,16 @@ final class TypeConverterBindingProcessor
     private static ImmutableList<TypeConverterBinding> buildBuiltInConverters()
     {
         ImmutableList.Builder<TypeConverterBinding> builtIn = ImmutableList.builder();
-        // Configure type converters.
-        convertToPrimitiveType(builtIn, int.class, Integer.class);
-        convertToPrimitiveType(builtIn, long.class, Long.class);
-        convertToPrimitiveType(builtIn, boolean.class, Boolean.class);
-        convertToPrimitiveType(builtIn, byte.class, Byte.class);
-        convertToPrimitiveType(builtIn, short.class, Short.class);
-        convertToPrimitiveType(builtIn, float.class, Float.class);
-        convertToPrimitiveType(builtIn, double.class, Double.class);
+        // Configure type converters. Parsers are passed as direct method references (rather than
+        // looked up reflectively by computed name) so GraalVM native-image's static analysis can
+        // resolve them without extra reflection configuration.
+        convertToPrimitiveType(builtIn, Integer.class, Integer::parseInt);
+        convertToPrimitiveType(builtIn, Long.class, Long::parseLong);
+        convertToPrimitiveType(builtIn, Boolean.class, Boolean::parseBoolean);
+        convertToPrimitiveType(builtIn, Byte.class, Byte::parseByte);
+        convertToPrimitiveType(builtIn, Short.class, Short::parseShort);
+        convertToPrimitiveType(builtIn, Float.class, Float::parseFloat);
+        convertToPrimitiveType(builtIn, Double.class, Double::parseDouble);
 
         convertToClass(
                 builtIn,
@@ -155,42 +156,31 @@ final class TypeConverterBindingProcessor
 
     private static <T> void convertToPrimitiveType(
             ImmutableList.Builder<TypeConverterBinding> builtIn,
-            Class<T> primitiveType,
-            final Class<T> wrapperType)
+            final Class<T> wrapperType,
+            final Function<String, T> parser)
     {
-        try {
-            final Method parser =
-                    wrapperType.getMethod("parse" + capitalize(primitiveType.getName()), String.class);
-
-            TypeConverter typeConverter =
-                    new TypeConverter()
+        TypeConverter typeConverter =
+                new TypeConverter()
+                {
+                    @Override
+                    public Object convert(String value, TypeLiteral<?> toType)
                     {
-                        @Override
-                        public Object convert(String value, TypeLiteral<?> toType)
-                        {
-                            try {
-                                return parser.invoke(null, value);
-                            }
-                            catch (IllegalAccessException e) {
-                                throw new AssertionError(e);
-                            }
-                            catch (InvocationTargetException e) {
-                                throw new RuntimeException(e.getTargetException().getMessage());
-                            }
+                        try {
+                            return parser.apply(value);
                         }
-
-                        @Override
-                        public String toString()
-                        {
-                            return "TypeConverter<" + wrapperType.getSimpleName() + ">";
+                        catch (RuntimeException e) {
+                            throw new RuntimeException(e.getMessage());
                         }
-                    };
+                    }
 
-            convertToClass(builtIn, wrapperType, typeConverter);
-        }
-        catch (NoSuchMethodException e) {
-            throw new AssertionError(e);
-        }
+                    @Override
+                    public String toString()
+                    {
+                        return "TypeConverter<" + wrapperType.getSimpleName() + ">";
+                    }
+                };
+
+        convertToClass(builtIn, wrapperType, typeConverter);
     }
 
     private static <T> void convertToClass(
@@ -253,15 +243,5 @@ final class TypeConverterBindingProcessor
                         new TypeConverterBinding(
                                 command.getSource(), command.getTypeMatcher(), command.getTypeConverter()));
         return true;
-    }
-
-    private static String capitalize(String s)
-    {
-        if (s.isEmpty()) {
-            return s;
-        }
-        char first = s.charAt(0);
-        char capitalized = Character.toUpperCase(first);
-        return (first == capitalized) ? s : capitalized + s.substring(1);
     }
 }
