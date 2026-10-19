@@ -1,5 +1,5 @@
 name: 'Local Artifact Tests'
-description: 'Installs the Guice artifacts with Maven and runs the example project against them.'
+description: 'Installs the Zest artifacts with Maven and runs the example project against them.'
 
 runs:
   using: "composite"
@@ -17,7 +17,7 @@ runs:
         restore-keys: |
           ${{ runner.os }}-artifact-tests-
     - name: 'Delete any stale artifacts from cache'
-      run: rm -rf ~/.m2/repository/com/google/inject
+      run: rm -rf ~/.m2/repository/io/airlift/zest*
       shell: bash
     - name: 'Install artifacts to the local repository'
       run: ./mvnw -B install -DskipTests=true -Dsource.skip=true -Dmaven.javadoc.skip=true
@@ -25,8 +25,8 @@ runs:
     - name: 'Maven Java local tests'
       run: |
         version=$(./mvnw -B -q -DforceStdout help:evaluate -Dexpression=project.version)
-        ./mvnw -B -f examples/guice-demo/pom.xml verify -Dguice.version="$version" --fail-at-end
+        ./mvnw -B -f examples/zest-demo/pom.xml verify -Dzest.version="$version" --fail-at-end
       shell: bash
     - name: 'Clean up Maven cache'
-      run: rm -rf ~/.m2/repository/com/google/inject
+      run: rm -rf ~/.m2/repository/io/airlift/zest*
       shell: bash

@@ -5,15 +5,15 @@
 
     <parent>
         <groupId>io.airlift</groupId>
-        <artifactId>guice-extensions-parent</artifactId>
+        <artifactId>zest-extensions-parent</artifactId>
         <version>11-SNAPSHOT</version>
     </parent>
 
-    <artifactId>guice-assistedinject</artifactId>
+    <artifactId>zest-assistedinject</artifactId>
 
-    <name>Google Guice - Extensions - AssistedInject</name>
+    <name>Zest - Extensions - AssistedInject</name>
 
-    <description>Guice extension for assisted injection</description>
+    <description>Zest extension for assisted injection</description>
 
     <dependencies>
         <dependency>
@@ -41,7 +41,7 @@
                 <configuration>
                     <archive>
                         <manifestEntries>
-                            <Automatic-Module-Name>com.google.guice.extensions.assistedinject</Automatic-Module-Name>
+                            <Automatic-Module-Name>io.airlift.zest.extensions.assistedinject</Automatic-Module-Name>
                         </manifestEntries>
                     </archive>
                 </configuration>

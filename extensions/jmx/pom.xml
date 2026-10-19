@@ -5,15 +5,15 @@
 
     <parent>
         <groupId>io.airlift</groupId>
-        <artifactId>guice-extensions-parent</artifactId>
+        <artifactId>zest-extensions-parent</artifactId>
         <version>11-SNAPSHOT</version>
     </parent>
 
-    <artifactId>guice-jmx</artifactId>
+    <artifactId>zest-jmx</artifactId>
 
-    <name>Google Guice - Extensions - JMX</name>
+    <name>Zest - Extensions - JMX</name>
 
-    <description>Guice extension for exposing bindings over JMX</description>
+    <description>Zest extension for exposing bindings over JMX</description>
 
     <build>
         <plugins>
@@ -30,7 +30,7 @@
                 <configuration>
                     <archive>
                         <manifestEntries>
-                            <Automatic-Module-Name>com.google.guice.extensions.jmx</Automatic-Module-Name>
+                            <Automatic-Module-Name>io.airlift.zest.extensions.jmx</Automatic-Module-Name>
                         </manifestEntries>
                     </archive>
                 </configuration>

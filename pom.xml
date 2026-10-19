@@ -22,21 +22,21 @@ See the Apache License Version 2.0 for the specific language governing permissio
     </parent>
 
     <groupId>io.airlift</groupId>
-    <artifactId>guice-parent</artifactId>
+    <artifactId>zest-parent</artifactId>
     <version>11-SNAPSHOT</version>
 
     <packaging>pom</packaging>
 
-    <name>Google Guice</name>
+    <name>Zest</name>
 
-    <description>Guice is a lightweight dependency injection framework for Java 25 and above</description>
+    <description>Zest is a lightweight dependency injection framework for Java 25 and above</description>
 
-    <url>https://github.com/google/guice</url>
+    <url>https://github.com/airlift/zest</url>
     <inceptionYear>2006</inceptionYear>
 
     <organization>
-        <name>Google, Inc.</name>
-        <url>http://www.google.com</url>
+        <name>Airlift</name>
+        <url>https://github.com/airlift</url>
     </organization>
 
     <licenses>
@@ -47,16 +47,6 @@ See the Apache License Version 2.0 for the specific language governing permissio
         </license>
     </licenses>
 
-    <mailingLists>
-        <mailingList>
-            <name>Guice Users List</name>
-            <subscribe>http://groups.google.com/group/google-guice/subscribe</subscribe>
-            <unsubscribe>http://groups.google.com/group/google-guice/subscribe</unsubscribe>
-            <post>http://groups.google.com/group/google-guice/post</post>
-            <archive>http://groups.google.com/group/google-guice/topics</archive>
-        </mailingList>
-    </mailingLists>
-
     <modules>
         <module>bom</module>
         <module>core</module>
@@ -64,27 +54,27 @@ See the Apache License Version 2.0 for the specific language governing permissio
     </modules>
 
     <scm>
-        <connection>scm:git:git://github.com/airlift/guice.git</connection>
-        <developerConnection>scm:git:git@github.com:airlift/guice.git</developerConnection>
+        <connection>scm:git:git://github.com/airlift/zest.git</connection>
+        <developerConnection>scm:git:git@github.com:airlift/zest.git</developerConnection>
         <tag>HEAD</tag>
-        <url>https://github.com/airlift/guice/tree/master</url>
+        <url>https://github.com/airlift/zest/tree/master</url>
     </scm>
 
     <issueManagement>
         <system>Github</system>
-        <url>https://github.com/google/guice/issues/</url>
+        <url>https://github.com/airlift/zest/issues/</url>
     </issueManagement>
 
     <ciManagement>
         <system>GitHub Actions</system>
-        <url>https://github.com/google/guice/actions</url>
+        <url>https://github.com/airlift/zest/actions</url>
     </ciManagement>
 
     <properties>
         <!--
-     | The spec version of the public Guice API
+     | The spec version of the public Zest API
     -->
-        <guice.api.version>1.4</guice.api.version>
+        <zest.api.version>1.4</zest.api.version>
         <project.build.targetJdk>25</project.build.targetJdk>
         <!--
      | SpotBugs stays off: its 102 findings on this tree are dominated by CT_CONSTRUCTOR_THROW
@@ -103,7 +93,7 @@ See the Apache License Version 2.0 for the specific language governing permissio
         <!--
      | The last stable release version id, used for generating API diffs between released versions
     -->
-        <guice.lastStableRelease>7.0.0</guice.lastStableRelease>
+        <zest.lastStableRelease>7.0.0</zest.lastStableRelease>
         <air.check.fail-modernizer>true</air.check.fail-modernizer>
         <air.check.skip-license>true</air.check.skip-license>
 
@@ -309,7 +299,7 @@ See the Apache License Version 2.0 for the specific language governing permissio
                         <excludePackageNames>com.google.inject.internal:com.google.inject.internal.*</excludePackageNames>
                         <groups>
                             <group>
-                                <title>Guice Core</title>
+                                <title>Zest Core</title>
                                 <packages>com.google.inject:com.google.inject.util:com.google.inject.spi:com.google.inject.name:com.google.inject.matcher:com.google.inject.binder:com.google.inject.multibindings</packages>
                             </group>
                             <group>
@@ -365,7 +355,7 @@ See the Apache License Version 2.0 for the specific language governing permissio
                     <version>8.10.0</version>
                     <configuration>
                         <destDir>${project.reporting.outputDirectory}/api-diffs/${project.artifactId}</destDir>
-                        <versionRange>[${guice.lastStableRelease}],[${project.version}]</versionRange>
+                        <versionRange>[${zest.lastStableRelease}],[${project.version}]</versionRange>
                     </configuration>
                 </plugin>
             </plugins>

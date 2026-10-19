@@ -1,18 +1,15 @@
-Guice
+Zest
 ====
 
--   **Latest releases:**
-    * **[6.0.0](https://github.com/google/guice/wiki/Guice600) (supports `javax.{inject,servlet,persistence}`, [mostly supports](https://github.com/google/guice/wiki/Guice600#jee-jakarta-transition) `jakarta.inject`)**
-    * **[7.0.0](https://github.com/google/guice/wiki/Guice700) (supports `jakarta.{inject,servlet,persistence}`)**
-    * (6.0.0 & 7.0.0 are equivalent except for their javax/jakarta support.)
--   **Documentation:**
-    * [User Guide](https://github.com/google/guice/wiki/Motivation),
-    * [6.0.0 javadocs](https://google.github.io/guice/api-docs/6.0.0/javadoc/index.html)
-    * [7.0.0 javadocs](https://google.github.io/guice/api-docs/7.0.0/javadoc/index.html)
-    * [Latest Snapshot javadocs](https://google.github.io/guice/api-docs/latest/javadoc/index.html)
+Zest is [Airlift](https://github.com/airlift)'s fork of [Google Guice](https://github.com/google/guice),
+a lightweight dependency injection framework, targeting Java 25 and above.
+
+Classes still live in the `com.google.inject` packages, so existing imports keep working; moving
+from Guice to Zest is mostly a matter of switching Maven coordinates.
+
+-   **Upstream documentation:** [Guice User Guide](https://github.com/google/guice/wiki/Motivation)
 -   **Continuous Integration:**
-    [![Build Status](https://github.com/google/guice/workflows/continuous-integration/badge.svg)](https://github.com/google/guice/actions)
--   **Mailing Lists:** [User Mailing List](http://groups.google.com/group/google-guice) <br/>
+    [![Build Status](https://github.com/airlift/zest/workflows/continuous-integration/badge.svg)](https://github.com/airlift/zest/actions)
 -   **License:** [Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
 Overview
@@ -33,29 +30,34 @@ We've been running Guice in mission critical applications since 2006, and now yo
 
 Installation Instructions
 ====
-Guice Core (Maven)
+Zest Core (Maven)
 ```xml
 <dependency>
-  <groupId>com.google.inject</groupId>
-  <artifactId>guice</artifactId>
-  <!-- {version} can be 6.0.0, 7.0.0, etc. -->
+  <groupId>io.airlift</groupId>
+  <artifactId>zest</artifactId>
   <version>{version}</version>
 </dependency>
 ```
 
-Guice Extension (Maven)
+Zest Extension (Maven)
 ```xml
 <dependency>
-  <groupId>com.google.inject.extensions</groupId>
+  <groupId>io.airlift</groupId>
   <!-- {extension-name} can be one of: assistedinject, grapher, jmx,
        servlet, testlib or throwingproviders -->
-  <artifactId>guice-{extension-name}</artifactId>
-  <!-- {version} must match the guice core version. -->
+  <artifactId>zest-{extension-name}</artifactId>
+  <!-- {version} must match the zest core version. -->
   <version>{version}</version>
 </dependency>
 ```
 
-See [Maven Central](https://central.sonatype.com/artifact/com.google.inject/guice/) for more details, including snippets for other build systems such as Gradle, Ivy, sbt, and more.
-
----
-[![jolt award](https://user-images.githubusercontent.com/1885701/52603534-0d620380-2e1c-11e9-8cd5-95f0e141fcb0.png)](http://www.drdobbs.com/tools/winners-of-the-18th-jolt-product-excelle/207600666?pgno=6)
+To keep all modules on the same version, import the BOM:
+```xml
+<dependency>
+  <groupId>io.airlift</groupId>
+  <artifactId>zest-bom</artifactId>
+  <version>{version}</version>
+  <type>pom</type>
+  <scope>import</scope>
+</dependency>
+```

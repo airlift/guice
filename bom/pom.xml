@@ -5,53 +5,53 @@
 
     <parent>
         <groupId>io.airlift</groupId>
-        <artifactId>guice-parent</artifactId>
+        <artifactId>zest-parent</artifactId>
         <version>11-SNAPSHOT</version>
     </parent>
 
-    <artifactId>guice-bom</artifactId>
+    <artifactId>zest-bom</artifactId>
 
     <packaging>pom</packaging>
 
-    <name>Google Guice - Bill of Materials</name>
+    <name>Zest - Bill of Materials</name>
 
-    <description>Bill of Materials for the Guice modules</description>
+    <description>Bill of Materials for the Zest modules</description>
 
     <dependencyManagement>
         <dependencies>
             <dependency>
                 <groupId>io.airlift</groupId>
-                <artifactId>guice</artifactId>
+                <artifactId>zest</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.airlift</groupId>
-                <artifactId>guice-assistedinject</artifactId>
+                <artifactId>zest-assistedinject</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.airlift</groupId>
-                <artifactId>guice-grapher</artifactId>
+                <artifactId>zest-grapher</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.airlift</groupId>
-                <artifactId>guice-jmx</artifactId>
+                <artifactId>zest-jmx</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.airlift</groupId>
-                <artifactId>guice-servlet</artifactId>
+                <artifactId>zest-servlet</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.airlift</groupId>
-                <artifactId>guice-testlib</artifactId>
+                <artifactId>zest-testlib</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.airlift</groupId>
-                <artifactId>guice-throwingproviders</artifactId>
+                <artifactId>zest-throwingproviders</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>

@@ -5,15 +5,15 @@
 
     <parent>
         <groupId>io.airlift</groupId>
-        <artifactId>guice-parent</artifactId>
+        <artifactId>zest-parent</artifactId>
         <version>11-SNAPSHOT</version>
     </parent>
 
-    <artifactId>guice</artifactId>
+    <artifactId>zest</artifactId>
 
-    <name>Google Guice - Core Library</name>
+    <name>Zest - Core Library</name>
 
-    <description>Guice core library</description>
+    <description>Zest core library</description>
 
     <dependencies>
         <dependency>
@@ -75,7 +75,7 @@
                         <!--
                      | Stock Guice publishes an unshaded "classes" classifier that airlift's poms depend
                      | on. Our main jar IS the unshaded classes, so attach it under that classifier too,
-                     | letting ecosystem builds resolve this fork without coordinate changes.
+                     | letting ecosystem builds that ask for the "classes" classifier keep resolving.
                     -->
                         <id>classes-classifier</id>
                         <goals>
@@ -133,7 +133,7 @@
                     </excludes>
                     <archive>
                         <manifestEntries>
-                            <Automatic-Module-Name>com.google.guice</Automatic-Module-Name>
+                            <Automatic-Module-Name>io.airlift.zest</Automatic-Module-Name>
                         </manifestEntries>
                     </archive>
                 </configuration>

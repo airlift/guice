@@ -21,14 +21,14 @@ echo "Downloading core..."
 wget $BASE_URL/guice/$OLD_VERSION/guice-$OLD_VERSION.jar
 
 echo "Diffing core..."
-pkgdiff  guice-$OLD_VERSION.jar $REPO_DIR/core/target/guice-$NEW_VERSION.jar &
+pkgdiff  guice-$OLD_VERSION.jar $REPO_DIR/core/target/zest-$NEW_VERSION.jar &
 
 for EXT in assistedinject grapher jmx servlet testlib throwingproviders
 do
     echo "Dowloading $EXT extension..."
     wget $BASE_URL/extensions/guice-$EXT/$OLD_VERSION/guice-$EXT-$OLD_VERSION.jar
     echo "Diffing $EXT..."
-    pkgdiff  guice-$EXT-$OLD_VERSION.jar $REPO_DIR/extensions/$EXT/target/guice-$EXT-$NEW_VERSION.jar &
+    pkgdiff  guice-$EXT-$OLD_VERSION.jar $REPO_DIR/extensions/$EXT/target/zest-$EXT-$NEW_VERSION.jar &
 done
 
 python3 -m http.server --directory pkgdiff_reports/

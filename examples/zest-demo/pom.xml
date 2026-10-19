@@ -5,14 +5,14 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.example</groupId>
-  <artifactId>guice-demo</artifactId>
+  <artifactId>zest-demo</artifactId>
   <version>1.0-SNAPSHOT</version>
 
-  <name>guice-demo</name>
+  <name>zest-demo</name>
   <url>http://www.example.com</url>
 
   <properties>
-    <guice.version>10-SNAPSHOT</guice.version>
+    <zest.version>11-SNAPSHOT</zest.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>11</maven.compiler.source>
     <maven.compiler.target>11</maven.compiler.target>
@@ -21,13 +21,13 @@
   <dependencies>
     <dependency>
       <groupId>io.airlift</groupId>
-      <artifactId>guice</artifactId>
-      <version>${guice.version}</version>
+      <artifactId>zest</artifactId>
+      <version>${zest.version}</version>
     </dependency>
     <dependency>
       <groupId>io.airlift</groupId>
-      <artifactId>guice-testlib</artifactId>
-      <version>${guice.version}</version>
+      <artifactId>zest-testlib</artifactId>
+      <version>${zest.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>

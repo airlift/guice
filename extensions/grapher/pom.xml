@@ -5,15 +5,15 @@
 
     <parent>
         <groupId>io.airlift</groupId>
-        <artifactId>guice-extensions-parent</artifactId>
+        <artifactId>zest-extensions-parent</artifactId>
         <version>11-SNAPSHOT</version>
     </parent>
 
-    <artifactId>guice-grapher</artifactId>
+    <artifactId>zest-grapher</artifactId>
 
-    <name>Google Guice - Extensions - Grapher</name>
+    <name>Zest - Extensions - Grapher</name>
 
-    <description>Guice extension for graphing injector contents</description>
+    <description>Zest extension for graphing injector contents</description>
 
     <dependencies>
         <dependency>
@@ -26,7 +26,7 @@
         </dependency>
         <dependency>
             <groupId>io.airlift</groupId>
-            <artifactId>guice-assistedinject</artifactId>
+            <artifactId>zest-assistedinject</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
@@ -39,7 +39,7 @@
                 <configuration>
                     <archive>
                         <manifestEntries>
-                            <Automatic-Module-Name>com.google.guice.extensions.grapher</Automatic-Module-Name>
+                            <Automatic-Module-Name>io.airlift.zest.extensions.grapher</Automatic-Module-Name>
                         </manifestEntries>
                     </archive>
                 </configuration>

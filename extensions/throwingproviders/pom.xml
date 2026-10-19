@@ -5,15 +5,15 @@
 
     <parent>
         <groupId>io.airlift</groupId>
-        <artifactId>guice-extensions-parent</artifactId>
+        <artifactId>zest-extensions-parent</artifactId>
         <version>11-SNAPSHOT</version>
     </parent>
 
-    <artifactId>guice-throwingproviders</artifactId>
+    <artifactId>zest-throwingproviders</artifactId>
 
-    <name>Google Guice - Extensions - ThrowingProviders</name>
+    <name>Zest - Extensions - ThrowingProviders</name>
 
-    <description>Guice extension for providers that can throw checked exceptions</description>
+    <description>Zest extension for providers that can throw checked exceptions</description>
 
     <dependencies>
         <dependency>
@@ -49,7 +49,7 @@
                 <configuration>
                     <archive>
                         <manifestEntries>
-                            <Automatic-Module-Name>com.google.guice.extensions.throwingproviders</Automatic-Module-Name>
+                            <Automatic-Module-Name>io.airlift.zest.extensions.throwingproviders</Automatic-Module-Name>
                         </manifestEntries>
                     </archive>
                 </configuration>

@@ -5,15 +5,15 @@
 
     <parent>
         <groupId>io.airlift</groupId>
-        <artifactId>guice-extensions-parent</artifactId>
+        <artifactId>zest-extensions-parent</artifactId>
         <version>11-SNAPSHOT</version>
     </parent>
 
-    <artifactId>guice-servlet</artifactId>
+    <artifactId>zest-servlet</artifactId>
 
-    <name>Google Guice - Extensions - Servlet</name>
+    <name>Zest - Extensions - Servlet</name>
 
-    <description>Guice extension for servlet and filter scoping</description>
+    <description>Zest extension for servlet and filter scoping</description>
 
     <dependencies>
         <dependency>
@@ -44,7 +44,7 @@
                 <configuration>
                     <archive>
                         <manifestEntries>
-                            <Automatic-Module-Name>com.google.guice.extensions.servlet</Automatic-Module-Name>
+                            <Automatic-Module-Name>io.airlift.zest.extensions.servlet</Automatic-Module-Name>
                         </manifestEntries>
                     </archive>
                 </configuration>

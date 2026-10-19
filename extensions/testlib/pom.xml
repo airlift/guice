@@ -5,15 +5,15 @@
 
     <parent>
         <groupId>io.airlift</groupId>
-        <artifactId>guice-extensions-parent</artifactId>
+        <artifactId>zest-extensions-parent</artifactId>
         <version>11-SNAPSHOT</version>
     </parent>
 
-    <artifactId>guice-testlib</artifactId>
+    <artifactId>zest-testlib</artifactId>
 
-    <name>Google Guice - Extensions - TestLib</name>
+    <name>Zest - Extensions - TestLib</name>
 
-    <description>Guice extension with test utilities</description>
+    <description>Zest extension with test utilities</description>
 
     <dependencies>
         <dependency>
@@ -31,7 +31,7 @@
         </dependency>
         <dependency>
             <groupId>io.airlift</groupId>
-            <artifactId>guice-throwingproviders</artifactId>
+            <artifactId>zest-throwingproviders</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -59,7 +59,7 @@
                 <configuration>
                     <archive>
                         <manifestEntries>
-                            <Automatic-Module-Name>com.google.guice.extensions.testlib</Automatic-Module-Name>
+                            <Automatic-Module-Name>io.airlift.zest.extensions.testlib</Automatic-Module-Name>
                         </manifestEntries>
                     </archive>
                 </configuration>
