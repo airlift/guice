@@ -28,7 +28,6 @@ import java.lang.ref.WeakReference;
  * as a logical place to create and configure your injector. This will ensure the injector is
  * created when the web application is deployed.
  *
- * @author Kevin Bourrillion (kevinb@google.com)
  * @since 2.0
  */
 public abstract class GuiceServletContextListener

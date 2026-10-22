@@ -29,9 +29,6 @@ import static com.google.inject.Asserts.assertContains;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
-/**
- * @author jessewilson@google.com (Jesse Wilson)
- */
 public class LineNumbersTest
 {
     @Test

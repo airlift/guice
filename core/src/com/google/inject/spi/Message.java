@@ -39,8 +39,6 @@ import static java.util.Objects.requireNonNull;
  *     } catch (IOException e) {
  *       addError(e);
  *     }</pre>
- *
- * @author crazybob@google.com (Bob Lee)
  */
 public final class Message
         implements Element

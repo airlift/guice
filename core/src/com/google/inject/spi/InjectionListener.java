@@ -20,8 +20,6 @@ package com.google.inject.spi;
  * Listens for injections into instances of type {@code I}. Useful for performing further
  * injections, post-injection initialization, and more.
  *
- * @author crazybob@google.com (Bob Lee)
- * @author jessewilson@google.com (Jesse Wilson)
  * @since 2.0
  */
 public interface InjectionListener<I>

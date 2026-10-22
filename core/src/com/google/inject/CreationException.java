@@ -27,8 +27,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 /**
  * Thrown when errors occur while creating a {@link Injector}. Includes a list of encountered
  * errors. Clients should catch this exception, log it, and stop execution.
- *
- * @author crazybob@google.com (Bob Lee)
  */
 public class CreationException
         extends RuntimeException

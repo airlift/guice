@@ -35,7 +35,6 @@ import static java.util.Objects.requireNonNull;
  *     MembersInjector&lt;PaymentService&gt; membersInjector
  *         = getMembersInjector(PaymentService.class);</pre>
  *
- * @author crazybob@google.com (Bob Lee)
  * @since 2.0
  */
 public final class MembersInjectorLookup<T>

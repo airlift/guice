@@ -76,9 +76,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-/**
- * @author sameb@google.com (Sam Berlin)
- */
 public class OptionalBinderTest
 {
     final Key<String> stringKey = Key.get(String.class);

@@ -49,8 +49,6 @@ import java.util.Set;
 /**
  * A container that stores an injector's binding data. This excludes JIT binding data, which is
  * stored in {@link InjectorJitBindingData}.
- *
- * @author jessewilson@google.com (Jesse Wilson)
  */
 class InjectorBindingData
 {

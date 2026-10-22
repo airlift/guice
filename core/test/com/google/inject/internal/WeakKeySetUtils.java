@@ -27,8 +27,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Utilities for verifying com.google.inject.internal.WeakKeySet is not leaking memory.
- *
- * @author dweis@google.com (Daniel Weis)
  */
 public final class WeakKeySetUtils
 {

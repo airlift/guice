@@ -27,7 +27,6 @@ import jakarta.servlet.http.HttpServlet;
  * {@link ServletModule} will be visited through this interface.
  *
  * @since 3.0
- * @author sameb@google.com (Sam Berlin)
  */
 public interface ServletModuleTargetVisitor<T, V>
         extends BindingTargetVisitor<T, V>

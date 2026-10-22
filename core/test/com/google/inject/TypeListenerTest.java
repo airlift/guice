@@ -40,9 +40,6 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-/**
- * @author jessewilson@google.com (Jesse Wilson)
- */
 public class TypeListenerTest
 {
     private final Matcher<Object> onlyAbcd =

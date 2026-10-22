@@ -26,8 +26,6 @@ import java.lang.reflect.Constructor;
 
 /**
  * See the EDSL examples at {@link com.google.inject.Binder}.
- *
- * @author crazybob@google.com (Bob Lee)
  */
 public interface LinkedBindingBuilder<T>
         extends ScopedBindingBuilder

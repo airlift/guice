@@ -48,8 +48,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests for {@link ServletScopes}.
- *
- * @author forster@google.com (Mike Forster)
  */
 public class ServletScopesTest
 {

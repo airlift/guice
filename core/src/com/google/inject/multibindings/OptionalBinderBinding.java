@@ -36,7 +36,6 @@ import java.util.Set;
  * @param <T> The fully qualified type of the optional binding, including Optional. For example:
  *         {@code Optional<String>}.
  * @since 4.0
- * @author sameb@google.com (Sam Berlin)
  */
 public interface OptionalBinderBinding<T>
 {

@@ -26,8 +26,6 @@ import java.util.List;
  * Alias creator that creates an alias for each {@link ProviderBinding}. These {@link Binding}s
  * arise from an {@link InjectionPoint} for the {@link Provider} interface. Since this isn't very
  * interesting information, we don't render this binding on the graph, and just alias the two nodes.
- *
- * @author bojand@google.com (Bojan Djordjevic)
  */
 final class ProviderAliasCreator
         implements AliasCreator

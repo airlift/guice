@@ -26,7 +26,6 @@ import java.util.Objects;
  * com.google.inject.spi.InjectionPoint}s.
  *
  * @see DependencyEdge
- * @author phopkins@gmail.com (Pete Hopkins)
  * @since 4.0 (since 2.0 as an interface)
  */
 public class ImplementationNode

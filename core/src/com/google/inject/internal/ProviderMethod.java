@@ -50,8 +50,6 @@ import static java.lang.invoke.MethodType.methodType;
 
 /**
  * A provider that invokes a method and returns its result.
- *
- * @author jessewilson@google.com (Jesse Wilson)
  */
 public abstract class ProviderMethod<T>
         extends InternalProviderInstanceBindingImpl.Factory<T>

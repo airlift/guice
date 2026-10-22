@@ -22,7 +22,6 @@ import jakarta.servlet.Filter;
 /**
  * A linked binding to a filter.
  *
- * @author sameb@google.com
  * @since 3.0
  */
 public interface LinkedFilterBinding

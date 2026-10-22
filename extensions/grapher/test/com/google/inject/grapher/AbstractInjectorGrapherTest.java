@@ -40,8 +40,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 /**
  * Test cases for {@link AbstractInjectorGrapher}. This indirectly tests most classes in this
  * package.
- *
- * @author bojand@google.com (Bojan Djordjevic)
  */
 
 public class AbstractInjectorGrapherTest

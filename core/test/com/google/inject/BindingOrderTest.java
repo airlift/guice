@@ -24,10 +24,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
-/**
- * @author jessewilson@google.com (Jesse Wilson)
- */
-
 public class BindingOrderTest
 {
     @Test

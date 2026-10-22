@@ -37,8 +37,6 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * Bind a non-constant key.
- *
- * @author jessewilson@google.com (Jesse Wilson)
  */
 public final class BindingBuilder<T>
         extends AbstractBindingBuilder<T>

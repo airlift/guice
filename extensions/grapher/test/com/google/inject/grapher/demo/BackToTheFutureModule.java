@@ -25,7 +25,6 @@ import com.google.inject.name.Names;
  * comprehensive sample graph.
  *
  * @see InjectorGrapherDemo
- * @author phopkins@gmail.com (Pete Hopkins)
  */
 public class BackToTheFutureModule
         extends AbstractModule

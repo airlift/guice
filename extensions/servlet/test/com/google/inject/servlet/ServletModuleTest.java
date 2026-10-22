@@ -32,8 +32,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Tests for ServletModule, to ensure it captures bindings correctly.
- *
- * @author sameb@google.com (Sam Berlin)
  */
 public class ServletModuleTest
 {

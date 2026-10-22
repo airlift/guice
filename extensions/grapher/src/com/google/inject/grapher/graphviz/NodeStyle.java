@@ -20,8 +20,6 @@ package com.google.inject.grapher.graphviz;
  * Styles for nodes. Similar to {@link EdgeStyle} but with a few more options.
  *
  * <p>See: http://www.graphviz.org/doc/info/attrs.html#k:style
- *
- * @author phopkins@gmail.com (Pete Hopkins)
  */
 public enum NodeStyle
 {

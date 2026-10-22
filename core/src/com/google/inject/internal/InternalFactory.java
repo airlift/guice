@@ -27,8 +27,6 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * Creates objects which will be injected.
- *
- * @author crazybob@google.com (Bob Lee)
  */
 abstract class InternalFactory<T>
 {

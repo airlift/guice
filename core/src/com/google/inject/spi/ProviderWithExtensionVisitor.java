@@ -44,7 +44,6 @@ import com.google.inject.Provider;
  * interfaces must extend from BindingTargetVisitor.
  *
  * @since 3.0
- * @author sameb@google.com (Sam Berlin)
  */
 public interface ProviderWithExtensionVisitor<T>
         extends Provider<T>

@@ -32,8 +32,6 @@ import static java.lang.invoke.MethodType.methodType;
 
 /**
  * Produces construction proxies that invoke the class constructor.
- *
- * @author crazybob@google.com (Bob Lee)
  */
 final class DefaultConstructionProxyFactory<T>
         implements ConstructionProxyFactory<T>

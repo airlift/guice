@@ -33,8 +33,6 @@ import static com.google.common.base.Preconditions.checkState;
 /**
  * Creates instances using an injectable constructor. After construction, all injectable fields and
  * methods are injected.
- *
- * @author crazybob@google.com (Bob Lee)
  */
 final class ConstructorInjector<T>
         implements ProvisionCallback<T>

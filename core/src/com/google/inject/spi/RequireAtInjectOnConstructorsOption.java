@@ -24,7 +24,6 @@ import static java.util.Objects.requireNonNull;
 /**
  * A request to require explicit {@literal @}{@link Inject} annotations on constructors.
  *
- * @author sameb@google.com (Sam Berlin)
  * @since 4.0
  */
 public final class RequireAtInjectOnConstructorsOption

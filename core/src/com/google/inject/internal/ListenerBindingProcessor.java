@@ -21,8 +21,6 @@ import com.google.inject.spi.TypeListenerBinding;
 
 /**
  * Handles {@code Binder#bindListener} commands.
- *
- * @author jessewilson@google.com (Jesse Wilson)
  */
 final class ListenerBindingProcessor
         extends AbstractProcessor

@@ -24,7 +24,6 @@ import com.google.inject.Binding;
  *
  * @param <V> any type to be returned by the visit method. Use {@link Void} with {@code return null}
  *         if no return type is needed.
- * @author sberlin@gmail.com (Sam Berlin)
  * @since 2.0
  */
 public abstract class DefaultElementVisitor<V>

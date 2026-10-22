@@ -43,9 +43,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * <p>Constructor parameters must be either supplied by the factory interface and marked with <code>
  * {@literal @}Assisted</code>, or they must be injectable.
- *
- * @author jmourits@google.com (Jerome Mourits)
- * @author jessewilson@google.com (Jesse Wilson)
  */
 @Target(CONSTRUCTOR)
 @Retention(RUNTIME)

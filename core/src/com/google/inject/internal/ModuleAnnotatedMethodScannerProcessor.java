@@ -21,8 +21,6 @@ import com.google.inject.spi.ModuleAnnotatedMethodScannerBinding;
 
 /**
  * Handles {@code Binder.scanModulesForAnnotatedMethods} commands.
- *
- * @author sameb@google.com (Sam Berlin)
  */
 final class ModuleAnnotatedMethodScannerProcessor
         extends AbstractProcessor

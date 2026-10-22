@@ -42,8 +42,6 @@ import static com.google.common.base.MoreObjects.toStringHelper;
 
 /**
  * A visitor for testing the servlet SPI extension.
- *
- * @author sameb@google.com (Sam Berlin)
  */
 class ServletSpiVisitor
         extends DefaultBindingTargetVisitor<Object, Integer>

@@ -29,8 +29,6 @@ import java.lang.annotation.Annotation;
  * javax.annotation.meta.Nullable</a> annotation and IntelliJ IDEA's <a
  * href="http://www.jetbrains.com/idea/documentation/howto.html">
  * org.jetbrains.annotations.Nullable</a>.
- *
- * @author jessewilson@google.com (Jesse Wilson)
  */
 public class Nullability
 {

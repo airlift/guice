@@ -22,9 +22,6 @@ import java.lang.annotation.Annotation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-/**
- * @author jessewilson@google.com (Jesse Wilson)
- */
 public class UniqueAnnotationsTest
 {
     @UniqueAnnotations.Internal(31)

@@ -30,8 +30,6 @@ import java.util.Set;
 /**
  * Builds the guice module that binds configured servlets, with their wrapper ServletDefinitions. Is
  * part of the binding EDSL. Very similar to {@link com.google.inject.servlet.FiltersModuleBuilder}.
- *
- * @author Dhanji R. Prasanna (dhanji@gmail.com)
  */
 class ServletsModuleBuilder
 {

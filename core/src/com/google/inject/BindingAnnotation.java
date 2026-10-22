@@ -33,8 +33,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *   {@code @}BindingAnnotation
  *   public {@code @}interface Transactional {}
  * </pre>
- *
- * @author crazybob@google.com (Bob Lee)
  */
 @Target(ANNOTATION_TYPE)
 @Retention(RUNTIME)

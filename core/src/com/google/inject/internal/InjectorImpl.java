@@ -66,8 +66,6 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * Default {@link Injector} implementation.
- *
- * @author crazybob@google.com (Bob Lee)
  */
 final class InjectorImpl
         implements Injector, Lookups

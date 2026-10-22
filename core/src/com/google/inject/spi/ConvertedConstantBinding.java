@@ -25,7 +25,6 @@ import java.util.Set;
  * A binding created from converting a bound instance to a new type. The source binding has the same
  * binding annotation but a different type.
  *
- * @author jessewilson@google.com (Jesse Wilson)
  * @since 2.0
  */
 public interface ConvertedConstantBinding<T>

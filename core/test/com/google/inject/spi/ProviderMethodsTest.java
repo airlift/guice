@@ -70,9 +70,6 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-/**
- * @author crazybob@google.com (Bob Lee)
- */
 @SuppressWarnings("ProvidesMethodOutsideOfModule")
 public class ProviderMethodsTest
         implements Module

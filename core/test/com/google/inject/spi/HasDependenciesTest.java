@@ -30,9 +30,6 @@ import java.util.Set;
 import static com.google.common.collect.MoreCollectors.onlyElement;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-/**
- * @author jessewilson@google.com (Jesse Wilson)
- */
 public class HasDependenciesTest
 {
     /**

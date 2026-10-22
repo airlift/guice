@@ -25,9 +25,6 @@ import java.util.logging.Logger;
 
 /**
  * Handles {@code Binder.addError} commands.
- *
- * @author crazybob@google.com (Bob Lee)
- * @author jessewilson@google.com (Jesse Wilson)
  */
 final class MessageProcessor
         extends AbstractProcessor

@@ -23,8 +23,6 @@ import java.util.List;
 
 /**
  * Data object to encapsulate the attributes of Graphviz edges that we're interested in drawing.
- *
- * @author phopkins@gmail.com (Pete Hopkins)
  */
 public class GraphvizEdge
 {

@@ -33,8 +33,6 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * A factory that wraps a provider that has been scoped.
- *
- * @author crazybob@google.com (Bob Lee)
  */
 class InternalFactoryToScopedProviderAdapter<T>
         extends InternalFactory<T>

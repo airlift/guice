@@ -33,8 +33,6 @@ import java.util.List;
 
 /**
  * Default node creator.
- *
- * @author bojand@google.com (Bojan Djordjevic)
  */
 final class DefaultNodeCreator
         implements NodeCreator

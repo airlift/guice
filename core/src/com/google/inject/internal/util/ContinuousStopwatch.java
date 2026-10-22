@@ -26,8 +26,6 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 /**
  * A continuously timing stopwatch that is used for simple performance monitoring. Not
  * thread-safe.
- *
- * @author crazybob@google.com (Bob Lee)
  */
 public final class ContinuousStopwatch
 {

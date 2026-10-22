@@ -48,8 +48,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Tests for {@link Binder#bindListener(Matcher, ProvisionListener...)}
- *
- * @author sameb@google.com (Sam Berlin)
  */
 // TODO(sameb): Add some tests for private modules & child injectors.
 public class ProvisionListenerTest

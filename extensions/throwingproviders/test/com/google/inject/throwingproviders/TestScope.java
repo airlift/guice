@@ -29,8 +29,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * A simple scope that can be explicitly reset.
- *
- * @author jmourits@google.com (Jerome Mourits)
  */
 class TestScope
         implements Scope

@@ -28,7 +28,6 @@ import java.util.Set;
  * A binding to the constructor of a concrete class. To resolve injections, an instance is
  * instantiated by invoking the constructor.
  *
- * @author jessewilson@google.com (Jesse Wilson)
  * @since 2.0
  */
 public interface ConstructorBinding<T>

@@ -32,8 +32,6 @@ import java.util.logging.Logger;
 
 /**
  * {@link ProvisionListenerStackCallback} for each key.
- *
- * @author sameb@google.com (Sam Berlin)
  */
 final class ProvisionListenerCallbackStore
 {

@@ -46,9 +46,6 @@ import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-/**
- * @author crazybob@google.com (Bob Lee)
- */
 public class BindingTest
 {
     static class Dependent

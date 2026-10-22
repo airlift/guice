@@ -49,8 +49,6 @@ import static java.util.Objects.requireNonNull;
  *   }
  * }
  * </pre>
- *
- * @author crazybob@google.com (Bob Lee)
  */
 public abstract class AbstractModule
         implements Module

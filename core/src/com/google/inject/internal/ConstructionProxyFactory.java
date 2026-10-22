@@ -18,8 +18,6 @@ package com.google.inject.internal;
 
 /**
  * Creates {@link ConstructionProxy} instances.
- *
- * @author crazybob@google.com (Bob Lee)
  */
 interface ConstructionProxyFactory<T>
 {

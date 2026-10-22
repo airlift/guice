@@ -18,8 +18,6 @@ package com.google.inject.matcher;
 
 /**
  * Returns {@code true} or {@code false} for a given input.
- *
- * @author crazybob@google.com (Bob Lee)
  */
 public interface Matcher<T>
 {

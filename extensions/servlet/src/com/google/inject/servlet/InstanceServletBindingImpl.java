@@ -24,8 +24,6 @@ import static com.google.common.base.MoreObjects.toStringHelper;
 
 /**
  * Default implementation of InstanceServletBinding.
- *
- * @author sameb@google.com (Sam Berlin)
  */
 class InstanceServletBindingImpl
         extends AbstractServletModuleBinding<HttpServlet>

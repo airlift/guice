@@ -25,8 +25,6 @@ import static org.mockito.Mockito.when;
  * multiple modules.
  *
  * <p>WARNING(dhanji): Non-parallelizable test =(
- *
- * @author dhanji@gmail.com (Dhanji R. Prasanna)
  */
 public class MultiModuleDispatchIntegrationTest
 {

@@ -43,7 +43,6 @@ import static java.util.stream.Collectors.toList;
  * <p>Note: None of this is thread-safe because it's only used while the Injector is being built,
  * which happens on a single thread.
  *
- * @author vzm@google.com (Vladimir Makaric)
  * @since 5.0
  */
 public final class BindingSourceRestriction

@@ -43,8 +43,6 @@ import static org.mockito.Mockito.when;
 
 /**
  * Basic unit test for lifecycle of a ServletDefinition (wrapper).
- *
- * @author Dhanji R. Prasanna (dhanji@gmail com)
  */
 public class ServletDefinitionTest
 {

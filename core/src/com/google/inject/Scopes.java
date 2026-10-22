@@ -27,8 +27,6 @@ import java.lang.annotation.Annotation;
 
 /**
  * Built-in scope implementations.
- *
- * @author crazybob@google.com (Bob Lee)
  */
 public class Scopes
 {

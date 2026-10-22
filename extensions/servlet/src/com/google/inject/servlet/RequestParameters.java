@@ -27,8 +27,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Apply this to field or parameters of type {@code Map<String, String[]>} when you want the HTTP
  * request parameter map to be injected.
- *
- * @author crazybob@google.com (Bob Lee)
  */
 @Retention(RUNTIME)
 @Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.METHOD})

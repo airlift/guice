@@ -28,8 +28,6 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
  * Unit tests for {@link Providers}.
- *
- * @author Kevin Bourrillion (kevinb9n@gmail.com)
  */
 public class ProvidersTest
 {

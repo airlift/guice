@@ -29,8 +29,6 @@ import static java.lang.invoke.MethodType.methodType;
 
 /**
  * An {@link InternalFactory} for {@literal @}{@link ProvidedBy} bindings.
- *
- * @author sameb@google.com (Sam Berlin)
  */
 class ProvidedByInternalFactory<T>
         extends ProviderInternalFactory<T>

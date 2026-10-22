@@ -26,9 +26,6 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * Handles {@code Binder.bindScope} commands.
- *
- * @author crazybob@google.com (Bob Lee)
- * @author jessewilson@google.com (Jesse Wilson)
  */
 final class ScopeBindingProcessor
         extends AbstractProcessor

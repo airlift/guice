@@ -25,9 +25,6 @@ import com.google.inject.spi.ProviderLookup;
 /**
  * Satisfies delegates for {@code Binder.getProvider} and {@code
  * Binder.getMembersInjector(TypeLiteral)} commands.
- *
- * @author crazybob@google.com (Bob Lee)
- * @author jessewilson@google.com (Jesse Wilson)
  */
 final class LookupProcessor
         extends AbstractProcessor

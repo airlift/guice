@@ -58,8 +58,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * Tests for {@link WeakKeySet}.
  *
  * <p>Multibinding specific tests can be found in MultibinderTest and MapBinderTest.
- *
- * @author dweis@google.com (Daniel Weis)
  */
 public class WeakKeySetTest
 {

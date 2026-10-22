@@ -26,9 +26,6 @@ import com.google.inject.spi.InstanceBinding;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 
-/**
- * @author crazybob@google.com (Bob Lee)
- */
 public abstract class BindingImpl<T>
         implements Binding<T>
 {

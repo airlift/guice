@@ -30,9 +30,6 @@ import java.util.List;
 
 import static com.google.common.base.Preconditions.checkState;
 
-/**
- * @author jessewilson@google.com (Jesse Wilson)
- */
 final class EncounterImpl<T>
         implements TypeEncounter<T>
 {

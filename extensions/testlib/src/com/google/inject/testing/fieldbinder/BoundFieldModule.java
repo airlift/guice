@@ -104,7 +104,6 @@ import static java.util.Arrays.stream;
  * }</pre>
  *
  * @see Bind
- * @author eatnumber1@google.com (Russ Harmon)
  */
 public final class BoundFieldModule
         implements Module

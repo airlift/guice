@@ -28,8 +28,6 @@ import java.util.concurrent.ConcurrentMap;
 
 /**
  * Creates stack trace elements for members.
- *
- * @author crazybob@google.com (Bob Lee)
  */
 public final class StackTraceElements
 {

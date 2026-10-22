@@ -55,9 +55,6 @@ import static java.util.Objects.requireNonNull;
  *     = mapType.getReturnType(Map.class.getMethod("keySet"));
  * System.out.println(keySetType); // prints "Set<Integer>"
  * }</pre>
- *
- * @author crazybob@google.com (Bob Lee)
- * @author jessewilson@google.com (Jesse Wilson)
  */
 public class TypeLiteral<T>
 {

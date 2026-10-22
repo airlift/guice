@@ -22,8 +22,6 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Simple little test that should compile. Ensures that wildcards on the generics are correct.
- *
- * @author phopkins@gmail.com
  */
 public class BindingTargetVisitorTest
 {

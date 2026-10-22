@@ -21,9 +21,6 @@ import com.google.inject.spi.Dependency;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 
-/**
- * @author crazybob@google.com (Bob Lee)
- */
 final class ConstantFactory<T>
         extends InternalFactory<T>
 {

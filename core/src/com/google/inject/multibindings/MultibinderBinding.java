@@ -38,7 +38,6 @@ import java.util.Set;
  * @param <T> The fully qualified type of the set, including Set. For example: {@code
  *         MultibinderBinding<Set<Boolean>>}
  * @since 3.0
- * @author sameb@google.com (Sam Berlin)
  */
 public interface MultibinderBinding<T>
 {

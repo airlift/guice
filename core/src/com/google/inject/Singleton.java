@@ -25,8 +25,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Apply this to implementation classes when you want only one instance (per {@link Injector}) to be
  * reused for all injections for that binding.
- *
- * @author crazybob@google.com (Bob Lee)
  */
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RUNTIME)

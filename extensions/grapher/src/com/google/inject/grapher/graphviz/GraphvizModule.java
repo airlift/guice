@@ -22,8 +22,6 @@ import com.google.inject.grapher.ShortNameFactory;
 
 /**
  * Module that provides classes needed by {@link GraphvizGrapher}.
- *
- * @author phopkins@gmail.com (Pete Hopkins)
  */
 public class GraphvizModule
         extends AbstractModule

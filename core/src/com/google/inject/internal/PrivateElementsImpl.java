@@ -37,9 +37,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static java.util.Objects.requireNonNull;
 
-/**
- * @author jessewilson@google.com (Jesse Wilson)
- */
 public final class PrivateElementsImpl
         implements PrivateElements
 {

@@ -20,8 +20,6 @@ package com.google.inject.internal;
  * Indicates that a result could not be returned while preparing or resolving a binding. The caller
  * should {@link Errors#merge(Errors) merge} the errors from this exception with their existing
  * errors.
- *
- * @author jessewilson@google.com (Jesse Wilson)
  */
 public class ErrorsException
         extends Exception

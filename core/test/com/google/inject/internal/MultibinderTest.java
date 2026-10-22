@@ -94,9 +94,6 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-/**
- * @author jessewilson@google.com (Jesse Wilson)
- */
 public class MultibinderTest
 {
     final TypeLiteral<Optional<String>> optionalOfString = new TypeLiteral<Optional<String>>() {};

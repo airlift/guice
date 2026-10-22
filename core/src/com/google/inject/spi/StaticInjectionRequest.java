@@ -32,7 +32,6 @@ import static java.util.Objects.requireNonNull;
  * <pre>
  *     requestStaticInjection(MyLegacyService.class);</pre>
  *
- * @author jessewilson@google.com (Jesse Wilson)
  * @since 2.0
  */
 public final class StaticInjectionRequest

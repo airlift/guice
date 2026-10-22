@@ -43,7 +43,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * will add two items to the {@code @Named("urls") Set<String>} set. The items are bound as
  * providers and will be evaluated at injection time.
  *
- * @author sameb@google.com (Sam Berlin)
  * @since 4.0
  */
 @Documented

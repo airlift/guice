@@ -29,8 +29,6 @@ import java.nio.file.Path;
 /**
  * Application that instantiates {@link BackToTheFutureModule} and graphs it, writing the output to
  * a DOT-formatted file (filename specified on the command line).
- *
- * @author phopkins@gmail.com (Pete Hopkins)
  */
 public class InjectorGrapherDemo
 {

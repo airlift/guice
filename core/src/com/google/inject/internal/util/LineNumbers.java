@@ -42,8 +42,6 @@ import static java.util.Objects.requireNonNull;
 /**
  * Looks up line numbers for classes and their members, using the JDK's class-file API rather than
  * a bytecode library, so error-message line attribution carries no extra dependency.
- *
- * @author Chris Nokleberg
  */
 final class LineNumbers
 {

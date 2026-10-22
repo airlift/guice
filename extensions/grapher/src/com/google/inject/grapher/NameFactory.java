@@ -23,8 +23,6 @@ import java.lang.reflect.Member;
 /**
  * Interface for a service that provides nice {@link String}s that we can display in the graph for
  * the types that come up in {@link com.google.inject.Binding}s.
- *
- * @author phopkins@gmail.com (Pete Hopkins)
  */
 public interface NameFactory
 {

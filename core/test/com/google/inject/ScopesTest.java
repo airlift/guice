@@ -64,9 +64,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-/**
- * @author crazybob@google.com (Bob Lee)
- */
 public class ScopesTest
 {
     static final long DEADLOCK_TIMEOUT_SECONDS = 1;

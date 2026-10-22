@@ -71,9 +71,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
 
-/**
- * @author crazybob@google.com (Bob Lee)
- */
 public class ServletTest
 {
     private static final Key<HttpServletRequest> HTTP_REQ_KEY = Key.get(HttpServletRequest.class);

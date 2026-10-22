@@ -119,6 +119,20 @@ See the Apache License Version 2.0 for the specific language governing permissio
                 <version>1.4.5</version>
                 <scope>test</scope>
             </dependency>
+            <dependency>
+                <groupId>io.airlift</groupId>
+                <artifactId>junit-extensions</artifactId>
+                <version>2</version>
+                <scope>test</scope>
+                <exclusions>
+                    <!-- log-manager pulls in stock Guice, which would shadow this project's own
+                         com.google.inject classes on the test classpath -->
+                    <exclusion>
+                        <groupId>com.google.inject</groupId>
+                        <artifactId>guice</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
             <!--
      | junit:junit is kept for the junit.framework types alone: the Jakarta @Inject TCK is
      | published as a JUnit 3 TestSuite that we cannot change. Nothing executes JUnit 3 or
@@ -157,6 +171,11 @@ See the Apache License Version 2.0 for the specific language governing permissio
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.airlift</groupId>
+            <artifactId>junit-extensions</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -246,6 +265,9 @@ See the Apache License Version 2.0 for the specific language governing permissio
                 <plugin>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <configuration>
+                        <systemPropertyVariables>
+                            <junit.jupiter.extensions.autodetection.enabled>true</junit.jupiter.extensions.autodetection.enabled>
+                        </systemPropertyVariables>
                         <redirectTestOutputToFile>true</redirectTestOutputToFile>
                         <trimStackTrace>false</trimStackTrace>
                         <!--

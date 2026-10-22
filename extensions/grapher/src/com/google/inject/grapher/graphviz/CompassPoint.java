@@ -20,8 +20,6 @@ package com.google.inject.grapher.graphviz;
  * Enum for the "compass point" values used to control where edge end points appear on the graph.
  *
  * <p>See: http://www.graphviz.org/doc/info/attrs.html#k:portPos
- *
- * @author phopkins@gmail.com (Pete Hopkins)
  */
 public enum CompassPoint
 {

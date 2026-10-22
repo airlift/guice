@@ -36,7 +36,6 @@ package com.google.inject;
  * </ul>
  *
  * @param <T> the type of object this provides
- * @author crazybob@google.com (Bob Lee)
  */
 public interface Provider<T>
         extends jakarta.inject.Provider<T>

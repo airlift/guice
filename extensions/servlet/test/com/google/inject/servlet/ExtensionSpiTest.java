@@ -37,8 +37,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * A very basic test that servlet module works with bindings.
- *
- * @author sameb@google.com (Sam Berlin)
  */
 public class ExtensionSpiTest
 {

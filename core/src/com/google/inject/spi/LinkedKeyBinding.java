@@ -22,7 +22,6 @@ import com.google.inject.Key;
 /**
  * A binding to a linked key. The other key's binding is used to resolve injections.
  *
- * @author jessewilson@google.com (Jesse Wilson)
  * @since 2.0
  */
 public interface LinkedKeyBinding<T>

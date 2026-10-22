@@ -209,7 +209,6 @@ import java.lang.invoke.MethodHandles;
  * a {@code Provider} as one of its arguments.
  *
  * @since 3.0
- * @author schmitt@google.com (Peter Schmitt)
  */
 public final class FactoryModuleBuilder
 {

@@ -27,7 +27,6 @@ import static com.google.common.base.Preconditions.checkState;
  * Thrown when a programming error such as a misplaced annotation, illegal binding, or unsupported
  * scope is found. Clients should catch this exception, log it, and stop execution.
  *
- * @author jessewilson@google.com (Jesse Wilson)
  * @since 2.0
  */
 public final class ConfigurationException

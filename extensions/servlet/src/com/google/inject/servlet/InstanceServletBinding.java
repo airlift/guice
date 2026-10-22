@@ -21,7 +21,6 @@ import jakarta.servlet.http.HttpServlet;
 /**
  * A binding to a single instance of a servlet.
  *
- * @author sameb@google.com
  * @since 3.0
  */
 public interface InstanceServletBinding

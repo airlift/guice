@@ -22,7 +22,6 @@ import jakarta.servlet.http.HttpServlet;
 /**
  * A linked binding to a servlet.
  *
- * @author sameb@google.com
  * @since 3.0
  */
 public interface LinkedServletBinding

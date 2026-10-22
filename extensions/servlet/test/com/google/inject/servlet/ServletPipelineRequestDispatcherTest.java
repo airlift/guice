@@ -51,8 +51,6 @@ import static org.mockito.Mockito.when;
 
 /**
  * Tests forwarding and inclusion (RequestDispatcher actions from the servlet spec).
- *
- * @author Dhanji R. Prasanna (dhanji@gmail com)
  */
 @SuppressWarnings("unchecked") // Safe because mock will only ever return HttpServlet
 public class ServletPipelineRequestDispatcherTest

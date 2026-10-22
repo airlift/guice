@@ -32,7 +32,6 @@ import static java.util.Objects.requireNonNull;
  *     convertToTypes(Matchers.only(TypeLiteral.get(DateTime.class)), new DateTimeConverter());
  * </pre>
  *
- * @author jessewilson@google.com (Jesse Wilson)
  * @since 2.0
  */
 public final class TypeConverterBinding

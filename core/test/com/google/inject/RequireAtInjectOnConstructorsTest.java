@@ -22,8 +22,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Tests for {@link Binder#requireAtInjectOnConstructors()}
- *
- * @author sameb@google.com (Sam Berlin)
  */
 public class RequireAtInjectOnConstructorsTest
 {

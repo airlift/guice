@@ -26,8 +26,6 @@ import java.util.List;
  *
  * <p>Extending classes must return {@code true} from any overridden {@code visit*()} methods, in
  * order for the element processor to remove the handled element.
- *
- * @author jessewilson@google.com (Jesse Wilson)
  */
 abstract class AbstractProcessor
         extends DefaultElementVisitor<Boolean>

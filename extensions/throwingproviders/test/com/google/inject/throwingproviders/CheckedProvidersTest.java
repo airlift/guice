@@ -11,8 +11,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Unit tests for {@link CheckedProviders}.
- *
- * @author eatnumber1@google.com (Russ Harmon)
  */
 public final class CheckedProvidersTest
 {

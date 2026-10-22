@@ -23,7 +23,6 @@ import static java.util.Objects.requireNonNull;
 /**
  * A request to disable circular proxies.
  *
- * @author sameb@google.com (Sam Berlin)
  * @since 3.0
  */
 public final class DisableCircularProxiesOption

@@ -25,9 +25,6 @@ import com.google.inject.Singleton;
 import junit.framework.Assert;
 import org.junit.jupiter.api.Test;
 
-/**
- * @author crazybob@google.com (Bob Lee)
- */
 public class ClientServiceWithGuiceDefaults
 {
     // 44 lines

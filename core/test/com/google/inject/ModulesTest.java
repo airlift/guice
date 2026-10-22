@@ -25,9 +25,6 @@ import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-/**
- * @author jessewilson@google.com (Jesse Wilson)
- */
 public class ModulesTest
 {
     @Test

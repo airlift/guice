@@ -40,9 +40,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
-/**
- * @author jessewilson@google.com (Jesse Wilson)
- */
 public class BinderSuiteTest
 {
     @TestFactory

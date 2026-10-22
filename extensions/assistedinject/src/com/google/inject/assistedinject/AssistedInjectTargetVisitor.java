@@ -25,7 +25,6 @@ import com.google.inject.spi.BindingTargetVisitor;
  * {@link FactoryModuleBuilder} will be visited through this interface.
  *
  * @since 3.0
- * @author ramakrishna@google.com (Ramakrishna Rajanna)
  */
 public interface AssistedInjectTargetVisitor<T, V>
         extends BindingTargetVisitor<T, V>

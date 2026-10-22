@@ -26,9 +26,6 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * @author crazybob@google.com (Bob Lee)
- */
 public class ClientServiceWithGuice
 {
     // 48 lines

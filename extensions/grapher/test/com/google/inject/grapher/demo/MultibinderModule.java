@@ -21,8 +21,6 @@ import com.google.inject.multibindings.Multibinder;
 
 /**
  * Module to add {@link Multibinder}-based bindings to the injector.
- *
- * @author phopkins@gmail.com (Pete Hopkins)
  */
 public class MultibinderModule
         extends AbstractModule

@@ -44,8 +44,6 @@ import static org.junit.jupiter.api.Assertions.fail;
  * Tests that {@code jakarta.inject.Named}, {@code jakarta.inject.Named} and {@code
  * com.google.inject.name.Named} are completely interchangeable: bindings for one can be used to
  * inject the other.
- *
- * @author cgdecker@gmail.com (Colin Decker)
  */
 public class NamedEquivalanceTest
 {

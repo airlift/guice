@@ -18,8 +18,6 @@ package com.google.inject.internal;
 
 /**
  * Holds a reference that requires initialization to be performed before it can be used.
- *
- * @author jessewilson@google.com (Jesse Wilson)
  */
 interface Initializable<T>
 {

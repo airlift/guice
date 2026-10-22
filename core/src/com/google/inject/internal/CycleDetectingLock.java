@@ -26,7 +26,6 @@ import static java.util.Objects.requireNonNull;
  *         heavy IDs. Lock is referenced by a lock factory as long as it's owned by a thread.
  * @see SingletonScope
  * @see com.google.inject.internal.CycleDetectingLock.CycleDetectingLockFactory
- * @author timofeyb (Timothy Basanov)
  */
 interface CycleDetectingLock<ID>
 {

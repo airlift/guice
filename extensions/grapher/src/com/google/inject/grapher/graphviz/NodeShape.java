@@ -20,8 +20,6 @@ package com.google.inject.grapher.graphviz;
  * Enum for the shapes that are most interesting for Guice graphing.
  *
  * <p>See: http://www.graphviz.org/doc/info/shapes.html
- *
- * @author phopkins@gmail.com (Pete Hopkins)
  */
 public enum NodeShape
 {

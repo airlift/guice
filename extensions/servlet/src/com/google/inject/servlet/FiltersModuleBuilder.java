@@ -28,8 +28,6 @@ import java.util.Map;
 /**
  * Builds the guice module that binds configured filters, with their wrapper FilterDefinitions. Is
  * part of the binding EDSL. All Filters and Servlets are always bound as singletons.
- *
- * @author dhanji@gmail.com (Dhanji R. Prasanna)
  */
 class FiltersModuleBuilder
 {

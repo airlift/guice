@@ -29,8 +29,6 @@ import com.google.inject.Binder;
  * <p>The elements of an injector can be inspected and exercised. Use {@link
  * com.google.inject.Injector#getBindings Injector.getBindings()} to reflect on Guice injectors.
  *
- * @author jessewilson@google.com (Jesse Wilson)
- * @author crazybob@google.com (Bob Lee)
  * @since 2.0
  */
 public interface Element

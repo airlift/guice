@@ -46,9 +46,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.fail;
 
-/**
- * @author crazybob@google.com (Bob Lee)
- */
 public class KeyTest
 {
     public void foo(List<String> a, List<String> b) {}

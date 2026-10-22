@@ -31,8 +31,6 @@ import java.lang.management.ManagementFactory;
 
 /**
  * Provides a JMX interface to Guice.
- *
- * @author crazybob@google.com (Bob Lee)
  */
 public class Manager
 {

@@ -39,8 +39,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Servlet scopes.
- *
- * @author crazybob@google.com (Bob Lee)
  */
 public final class ServletScopes
 {

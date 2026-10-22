@@ -30,8 +30,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Tests for {@link RestrictedBindingSource}.
- *
- * @author vzm@google.com (Vladimir Makaric)
  */
 public class RestrictedBindingSourceTest
 {

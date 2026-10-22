@@ -46,8 +46,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Annotation utilities.
- *
- * @author crazybob@google.com (Bob Lee)
  */
 public class Annotations
 {

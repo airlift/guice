@@ -35,8 +35,6 @@ import static com.google.common.base.Preconditions.checkState;
 
 /**
  * Minimal set that doesn't hold strong references to the contained keys.
- *
- * @author dweis@google.com (Daniel Weis)
  */
 final class WeakKeySet
 {

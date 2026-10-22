@@ -47,8 +47,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Tests for AssistedInject Spi.
- *
- * @author ramakrishna@google.com (Ramakrishna Rajanna)
  */
 public class ExtensionSpiTest
 {

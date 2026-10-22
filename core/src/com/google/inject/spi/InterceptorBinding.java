@@ -39,7 +39,6 @@ import static java.util.Objects.requireNonNull;
  * or from an injectable type listener using {@link TypeEncounter#bindInterceptor(Matcher,
  * org.aopalliance.intercept.MethodInterceptor[]) TypeEncounter.bindInterceptor()}.
  *
- * @author jessewilson@google.com (Jesse Wilson)
  * @since 2.0
  */
 public final class InterceptorBinding

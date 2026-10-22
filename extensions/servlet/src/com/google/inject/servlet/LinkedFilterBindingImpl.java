@@ -25,8 +25,6 @@ import static com.google.common.base.MoreObjects.toStringHelper;
 
 /**
  * Default implementation of LinkedFilterBinding.
- *
- * @author sameb@google.com (Sam Berlin)
  */
 class LinkedFilterBindingImpl
         extends AbstractServletModuleBinding<Key<? extends Filter>>

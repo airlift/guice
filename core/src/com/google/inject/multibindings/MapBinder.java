@@ -88,8 +88,6 @@ import static com.google.inject.internal.RealMapBinder.newRealMapBinder;
  *
  * <p><strong>Values must be non-null to use map injection.</strong> If any value is null, map
  * injection will fail (although injecting a map of providers will not).
- *
- * @author dpb@google.com (David P. Baker)
  */
 public class MapBinder<K, V>
 {

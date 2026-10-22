@@ -18,8 +18,6 @@ package com.google.inject;
 
 /**
  * The stage we're running in.
- *
- * @author crazybob@google.com (Bob Lee)
  */
 public enum Stage
 {

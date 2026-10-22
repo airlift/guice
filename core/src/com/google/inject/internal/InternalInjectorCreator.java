@@ -55,9 +55,6 @@ import java.util.Set;
  *       create eager singletons. In this phase, user code may have started other threads. This
  *       phase is not executed for injectors created using {@link Stage#TOOL the tool stage}
  * </ol>
- *
- * @author crazybob@google.com (Bob Lee)
- * @author jessewilson@google.com (Jesse Wilson)
  */
 public final class InternalInjectorCreator
 {

@@ -38,7 +38,6 @@ import java.util.List;
  *
  * <p>And the end, it proceeds to the web.xml (default) servlet filter chain, if needed.
  *
- * @author Dhanji R. Prasanna
  * @since 1.0
  */
 class FilterChainInvocation

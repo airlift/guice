@@ -51,9 +51,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-/**
- * @author jessewilson@google.com (Jesse Wilson)
- */
 public class InjectionPointTest
 {
     public @Inject @Named("a") String foo;

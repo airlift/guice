@@ -30,8 +30,6 @@ import com.google.inject.spi.Dependency;
  *   <li>It throws a slightly different ProvisionException if an error occurs. It doesn't add the
  *       current Dependency to the provision source stack.
  * </ul>
- *
- * @author crazybob@google.com (Bob Lee)
  */
 public class ProviderToInternalFactoryAdapter<T>
         implements Provider<T>

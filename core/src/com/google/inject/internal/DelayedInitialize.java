@@ -19,8 +19,6 @@ package com.google.inject.internal;
 /**
  * Something that needs some delayed initialization, typically a binding or internal factory that
  * needs to be created; put into the bindings map and then initialized later.
- *
- * @author sameb@google.com (Sam Berlin)
  */
 interface DelayedInitialize
 {

@@ -12,8 +12,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Test built-in injection of loggers.
- *
- * @author jessewilson
  */
 public class LoggerInjectionTest
 {

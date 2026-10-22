@@ -25,8 +25,6 @@ import java.lang.annotation.Target;
 
 /**
  * Apply this to implementation classes when you want one instance per request.
- *
- * @author crazybob@google.com (Bob Lee)
  */
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)

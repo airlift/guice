@@ -27,8 +27,6 @@ import static org.mockito.Mockito.when;
 /**
  * This is a basic whitebox test that verifies the glue between GuiceFilter and
  * ManagedFilterPipeline is working.
- *
- * @author dhanji@gmail.com (Dhanji R. Prasanna)
  */
 public class FilterPipelineTest
 {

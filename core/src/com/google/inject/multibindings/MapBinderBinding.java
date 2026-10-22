@@ -41,7 +41,6 @@ import java.util.Set;
  * @param <T> The fully qualified type of the map, including Map. For example: {@code
  *         MapBinderBinding<Map<String, Snack>>}
  * @since 3.0
- * @author sameb@google.com (Sam Berlin)
  */
 public interface MapBinderBinding<T>
 {

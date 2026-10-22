@@ -18,8 +18,6 @@ package com.google.inject.tools.jmx;
 
 /**
  * JMX interface to bindings.
- *
- * @author crazybob@google.com (Bob Lee)
  */
 public interface ManagedBindingMBean
 {

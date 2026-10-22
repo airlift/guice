@@ -27,7 +27,6 @@ import java.lang.reflect.Method;
  * ModuleAnnotatedMethodScanner}.
  *
  * @since 4.0
- * @author sameb@google.com (Sam Berlin)
  */
 public interface ProvidesMethodBinding<T>
         extends HasDependencies

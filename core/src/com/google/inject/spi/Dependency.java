@@ -33,8 +33,6 @@ import static java.util.Objects.requireNonNull;
  * <p>Use {@link #get} to build a freestanding dependency, or {@link InjectionPoint} to build one
  * that's attached to a constructor, method or field.
  *
- * @author crazybob@google.com (Bob Lee)
- * @author jessewilson@google.com (Jesse Wilson)
  * @since 2.0
  */
 public final class Dependency<T>

@@ -35,8 +35,6 @@ import static com.google.common.collect.ImmutableListMultimap.flatteningToImmuta
 
 /**
  * Members injectors by type.
- *
- * @author jessewilson@google.com (Jesse Wilson)
  */
 final class MembersInjectorStore
 {

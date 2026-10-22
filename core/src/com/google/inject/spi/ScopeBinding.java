@@ -34,7 +34,6 @@ import static java.util.Objects.requireNonNull;
  *     Scope recordScope = new RecordScope();
  *     bindScope(RecordScoped.class, new RecordScope());</pre>
  *
- * @author jessewilson@google.com (Jesse Wilson)
  * @since 2.0
  */
 public final class ScopeBinding

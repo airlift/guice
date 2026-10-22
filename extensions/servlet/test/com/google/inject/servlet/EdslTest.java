@@ -30,8 +30,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * Sanity checks the EDSL and resultant bound module(s).
- *
- * @author Dhanji R. Prasanna (dhanji gmail com)
  */
 public class EdslTest
 {

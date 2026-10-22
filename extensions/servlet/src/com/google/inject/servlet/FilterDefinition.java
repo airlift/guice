@@ -37,8 +37,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * An internal representation of a filter definition against a particular URI pattern.
- *
- * @author dhanji@gmail.com (Dhanji R. Prasanna)
  */
 class FilterDefinition
         implements ProviderWithExtensionVisitor<FilterDefinition>

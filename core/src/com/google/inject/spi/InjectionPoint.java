@@ -57,7 +57,6 @@ import static com.google.inject.internal.MoreTypes.getRawType;
  * {@literal @}{@link Inject} annotation. For non-private, no argument constructors, the member may
  * omit the annotation.
  *
- * @author crazybob@google.com (Bob Lee)
  * @since 2.0
  */
 public final class InjectionPoint

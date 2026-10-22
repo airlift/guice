@@ -20,8 +20,6 @@ import java.lang.reflect.Member;
 
 /**
  * Implementation of {@link PortIdFactory}. Bound in {@link GraphvizModule}.
- *
- * @author phopkins@gmail.com (Pete Hopkins)
  */
 public class PortIdFactoryImpl
         implements PortIdFactory

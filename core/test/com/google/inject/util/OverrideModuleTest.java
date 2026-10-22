@@ -59,9 +59,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-/**
- * @author sberlin@gmail.com (Sam Berlin)
- */
 public class OverrideModuleTest
 {
     private static final Key<String> key2 = Key.get(String.class, named("2"));

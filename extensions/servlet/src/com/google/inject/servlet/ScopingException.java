@@ -19,7 +19,6 @@ package com.google.inject.servlet;
 /**
  * Exception thrown when there was a failure entering request scope.
  *
- * @author Chris Nokleberg
  * @since 4.0
  */
 public final class ScopingException

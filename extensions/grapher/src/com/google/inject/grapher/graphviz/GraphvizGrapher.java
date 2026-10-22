@@ -45,7 +45,6 @@ import static java.util.stream.Collectors.joining;
  *
  * <p>Specify the {@link PrintWriter} to output to with {@link #setOut(PrintWriter)}.
  *
- * @author phopkins@gmail.com (Pete Hopkins)
  * @since 4.0
  */
 public class GraphvizGrapher

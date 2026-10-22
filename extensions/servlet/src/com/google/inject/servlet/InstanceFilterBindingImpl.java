@@ -24,8 +24,6 @@ import static com.google.common.base.MoreObjects.toStringHelper;
 
 /**
  * Default implementation of InstanceFilterBinding.
- *
- * @author sameb@google.com (Sam Berlin)
  */
 class InstanceFilterBindingImpl
         extends AbstractServletModuleBinding<Filter>

@@ -41,8 +41,6 @@ import static org.mockito.Mockito.when;
 
 /**
  * Ensures servlet spec compliance for CGI-style variables and general path/pattern matching.
- *
- * @author Dhanji R. Prasanna (dhanji@gmail com)
  */
 @SuppressWarnings("unchecked") // Safe because mock will only ever return HttpServlet
 public class ServletDefinitionPathsTest

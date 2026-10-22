@@ -47,8 +47,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests for {@link TransitiveDependencyVisitor}.
- *
- * @author phopkins@gmail.com (Pete Hopkins)
  */
 public class TransitiveDependencyVisitorTest
 {

@@ -22,7 +22,6 @@ import com.google.inject.Binding;
 /**
  * A binding to a key exposed from an enclosed private environment.
  *
- * @author jessewilson@google.com (Jesse Wilson)
  * @since 2.0
  */
 public interface ExposedBinding<T>

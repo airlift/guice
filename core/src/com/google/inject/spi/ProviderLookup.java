@@ -38,7 +38,6 @@ import static java.util.Objects.requireNonNull;
  *     Provider&lt;PaymentService&gt; paymentServiceProvider
  *         = getProvider(PaymentService.class);</pre>
  *
- * @author jessewilson@google.com (Jesse Wilson)
  * @since 2.0
  */
 public final class ProviderLookup<T>

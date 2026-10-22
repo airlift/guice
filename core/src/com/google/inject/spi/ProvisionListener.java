@@ -24,7 +24,6 @@ import com.google.inject.Scope;
  * Listens for provisioning of objects. Useful for gathering timing information about provisioning,
  * post-provision initialization, and more.
  *
- * @author sameb@google.com (Sam Berlin)
  * @since 4.0
  */
 public interface ProvisionListener

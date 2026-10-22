@@ -24,8 +24,6 @@ import static java.util.Objects.requireNonNull;
 /**
  * Adapts {@link ProviderInstanceBinding} providers, ensuring circular proxies fail (or proxy)
  * properly.
- *
- * @author sameb@google.com (Sam Berlin)
  */
 final class InternalFactoryToInitializableAdapter<T>
         extends ProviderInternalFactory<T>

@@ -24,7 +24,6 @@ import com.google.inject.Provider;
  * A binding to a {@link Provider} that delegates to the binding for the provided type. This binding
  * is used whenever a {@code Provider<T>} is injected (as opposed to injecting {@code T} directly).
  *
- * @author jessewilson@google.com (Jesse Wilson)
  * @since 2.0
  */
 public interface ProviderBinding<T extends Provider<?>>

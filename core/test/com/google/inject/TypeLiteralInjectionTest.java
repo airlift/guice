@@ -28,8 +28,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Demonstrates type reification.
- *
- * @author jessewilson@google.com (Jesse Wilson)
  */
 public class TypeLiteralInjectionTest
 {

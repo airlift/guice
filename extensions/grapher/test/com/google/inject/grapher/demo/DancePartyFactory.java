@@ -18,8 +18,6 @@ package com.google.inject.grapher.demo;
 
 /**
  * Interface to be used with {@link FactoryProvider}.
- *
- * @author phopkins@gmail.com (Pete Hopkins)
  */
 interface DancePartyFactory
 {

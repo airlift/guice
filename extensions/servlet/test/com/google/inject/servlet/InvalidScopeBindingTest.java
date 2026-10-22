@@ -16,8 +16,6 @@ import static org.mockito.Mockito.mock;
 /**
  * Ensures that an error is thrown if a Servlet or Filter is bound under any scope other than
  * singleton, explicitly.
- *
- * @author dhanji@gmail.com
  */
 public class InvalidScopeBindingTest
 {

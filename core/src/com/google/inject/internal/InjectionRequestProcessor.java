@@ -30,10 +30,6 @@ import java.util.Set;
 
 /**
  * Handles {@code Binder.requestInjection} and {@code Binder.requestStaticInjection} commands.
- *
- * @author crazybob@google.com (Bob Lee)
- * @author jessewilson@google.com (Jesse Wilson)
- * @author mikeward@google.com (Mike Ward)
  */
 final class InjectionRequestProcessor
         extends AbstractProcessor

@@ -45,8 +45,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * In all cases, a member can be injected regardless of its Java access specifier (private, default,
  * protected, public).
- *
- * @author crazybob@google.com (Bob Lee)
  */
 @Target({METHOD, CONSTRUCTOR, FIELD})
 @Retention(RUNTIME)

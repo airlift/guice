@@ -134,7 +134,6 @@ import static com.google.inject.internal.RealOptionalBinder.newRealOptionalBinde
  * ... would generate an error, because both the framework and the user are trying to bind
  * {@code @LookupUrl String}.
  *
- * @author sameb@google.com (Sam Berlin)
  * @since 4.0
  */
 public class OptionalBinder<T>

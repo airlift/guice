@@ -34,8 +34,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /**
  * Tests that ProvisionExceptions are readable and clearly indicate to the user what went wrong with
  * their code.
- *
- * @author sameb@google.com (Sam Berlin)
  */
 
 public class ProvisionExceptionsTest

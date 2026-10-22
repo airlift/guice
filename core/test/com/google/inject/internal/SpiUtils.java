@@ -84,8 +84,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Utilities for testing the Multibinder and MapBinder extension SPI.
- *
- * @author sameb@google.com (Sam Berlin)
  */
 public class SpiUtils
 {

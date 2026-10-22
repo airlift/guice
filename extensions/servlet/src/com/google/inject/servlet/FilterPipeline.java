@@ -32,8 +32,6 @@ import java.io.IOException;
  * <p>If on the other hand, {@link ServletModule} is used to register managed servlets and/or
  * filters, then a different pipeline is bound instead. Which, after dispatching to Guice-injected
  * filters and servlets continues to the web.xml pipeline (if necessary).
- *
- * @author dhanji@gmail.com (Dhanji R. Prasanna)
  */
 @ImplementedBy(DefaultFilterPipeline.class)
 interface FilterPipeline

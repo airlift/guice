@@ -35,8 +35,6 @@ import java.util.List;
 
 /**
  * Default edge creator.
- *
- * @author bojand@google.com (Bojan Djordjevic)
  */
 final class DefaultEdgeCreator
         implements EdgeCreator

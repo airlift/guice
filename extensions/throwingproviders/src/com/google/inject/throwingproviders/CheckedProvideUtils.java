@@ -29,8 +29,6 @@ import java.lang.reflect.Constructor;
 
 /**
  * Utilities for the throwing provider module.
- *
- * @author sameb@google.com (Sam Berlin)
  */
 class CheckedProvideUtils
 {

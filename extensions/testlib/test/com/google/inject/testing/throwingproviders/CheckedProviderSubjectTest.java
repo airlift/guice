@@ -10,8 +10,6 @@ import static com.google.inject.testing.throwingproviders.CheckedProviderSubject
 
 /**
  * Unit tests for {@link CheckedProviderSubject}.
- *
- * @author eatnumber1@google.com (Russ Harmon)
  */
 public class CheckedProviderSubjectTest
 {

@@ -87,9 +87,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-/**
- * @author dpb@google.com (David P. Baker)
- */
 public class MapBinderTest
 {
     private static final ImmutableSet<Key<?>> FRAMEWORK_KEYS =

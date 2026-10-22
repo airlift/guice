@@ -22,8 +22,6 @@ import java.lang.annotation.Annotation;
 
 /**
  * See the EDSL examples at {@link com.google.inject.Binder}.
- *
- * @author crazybob@google.com (Bob Lee)
  */
 public interface ScopedBindingBuilder
 {

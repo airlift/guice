@@ -21,7 +21,6 @@ import com.google.inject.Binding;
 /**
  * Creator of graph nodes.
  *
- * @author bojand@google.com (Bojan Djordjevic)
  * @since 4.0
  */
 public interface NodeCreator

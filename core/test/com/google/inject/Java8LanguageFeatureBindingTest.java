@@ -32,8 +32,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Test bindings to lambdas, method references, etc.
- *
- * @author cgdecker@google.com (Colin Decker)
  */
 public class Java8LanguageFeatureBindingTest
 {

@@ -23,7 +23,6 @@ import com.google.inject.Key;
  * A binding to a provider key. To resolve injections, the provider key is first resolved, then that
  * provider's {@code get} method is invoked.
  *
- * @author jessewilson@google.com (Jesse Wilson)
  * @since 2.0
  */
 public interface ProviderKeyBinding<T>

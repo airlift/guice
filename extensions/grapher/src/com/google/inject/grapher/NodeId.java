@@ -26,7 +26,6 @@ import java.util.Objects;
  * bind(Integer.class).toInstance(42)} produces two nodes: an interface node with the key of {@code
  * Key<Integer>} and an instance node with the same {@link Key} and value of 42.
  *
- * @author bojand@google.com (Bojan Djordjevic)
  * @since 4.0
  */
 public final class NodeId

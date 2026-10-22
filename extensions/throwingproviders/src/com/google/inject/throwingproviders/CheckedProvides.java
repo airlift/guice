@@ -33,7 +33,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * ThrowingProviderBinder#forModule(com.google.inject.Module)} on the module where the methods are
  * declared.
  *
- * @author sameb@google.com (Sam Berlin)
  * @since 3.0
  */
 @Documented

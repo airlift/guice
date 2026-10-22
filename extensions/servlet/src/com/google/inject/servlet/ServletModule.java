@@ -33,9 +33,6 @@ import static com.google.common.base.Preconditions.checkState;
  *
  * <p>You should subclass this module to register servlets and filters in the {@link
  * #configureServlets()} method.
- *
- * @author crazybob@google.com (Bob Lee)
- * @author dhanji@gmail.com (Dhanji R. Prasanna)
  */
 public class ServletModule
         extends AbstractModule

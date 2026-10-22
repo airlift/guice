@@ -70,11 +70,6 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-/**
- * @author jmourits@google.com (Jerome Mourits)
- * @author jessewilson@google.com (Jesse Wilson)
- * @author sameb@google.com (Sam Berlin)
- */
 public class CheckedProviderTest
 {
     @Target(METHOD)

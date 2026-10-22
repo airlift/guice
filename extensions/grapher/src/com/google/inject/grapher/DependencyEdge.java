@@ -24,7 +24,6 @@ import java.util.Objects;
  * Edge from a class or {@link InjectionPoint} to the interface node that will satisfy the
  * dependency.
  *
- * @author phopkins@gmail.com (Pete Hopkins)
  * @since 4.0 (since 2.0 as an interface)
  */
 public class DependencyEdge

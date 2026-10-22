@@ -20,8 +20,6 @@ import java.util.Map;
 
 /**
  * Abstract implementation for all servlet module bindings
- *
- * @author sameb@google.com (Sam Berlin)
  */
 class AbstractServletModuleBinding<T>
         implements ServletModuleBinding

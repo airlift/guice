@@ -31,9 +31,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
-/**
- * @author crazybob@google.com (Bob Lee)
- */
 public class RequestInjectionTest
 {
     @Retention(RUNTIME)

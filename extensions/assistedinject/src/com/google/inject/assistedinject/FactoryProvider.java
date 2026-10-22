@@ -156,9 +156,6 @@ import static com.google.inject.internal.Annotations.getKey;
  * method interception. They do receive post-construction member injection.
  *
  * @param <F> The factory interface
- * @author jmourits@google.com (Jerome Mourits)
- * @author jessewilson@google.com (Jesse Wilson)
- * @author dtm@google.com (Daniel Martin)
  * @deprecated use {@link FactoryModuleBuilder} instead.
  */
 @Deprecated

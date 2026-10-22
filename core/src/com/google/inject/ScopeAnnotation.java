@@ -33,8 +33,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *   {@code @}ScopeAnnotation
  *   public {@code @}interface SessionScoped {}
  * </pre>
- *
- * @author crazybob@google.com (Bob Lee)
  */
 @Target(ANNOTATION_TYPE)
 @Retention(RUNTIME)

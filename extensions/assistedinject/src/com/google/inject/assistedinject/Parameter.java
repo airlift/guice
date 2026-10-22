@@ -30,9 +30,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Models a method or constructor parameter.
- *
- * @author jmourits@google.com (Jerome Mourits)
- * @author jessewilson@google.com (Jesse Wilson)
  */
 class Parameter
 {

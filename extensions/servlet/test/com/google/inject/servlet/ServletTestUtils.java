@@ -20,8 +20,6 @@ import java.util.Map;
 
 /**
  * Utilities for servlet tests.
- *
- * @author sameb@google.com (Sam Berlin)
  */
 public class ServletTestUtils
 {

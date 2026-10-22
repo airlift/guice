@@ -62,7 +62,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * }
  * </pre>
  *
- * @author vzm@google.com (Vladimir Makaric)
  * @since 5.0
  */
 @Inherited

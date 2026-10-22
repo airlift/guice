@@ -33,8 +33,6 @@ import java.util.List;
 /**
  * Reasonable implementation for {@link NameFactory}. Mostly takes various {@link
  * Object#toString()}s and strips package names out of them so that they'll fit on the graph.
- *
- * @author phopkins@gmail.com (Pete Hopkins)
  */
 public class ShortNameFactory
         implements NameFactory

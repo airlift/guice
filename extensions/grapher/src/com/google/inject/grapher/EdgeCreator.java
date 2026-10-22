@@ -22,7 +22,6 @@ import com.google.inject.Binding;
  * Creator of graph edges to render. All edges will be rendered on the graph after node aliasing is
  * performed.
  *
- * @author bojand@google.com (Bojan Djordjevic)
  * @since 4.0
  */
 public interface EdgeCreator

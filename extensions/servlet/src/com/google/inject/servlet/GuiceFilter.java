@@ -57,9 +57,6 @@ import java.util.logging.Logger;
  * This filter must appear before every filter that makes use of Guice injection or servlet scopes
  * functionality. Typically, you will only register this filter in web.xml and register any other
  * filters (and servlets) using a {@link ServletModule}.
- *
- * @author crazybob@google.com (Bob Lee)
- * @author dhanji@gmail.com (Dhanji R. Prasanna)
  */
 public class GuiceFilter
         implements Filter

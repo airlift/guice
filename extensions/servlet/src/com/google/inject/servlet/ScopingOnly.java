@@ -28,7 +28,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Annotates a {@link GuiceFilter} that provides scope functionality, but doesn't dispatch to {@link
  * ServletModule} bound servlets or filters.
  *
- * @author iqshum@google.com (Isaac Shum)
  * @since 4.0
  */
 @Retention(RUNTIME)

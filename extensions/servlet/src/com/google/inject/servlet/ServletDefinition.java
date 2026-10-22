@@ -47,8 +47,6 @@ import static com.google.inject.servlet.ManagedServletPipeline.REQUEST_DISPATCHE
 /**
  * An internal representation of a servlet definition mapped to a particular URI pattern. Also
  * performs the request dispatch to that servlet. How nice and OO =)
- *
- * @author dhanji@gmail.com (Dhanji R. Prasanna)
  */
 class ServletDefinition
         implements ProviderWithExtensionVisitor<ServletDefinition>

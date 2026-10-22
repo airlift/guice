@@ -33,8 +33,6 @@ import static java.lang.invoke.MethodType.methodType;
 
 /**
  * Injects members of instances of a given type.
- *
- * @author jessewilson@google.com (Jesse Wilson)
  */
 class MembersInjectorImpl<T>
         implements MembersInjector<T>

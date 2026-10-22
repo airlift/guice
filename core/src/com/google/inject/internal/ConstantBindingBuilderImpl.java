@@ -29,8 +29,6 @@ import java.util.List;
 
 /**
  * Bind a constant.
- *
- * @author jessewilson@google.com (Jesse Wilson)
  */
 public final class ConstantBindingBuilderImpl<T>
         extends AbstractBindingBuilder<T>

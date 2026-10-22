@@ -51,9 +51,6 @@ import java.util.Set;
  *
  * <p>The injector's {@link #getBindings() internal bindings} are available for introspection. This
  * enables tools and extensions to operate on an injector reflectively.
- *
- * @author crazybob@google.com (Bob Lee)
- * @author jessewilson@google.com (Jesse Wilson)
  */
 public interface Injector
 {

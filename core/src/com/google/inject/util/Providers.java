@@ -34,7 +34,6 @@ import static java.util.Objects.requireNonNull;
 /**
  * Static utility methods for creating and working with instances of {@link Provider}.
  *
- * @author Kevin Bourrillion (kevinb9n@gmail.com)
  * @since 2.0
  */
 @CheckReturnValue

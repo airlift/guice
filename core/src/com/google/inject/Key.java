@@ -46,8 +46,6 @@ import static java.util.Objects.requireNonNull;
  * <p>Keys do not differentiate between primitive types (int, char, etc.) and their corresponding
  * wrapper types (Integer, Character, etc.). Primitive types will be replaced with their wrapper
  * types when keys are created.
- *
- * @author crazybob@google.com (Bob Lee)
  */
 @CheckReturnValue
 public class Key<T>

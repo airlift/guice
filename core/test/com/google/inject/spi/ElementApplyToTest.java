@@ -18,9 +18,6 @@ package com.google.inject.spi;
 
 import com.google.inject.Module;
 
-/**
- * @author jessewilson@google.com (Jesse Wilson)
- */
 public class ElementApplyToTest
         extends ElementsTest
 {

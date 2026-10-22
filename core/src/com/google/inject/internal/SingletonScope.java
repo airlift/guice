@@ -61,7 +61,6 @@ import static java.util.Objects.requireNonNull;
  *
  * @see #scope(Key, Provider)
  * @see CycleDetectingLock
- * @author timofeyb (Timothy Basanov)
  */
 public class SingletonScope
         implements Scope

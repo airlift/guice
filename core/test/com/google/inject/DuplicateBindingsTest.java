@@ -42,8 +42,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * A suite of tests for duplicate bindings.
- *
- * @author sameb@google.com (Sam Berlin)
  */
 public class DuplicateBindingsTest
 {

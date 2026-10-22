@@ -80,10 +80,6 @@ import static java.util.Objects.requireNonNull;
  *    .providing(CustomerImpl.class)
  *    .in(RequestScope.class);
  * </code></pre>
- *
- * @author jmourits@google.com (Jerome Mourits)
- * @author jessewilson@google.com (Jesse Wilson)
- * @author sameb@google.com (Sam Berlin)
  */
 public class ThrowingProviderBinder
 {

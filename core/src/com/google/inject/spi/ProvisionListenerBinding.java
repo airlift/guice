@@ -27,7 +27,6 @@ import java.util.List;
  * Binds keys (picked using a Matcher) to a provision listener. Listeners are created explicitly in
  * a module using {@link Binder#bindListener(Matcher, ProvisionListener...)} statements:
  *
- * @author sameb@google.com (Sam Berlin)
  * @since 4.0
  */
 public final class ProvisionListenerBinding

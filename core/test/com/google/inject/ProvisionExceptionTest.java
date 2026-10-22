@@ -36,9 +36,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-/**
- * @author jessewilson@google.com (Jesse Wilson)
- */
 @SuppressWarnings("UnusedDeclaration")
 public class ProvisionExceptionTest
 {

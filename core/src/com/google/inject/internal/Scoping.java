@@ -32,8 +32,6 @@ import java.util.Objects;
 /**
  * References a scope, either directly (as a scope instance), or indirectly (as a scope annotation).
  * The scope's eager or laziness is also exposed.
- *
- * @author jessewilson@google.com (Jesse Wilson)
  */
 public abstract class Scoping
 {

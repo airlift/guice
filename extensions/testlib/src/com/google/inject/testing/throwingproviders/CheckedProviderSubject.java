@@ -12,8 +12,6 @@ import static com.google.common.truth.Truth.assertAbout;
 
 /**
  * Truth {@link Subject} for use with {@link CheckedProvider} classes.
- *
- * @author eatnumber1@google.com (Russ Harmon)
  */
 public final class CheckedProviderSubject<T, P extends CheckedProvider<T>>
         extends Subject

@@ -30,8 +30,6 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * Base class for InternalFactories that are used by Providers, to handle circular dependencies.
- *
- * @author sameb@google.com (Sam Berlin)
  */
 abstract class ProviderInternalFactory<T>
         extends InternalFactory<T>

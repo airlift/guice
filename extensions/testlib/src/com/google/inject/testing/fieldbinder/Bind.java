@@ -36,7 +36,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * href="https://github.com/google/guice/wiki/UseNullable">https://github.com/google/guice/wiki/UseNullable</a>
  *
  * @see BoundFieldModule
- * @author eatnumber1@google.com (Russ Harmon)
  */
 @Retention(RUNTIME)
 @Target(FIELD)

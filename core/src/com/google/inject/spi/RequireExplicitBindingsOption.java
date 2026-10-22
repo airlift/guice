@@ -23,7 +23,6 @@ import static java.util.Objects.requireNonNull;
 /**
  * A request to require explicit bindings.
  *
- * @author sameb@google.com (Sam Berlin)
  * @since 3.0
  */
 public final class RequireExplicitBindingsOption

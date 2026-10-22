@@ -24,8 +24,6 @@ import com.google.inject.TypeLiteral;
 /**
  * Accessors for providers and members injectors. The returned values will not be functional until
  * the injector has been created.
- *
- * @author jessewilson@google.com (Jesse Wilson)
  */
 interface Lookups
 {

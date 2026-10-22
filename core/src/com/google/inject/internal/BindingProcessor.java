@@ -37,9 +37,6 @@ import java.util.Set;
 
 /**
  * Handles {@link Binder#bind} and {@link Binder#bindConstant} elements.
- *
- * @author crazybob@google.com (Bob Lee)
- * @author jessewilson@google.com (Jesse Wilson)
  */
 final class BindingProcessor
         extends AbstractBindingProcessor

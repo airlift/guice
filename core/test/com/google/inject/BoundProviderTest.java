@@ -24,9 +24,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
-/**
- * @author crazybob@google.com (Bob Lee)
- */
 public class BoundProviderTest
 {
     @Test

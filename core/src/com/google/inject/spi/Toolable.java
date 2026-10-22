@@ -35,7 +35,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * com.google.inject.binder.LinkedBindingBuilder#toInstance toInstance}, or {@link
  * com.google.inject.Binder#requestInjection requestInjection}.
  *
- * @author sberlin@gmail.com (Sam Berlin)
  * @since 3.0
  */
 @Target(METHOD)

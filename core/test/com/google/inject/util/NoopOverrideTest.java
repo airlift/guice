@@ -20,9 +20,6 @@ import com.google.inject.Module;
 import com.google.inject.spi.ElementVisitor;
 import com.google.inject.spi.ElementsTest;
 
-/**
- * @author jessewilson@google.com (Jesse Wilson)
- */
 public class NoopOverrideTest
         extends ElementsTest
 {

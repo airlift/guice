@@ -24,8 +24,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * A pointer to the default implementation of a type.
- *
- * @author crazybob@google.com (Bob Lee)
  */
 @Retention(RUNTIME)
 @Target(TYPE)

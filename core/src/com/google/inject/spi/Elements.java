@@ -75,7 +75,6 @@ import static java.util.Objects.requireNonNull;
  * Exposes elements of a module so they can be inspected, validated or {@link
  * Element#applyTo(Binder) rewritten}.
  *
- * @author jessewilson@google.com (Jesse Wilson)
  * @since 2.0
  */
 public final class Elements

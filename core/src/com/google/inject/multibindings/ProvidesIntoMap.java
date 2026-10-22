@@ -50,7 +50,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <p>Because the key is specified as an annotation, only Strings, Classes, enums, primitive types
  * and annotation instances are supported as keys.
  *
- * @author sameb@google.com (Sam Berlin)
  * @since 4.0
  */
 @Documented

@@ -77,11 +77,6 @@ import static com.google.common.collect.MoreCollectors.onlyElement;
 /**
  * The newer implementation of factory provider. This implementation uses a child injector to create
  * values.
- *
- * @author jessewilson@google.com (Jesse Wilson)
- * @author dtm@google.com (Daniel Martin)
- * @author schmitt@google.com (Peter Schmitt)
- * @author sameb@google.com (Sam Berlin)
  */
 final class FactoryProvider2<F>
         implements AssistedInjectBinding<F>,

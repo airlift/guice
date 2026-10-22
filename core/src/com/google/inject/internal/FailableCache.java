@@ -32,8 +32,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * allocations. Loads may recurse through the cache for other keys, as constructor injectors do for
  * their dependencies; only re-entering the same key on the same thread is broken, exactly as it
  * was with the previous LoadingCache.
- *
- * @author jessewilson@google.com (Jesse Wilson)
  */
 public abstract class FailableCache<K, V>
 {

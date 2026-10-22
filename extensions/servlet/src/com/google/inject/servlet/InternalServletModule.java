@@ -38,8 +38,6 @@ import static com.google.inject.servlet.ServletScopes.SESSION;
  * This is a left-factoring of all ServletModules installed in the system. In other words, this
  * module contains the bindings common to all ServletModules, and is bound exactly once per
  * injector.
- *
- * @author dhanji@gmail.com (Dhanji R. Prasanna)
  */
 final class InternalServletModule
         extends AbstractModule

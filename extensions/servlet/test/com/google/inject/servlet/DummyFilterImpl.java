@@ -27,8 +27,6 @@ import java.io.IOException;
 
 /**
  * Used in unit tests to verify the EDSL.
- *
- * @author Dhanji R. Prasanna (dhanji@gmail com)
  */
 public class DummyFilterImpl
         implements Filter

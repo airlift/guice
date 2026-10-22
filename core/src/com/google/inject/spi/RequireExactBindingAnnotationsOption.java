@@ -23,7 +23,6 @@ import static java.util.Objects.requireNonNull;
 /**
  * A request to require exact binding annotations.
  *
- * @author sameb@google.com (Sam Berlin)
  * @since 4.0
  */
 public final class RequireExactBindingAnnotationsOption

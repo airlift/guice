@@ -29,8 +29,6 @@ import static org.mockito.Mockito.when;
 /**
  * Exactly the same as {@linkplain com.google.inject.servlet.FilterPipelineTest} except that we test
  * that the static pipeline is not used.
- *
- * @author dhanji@gmail.com (Dhanji R. Prasanna)
  */
 public class InjectedFilterPipelineTest
 {

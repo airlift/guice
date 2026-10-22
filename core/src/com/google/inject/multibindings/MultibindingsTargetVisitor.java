@@ -26,7 +26,6 @@ import com.google.inject.spi.BindingTargetVisitor;
  * this interface.
  *
  * @since 3.0
- * @author sameb@google.com (Sam Berlin)
  */
 public interface MultibindingsTargetVisitor<T, V>
         extends BindingTargetVisitor<T, V>

@@ -38,8 +38,6 @@ import static java.util.Objects.requireNonNull;
  * Manages and injects instances at injector-creation time. This is made more complicated by
  * instances that request other instances while they're being injected. We overcome this by using
  * {@link Initializable}, which attempts to perform injection before use.
- *
- * @author jessewilson@google.com (Jesse Wilson)
  */
 final class Initializer
 {

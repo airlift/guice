@@ -30,8 +30,6 @@ import java.util.List;
 /**
  * Returns providers and members injectors that haven't yet been initialized. As a part of injector
  * creation it's necessary to {@link #initialize initialize} these lookups.
- *
- * @author jessewilson@google.com (Jesse Wilson)
  */
 final class DeferredLookups
         implements Lookups

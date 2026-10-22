@@ -31,8 +31,6 @@ import static java.util.Objects.requireNonNull;
  * Base class used to create a new binding with the Guice EDSL described in {@link Binder}.
  * Constructing an AbstractBindingBuilder will create a new binding and add it into the {@link
  * Binder}.
- *
- * @author jessewilson@google.com (Jesse Wilson)
  */
 public abstract sealed class AbstractBindingBuilder<T>
         permits BindingBuilder, ConstantBindingBuilderImpl

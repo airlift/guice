@@ -49,9 +49,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * @author jessewilson@google.com (Jesse Wilson)
- */
 public class SpiBindingsTest
 {
     @Test

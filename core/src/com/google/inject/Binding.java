@@ -51,8 +51,6 @@ import com.google.inject.spi.Element;
  * </ul>
  *
  * @param <T> the bound type. The injected is always assignable to this type.
- * @author crazybob@google.com (Bob Lee)
- * @author jessewilson@google.com (Jesse Wilson)
  */
 public interface Binding<T>
         extends Element

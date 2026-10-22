@@ -20,7 +20,6 @@ package com.google.inject.grapher;
  * Alias between two nodes. Causes the 'from' node to be aliased with the 'to' node, which means
  * that the 'from' node is not rendered and all edges going to it instead go to the 'to' node.
  *
- * @author bojand@google.com (Bojan Djordjevic)
  * @since 4.0
  */
 public final class Alias

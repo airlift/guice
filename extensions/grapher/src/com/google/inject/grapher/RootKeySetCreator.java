@@ -25,7 +25,6 @@ import java.util.Set;
  * Creator of the default starting set of keys to graph. These keys and their transitive
  * dependencies will be graphed.
  *
- * @author bojand@google.com (Bojan Djordjevic)
  * @since 4.0
  */
 public interface RootKeySetCreator

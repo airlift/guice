@@ -182,10 +182,6 @@ import java.lang.reflect.Method;
  * #install}, {@link #requestStaticInjection}, {@link #addError} and {@link #currentStage} are not
  * part of the Binding EDSL; you can learn how to use these in the usual way, from the method
  * documentation.
- *
- * @author crazybob@google.com (Bob Lee)
- * @author jessewilson@google.com (Jesse Wilson)
- * @author kevinb@google.com (Kevin Bourrillion)
  */
 public interface Binder
 {

@@ -42,8 +42,6 @@ import static org.mockito.Mockito.when;
 /**
  * Tests the FilterPipeline that dispatches to guice-managed servlets, is a full integration test,
  * with a real injector.
- *
- * @author Dhanji R. Prasanna (dhanji gmail com)
  */
 public class VarargsServletDispatchIntegrationTest
 {

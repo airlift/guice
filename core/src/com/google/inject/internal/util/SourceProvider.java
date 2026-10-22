@@ -25,8 +25,6 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * Provides access to the calling line of code.
- *
- * @author crazybob@google.com (Bob Lee)
  */
 public final class SourceProvider
 {

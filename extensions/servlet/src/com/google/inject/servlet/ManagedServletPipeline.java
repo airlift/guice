@@ -40,8 +40,6 @@ import static com.google.common.base.Preconditions.checkState;
 /**
  * A wrapping dispatcher for servlets, in much the same way as {@link ManagedFilterPipeline} is for
  * filters.
- *
- * @author dhanji@gmail.com (Dhanji R. Prasanna)
  */
 @Singleton
 class ManagedServletPipeline

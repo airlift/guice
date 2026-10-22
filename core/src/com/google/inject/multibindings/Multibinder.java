@@ -79,8 +79,6 @@ import static com.google.inject.internal.RealMultibinder.newRealSetBinder;
  *
  * <p><strong>Elements must be non-null.</strong> If any set element is null, set injection will
  * fail.
- *
- * @author jessewilson@google.com (Jesse Wilson)
  */
 public class Multibinder<T>
 {

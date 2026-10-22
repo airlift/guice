@@ -51,8 +51,6 @@ import static org.mockito.Mockito.when;
  * This tests that filter stage of the pipeline dispatches correctly to guice-managed filters.
  *
  * <p>WARNING(dhanji): Non-parallelizable test =(
- *
- * @author dhanji@gmail.com (Dhanji R. Prasanna)
  */
 public class FilterDispatchIntegrationTest
 {

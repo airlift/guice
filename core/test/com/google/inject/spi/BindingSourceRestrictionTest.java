@@ -19,8 +19,6 @@ import static com.google.common.truth.Truth.assertThat;
  *
  * <p>The rest of this class is tested through the public {@code RestrictedBindingSource} API it's
  * implementing.
- *
- * @author vzm@google.com (Vladimir Makaric)
  */
 public final class BindingSourceRestrictionTest
 {

@@ -24,8 +24,6 @@ import java.lang.reflect.InvocationTargetException;
 
 /**
  * Proxies calls to a {@link java.lang.reflect.Constructor} for a class {@code T}.
- *
- * @author crazybob@google.com (Bob Lee)
  */
 interface ConstructionProxy<T>
 {

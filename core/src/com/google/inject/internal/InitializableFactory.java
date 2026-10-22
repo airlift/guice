@@ -22,9 +22,6 @@ import com.google.inject.spi.Dependency;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 
-/**
- * @author crazybob@google.com (Bob Lee)
- */
 final class InitializableFactory<T>
         extends InternalFactory<T>
 {

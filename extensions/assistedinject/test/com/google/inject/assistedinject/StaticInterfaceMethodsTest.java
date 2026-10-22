@@ -26,8 +26,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Test static methods in interfaces.
- *
- * @author tavianator@tavianator.com (Tavian Barnes)
  */
 public class StaticInterfaceMethodsTest
 {

@@ -28,7 +28,6 @@ import java.util.logging.Logger;
  * Root key set creator that starts with all types that are not Guice internal types or the {@link
  * Logger} type.
  *
- * @author bojand@google.com (Bojan Djordjevic)
  * @since 4.0
  */
 public class DefaultRootKeySetCreator

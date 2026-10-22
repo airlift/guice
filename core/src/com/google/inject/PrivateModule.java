@@ -87,7 +87,6 @@ import static com.google.common.base.Preconditions.checkState;
  *   bind(FooImpl.class);
  * </pre>
  *
- * @author jessewilson@google.com (Jesse Wilson)
  * @since 2.0
  */
 public abstract class PrivateModule

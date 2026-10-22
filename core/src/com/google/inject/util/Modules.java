@@ -52,7 +52,6 @@ import static com.google.common.collect.MoreCollectors.onlyElement;
 /**
  * Static utility methods for creating and working with instances of {@link Module}.
  *
- * @author jessewilson@google.com (Jesse Wilson)
  * @since 2.0
  */
 @CheckReturnValue

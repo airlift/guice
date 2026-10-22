@@ -42,8 +42,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Tests the various @ProvidesInto annotations.
- *
- * @author sameb@google.com (Sam Berlin)
  */
 public class ProvidesIntoTest
 {

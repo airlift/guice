@@ -20,8 +20,6 @@ import jakarta.servlet.http.HttpServlet;
 
 /**
  * Used in unit tests to verify the EDSL.
- *
- * @author Dhanji R. Prasanna (dhanji@gmail com)
  */
 @Singleton
 public class DummyServlet

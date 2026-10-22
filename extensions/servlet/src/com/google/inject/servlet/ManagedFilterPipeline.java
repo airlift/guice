@@ -40,8 +40,6 @@ import java.util.Set;
 /**
  * Central routing/dispatch class handles lifecycle of managed filters, and delegates to the servlet
  * pipeline.
- *
- * @author dhanji@gmail.com (Dhanji R. Prasanna)
  */
 @Singleton
 class ManagedFilterPipeline

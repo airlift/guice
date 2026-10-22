@@ -31,9 +31,6 @@ import java.util.Set;
 
 /**
  * Internal representation of a constructor annotated with {@link AssistedInject}
- *
- * @author jmourits@google.com (Jerome Mourits)
- * @author jessewilson@google.com (Jesse Wilson)
  */
 class AssistedConstructor<T>
 {

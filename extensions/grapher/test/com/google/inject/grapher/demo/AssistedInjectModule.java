@@ -21,8 +21,6 @@ import com.google.inject.assistedinject.FactoryModuleBuilder;
 
 /**
  * Module to add {@link AssistedInject}-based elements to the demo {@link Injector}.
- *
- * @author phopkins@gmail.com (Pete Hopkins)
  */
 public class AssistedInjectModule
         extends AbstractModule

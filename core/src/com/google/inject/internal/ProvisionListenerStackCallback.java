@@ -28,8 +28,6 @@ import java.util.Set;
 
 /**
  * Intercepts provisions with a stack of listeners.
- *
- * @author sameb@google.com (Sam Berlin)
  */
 final class ProvisionListenerStackCallback<T>
 {

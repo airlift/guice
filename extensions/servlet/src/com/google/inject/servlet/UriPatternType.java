@@ -49,8 +49,6 @@ public enum UriPatternType
 
     /**
      * Matches URIs using the pattern grammar of the Servlet API and web.xml.
-     *
-     * @author dhanji@gmail.com (Dhanji R. Prasanna)
      */
     private static class ServletStyleUriPatternMatcher
             implements UriPatternMatcher
@@ -153,8 +151,6 @@ public enum UriPatternType
 
     /**
      * Matches URIs using a regular expression.
-     *
-     * @author dhanji@gmail.com (Dhanji R. Prasanna)
      */
     private static class RegexUriPatternMatcher
             implements UriPatternMatcher

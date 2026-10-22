@@ -21,7 +21,6 @@ import java.util.Objects;
 /**
  * Node in a guice dependency graph.
  *
- * @author bojand@google.com (Bojan Djordjevic)
  * @since 4.0
  */
 public abstract class Node

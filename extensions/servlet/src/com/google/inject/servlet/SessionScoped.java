@@ -27,7 +27,6 @@ import java.lang.annotation.Target;
  * Apply this to implementation classes when you want one instance per session.
  *
  * @see com.google.inject.Scopes#SINGLETON
- * @author crazybob@google.com (Bob Lee)
  */
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)

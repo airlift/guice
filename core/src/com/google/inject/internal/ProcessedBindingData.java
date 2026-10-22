@@ -24,8 +24,6 @@ import java.util.List;
 /**
  * Keeps track of creation listeners and uninitialized bindings, so they can be processed after
  * bindings are recorded.
- *
- * @author sameb@google.com (Sam Berlin)
  */
 class ProcessedBindingData
 {

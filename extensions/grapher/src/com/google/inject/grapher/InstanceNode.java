@@ -22,7 +22,6 @@ import java.util.Objects;
 /**
  * Node for instances. Used when a type is bound to an instance.
  *
- * @author bojand@google.com (Bojan Djordjevic)
  * @since 4.0
  */
 public class InstanceNode

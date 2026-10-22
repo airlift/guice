@@ -60,8 +60,6 @@ import java.util.Set;
  * good rule of thumb is to assume a method's caller has already specified enough context to
  * identify that method. When calling a method that's defined in a different context, call that
  * method with an errors object that includes its context.
- *
- * @author jessewilson@google.com (Jesse Wilson)
  */
 public final class Errors
 {

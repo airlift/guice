@@ -24,8 +24,6 @@ import java.util.List;
 
 /**
  * Handles {@code Binder.newPrivateBinder()} elements.
- *
- * @author jessewilson@google.com (Jesse Wilson)
  */
 final class PrivateElementProcessor
         extends AbstractProcessor

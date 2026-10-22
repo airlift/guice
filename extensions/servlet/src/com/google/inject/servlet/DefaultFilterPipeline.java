@@ -27,7 +27,6 @@ import java.io.IOException;
 /**
  * This default pipeline simply dispatches to web.xml's servlet pipeline.
  *
- * @author dhanji@gmail.com (Dhanji R. Prasanna)
  * @see com.google.inject.servlet.ManagedFilterPipeline See Also ManagedFilterPipeline.
  */
 class DefaultFilterPipeline

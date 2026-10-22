@@ -31,9 +31,6 @@ import java.util.function.Function;
 
 /**
  * Handles {@code Binder.convertToTypes} commands.
- *
- * @author crazybob@google.com (Bob Lee)
- * @author jessewilson@google.com (Jesse Wilson)
  */
 final class TypeConverterBindingProcessor
         extends AbstractProcessor

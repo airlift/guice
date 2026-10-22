@@ -5,8 +5,6 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Tests relating to modules.
- *
- * @author kevinb
  */
 public class ModuleTest
 {

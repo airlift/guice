@@ -38,8 +38,6 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * Static methods for working with types that we aren't publishing in the public {@code Types} API.
- *
- * @author jessewilson@google.com (Jesse Wilson)
  */
 public class MoreTypes
 {

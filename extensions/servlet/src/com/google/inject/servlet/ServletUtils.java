@@ -31,8 +31,6 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * Some servlet utility methods.
- *
- * @author ntang@google.com (Michael Tang)
  */
 final class ServletUtils
 {

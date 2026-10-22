@@ -20,8 +20,6 @@ import com.google.inject.spi.InjectionPoint;
 
 /**
  * Constructor injectors by type.
- *
- * @author jessewilson@google.com (Jesse Wilson)
  */
 final class ConstructorInjectorStore
 {

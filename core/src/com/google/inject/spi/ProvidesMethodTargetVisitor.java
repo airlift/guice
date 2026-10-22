@@ -25,7 +25,6 @@ import com.google.inject.Provides;
  * created by using {@code @Provides} will be visited through this interface.
  *
  * @since 4.0
- * @author sameb@google.com (Sam Berlin)
  */
 public interface ProvidesMethodTargetVisitor<T, V>
         extends BindingTargetVisitor<T, V>

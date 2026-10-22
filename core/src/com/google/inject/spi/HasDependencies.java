@@ -22,7 +22,6 @@ import java.util.Set;
  * Implemented by {@link com.google.inject.Binding bindings}, {@link com.google.inject.Provider
  * providers} and instances that expose their dependencies explicitly.
  *
- * @author jessewilson@google.com (Jesse Wilson)
  * @since 2.0
  */
 public interface HasDependencies

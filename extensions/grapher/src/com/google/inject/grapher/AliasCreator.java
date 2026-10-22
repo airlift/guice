@@ -22,7 +22,6 @@ import com.google.inject.Binding;
  * Creator of node aliases. Used by dependency graphers to merge nodes in the internal Guice graph
  * into a single node on the rendered graph.
  *
- * @author bojand@google.com (Bojan Djordjevic)
  * @since 4.0
  */
 public interface AliasCreator

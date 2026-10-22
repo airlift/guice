@@ -24,8 +24,6 @@ package com.google.inject;
  * allows the created instance to be "remembered" and possibly used again for other injections.
  *
  * <p>An example of a scope is {@link Scopes#SINGLETON}.
- *
- * @author crazybob@google.com (Bob Lee)
  */
 public interface Scope
 {

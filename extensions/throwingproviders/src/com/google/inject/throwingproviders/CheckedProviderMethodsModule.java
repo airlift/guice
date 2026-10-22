@@ -41,8 +41,6 @@ import static java.util.Objects.requireNonNull;
 /**
  * Creates bindings to methods annotated with {@literal @}{@link CheckedProvides}. Use the scope and
  * binding annotations on the provider method to configure the binding.
- *
- * @author sameb@google.com (Sam Berlin)
  */
 final class CheckedProviderMethodsModule
         implements Module

@@ -28,9 +28,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Annotates an injected parameter or field whose value comes from an argument to a factory method.
- *
- * @author jmourits@google.com (Jerome Mourits)
- * @author jessewilson@google.com (Jesse Wilson)
  */
 @BindingAnnotation
 @Target({FIELD, PARAMETER, METHOD})

@@ -20,8 +20,6 @@ import com.google.inject.PrivateModule;
 
 /**
  * Module to test private modules and exposed bindings.
- *
- * @author bojand@google.com (Bojan Djordjevic)
  */
 public class PrivateTestModule
         extends PrivateModule

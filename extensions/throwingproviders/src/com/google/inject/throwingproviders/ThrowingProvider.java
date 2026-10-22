@@ -31,8 +31,6 @@ package com.google.inject.throwingproviders;
  * thrown by {@link #get} will be scoped. As a consequence, {@link #get} will invoked at most once
  * within each scope.
  *
- * @author jmourits@google.com (Jerome Mourits)
- * @author jessewilson@google.com (Jesse Wilson)
  * @deprecated use {@link CheckedProvider} instead.
  */
 @Deprecated

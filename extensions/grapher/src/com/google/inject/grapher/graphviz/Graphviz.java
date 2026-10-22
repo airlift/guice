@@ -23,8 +23,6 @@ import java.lang.annotation.RetentionPolicy;
 
 /**
  * Annotation for types used by the graphviz grapher.
- *
- * @author bojand@google.com (Bojan Djordjevic)
  */
 @BindingAnnotation
 @Retention(RetentionPolicy.RUNTIME)

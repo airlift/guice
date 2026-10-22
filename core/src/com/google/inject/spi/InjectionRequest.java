@@ -33,7 +33,6 @@ import static java.util.Objects.requireNonNull;
  * <pre>
  *     requestInjection(serviceInstance);</pre>
  *
- * @author mikeward@google.com (Mike Ward)
  * @since 2.0
  */
 public final class InjectionRequest<T>

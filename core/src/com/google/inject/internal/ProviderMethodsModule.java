@@ -50,9 +50,6 @@ import static java.util.Objects.requireNonNull;
 /**
  * Creates bindings to methods annotated with {@literal @}{@link Provides}. Use the scope and
  * binding annotations on the provider method to configure the binding.
- *
- * @author crazybob@google.com (Bob Lee)
- * @author jessewilson@google.com (Jesse Wilson)
  */
 public final class ProviderMethodsModule
         implements Module

@@ -25,8 +25,6 @@ import static com.google.common.base.MoreObjects.toStringHelper;
 
 /**
  * Default implementation of LinkedServletBinding.
- *
- * @author sameb@google.com (Sam Berlin)
  */
 class LinkedServletBindingImpl
         extends AbstractServletModuleBinding<Key<? extends HttpServlet>>

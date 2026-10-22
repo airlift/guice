@@ -19,9 +19,6 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-/**
- * @author crazybob@google.com (Bob Lee)
- */
 public class SuperclassTest
 {
     @Test

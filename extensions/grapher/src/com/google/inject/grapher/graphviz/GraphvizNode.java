@@ -27,8 +27,6 @@ import java.util.TreeMap;
 
 /**
  * Data object to encapsulate the attributes of Graphviz nodes that we're interested in drawing.
- *
- * @author phopkins@gmail.com (Pete Hopkins)
  */
 public class GraphvizNode
 {

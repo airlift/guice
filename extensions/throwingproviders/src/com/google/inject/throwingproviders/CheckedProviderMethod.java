@@ -38,8 +38,6 @@ import java.util.Set;
 
 /**
  * A provider that invokes a method and returns its result.
- *
- * @author sameb@google.com (Sam Berlin)
  */
 class CheckedProviderMethod<T>
         implements CheckedProvider<T>, HasDependencies

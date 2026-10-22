@@ -32,8 +32,6 @@ import com.google.inject.spi.DefaultBindingTargetVisitor;
 
 /**
  * Guarantees that processing of Binding elements happens in a sane way.
- *
- * @author sameb@google.com (Sam Berlin)
  */
 abstract class AbstractBindingProcessor
         extends AbstractProcessor

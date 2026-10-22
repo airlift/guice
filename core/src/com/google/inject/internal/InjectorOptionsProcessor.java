@@ -29,8 +29,6 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * A processor to gather injector options.
- *
- * @author sameb@google.com (Sam Berlin)
  */
 class InjectorOptionsProcessor
         extends AbstractProcessor

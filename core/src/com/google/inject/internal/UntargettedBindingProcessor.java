@@ -22,8 +22,6 @@ import com.google.inject.spi.UntargettedBinding;
 
 /**
  * Processes just UntargettedBindings.
- *
- * @author sameb@google.com (Sam Berlin)
  */
 class UntargettedBindingProcessor
         extends AbstractBindingProcessor

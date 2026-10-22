@@ -27,8 +27,6 @@ import java.util.Map;
 
 /**
  * Utility class for collecting factory bindings. Used for configuring {@link FactoryProvider2}.
- *
- * @author schmitt@google.com (Peter Schmitt)
  */
 class BindingCollector
 {

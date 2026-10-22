@@ -28,9 +28,6 @@ import static com.google.inject.Asserts.getClassPathUrls;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
-/**
- * @author jessewilson@google.com (Jesse Wilson)
- */
 public class EagerSingletonTest
 {
     @BeforeEach

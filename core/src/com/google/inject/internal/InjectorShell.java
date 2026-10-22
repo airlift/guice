@@ -62,8 +62,6 @@ import static java.lang.invoke.MethodType.methodType;
  * <p>It is necessary to create the root and child injectors in a single batch because there can be
  * bidirectional parent &lt;-&gt; child injector dependencies that require the entire tree of
  * injectors to be initialized together in the {@link InternalInjectorCreator}.
- *
- * @author jessewilson@google.com (Jesse Wilson)
  */
 final class InjectorShell
 {

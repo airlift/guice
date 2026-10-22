@@ -33,8 +33,6 @@ import static org.mockito.Mockito.verify;
 
 /**
  * This gorgeous test asserts that multiple servlet pipelines can run in the SAME JVM. booya.
- *
- * @author dhanji@gmail.com (Dhanji R. Prasanna)
  */
 public class MultipleServletInjectorsTest
 {

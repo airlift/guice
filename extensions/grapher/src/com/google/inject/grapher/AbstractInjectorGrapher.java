@@ -34,7 +34,6 @@ import java.util.Set;
 /**
  * Abstract injector grapher that builds the dependency graph but doesn't render it.
  *
- * @author bojand@google.com (Bojan Djordjevic)
  * @since 4.0
  */
 public abstract class AbstractInjectorGrapher

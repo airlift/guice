@@ -43,7 +43,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * will set the default value of {@code @Named("url") Optional<String>} to foo's URL, and then
  * override it to bar's URL.
  *
- * @author sameb@google.com (Sam Berlin)
  * @since 4.0
  */
 @Documented

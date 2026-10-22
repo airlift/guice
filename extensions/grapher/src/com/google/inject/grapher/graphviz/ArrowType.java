@@ -21,8 +21,6 @@ package com.google.inject.grapher.graphviz;
  * double arrows and such.
  *
  * <p>See: http://www.graphviz.org/doc/info/arrows.html
- *
- * @author phopkins@gmail.com (Pete Hopkins)
  */
 public enum ArrowType
 {

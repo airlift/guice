@@ -26,7 +26,6 @@ import java.util.Set;
  * Guice injector grapher. Renders the guice dependency graph for an injector. It can render the
  * whole dependency graph or just transitive dependencies of a given set of nodes.
  *
- * @author phopkins@gmail.com (Pete Hopkins)
  * @since 4.0 (since 2.0 as a concrete class with a different API)
  */
 public interface InjectorGrapher

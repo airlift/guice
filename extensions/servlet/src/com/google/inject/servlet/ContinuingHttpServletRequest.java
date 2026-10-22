@@ -29,8 +29,6 @@ import java.util.Map;
 
 /**
  * A wrapper for requests that makes requests immutable, taking a snapshot of the original request.
- *
- * @author dhanji@gmail.com (Dhanji R. Prasanna)
  */
 class ContinuingHttpServletRequest
         extends HttpServletRequestWrapper

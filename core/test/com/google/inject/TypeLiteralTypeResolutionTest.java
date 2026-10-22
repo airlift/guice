@@ -49,8 +49,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * This test checks that TypeLiteral can perform type resolution on its members.
- *
- * @author jessewilson@google.com (Jesse Wilson)
  */
 public class TypeLiteralTypeResolutionTest
 {

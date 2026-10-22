@@ -30,8 +30,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Some tests for {@link Binder#requireExplicitBindings()}
- *
- * @author sberlin@gmail.com (Sam Berlin)
  */
 public class JitBindingsTest
 {

@@ -33,8 +33,6 @@ import static org.junit.jupiter.api.Assertions.fail;
  * This test verifies the ways things are injected (ie. getInstance(), injectMembers(), bind to
  * instance, and bind to provider instance) for all states of optional bindings (fields, methods,
  * multiple-argument methods, provider fields, provider methods, constructors).
- *
- * @author jessewilson@google.com (Jesse Wilson)
  */
 public class OptionalBindingTest
 {

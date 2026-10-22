@@ -12,8 +12,6 @@ import static org.mockito.Mockito.when;
 
 /**
  * Unit test for the servlet utility class.
- *
- * @author ntang@google.com (Michael Tang)
  */
 public class ServletUtilsTest
 {
