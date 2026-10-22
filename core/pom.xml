@@ -70,6 +70,20 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <!--
+                     | Remove duplicate jarjar'd LICENSE and NOTICE
+                    -->
+                    <excludes>
+                        <exclude>LICENSE</exclude>
+                        <exclude>NOTICE</exclude>
+                    </excludes>
+                    <archive>
+                        <manifestEntries>
+                            <Automatic-Module-Name>io.airlift.zest</Automatic-Module-Name>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
                 <executions>
                     <execution>
                         <!--
@@ -120,23 +134,6 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
-            <!--
-       | Remove duplicate jarjar'd LICENSE and NOTICE
-      -->
-            <plugin>
-                <artifactId>maven-jar-plugin</artifactId>
-                <configuration>
-                    <excludes>
-                        <exclude>LICENSE</exclude>
-                        <exclude>NOTICE</exclude>
-                    </excludes>
-                    <archive>
-                        <manifestEntries>
-                            <Automatic-Module-Name>io.airlift.zest</Automatic-Module-Name>
-                        </manifestEntries>
-                    </archive>
-                </configuration>
             </plugin>
             <!--
        | Generate sources jar
