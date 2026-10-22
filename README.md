@@ -15,17 +15,17 @@ from Guice to Zest is mostly a matter of switching Maven coordinates.
 Overview
 ====
 
-Put simply, Guice alleviates the need for factories and the use of new in your Java code. Think of Guice's @Inject as the new new. You will still need to write factories in some cases, but your code will not depend directly on them. Your code will be easier to change, unit test and reuse in other contexts.
+Put simply, Zest alleviates the need for factories and the use of new in your Java code. Think of Zest's @Inject as the new new. You will still need to write factories in some cases, but your code will not depend directly on them. Your code will be easier to change, unit test and reuse in other contexts.
 
-Guice embraces Java's type safe nature. You might think of Guice as filling in missing features for core Java. Ideally, the language itself would provide most of the same features, but until such a language comes along, we have Guice.
+Zest embraces Java's type safe nature. You might think of Zest as filling in missing features for core Java. Ideally, the language itself would provide most of the same features, but until such a language comes along, we have Zest.
 
-Guice helps you design better APIs, and the Guice API itself sets a good example. Guice is not a kitchen sink. We justify each feature with at least three use cases. When in doubt, we leave it out. We build general functionality which enables you to extend Guice rather than adding every feature to the core framework.
+Zest helps you design better APIs, and the Zest API itself sets a good example. Zest is not a kitchen sink. We justify each feature with at least three use cases. When in doubt, we leave it out. We build general functionality which enables you to extend Zest rather than adding every feature to the core framework.
 
-Guice aims to make development and debugging easier and faster, not harder and slower. In that vein, Guice steers clear of surprises and magic. You should be able to understand code with or without tools, though tools can make things even easier. When errors do occur, Guice goes the extra mile to generate helpful messages.
+Zest aims to make development and debugging easier and faster, not harder and slower. In that vein, Zest steers clear of surprises and magic. You should be able to understand code with or without tools, though tools can make things even easier. When errors do occur, Zest goes the extra mile to generate helpful messages.
 
-For an introduction to Guice and a comparison to new and the factory pattern, see [Bob Lee's video presentation](https://www.youtube.com/watch?v=hBVJbzAagfs). After that, check out our [user's guide](https://github.com/google/guice/wiki/Motivation).
+For an introduction to Guice (and therefore Zest) and a comparison to new and the factory pattern, see [Bob Lee's video presentation](https://www.youtube.com/watch?v=hBVJbzAagfs). After that, check out the upstream [user's guide](https://github.com/google/guice/wiki/Motivation).
 
-We've been running Guice in mission critical applications since 2006, and now you can, too. We hope you enjoy it as much as we do.
+Guice has been running in mission critical applications since 2006, and Zest carries that lineage forward. We hope you enjoy it as much as we do.
 
 
 Installation Instructions

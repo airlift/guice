@@ -16,6 +16,6 @@
 
 /**
  * Extension for combining factory interfaces with injection; this extension requires {@code
- * guice-assistedinject.jar}.
+ * zest-assistedinject.jar}.
  */
 package com.google.inject.assistedinject;

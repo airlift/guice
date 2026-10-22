@@ -15,7 +15,7 @@
  */
 
 /**
- * Extension for binding multiple instances in a collection; this extension requires {@code
- * guice-multibindings.jar}.
+ * Extension for binding multiple instances in a collection; this extension ships as part of the
+ * {@code zest} core artifact.
  */
 package com.google.inject.multibindings;
