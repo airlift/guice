@@ -191,6 +191,31 @@ public final class Errors
                 key);
     }
 
+    Errors boundForRequired(Key<?> key, Collection<Key<?>> boundForKeys)
+    {
+        StringBuilder boundForBindings = new StringBuilder();
+        for (Key<?> boundForKey : boundForKeys) {
+            boundForBindings.append("\n    * ").append(Messages.convert(boundForKey));
+        }
+        return addMessage(
+                ErrorId.BOUND_FOR_REQUIRED,
+                "%s is not explicitly bound, and is not created just in time because it has @BoundFor"
+                        + " bindings.\nAdd the missing @BoundFor qualifier, or bind %s explicitly. Its"
+                        + " @BoundFor bindings:%s",
+                key,
+                key,
+                boundForBindings);
+    }
+
+    Errors boundForWithoutClass(Key<?> key)
+    {
+        return addMessage(
+                ErrorId.BOUND_FOR_WITHOUT_CLASS,
+                "Cannot bind %s annotated with @BoundFor alone, as @BoundFor needs a class. Use"
+                        + " Binder.boundFor(SomeClass.class) rather than BoundFor.class.",
+                key.getTypeLiteral());
+    }
+
     public Errors atInjectRequired(TypeLiteral<?> type)
     {
         return addMessage(

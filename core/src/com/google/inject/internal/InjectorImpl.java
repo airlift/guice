@@ -297,12 +297,23 @@ final class InjectorImpl
             throws ErrorsException
     {
         boolean jitOverride = isProvider(key) || isTypeLiteral(key) || isMembersInjector(key);
+        // An unqualified key of a type with @BoundFor bindings is most likely missing its @BoundFor,
+        // so it is treated as though explicit bindings were required for it
+        boolean boundForRequired =
+                !jitOverride
+                        && key.getAnnotationType() == null
+                        && bindingData.hasBoundForBindings(key.getTypeLiteral());
         synchronized (jitBindingData.lock()) {
             // first try to find a JIT binding that we've already created
             for (InjectorImpl injector = this; injector != null; injector = injector.parent) {
                 var binding = injector.jitBindingData.getJitBinding(key);
 
                 if (binding != null) {
+                    // Like jitDisabled below, an existing binding (such as a linked binding's target)
+                    // is still returned by getBinding(), which tools use to walk the binding graph
+                    if (boundForRequired && jitType == JitLimitation.NO_JIT) {
+                        throw boundForRequired(key, errors);
+                    }
                     // If we found a JIT binding and we don't allow them,
                     // fail.  (But allow bindings created through TypeConverters.)
                     if (options.jitDisabled
@@ -334,8 +345,17 @@ final class InjectorImpl
             if (jitBindingData.isFailedJitBinding(key) && errors.hasErrors()) {
                 throw errors.toException();
             }
+            if (boundForRequired && jitType != JitLimitation.NEW_OR_EXISTING_JIT) {
+                throw boundForRequired(key, errors);
+            }
             return createJustInTimeBindingRecursive(key, errors, options.jitDisabled, jitType);
         } // end synchronized(jitBindingData.lock())
+    }
+
+    private ErrorsException boundForRequired(Key<?> key, Errors errors)
+    {
+        return errors.boundForRequired(key, bindingData.getBoundForKeys(key.getTypeLiteral()))
+                .toException();
     }
 
     /**

@@ -160,6 +160,16 @@ import java.lang.reflect.Method;
  * these names will live in a single flat namespace with all the other names used in your
  * application.
  *
+ * <pre>
+ *     bind(Service.class)
+ *         .annotatedWith(Binder.boundFor(BillingModule.class))
+ *         .to(BillingService.class);</pre>
+ *
+ * Qualifies the binding with a class rather than a name, for injection requests annotated with
+ * {@code @BoundFor(BillingModule.class)}. Any class will do, so there is no annotation to declare,
+ * and unlike a name the class is checked by the compiler. See {@link BoundFor @BoundFor} and
+ * {@link #boundFor boundFor()}.
+ *
  * <pre>{@code
  * Constructor<T> loneCtor = getLoneCtorFromServiceImplViaReflection();
  * bind(ServiceImpl.class)
@@ -227,6 +237,21 @@ public interface Binder
      * See the EDSL examples at {@link Binder}.
      */
     AnnotatedConstantBindingBuilder bindConstant();
+
+    /**
+     * Returns a {@link BoundFor @BoundFor} annotation with {@code type} as its class, to qualify a
+     * binding with:
+     *
+     * <pre>
+     *     bind(Service.class).annotatedWith(Binder.boundFor(BillingModule.class)).to(BillingService.class);</pre>
+     *
+     * As a static interface method it is not inherited, so it can't be called on a binder or
+     * unqualified in a module: call it as {@code Binder.boundFor()} or import it statically.
+     */
+    static BoundFor boundFor(Class<?> type)
+    {
+        return new BoundForImpl(type);
+    }
 
     /**
      * Upon successful creation, the {@link Injector} will inject instance fields and methods of the

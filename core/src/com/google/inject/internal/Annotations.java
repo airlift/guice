@@ -302,7 +302,8 @@ public class Annotations
      *
      * <p>The value of the member is prefixed with `memberName=` unless the runtime omits the member
      * name. The value of the member is quoted if annotation implementations quote their member values
-     * and the value type is String.
+     * and the value type is String. A Class value is shown as a class literal, as the runtime shows
+     * it.
      *
      * <p>In Java 9, annotations quote their string members and in Java 15, the member name is
      * omitted.
@@ -317,6 +318,10 @@ public class Annotations
         }
         if (quote && (value instanceof String)) {
             sb.append('"').append(value).append('"');
+        }
+        else if (value instanceof Class<?> type) {
+            String canonicalName = type.getCanonicalName();
+            sb.append(canonicalName == null ? "<no canonical name>" : canonicalName).append(".class");
         }
         else {
             sb.append(value);

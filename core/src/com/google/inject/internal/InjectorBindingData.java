@@ -19,8 +19,11 @@ package com.google.inject.internal;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.SetMultimap;
 import com.google.inject.Binding;
+import com.google.inject.BoundFor;
 import com.google.inject.Key;
 import com.google.inject.Scope;
 import com.google.inject.TypeLiteral;
@@ -73,6 +76,10 @@ class InjectorBindingData
     // and all of them run after the explicit-binding set is final, so most injectors never pay for
     // indexing every binding. Benign race: concurrent first calls build identical immutable maps.
     private volatile ImmutableListMultimap<TypeLiteral<?>, Binding<?>> indexedExplicitBindings;
+    // The keys of the injector's explicit bindings that are qualified with a @BoundFor class, indexed
+    // by type. Like the explicit bindings it only changes while the injector is created, all before
+    // the first just-in-time binding is, so every injector's view of its ancestors is complete.
+    private final SetMultimap<TypeLiteral<?>, Key<?>> boundForKeys = LinkedHashMultimap.create();
 
     InjectorBindingData(Optional<InjectorBindingData> parent)
     {
@@ -102,6 +109,36 @@ class InjectorBindingData
     public void putBinding(Key<?> key, BindingImpl<?> binding)
     {
         explicitBindingsMutable.put(key, binding);
+        // a @BoundFor without a class is an error reported elsewhere, and is not indexed so that it
+        // doesn't also cause errors for the unqualified type
+        if (key.getAnnotationType() == BoundFor.class && key.hasAttributes()) {
+            boundForKeys.put(key.getTypeLiteral(), key);
+        }
+    }
+
+    /**
+     * Returns true if this injector or an ancestor has an explicit binding of {@code type} that is
+     * qualified with {@link BoundFor}.
+     */
+    public boolean hasBoundForBindings(TypeLiteral<?> type)
+    {
+        if (boundForKeys.containsKey(type)) {
+            return true;
+        }
+        return parent.isPresent() && parent.orElseThrow().hasBoundForBindings(type);
+    }
+
+    /**
+     * Returns the keys of the explicit bindings of {@code type} that are qualified with
+     * {@link BoundFor}, in this injector and its ancestors.
+     */
+    public List<Key<?>> getBoundForKeys(TypeLiteral<?> type)
+    {
+        ImmutableList.Builder<Key<?>> keys = ImmutableList.builder();
+        for (InjectorBindingData data = this; data != null; data = data.parent.orElse(null)) {
+            keys.addAll(data.boundForKeys.get(type));
+        }
+        return keys.build();
     }
 
     public void putProviderLookup(ProviderLookup<?> lookup)

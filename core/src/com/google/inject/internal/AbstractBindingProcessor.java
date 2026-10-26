@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Binder;
 import com.google.inject.Binding;
+import com.google.inject.BoundFor;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.MembersInjector;
@@ -144,6 +145,12 @@ abstract class AbstractBindingProcessor
     {
         Annotations.checkForMisplacedScopeAnnotations(
                 key.getTypeLiteral().getRawType(), source, errors);
+
+        // a @BoundFor without its class would be a catch-all for every @BoundFor of the type, while
+        // @BoundFor is meant to be matched exactly
+        if (key.getAnnotationType() == BoundFor.class && !key.hasAttributes()) {
+            errors.boundForWithoutClass(key);
+        }
     }
 
     /**
