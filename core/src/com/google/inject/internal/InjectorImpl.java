@@ -133,6 +133,11 @@ final class InjectorImpl
     private final InjectorJitBindingData jitBindingData;
     final InjectorImpl parent;
     final InjectorOptions options;
+    /**
+     * The attributes the binders returned while recording this injector's modules, inherited by
+     * child injectors.
+     */
+    final ImmutableMap<String, Object> attributes;
     final InternalContext.CircularFactoryIdFactory circularFactoryIdFactory;
 
     Lookups lookups = new DeferredLookups(this);
@@ -146,12 +151,14 @@ final class InjectorImpl
             InjectorImpl parent,
             InjectorBindingData bindingData,
             InjectorJitBindingData jitBindingData,
-            InjectorOptions injectorOptions)
+            InjectorOptions injectorOptions,
+            ImmutableMap<String, Object> attributes)
     {
         this.parent = parent;
         this.bindingData = bindingData;
         this.jitBindingData = jitBindingData;
         this.options = injectorOptions;
+        this.attributes = attributes;
 
         if (parent != null) {
             localContext = parent.localContext;

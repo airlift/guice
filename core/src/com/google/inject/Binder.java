@@ -16,6 +16,7 @@
 
 package com.google.inject;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.binder.AnnotatedBindingBuilder;
 import com.google.inject.binder.AnnotatedConstantBindingBuilder;
 import com.google.inject.binder.LinkedBindingBuilder;
@@ -30,6 +31,8 @@ import org.aopalliance.intercept.MethodInterceptor;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Collects configuration information (primarily <i>bindings</i>) which will be used to create an
@@ -476,4 +479,21 @@ public interface Binder
      * @since 4.0
      */
     void scanModulesForAnnotatedMethods(ModuleAnnotatedMethodScanner scanner);
+
+    /**
+     * Returns the attribute added under {@code key} with {@link Guice#withAttribute} when the
+     * injector was created. Child injectors have the attributes of their parent.
+     *
+     * <p>The default implementation, for Binder implementations other than Guice's, has no
+     * attributes and always throws.
+     *
+     * @param key name of the attribute
+     * @throws ConfigurationException if no attribute was added under {@code key}
+     */
+    default Object getAttribute(String key)
+    {
+        requireNonNull(key, "key");
+        throw new ConfigurationException(ImmutableList.of(new Message(
+                "No attribute \"%s\" was added with Guice.withAttribute()".formatted(key))));
+    }
 }

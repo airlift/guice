@@ -16,9 +16,14 @@
 
 package com.google.inject;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.internal.InternalInjectorCreator;
 
 import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * The entry point to the Guice framework. Creates {@link Injector}s from {@link Module}s.
@@ -90,5 +95,78 @@ public final class Guice
     public static Injector createInjector(Stage stage, Iterable<? extends Module> modules)
     {
         return new InternalInjectorCreator().stage(stage).addModules(modules).build();
+    }
+
+    /**
+     * Returns a builder for injectors whose binders return {@code value} from {@link
+     * Binder#getAttribute} for {@code key}. Add more attributes with {@link Builder#withAttribute}.
+     * Injectors created with the other methods of this class have no attributes.
+     */
+    public static Builder withAttribute(String key, Object value)
+    {
+        return new Builder(ImmutableMap.of()).withAttribute(key, value);
+    }
+
+    /**
+     * Creates {@link Injector}s whose binders return this builder's attributes from {@link
+     * Binder#getAttribute}. Builders are immutable and can be reused.
+     */
+    public static final class Builder
+    {
+        private final ImmutableMap<String, Object> attributes;
+
+        private Builder(ImmutableMap<String, Object> attributes)
+        {
+            this.attributes = attributes;
+        }
+
+        /**
+         * Returns a builder with this builder's attributes plus {@code value} for {@code key},
+         * replacing any previous value for {@code key}.
+         */
+        public Builder withAttribute(String key, Object value)
+        {
+            requireNonNull(key, "key");
+            requireNonNull(value, "value");
+            Map<String, Object> newAttributes = new LinkedHashMap<>(attributes);
+            newAttributes.put(key, value);
+            return new Builder(ImmutableMap.copyOf(newAttributes));
+        }
+
+        /**
+         * See {@link Guice#createInjector(Module...)}.
+         */
+        public Injector createInjector(Module... modules)
+        {
+            return createInjector(Arrays.asList(modules));
+        }
+
+        /**
+         * See {@link Guice#createInjector(Iterable)}.
+         */
+        public Injector createInjector(Iterable<? extends Module> modules)
+        {
+            return createInjector(Stage.DEVELOPMENT, modules);
+        }
+
+        /**
+         * See {@link Guice#createInjector(Stage, Module...)}.
+         */
+        public Injector createInjector(Stage stage, Module... modules)
+        {
+            return createInjector(stage, Arrays.asList(modules));
+        }
+
+        /**
+         * See {@link Guice#createInjector(Stage, Iterable)}.
+         */
+        public Injector createInjector(Stage stage, Iterable<? extends Module> modules)
+        {
+            return new InternalInjectorCreator()
+                    .stage(stage)
+                    .attributes(attributes)
+                    .addModules(modules)
+                    .build();
+        }
     }
 }

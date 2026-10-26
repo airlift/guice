@@ -253,7 +253,8 @@ public final class Modules
         public void configure()
         {
             Binder baseBinder = binder();
-            List<Element> baseElements = Elements.getElements(currentStage(), baseModules);
+            Map<String, Object> attributes = Elements.getAttributes(baseBinder);
+            List<Element> baseElements = Elements.getElements(currentStage(), attributes, baseModules);
 
             // If the sole element was a PrivateElements, we want to override
             // the private elements within that -- so refocus our elements
@@ -277,6 +278,7 @@ public final class Modules
             final List<Element> overrideElements =
                     Elements.getElements(
                             currentStage(),
+                            attributes,
                             ImmutableList.<Module>builder().addAll(overrides).add(scannersModule).build());
 
             final Set<Key<?>> overriddenKeys = new HashSet<>();

@@ -92,6 +92,16 @@ public final class InternalInjectorCreator
         return this;
     }
 
+    /**
+     * Sets the attributes returned by {@link com.google.inject.Binder#getAttribute} while recording
+     * modules. Child injectors have the attributes of their parent.
+     */
+    public InternalInjectorCreator attributes(Map<String, Object> attributes)
+    {
+        shellBuilder.attributes(attributes);
+        return this;
+    }
+
     public InternalInjectorCreator addModules(Iterable<? extends Module> modules)
     {
         shellBuilder.addModules(modules);

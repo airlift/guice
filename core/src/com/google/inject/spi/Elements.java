@@ -17,10 +17,12 @@
 package com.google.inject.spi;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Binder;
 import com.google.inject.Binding;
+import com.google.inject.ConfigurationException;
 import com.google.inject.Key;
 import com.google.inject.MembersInjector;
 import com.google.inject.Module;
@@ -126,7 +128,19 @@ public final class Elements
      */
     public static List<Element> getElements(Stage stage, Iterable<? extends Module> modules)
     {
-        RecordingBinder binder = new RecordingBinder(stage);
+        return getElements(stage, ImmutableMap.of(), modules);
+    }
+
+    /**
+     * Records the elements executed by {@code modules}, whose binders return {@code attributes} from
+     * {@link Binder#getAttribute} and throw for any other key.
+     */
+    public static List<Element> getElements(
+            Stage stage,
+            Map<String, ?> attributes,
+            Iterable<? extends Module> modules)
+    {
+        RecordingBinder binder = new RecordingBinder(stage, ImmutableMap.copyOf(attributes));
         for (Module module : modules) {
             binder.install(module);
         }
@@ -176,6 +190,19 @@ public final class Elements
         }
         // Preserve existing (untrusted) behavior for non-standard Binder implementations.
         return binder.withSource(source);
+    }
+
+    /**
+     * Returns the attributes {@code binder} returns from {@link Binder#getAttribute}, so that modules
+     * recorded separately with {@link #getElements(Stage, Map, Iterable)} can see them. Returns an
+     * empty map for non-standard Binder implementations.
+     */
+    public static Map<String, Object> getAttributes(Binder binder)
+    {
+        if (binder instanceof RecordingBinder recordingBinder) {
+            return recordingBinder.attributes;
+        }
+        return ImmutableMap.of();
     }
 
     private static class ElementsAsModule
@@ -265,6 +292,12 @@ public final class Elements
         private final BindingSourceRestriction.PermitMapConstruction permitMapConstruction;
 
         /**
+         * Attributes returned by {@link #getAttribute}, shared by every binder derived from the root
+         * binder.
+         */
+        private final ImmutableMap<String, Object> attributes;
+
+        /**
          * The current modules stack
          */
         protected ModuleSource moduleSource;
@@ -289,7 +322,7 @@ public final class Elements
         private ModuleAnnotatedMethodScanner currentScanner;
         private boolean trustedSource;
 
-        private RecordingBinder(Stage stage)
+        private RecordingBinder(Stage stage, ImmutableMap<String, Object> attributes)
         {
             this.stage = stage;
             this.modules = new LinkedHashMap<>();
@@ -301,6 +334,7 @@ public final class Elements
             this.privateElements = null;
             this.privateBindersForScanning = new ArrayList<>();
             this.permitMapConstruction = new BindingSourceRestriction.PermitMapConstruction();
+            this.attributes = attributes;
         }
 
         /**
@@ -328,6 +362,7 @@ public final class Elements
             this.privateBindersForScanning = prototype.privateBindersForScanning;
             this.permitMapConstruction = prototype.permitMapConstruction;
             this.scannerSource = prototype.scannerSource;
+            this.attributes = prototype.attributes;
         }
 
         /**
@@ -348,6 +383,7 @@ public final class Elements
             this.privateBindersForScanning = parent.privateBindersForScanning;
             this.permitMapConstruction = parent.permitMapConstruction;
             this.scannerSource = parent.scannerSource;
+            this.attributes = parent.attributes;
         }
 
         @Override
@@ -717,6 +753,20 @@ public final class Elements
         }
 
         @Override
+        public Object getAttribute(String key)
+        {
+            requireNonNull(key, "key");
+            Object value = attributes.get(key);
+            if (value == null) {
+                Message message = new Message(
+                        getElementSource(),
+                        Errors.format("No attribute \"%s\" was added with Guice.withAttribute()", key));
+                throw new ConfigurationException(ImmutableList.of(message));
+            }
+            return value;
+        }
+
+        @Override
         public void expose(Key<?> key)
         {
             exposeInternal(key);
@@ -830,7 +880,7 @@ public final class Elements
 
         RecordTopLevelModulesBinder(Stage stage)
         {
-            super(stage);
+            super(stage, ImmutableMap.of());
         }
 
         private void record(Module module)

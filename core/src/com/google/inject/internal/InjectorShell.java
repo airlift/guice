@@ -16,6 +16,7 @@
 
 package com.google.inject.internal;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Binder;
 import com.google.inject.Injector;
@@ -41,6 +42,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Logger;
 
@@ -96,6 +98,7 @@ final class InjectorShell
         private InjectorImpl parent;
         private InjectorOptions options;
         private Stage stage;
+        private ImmutableMap<String, Object> attributes = ImmutableMap.of();
 
         /**
          * null unless this exists in a {@link Binder#newPrivateBinder private environment}
@@ -115,6 +118,13 @@ final class InjectorShell
             this.bindingData = new InjectorBindingData(Optional.of(parent.getBindingData()));
             this.options = parent.options;
             this.stage = options.stage;
+            this.attributes = parent.attributes;
+            return this;
+        }
+
+        Builder attributes(Map<String, Object> attributes)
+        {
+            this.attributes = ImmutableMap.copyOf(attributes);
             return this;
         }
 
@@ -180,7 +190,7 @@ final class InjectorShell
             else {
                 modules.add(0, new InheritedScannersModule(parent.getBindingData()));
             }
-            elements.addAll(Elements.getElements(stage, modules));
+            elements.addAll(Elements.getElements(stage, attributes, modules));
 
             // Check binding source restrictions only for the root shell (note that the root shell
             // can have a parent Injector, when Injector.createChildInjector is called). It isn't
@@ -210,7 +220,8 @@ final class InjectorShell
             checkState(bindingData != null, "no binding data. Did you remember to lock() ?");
             recordElements(errors);
 
-            InjectorImpl injector = new InjectorImpl(parent, bindingData, jitBindingData, options);
+            InjectorImpl injector =
+                    new InjectorImpl(parent, bindingData, jitBindingData, options, attributes);
             if (privateElements != null) {
                 privateElements.initInjector(injector);
             }
