@@ -534,6 +534,42 @@ public final class Errors
                 key);
     }
 
+    Errors rebindWithoutBinding(Key<?> key)
+    {
+        return addMessage(
+                ErrorId.REBIND_WITHOUT_BINDING,
+                "Could not rebind() %s, there is no earlier binding of it to replace.",
+                key);
+    }
+
+    Errors rebindBeforeBinding(Key<?> key, Object bindingSource)
+    {
+        return addMessage(
+                ErrorId.REBIND_WITHOUT_BINDING,
+                "Could not rebind() %s, it is bound only after the rebind, at %s. A rebind must come"
+                        + " after the binding it replaces.",
+                key,
+                convert(bindingSource));
+    }
+
+    Errors rebindOfExposedBinding(Key<?> key)
+    {
+        return addMessage(
+                ErrorId.REBIND_WITHOUT_BINDING,
+                "Could not rebind() %s, it is exposed from a private module. Rebind it within that"
+                        + " private module instead.",
+                key);
+    }
+
+    Errors rebindOfParentBinding(Key<?> key)
+    {
+        return addMessage(
+                ErrorId.REBIND_WITHOUT_BINDING,
+                "Could not rebind() %s, it is bound in a parent injector. A rebind can only replace a"
+                        + " binding in the same injector.",
+                key);
+    }
+
     public Errors childBindingAlreadySet(Key<?> key, Set<Object> sources)
     {
         Message message =

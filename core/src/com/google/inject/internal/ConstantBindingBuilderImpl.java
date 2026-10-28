@@ -35,9 +35,13 @@ public final class ConstantBindingBuilderImpl<T>
         implements AnnotatedConstantBindingBuilder, ConstantBindingBuilder
 {
     @SuppressWarnings("unchecked") // constant bindings start out with T unknown
-    public ConstantBindingBuilderImpl(Binder binder, List<Element> elements, Object source)
+    public ConstantBindingBuilderImpl(
+            Binder binder,
+            List<Element> elements,
+            Object source,
+            boolean rebind)
     {
-        super(binder, elements, source, (Key<T>) NULL_KEY);
+        super(binder, elements, source, (Key<T>) NULL_KEY, rebind);
     }
 
     @Override
@@ -145,6 +149,7 @@ public final class ConstantBindingBuilderImpl<T>
                         base.getSource(),
                         key,
                         base.getScoping(),
+                        base.isRebind(),
                         ImmutableSet.<InjectionPoint>of(),
                         instanceAsT));
     }

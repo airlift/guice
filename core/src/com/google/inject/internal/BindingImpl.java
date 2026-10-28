@@ -17,14 +17,18 @@
 package com.google.inject.internal;
 
 import com.google.errorprone.annotations.concurrent.LazyInit;
+import com.google.inject.Binder;
 import com.google.inject.Binding;
 import com.google.inject.Key;
 import com.google.inject.Provider;
+import com.google.inject.binder.LinkedBindingBuilder;
 import com.google.inject.spi.BindingScopingVisitor;
 import com.google.inject.spi.ElementVisitor;
 import com.google.inject.spi.InstanceBinding;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.inject.internal.GuiceInternal.GUICE_INTERNAL;
+import static com.google.inject.spi.Elements.withTrustedSource;
 
 public abstract class BindingImpl<T>
         implements Binding<T>
@@ -34,6 +38,7 @@ public abstract class BindingImpl<T>
     private final Object source;
     private final Scoping scoping;
     private final InternalFactory<? extends T> internalFactory;
+    private final boolean rebind;
 
     BindingImpl(
             InjectorImpl injector,
@@ -42,20 +47,33 @@ public abstract class BindingImpl<T>
             InternalFactory<? extends T> internalFactory,
             Scoping scoping)
     {
+        this(injector, key, source, internalFactory, scoping, false);
+    }
+
+    BindingImpl(
+            InjectorImpl injector,
+            Key<T> key,
+            Object source,
+            InternalFactory<? extends T> internalFactory,
+            Scoping scoping,
+            boolean rebind)
+    {
         this.injector = injector;
         this.key = key;
         this.source = source;
         this.internalFactory = internalFactory;
         this.scoping = scoping;
+        this.rebind = rebind;
     }
 
-    BindingImpl(Object source, Key<T> key, Scoping scoping)
+    BindingImpl(Object source, Key<T> key, Scoping scoping, boolean rebind)
     {
         this.internalFactory = null;
         this.injector = null;
         this.source = source;
         this.key = key;
         this.scoping = scoping;
+        this.rebind = rebind;
     }
 
     @Override
@@ -110,6 +128,22 @@ public abstract class BindingImpl<T>
     public boolean isConstant()
     {
         return this instanceof InstanceBinding;
+    }
+
+    @Override
+    public boolean isRebind()
+    {
+        return rebind;
+    }
+
+    /**
+     * Starts recording this binding with {@code binder} for {@link #applyTo}: binds this binding's
+     * key with its source, rebinding the key if this binding is a rebind.
+     */
+    protected LinkedBindingBuilder<T> bindToApplyTo(Binder binder)
+    {
+        Binder sourced = withTrustedSource(GUICE_INTERNAL, binder, source);
+        return rebind ? sourced.rebind(key) : sourced.bind(key);
     }
 
     @Override

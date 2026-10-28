@@ -29,8 +29,6 @@ import java.util.Objects;
 import java.util.Set;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
-import static com.google.inject.internal.GuiceInternal.GUICE_INTERNAL;
-import static com.google.inject.spi.Elements.withTrustedSource;
 
 final class InstanceBindingImpl<T>
         extends BindingImpl<T>
@@ -56,10 +54,11 @@ final class InstanceBindingImpl<T>
             Object source,
             Key<T> key,
             Scoping scoping,
+            boolean rebind,
             Set<InjectionPoint> injectionPoints,
             T instance)
     {
-        super(source, key, scoping);
+        super(source, key, scoping, rebind);
         this.injectionPoints = ImmutableSet.copyOf(injectionPoints);
         this.instance = instance;
     }
@@ -93,20 +92,22 @@ final class InstanceBindingImpl<T>
     @Override
     public BindingImpl<T> withScoping(Scoping scoping)
     {
-        return new InstanceBindingImpl<T>(getSource(), getKey(), scoping, injectionPoints, instance);
+        return new InstanceBindingImpl<T>(
+                getSource(), getKey(), scoping, isRebind(), injectionPoints, instance);
     }
 
     @Override
     public BindingImpl<T> withKey(Key<T> key)
     {
-        return new InstanceBindingImpl<T>(getSource(), key, getScoping(), injectionPoints, instance);
+        return new InstanceBindingImpl<T>(
+                getSource(), key, getScoping(), isRebind(), injectionPoints, instance);
     }
 
     @Override
     public void applyTo(Binder binder)
     {
         // instance bindings aren't scoped
-        withTrustedSource(GUICE_INTERNAL, binder, getSource()).bind(getKey()).toInstance(instance);
+        bindToApplyTo(binder).toInstance(instance);
     }
 
     @Override
@@ -126,7 +127,8 @@ final class InstanceBindingImpl<T>
             InstanceBindingImpl<?> o = (InstanceBindingImpl<?>) obj;
             return getKey().equals(o.getKey())
                     && getScoping().equals(o.getScoping())
-                    && Objects.equals(instance, o.instance);
+                    && Objects.equals(instance, o.instance)
+                    && isRebind() == o.isRebind();
         }
         else {
             return false;
@@ -136,6 +138,6 @@ final class InstanceBindingImpl<T>
     @Override
     public int hashCode()
     {
-        return Objects.hash(getKey(), getScoping());
+        return Objects.hash(getKey(), getScoping(), isRebind());
     }
 }

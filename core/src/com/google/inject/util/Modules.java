@@ -283,12 +283,31 @@ public final class Modules
             final Map<Class<? extends Annotation>, ScopeBinding> overridesScopeAnnotations =
                     new HashMap<>();
 
+            // A key the overrides only rebind isn't overridden: its rebinds are written after the
+            // original module, so that they replace the original module's bindings of it
+            final Set<Key<?>> reboundOnlyKeys = new HashSet<>();
+            final Set<Key<?>> boundKeys = new HashSet<>();
+            for (Element element : overrideElements) {
+                if (element instanceof Binding<?> binding) {
+                    (binding.isRebind() ? reboundOnlyKeys : boundKeys).add(binding.getKey());
+                }
+                else if (element instanceof PrivateElements privateElements) {
+                    boundKeys.addAll(privateElements.getExposedKeys());
+                }
+            }
+            reboundOnlyKeys.removeAll(boundKeys);
+            final List<Element> deferredRebinds = new ArrayList<>();
+
             // execute the overrides module, keeping track of which keys and scopes are bound
             new ModuleWriter(binder)
             {
                 @Override
                 public <T> Void visit(Binding<T> binding)
                 {
+                    if (reboundOnlyKeys.contains(binding.getKey())) {
+                        deferredRebinds.add(binding);
+                        return null;
+                    }
                     overriddenKeys.add(binding.getKey());
                     return super.visit(binding);
                 }
@@ -310,7 +329,9 @@ public final class Modules
 
             // execute the original module, skipping all scopes and overridden keys. We only skip each
             // overridden binding once so things still blow up if the module binds the same thing
-            // multiple times.
+            // multiple times. Rebinds of an overridden key are all skipped, since they would
+            // replace the override.
+            final Set<Key<?>> overriddenRebindKeys = ImmutableSet.copyOf(overriddenKeys);
             final Map<Scope, List<Object>> scopeInstancesInUse = new HashMap<>();
             final List<ScopeBinding> scopeBindings = new ArrayList<>();
             new ModuleWriter(binder)
@@ -318,6 +339,9 @@ public final class Modules
                 @Override
                 public <T> Void visit(Binding<T> binding)
                 {
+                    if (binding.isRebind() && overriddenRebindKeys.contains(binding.getKey())) {
+                        return null;
+                    }
                     if (!overriddenKeys.remove(binding.getKey())) {
                         super.visit(binding);
 
@@ -349,7 +373,13 @@ public final class Modules
                         }
                     }
 
+                    Set<Key<?>> skippedRebindKeys = ImmutableSet.copyOf(skippedExposes);
                     for (Element element : privateElements.getElements()) {
+                        if (element instanceof Binding<?> binding
+                                && binding.isRebind()
+                                && skippedRebindKeys.contains(binding.getKey())) {
+                            continue;
+                        }
                         if (element instanceof Binding && skippedExposes.remove(((Binding) element).getKey())) {
                             continue;
                         }
@@ -375,6 +405,8 @@ public final class Modules
                     return null;
                 }
             }.writeAll(elements);
+
+            new ModuleWriter(binder).writeAll(deferredRebinds);
 
             // execute the scope bindings, skipping scopes that have been overridden. Any scope that
             // is overridden and in active use will prompt an error

@@ -198,6 +198,38 @@ public abstract class PrivateModule
     }
 
     /**
+     * @see Binder#rebind(Key)
+     */
+    protected final <T> LinkedBindingBuilder<T> rebind(Key<T> key)
+    {
+        return binder().rebind(key);
+    }
+
+    /**
+     * @see Binder#rebind(TypeLiteral)
+     */
+    protected final <T> AnnotatedBindingBuilder<T> rebind(TypeLiteral<T> typeLiteral)
+    {
+        return binder().rebind(typeLiteral);
+    }
+
+    /**
+     * @see Binder#rebind(Class)
+     */
+    protected final <T> AnnotatedBindingBuilder<T> rebind(Class<T> clazz)
+    {
+        return binder().rebind(clazz);
+    }
+
+    /**
+     * @see Binder#rebindConstant()
+     */
+    protected final AnnotatedConstantBindingBuilder rebindConstant()
+    {
+        return binder().rebindConstant();
+    }
+
+    /**
      * @see Binder#install(Module)
      */
     protected final void install(Module module)

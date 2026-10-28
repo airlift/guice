@@ -28,8 +28,6 @@ import java.util.Objects;
 import java.util.Set;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
-import static com.google.inject.internal.GuiceInternal.GUICE_INTERNAL;
-import static com.google.inject.spi.Elements.withTrustedSource;
 
 final class LinkedProviderBindingImpl<T>
         extends BindingImpl<T>
@@ -69,9 +67,10 @@ final class LinkedProviderBindingImpl<T>
             Object source,
             Key<T> key,
             Scoping scoping,
+            boolean rebind,
             Key<? extends jakarta.inject.Provider<? extends T>> providerKey)
     {
-        super(source, key, scoping);
+        super(source, key, scoping, rebind);
         this.providerKey = providerKey;
         this.delayedInitializer = null;
     }
@@ -119,23 +118,21 @@ final class LinkedProviderBindingImpl<T>
     @Override
     public BindingImpl<T> withScoping(Scoping scoping)
     {
-        return new LinkedProviderBindingImpl<T>(getSource(), getKey(), scoping, providerKey);
+        return new LinkedProviderBindingImpl<T>(
+                getSource(), getKey(), scoping, isRebind(), providerKey);
     }
 
     @Override
     public BindingImpl<T> withKey(Key<T> key)
     {
-        return new LinkedProviderBindingImpl<T>(getSource(), key, getScoping(), providerKey);
+        return new LinkedProviderBindingImpl<T>(
+                getSource(), key, getScoping(), isRebind(), providerKey);
     }
 
     @Override
     public void applyTo(Binder binder)
     {
-        getScoping()
-                .applyTo(
-                        withTrustedSource(GUICE_INTERNAL, binder, getSource())
-                                .bind(getKey())
-                                .toProvider(getProviderKey()));
+        getScoping().applyTo(bindToApplyTo(binder).toProvider(getProviderKey()));
     }
 
     @Override
@@ -156,7 +153,8 @@ final class LinkedProviderBindingImpl<T>
             LinkedProviderBindingImpl<?> o = (LinkedProviderBindingImpl<?>) obj;
             return getKey().equals(o.getKey())
                     && getScoping().equals(o.getScoping())
-                    && Objects.equals(providerKey, o.providerKey);
+                    && Objects.equals(providerKey, o.providerKey)
+                    && isRebind() == o.isRebind();
         }
         else {
             return false;
@@ -166,6 +164,6 @@ final class LinkedProviderBindingImpl<T>
     @Override
     public int hashCode()
     {
-        return Objects.hash(getKey(), getScoping(), providerKey);
+        return Objects.hash(getKey(), getScoping(), providerKey, isRebind());
     }
 }

@@ -38,8 +38,6 @@ import java.util.Set;
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.inject.internal.Annotations.findScopeAnnotation;
-import static com.google.inject.internal.GuiceInternal.GUICE_INTERNAL;
-import static com.google.inject.spi.Elements.withTrustedSource;
 import static java.lang.invoke.MethodType.methodType;
 
 final class ConstructorBindingImpl<T>
@@ -55,10 +53,11 @@ final class ConstructorBindingImpl<T>
             Object source,
             InternalFactory<? extends T> scopedFactory,
             Scoping scoping,
+            boolean rebind,
             Factory<T> factory,
             InjectionPoint constructorInjectionPoint)
     {
-        super(injector, key, source, scopedFactory, scoping);
+        super(injector, key, source, scopedFactory, scoping, rebind);
         this.factory = factory;
         this.constructorInjectionPoint = constructorInjectionPoint;
     }
@@ -67,10 +66,11 @@ final class ConstructorBindingImpl<T>
             Key<T> key,
             Object source,
             Scoping scoping,
+            boolean rebind,
             InjectionPoint constructorInjectionPoint,
             Set<InjectionPoint> injectionPoints)
     {
-        super(source, key, scoping);
+        super(source, key, scoping, rebind);
         this.factory = new Factory<>(false, key);
         ConstructionProxy<T> constructionProxy =
                 new DefaultConstructionProxyFactory<T>(constructorInjectionPoint).create();
@@ -152,7 +152,14 @@ final class ConstructorBindingImpl<T>
                 Scoping.scope(key, injector, factoryFactory, source, scoping);
 
         return new ConstructorBindingImpl<T>(
-                injector, key, source, scopedFactory, scoping, factoryFactory, constructorInjector);
+                injector,
+                key,
+                source,
+                scopedFactory,
+                scoping,
+                /* rebind= */ false,
+                factoryFactory,
+                constructorInjector);
     }
 
     @Override
@@ -246,14 +253,28 @@ final class ConstructorBindingImpl<T>
     protected BindingImpl<T> withScoping(Scoping scoping)
     {
         return new ConstructorBindingImpl<T>(
-                null, getKey(), getSource(), factory, scoping, factory, constructorInjectionPoint);
+                null,
+                getKey(),
+                getSource(),
+                factory,
+                scoping,
+                isRebind(),
+                factory,
+                constructorInjectionPoint);
     }
 
     @Override
     protected BindingImpl<T> withKey(Key<T> key)
     {
         return new ConstructorBindingImpl<T>(
-                null, key, getSource(), factory, getScoping(), factory, constructorInjectionPoint);
+                null,
+                key,
+                getSource(),
+                factory,
+                getScoping(),
+                isRebind(),
+                factory,
+                constructorInjectionPoint);
     }
 
     @Override
@@ -263,8 +284,7 @@ final class ConstructorBindingImpl<T>
         InjectionPoint constructor = getConstructor();
         getScoping()
                 .applyTo(
-                        withTrustedSource(GUICE_INTERNAL, binder, getSource())
-                                .bind(getKey())
+                        bindToApplyTo(binder)
                                 .toConstructor(
                                         (Constructor) getConstructor().getMember(),
                                         (TypeLiteral) constructor.getDeclaringType()));
@@ -287,7 +307,8 @@ final class ConstructorBindingImpl<T>
             ConstructorBindingImpl<?> o = (ConstructorBindingImpl<?>) obj;
             return getKey().equals(o.getKey())
                     && getScoping().equals(o.getScoping())
-                    && Objects.equals(constructorInjectionPoint, o.constructorInjectionPoint);
+                    && Objects.equals(constructorInjectionPoint, o.constructorInjectionPoint)
+                    && isRebind() == o.isRebind();
         }
         else {
             return false;
@@ -297,7 +318,7 @@ final class ConstructorBindingImpl<T>
     @Override
     public int hashCode()
     {
-        return Objects.hash(getKey(), getScoping(), constructorInjectionPoint);
+        return Objects.hash(getKey(), getScoping(), constructorInjectionPoint, isRebind());
     }
 
     private static class Factory<T>

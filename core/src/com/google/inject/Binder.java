@@ -172,6 +172,14 @@ import java.lang.reflect.Method;
  * useful for cases where you cannot modify existing classes and is a bit simpler than using a
  * {@link Provider}.
  *
+ * <pre>
+ *     rebind(Service.class).to(FakeService.class);</pre>
+ *
+ * Replaces a binding of {@code Service} that a module installed earlier in the same injector, as
+ * though that binding had never been made. Without {@link #rebind(Class) rebind}, binding {@code
+ * Service} a second time to a different target is an error. A rebind has to replace an existing
+ * binding: it is an error to rebind a key that is not yet bound.
+ *
  * <p>The above list of examples is far from exhaustive. If you can think of how the concepts of one
  * example might coexist with the concepts from another, you can most likely weave the two together.
  * If the two concepts make no sense with each other, you most likely won't be able to do it. In a
@@ -227,6 +235,62 @@ public interface Binder
      * See the EDSL examples at {@link Binder}.
      */
     AnnotatedConstantBindingBuilder bindConstant();
+
+    /**
+     * Like {@link #bind(Key)}, but the binding replaces the bindings of {@code key} that precede it
+     * in this injector, as though they had never been made. A rebind is a complete
+     * respecification: neither the target nor the scope of the replaced binding carries over. A key
+     * may be rebound repeatedly, each rebind replacing the previous one. Constants are rebound with
+     * {@link #rebindConstant()}.
+     *
+     * <p>A rebind requires an earlier binding of its key in the same injector or private
+     * environment. The injector reports an error for a rebind of a key that is not bound before it,
+     * that is bound only in a parent injector, or that is exposed from a private module.
+     *
+     * <p>The default implementation, for binders that can't rebind, records an error and binds
+     * {@code key} instead.
+     */
+    default <T> LinkedBindingBuilder<T> rebind(Key<T> key)
+    {
+        addError("rebind() is not supported by %s", getClass().getName());
+        return bind(key);
+    }
+
+    /**
+     * Like {@link #bind(TypeLiteral)}, but the binding replaces existing bindings; see {@link
+     * #rebind(Key)}.
+     */
+    default <T> AnnotatedBindingBuilder<T> rebind(TypeLiteral<T> typeLiteral)
+    {
+        addError("rebind() is not supported by %s", getClass().getName());
+        return bind(typeLiteral);
+    }
+
+    /**
+     * Like {@link #bind(Class)}, but the binding replaces existing bindings; see {@link
+     * #rebind(Key)}.
+     */
+    default <T> AnnotatedBindingBuilder<T> rebind(Class<T> type)
+    {
+        addError("rebind() is not supported by %s", getClass().getName());
+        return bind(type);
+    }
+
+    /**
+     * Like {@link #bindConstant()}, but the constant replaces existing bindings of its key; see
+     * {@link #rebind(Key)}. A constant's key takes its type from the value it is bound to, so a
+     * rebind has to bind a value of the same type as the constant it replaces: {@code
+     * rebindConstant().annotatedWith(Names.named("port")).to(9090)} replaces a constant bound with
+     * {@code to(8080)}, but not one bound with {@code to("8080")}.
+     *
+     * <p>The default implementation, for binders that can't rebind, records an error and binds a
+     * constant instead.
+     */
+    default AnnotatedConstantBindingBuilder rebindConstant()
+    {
+        addError("rebindConstant() is not supported by %s", getClass().getName());
+        return bindConstant();
+    }
 
     /**
      * Upon successful creation, the {@link Injector} will inject instance fields and methods of the

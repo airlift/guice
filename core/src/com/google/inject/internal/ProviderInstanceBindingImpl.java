@@ -32,8 +32,6 @@ import java.util.Objects;
 import java.util.Set;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
-import static com.google.inject.internal.GuiceInternal.GUICE_INTERNAL;
-import static com.google.inject.spi.Elements.withTrustedSource;
 
 class ProviderInstanceBindingImpl<T>
         extends BindingImpl<T>
@@ -60,10 +58,11 @@ class ProviderInstanceBindingImpl<T>
             Object source,
             Key<T> key,
             Scoping scoping,
+            boolean rebind,
             Set<InjectionPoint> injectionPoints,
             jakarta.inject.Provider<? extends T> providerInstance)
     {
-        super(source, key, scoping);
+        super(source, key, scoping, rebind);
         this.injectionPoints = ImmutableSet.copyOf(injectionPoints);
         this.providerInstance = providerInstance;
     }
@@ -109,24 +108,21 @@ class ProviderInstanceBindingImpl<T>
     public BindingImpl<T> withScoping(Scoping scoping)
     {
         return new ProviderInstanceBindingImpl<T>(
-                getSource(), getKey(), scoping, injectionPoints, providerInstance);
+                getSource(), getKey(), scoping, isRebind(), injectionPoints, providerInstance);
     }
 
     @Override
     public BindingImpl<T> withKey(Key<T> key)
     {
         return new ProviderInstanceBindingImpl<T>(
-                getSource(), key, getScoping(), injectionPoints, providerInstance);
+                getSource(), key, getScoping(), isRebind(), injectionPoints, providerInstance);
     }
 
     @Override
     public void applyTo(Binder binder)
     {
         getScoping()
-                .applyTo(
-                        withTrustedSource(GUICE_INTERNAL, binder, getSource())
-                                .bind(getKey())
-                                .toProvider(getUserSuppliedProvider()));
+                .applyTo(bindToApplyTo(binder).toProvider(getUserSuppliedProvider()));
     }
 
     @Override
@@ -147,7 +143,8 @@ class ProviderInstanceBindingImpl<T>
             ProviderInstanceBindingImpl<?> o = (ProviderInstanceBindingImpl<?>) obj;
             return getKey().equals(o.getKey())
                     && getScoping().equals(o.getScoping())
-                    && Objects.equals(providerInstance, o.providerInstance);
+                    && Objects.equals(providerInstance, o.providerInstance)
+                    && isRebind() == o.isRebind();
         }
         else {
             return false;
@@ -157,6 +154,6 @@ class ProviderInstanceBindingImpl<T>
     @Override
     public int hashCode()
     {
-        return Objects.hash(getKey(), getScoping());
+        return Objects.hash(getKey(), getScoping(), isRebind());
     }
 }

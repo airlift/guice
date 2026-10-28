@@ -124,6 +124,38 @@ public abstract class AbstractModule
     }
 
     /**
+     * @see Binder#rebind(Key)
+     */
+    protected <T> LinkedBindingBuilder<T> rebind(Key<T> key)
+    {
+        return binder().rebind(key);
+    }
+
+    /**
+     * See {@link Binder#rebind(TypeLiteral)}.
+     */
+    protected <T> AnnotatedBindingBuilder<T> rebind(TypeLiteral<T> typeLiteral)
+    {
+        return binder().rebind(typeLiteral);
+    }
+
+    /**
+     * See {@link Binder#rebind(Class)}.
+     */
+    protected <T> AnnotatedBindingBuilder<T> rebind(Class<T> clazz)
+    {
+        return binder().rebind(clazz);
+    }
+
+    /**
+     * @see Binder#rebindConstant()
+     */
+    protected AnnotatedConstantBindingBuilder rebindConstant()
+    {
+        return binder().rebindConstant();
+    }
+
+    /**
      * @see Binder#install(Module)
      */
     protected void install(Module module)

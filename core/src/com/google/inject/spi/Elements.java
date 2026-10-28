@@ -583,9 +583,7 @@ public final class Elements
         @Override
         public <T> AnnotatedBindingBuilder<T> bind(Key<T> key)
         {
-            BindingBuilder<T> builder =
-                    new BindingBuilder<T>(this, elements, getElementSource(), MoreTypes.canonicalizeKey(key));
-            return builder;
+            return bind(key, /* rebind= */ false);
         }
 
         @Override
@@ -603,7 +601,39 @@ public final class Elements
         @Override
         public AnnotatedConstantBindingBuilder bindConstant()
         {
-            return new ConstantBindingBuilderImpl<Void>(this, elements, getElementSource());
+            return new ConstantBindingBuilderImpl<Void>(
+                    this, elements, getElementSource(), /* rebind= */ false);
+        }
+
+        @Override
+        public <T> AnnotatedBindingBuilder<T> rebind(Key<T> key)
+        {
+            return bind(key, /* rebind= */ true);
+        }
+
+        @Override
+        public <T> AnnotatedBindingBuilder<T> rebind(TypeLiteral<T> typeLiteral)
+        {
+            return rebind(Key.get(typeLiteral));
+        }
+
+        @Override
+        public <T> AnnotatedBindingBuilder<T> rebind(Class<T> type)
+        {
+            return rebind(Key.get(type));
+        }
+
+        @Override
+        public AnnotatedConstantBindingBuilder rebindConstant()
+        {
+            return new ConstantBindingBuilderImpl<Void>(
+                    this, elements, getElementSource(), /* rebind= */ true);
+        }
+
+        private <T> AnnotatedBindingBuilder<T> bind(Key<T> key, boolean rebind)
+        {
+            return new BindingBuilder<T>(
+                    this, elements, getElementSource(), MoreTypes.canonicalizeKey(key), rebind);
         }
 
         @Override

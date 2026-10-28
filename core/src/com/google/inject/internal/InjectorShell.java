@@ -210,6 +210,10 @@ final class InjectorShell
             checkState(bindingData != null, "no binding data. Did you remember to lock() ?");
             recordElements(errors);
 
+            // drop rebound bindings before anything processes them; this reads the parent's
+            // bindings, so it runs under the lock rather than in recordElements
+            new RebindProcessor(errors).process(parent, elements);
+
             InjectorImpl injector = new InjectorImpl(parent, bindingData, jitBindingData, options);
             if (privateElements != null) {
                 privateElements.initInjector(injector);

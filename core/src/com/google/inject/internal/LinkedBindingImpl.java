@@ -28,8 +28,6 @@ import java.util.Objects;
 import java.util.Set;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
-import static com.google.inject.internal.GuiceInternal.GUICE_INTERNAL;
-import static com.google.inject.spi.Elements.withTrustedSource;
 
 final class LinkedBindingImpl<T>
         extends BindingImpl<T>
@@ -49,9 +47,14 @@ final class LinkedBindingImpl<T>
         this.targetKey = targetKey;
     }
 
-    LinkedBindingImpl(Object source, Key<T> key, Scoping scoping, Key<? extends T> targetKey)
+    LinkedBindingImpl(
+            Object source,
+            Key<T> key,
+            Scoping scoping,
+            boolean rebind,
+            Key<? extends T> targetKey)
     {
-        super(source, key, scoping);
+        super(source, key, scoping, rebind);
         this.targetKey = targetKey;
     }
 
@@ -76,23 +79,19 @@ final class LinkedBindingImpl<T>
     @Override
     public BindingImpl<T> withScoping(Scoping scoping)
     {
-        return new LinkedBindingImpl<T>(getSource(), getKey(), scoping, targetKey);
+        return new LinkedBindingImpl<T>(getSource(), getKey(), scoping, isRebind(), targetKey);
     }
 
     @Override
     public BindingImpl<T> withKey(Key<T> key)
     {
-        return new LinkedBindingImpl<T>(getSource(), key, getScoping(), targetKey);
+        return new LinkedBindingImpl<T>(getSource(), key, getScoping(), isRebind(), targetKey);
     }
 
     @Override
     public void applyTo(Binder binder)
     {
-        getScoping()
-                .applyTo(
-                        withTrustedSource(GUICE_INTERNAL, binder, getSource())
-                                .bind(getKey())
-                                .to(getLinkedKey()));
+        getScoping().applyTo(bindToApplyTo(binder).to(getLinkedKey()));
     }
 
     @Override
@@ -113,7 +112,8 @@ final class LinkedBindingImpl<T>
             LinkedBindingImpl<?> o = (LinkedBindingImpl<?>) obj;
             return getKey().equals(o.getKey())
                     && getScoping().equals(o.getScoping())
-                    && Objects.equals(targetKey, o.targetKey);
+                    && Objects.equals(targetKey, o.targetKey)
+                    && isRebind() == o.isRebind();
         }
         else {
             return false;
@@ -123,6 +123,6 @@ final class LinkedBindingImpl<T>
     @Override
     public int hashCode()
     {
-        return Objects.hash(getKey(), getScoping(), targetKey);
+        return Objects.hash(getKey(), getScoping(), targetKey, isRebind());
     }
 }

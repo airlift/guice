@@ -84,4 +84,15 @@ public interface Binding<T>
      * @since 2.0
      */
     <V> V acceptScopingVisitor(BindingScopingVisitor<V> visitor);
+
+    /**
+     * Returns true if this binding was made with {@link Binder#rebind(Key)}, so it replaces the
+     * bindings of its key that precede it. Only a {@link Binding} created via {@link
+     * com.google.inject.spi.Elements#getElements} can be a rebind; a binding returned from an
+     * injector never is, since the bindings it replaced are gone.
+     */
+    default boolean isRebind()
+    {
+        return false;
+    }
 }

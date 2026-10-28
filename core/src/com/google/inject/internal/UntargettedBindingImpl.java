@@ -25,8 +25,6 @@ import com.google.inject.spi.UntargettedBinding;
 import java.util.Objects;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
-import static com.google.inject.internal.GuiceInternal.GUICE_INTERNAL;
-import static com.google.inject.spi.Elements.withTrustedSource;
 
 final class UntargettedBindingImpl<T>
         extends BindingImpl<T>
@@ -54,9 +52,9 @@ final class UntargettedBindingImpl<T>
                 Scoping.UNSCOPED);
     }
 
-    public UntargettedBindingImpl(Object source, Key<T> key, Scoping scoping)
+    public UntargettedBindingImpl(Object source, Key<T> key, Scoping scoping, boolean rebind)
     {
-        super(source, key, scoping);
+        super(source, key, scoping, rebind);
     }
 
     @Override
@@ -68,19 +66,19 @@ final class UntargettedBindingImpl<T>
     @Override
     public BindingImpl<T> withScoping(Scoping scoping)
     {
-        return new UntargettedBindingImpl<T>(getSource(), getKey(), scoping);
+        return new UntargettedBindingImpl<T>(getSource(), getKey(), scoping, isRebind());
     }
 
     @Override
     public BindingImpl<T> withKey(Key<T> key)
     {
-        return new UntargettedBindingImpl<T>(getSource(), key, getScoping());
+        return new UntargettedBindingImpl<T>(getSource(), key, getScoping(), isRebind());
     }
 
     @Override
     public void applyTo(Binder binder)
     {
-        getScoping().applyTo(withTrustedSource(GUICE_INTERNAL, binder, getSource()).bind(getKey()));
+        getScoping().applyTo(bindToApplyTo(binder));
     }
 
     @Override
@@ -97,7 +95,9 @@ final class UntargettedBindingImpl<T>
     {
         if (obj instanceof UntargettedBindingImpl) {
             UntargettedBindingImpl<?> o = (UntargettedBindingImpl<?>) obj;
-            return getKey().equals(o.getKey()) && getScoping().equals(o.getScoping());
+            return getKey().equals(o.getKey())
+                    && getScoping().equals(o.getScoping())
+                    && isRebind() == o.isRebind();
         }
         else {
             return false;
@@ -107,6 +107,6 @@ final class UntargettedBindingImpl<T>
     @Override
     public int hashCode()
     {
-        return Objects.hash(getKey(), getScoping());
+        return Objects.hash(getKey(), getScoping(), isRebind());
     }
 }

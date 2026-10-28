@@ -42,9 +42,14 @@ public final class BindingBuilder<T>
         extends AbstractBindingBuilder<T>
         implements AnnotatedBindingBuilder<T>
 {
-    public BindingBuilder(Binder binder, List<Element> elements, Object source, Key<T> key)
+    public BindingBuilder(
+            Binder binder,
+            List<Element> elements,
+            Object source,
+            Key<T> key,
+            boolean rebind)
     {
-        super(binder, elements, source, key);
+        super(binder, elements, source, key, rebind);
     }
 
     @Override
@@ -80,7 +85,8 @@ public final class BindingBuilder<T>
         checkNotTargetted();
         BindingImpl<T> base = getBinding();
         setBinding(
-                new LinkedBindingImpl<T>(base.getSource(), base.getKey(), base.getScoping(), linkedKey));
+                new LinkedBindingImpl<T>(
+                        base.getSource(), base.getKey(), base.getScoping(), base.isRebind(), linkedKey));
         return this;
     }
 
@@ -108,7 +114,12 @@ public final class BindingBuilder<T>
         BindingImpl<T> base = getBinding();
         setBinding(
                 new InstanceBindingImpl<T>(
-                        base.getSource(), base.getKey(), Scoping.EAGER_SINGLETON, injectionPoints, instance));
+                        base.getSource(),
+                        base.getKey(),
+                        Scoping.EAGER_SINGLETON,
+                        base.isRebind(),
+                        injectionPoints,
+                        instance));
     }
 
     @Override
@@ -136,7 +147,12 @@ public final class BindingBuilder<T>
         BindingImpl<T> base = getBinding();
         setBinding(
                 new ProviderInstanceBindingImpl<T>(
-                        base.getSource(), base.getKey(), base.getScoping(), injectionPoints, provider));
+                        base.getSource(),
+                        base.getKey(),
+                        base.getScoping(),
+                        base.isRebind(),
+                        injectionPoints,
+                        provider));
         return this;
     }
 
@@ -164,7 +180,7 @@ public final class BindingBuilder<T>
         BindingImpl<T> base = getBinding();
         setBinding(
                 new LinkedProviderBindingImpl<T>(
-                        base.getSource(), base.getKey(), base.getScoping(), providerKey));
+                        base.getSource(), base.getKey(), base.getScoping(), base.isRebind(), providerKey));
         return this;
     }
 
@@ -201,6 +217,7 @@ public final class BindingBuilder<T>
                             base.getKey(),
                             base.getSource(),
                             base.getScoping(),
+                            base.isRebind(),
                             constructorPoint,
                             injectionPoints));
         }

@@ -67,12 +67,20 @@ public abstract sealed class AbstractBindingBuilder<T>
      */
     private BindingImpl<T> binding;
 
-    public AbstractBindingBuilder(Binder binder, List<Element> elements, Object source, Key<T> key)
+    /**
+     * @param rebind whether the new binding is a rebind, made with {@link Binder#rebind(Key)}
+     */
+    public AbstractBindingBuilder(
+            Binder binder,
+            List<Element> elements,
+            Object source,
+            Key<T> key,
+            boolean rebind)
     {
         this.binder = binder;
         this.elements = elements;
         this.position = elements.size();
-        this.binding = new UntargettedBindingImpl<>(source, key, Scoping.UNSCOPED);
+        this.binding = new UntargettedBindingImpl<>(source, key, Scoping.UNSCOPED, rebind);
         elements.add(position, this.binding);
     }
 
