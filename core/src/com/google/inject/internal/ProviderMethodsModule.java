@@ -65,9 +65,17 @@ public final class ProviderMethodsModule
             ModuleAnnotatedMethodScanner scanner)
     {
         this.delegate = requireNonNull(delegate, "delegate");
-        this.typeLiteral = TypeLiteral.get(getDelegateModuleClass());
+        this.typeLiteral = TypeLiteral.get(isStaticModule() ? (Class<?>) delegate : delegate.getClass());
         this.skipFastClassGeneration = skipFastClassGeneration;
         this.scanner = scanner;
+    }
+
+    private ProviderMethodsModule(TypeLiteral<?> typeLiteral)
+    {
+        this.delegate = null;
+        this.typeLiteral = requireNonNull(typeLiteral, "typeLiteral");
+        this.skipFastClassGeneration = true;
+        this.scanner = ProvidesMethodScanner.INSTANCE;
     }
 
     /**
@@ -111,9 +119,19 @@ public final class ProviderMethodsModule
         return new ProviderMethodsModule(object, skipFastClassGeneration, scanner);
     }
 
+    /**
+     * Returns a module for the {@literal @}Provides methods of {@code type}, with their types resolved
+     * against its type arguments, for a caller that supplies the instance to call them on. The
+     * provider methods it returns have no instance, so they are not bound themselves.
+     */
+    static ProviderMethodsModule forType(TypeLiteral<?> type)
+    {
+        return new ProviderMethodsModule(type);
+    }
+
     public Class<?> getDelegateModuleClass()
     {
-        return isStaticModule() ? (Class<?>) delegate : delegate.getClass();
+        return typeLiteral.getRawType();
     }
 
     private boolean isStaticModule()
@@ -133,8 +151,9 @@ public final class ProviderMethodsModule
     {
         List<ProviderMethod<?>> result = null;
         List<MethodAndAnnotation> methodsAndAnnotations = null;
+        // The cached metas are resolved against the raw class, so not against type arguments
         ImmutableMap<Method, ProviderMethodMeta> cachedMetas =
-                scanner == ProvidesMethodScanner.INSTANCE
+                scanner == ProvidesMethodScanner.INSTANCE && typeLiteral.getType() == getDelegateModuleClass()
                         ? PROVIDER_METHOD_METAS.get(getDelegateModuleClass())
                         : null;
         // The highest class in the type hierarchy that contained a provider method definition.
@@ -498,6 +517,7 @@ public final class ProviderMethodsModule
     {
         return o instanceof ProviderMethodsModule
                 && ((ProviderMethodsModule) o).delegate == delegate
+                && ((ProviderMethodsModule) o).typeLiteral.equals(typeLiteral)
                 && ((ProviderMethodsModule) o).scanner.equals(scanner);
     }
 

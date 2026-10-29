@@ -1,6 +1,5 @@
 package com.google.inject.internal;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.inject.Key;
 import com.google.inject.Provider;
 import com.google.inject.spi.Dependency;
@@ -8,6 +7,7 @@ import com.google.inject.spi.HasDependencies;
 import com.google.inject.spi.InjectionPoint;
 
 import java.lang.invoke.MethodHandle;
+import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkState;
 
@@ -45,7 +45,8 @@ final class InternalProviderInstanceBindingImpl<T>
             Object source,
             Factory<T> originalFactory,
             InternalFactory<? extends T> scopedFactory,
-            Scoping scoping)
+            Scoping scoping,
+            Set<InjectionPoint> injectionPoints)
     {
         super(injector,
                 key,
@@ -55,7 +56,7 @@ final class InternalProviderInstanceBindingImpl<T>
                 // Pass the original factory as the provider instance. A number of checks rely on being able
                 // to downcast this provider to access the original factory.
                 originalFactory,
-                ImmutableSet.<InjectionPoint>of());
+                injectionPoints);
         this.originalFactory = originalFactory;
     }
 

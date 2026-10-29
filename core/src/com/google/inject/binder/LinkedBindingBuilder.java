@@ -17,6 +17,7 @@
 package com.google.inject.binder;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import com.google.inject.DynamicProvider;
 import com.google.inject.Key;
 import com.google.inject.Provider;
 import com.google.inject.TypeLiteral;
@@ -57,6 +58,10 @@ public interface LinkedBindingBuilder<T>
 
     /**
      * See the EDSL examples at {@link com.google.inject.Binder}.
+     *
+     * <p>A {@link DynamicProvider} passed here, or by type to another {@code toProvider} method, is
+     * provisioned through its {@link com.google.inject.Provides} method rather than through
+     * {@code get()}.
      *
      * @see com.google.inject.Injector#injectMembers
      */

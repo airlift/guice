@@ -756,6 +756,38 @@ public class ProviderMethodsTest
     }
     /*end[AOP]*/
 
+    @Test
+    public void testAbstractProviderMethod()
+    {
+        try {
+            Guice.createInjector(new ImplementedProviderMethodModule());
+            fail();
+        }
+        catch (CreationException e) {
+            assertContains(
+                    e.getMessage(),
+                    "@Provides methods may not be abstract:"
+                            + " ProviderMethodsTest$AbstractProviderMethodModule.providerMethod()");
+        }
+    }
+
+    abstract static class AbstractProviderMethodModule
+            extends AbstractModule
+    {
+        @Provides
+        abstract Number providerMethod();
+    }
+
+    static class ImplementedProviderMethodModule
+            extends AbstractProviderMethodModule
+    {
+        @Override
+        Number providerMethod()
+        {
+            return 1d;
+        }
+    }
+
     static class SuperClassModule
             extends AbstractModule
     {

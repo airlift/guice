@@ -31,6 +31,7 @@ import com.google.inject.spi.ModuleAnnotatedMethodScanner;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Set;
 
 /**
@@ -65,6 +66,12 @@ final class ProvidesMethodScanner
             InjectionPoint injectionPoint)
     {
         Method method = (Method) injectionPoint.getMember();
+        if (Modifier.isAbstract(method.getModifiers())) {
+            // Returning null skips the method, as ProviderMethodsModule requires for abstract methods.
+            binder.addError(
+                    "@%s methods may not be abstract: %s", annotation.annotationType().getSimpleName(), method);
+            return null;
+        }
         AnnotationOrError mapKey = findMapKeyAnnotation(binder, method);
         if (annotation instanceof Provides) {
             if (mapKey.annotation != null) {

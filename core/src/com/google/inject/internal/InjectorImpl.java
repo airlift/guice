@@ -24,6 +24,7 @@ import com.google.common.collect.Multimaps;
 import com.google.inject.Binder;
 import com.google.inject.Binding;
 import com.google.inject.ConfigurationException;
+import com.google.inject.DynamicProvider;
 import com.google.inject.ImplementedBy;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -39,10 +40,13 @@ import com.google.inject.spi.BindingTargetVisitor;
 import com.google.inject.spi.ConvertedConstantBinding;
 import com.google.inject.spi.Dependency;
 import com.google.inject.spi.Element;
+import com.google.inject.spi.Elements;
 import com.google.inject.spi.HasDependencies;
 import com.google.inject.spi.InjectionPoint;
 import com.google.inject.spi.InstanceBinding;
+import com.google.inject.spi.Message;
 import com.google.inject.spi.ProviderBinding;
+import com.google.inject.spi.ProviderInstanceBinding;
 import com.google.inject.spi.TypeConverterBinding;
 import com.google.inject.util.Providers;
 import org.jspecify.annotations.Nullable;
@@ -61,6 +65,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.inject.internal.Annotations.findScopeAnnotation;
 import static java.util.Objects.requireNonNull;
 
@@ -937,6 +942,10 @@ final class InjectorImpl
             errors.throwIfNewErrors(numErrorsBefore);
         }
 
+        if (DynamicProvider.class.isAssignableFrom(providerType)) {
+            return createDynamicProvidedByBinding(key, scoping, providerType, errors);
+        }
+
         // Assume the provider provides an appropriate type. We double check at runtime.
         @SuppressWarnings("unchecked")
         Key<? extends Provider<T>> providerKey = (Key<? extends Provider<T>>) Key.get(providerType);
@@ -955,6 +964,53 @@ final class InjectorImpl
                         internalFactory);
         internalFactory.setProvisionListenerCallback(provisionListenerStore.get(binding));
         return binding;
+    }
+
+    /**
+     * Creates a binding for a type whose @ProvidedBy names a DynamicProvider type. It is bound as
+     * {@code bind(key).toProvider(providerType)} would bind it, so that its provider method is checked
+     * and called the same way.
+     */
+    private <T> BindingImpl<T> createDynamicProvidedByBinding(
+            Key<T> key,
+            Scoping scoping,
+            Class<?> providerType,
+            Errors errors)
+            throws ErrorsException
+    {
+        Object source = key.getTypeLiteral().getRawType();
+        @SuppressWarnings("unchecked") // toProvider checks the provider method's return type
+        Key<? extends jakarta.inject.Provider<? extends T>> providerKey =
+                (Key<? extends jakarta.inject.Provider<? extends T>>) Key.get(providerType);
+        List<Element> elements =
+                Elements.getElements(binder -> binder.withSource(source).bind(key).toProvider(providerKey));
+
+        int numErrorsBefore = errors.size();
+        ProviderMethod<T> providerMethod = null;
+        for (Element element : elements) {
+            if (element instanceof Message message) {
+                errors.addMessage(message);
+            }
+            else if (element instanceof ProviderInstanceBinding<?> binding
+                    && binding.getUserSuppliedProvider() instanceof ProviderMethod<?> method) {
+                @SuppressWarnings("unchecked") // bound to key
+                ProviderMethod<T> keyMethod = (ProviderMethod<T>) method;
+                providerMethod = keyMethod;
+            }
+        }
+        errors.throwIfNewErrors(numErrorsBefore);
+
+        // The provider method is new, so this injector's claim on it always succeeds
+        boolean claimed = providerMethod.bindToInjector(this);
+        checkState(claimed, "%s is already bound to an injector", providerMethod);
+        return new InternalProviderInstanceBindingImpl<T>(
+                this,
+                key,
+                source,
+                providerMethod,
+                Scoping.scope(key, this, providerMethod, source, scoping),
+                scoping,
+                ImmutableSet.of());
     }
 
     /**

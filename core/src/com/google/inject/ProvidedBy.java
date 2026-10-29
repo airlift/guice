@@ -23,7 +23,8 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * A pointer to the default provider type for a type.
+ * A pointer to the default provider type for a type. For a {@link DynamicProvider} type, its
+ * {@literal @}{@link Provides} method provides the instance rather than {@code get()}.
  */
 @Retention(RUNTIME)
 @Target(TYPE)

@@ -38,6 +38,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiFunction;
@@ -87,6 +88,13 @@ public abstract class ProviderMethod<T>
     protected final Object instance;
     protected final Method method;
 
+    /**
+     * Whether the instance to call {@link #method} on is injected as the first dependency, as it is
+     * for a {@link com.google.inject.DynamicProvider} bound by type, rather than given as
+     * {@link #instance}.
+     */
+    protected final boolean injectedInstance;
+
     private final Key<T> key;
     private final Class<? extends Annotation> scopeAnnotation;
     private final ImmutableSet<Dependency<?>> dependencies;
@@ -98,6 +106,13 @@ public abstract class ProviderMethod<T>
      * Set by {@link #initialize(InjectorImpl, Errors)} so it is always available prior to injection.
      */
     private SingleParameterInjector<?>[] parameterInjectors;
+
+    /**
+     * Set by {@link #injectInstanceFirst} when {@link #instance} is a {@link
+     * com.google.inject.DynamicProvider}, whose members, like any provider instance's, are injected
+     * before it is first used.
+     */
+    private Initializable<?> instanceInitializable;
 
     /**
      * @param method the method to invoke. Its return type must be the same type as {@code key}.
@@ -118,6 +133,7 @@ public abstract class ProviderMethod<T>
         this.instance = instance;
         this.dependencies = dependencies;
         this.method = method;
+        this.injectedInstance = instance == null && !Modifier.isStatic(method.getModifiers());
         this.exposed = method.isAnnotationPresent(Exposed.class);
         this.annotation = annotation;
     }
@@ -150,6 +166,16 @@ public abstract class ProviderMethod<T>
     public Annotation getAnnotation()
     {
         return annotation;
+    }
+
+    Class<? extends Annotation> getScopeAnnotation()
+    {
+        return scopeAnnotation;
+    }
+
+    void injectInstanceFirst(Initializable<?> instanceInitializable)
+    {
+        this.instanceInitializable = instanceInitializable;
     }
 
     public void configure(Binder binder)
@@ -197,6 +223,9 @@ public abstract class ProviderMethod<T>
     {
         T t = null;
         try {
+            if (instanceInitializable != null) {
+                instanceInitializable.get(context);
+            }
             t = doProvision(SingleParameterInjector.getAll(context, parameterInjectors));
             if (t == null && !dependency.isNullable()) {
                 InternalProvisionException.onNullInjectedIntoNonNullableDependency(getMethod(), dependency);
@@ -248,6 +277,14 @@ public abstract class ProviderMethod<T>
         InternalMethodHandles.checkHasElementFactoryType(handle);
         // add a dependency parameter so `nullCheckResult` can use it.
         handle = MethodHandles.dropArguments(handle, 1, Dependency.class);
+        if (instanceInitializable != null) {
+            // Inject the instance's members first, as doProvision does.
+            handle =
+                    MethodHandles.foldArguments(
+                            handle,
+                            InternalMethodHandles.dropReturn(
+                                    InternalMethodHandles.initializableFactoryGetHandle(instanceInitializable)));
+        }
         handle = InternalMethodHandles.nullCheckResult(handle, getMethod());
         // catch everything else and rethrow as an error in provider.
         handle =
@@ -302,9 +339,11 @@ public abstract class ProviderMethod<T>
     {
         if (obj instanceof ProviderMethod) {
             ProviderMethod<?> o = (ProviderMethod<?>) obj;
+            // An injected instance is one of the dependencies, so they distinguish its provider type
             return method.equals(o.method)
                     && Objects.equals(instance, o.instance)
-                    && annotation.equals(o.annotation);
+                    && annotation.equals(o.annotation)
+                    && dependencies.equals(o.dependencies);
         }
         else {
             return false;
@@ -396,6 +435,9 @@ public abstract class ProviderMethod<T>
         T doProvision(Object[] parameters)
                 throws IllegalAccessException, InvocationTargetException
         {
+            if (injectedInstance) {
+                return (T) method.invoke(parameters[0], Arrays.copyOfRange(parameters, 1, parameters.length));
+            }
             return (T) method.invoke(instance, parameters);
         }
 
@@ -416,6 +458,19 @@ public abstract class ProviderMethod<T>
             // bind to the `Method` object
             // (Object, Object[]) -> Object
             var handle = InternalMethodHandles.invokeHandle(method);
+            if (injectedInstance) {
+                // Pass the first parameter as the instance and the rest as the method's arguments
+                // (InternalContext, InternalContext) -> Object
+                handle =
+                        MethodHandles.filterArguments(
+                                handle,
+                                0,
+                                castReturnToObject(parameters[0]),
+                                InternalMethodHandles.buildObjectArrayFactory(
+                                        Arrays.copyOfRange(parameters, 1, parameters.length)));
+                // (InternalContext) -> Object
+                return MethodHandles.permuteArguments(handle, InternalMethodHandles.ELEMENT_FACTORY_TYPE, 0, 0);
+            }
             // insert the instance
             // (Object[]) -> Object
             handle = MethodHandles.insertArguments(handle, 0, instance);
