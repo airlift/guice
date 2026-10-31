@@ -25,6 +25,7 @@ import com.google.inject.Binder;
 import com.google.inject.Key;
 import com.google.inject.Module;
 import com.google.inject.Provides;
+import com.google.inject.SingletonModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.spi.Dependency;
 import com.google.inject.spi.InjectionPoint;
@@ -45,11 +46,15 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.inject.internal.Scoping.SINGLETON_INSTANCE;
+import static com.google.inject.internal.Scoping.UNSCOPED;
 import static java.util.Objects.requireNonNull;
 
 /**
  * Creates bindings to methods annotated with {@literal @}{@link Provides}. Use the scope and
- * binding annotations on the provider method to configure the binding.
+ * binding annotations on the provider method to configure the binding. Provider methods of a
+ * {@link SingletonModule} that have no scope annotation are singletons, like the module's other
+ * bindings.
  */
 public final class ProviderMethodsModule
         implements Module
@@ -124,9 +129,19 @@ public final class ProviderMethodsModule
     @Override
     public void configure(Binder binder)
     {
+        Scoping defaultScoping = defaultScoping();
         for (ProviderMethod<?> providerMethod : getProviderMethods(binder)) {
-            providerMethod.configure(binder);
+            providerMethod.configure(binder, defaultScoping);
         }
+    }
+
+    /**
+     * Returns the scope of provider methods that have no scope annotation, which is singleton for
+     * a {@link SingletonModule}.
+     */
+    private Scoping defaultScoping()
+    {
+        return SingletonModule.class.isAssignableFrom(getDelegateModuleClass()) ? SINGLETON_INSTANCE : UNSCOPED;
     }
 
     public List<ProviderMethod<?>> getProviderMethods(Binder binder)

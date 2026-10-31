@@ -112,7 +112,9 @@ import java.lang.reflect.Method;
  * is the same as the previous example. The one returned by its {@link SingletonBinder#eagerly()}
  * makes each binding an eager singleton instead, as if each ended with {@code asEagerSingleton()}.
  * Since the scope is already set, these bindings have no {@code in()} method. They have no
- * {@code toInstance()} method either, since an instance binding is always an eager singleton.
+ * {@code toInstance()} method either, since an instance binding is always an eager singleton. To
+ * make every binding in a module a singleton, implement {@link SingletonModule}, which is given a
+ * {@code SingletonBinder} instead of a binder.
  *
  * <p>Besides {@link Singleton}/{@link Scopes#SINGLETON}, there are servlet-specific scopes
  * available in {@code com.google.inject.servlet.ServletScopes}, and your Modules can contribute

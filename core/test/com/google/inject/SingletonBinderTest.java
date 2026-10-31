@@ -1,5 +1,6 @@
 package com.google.inject;
 
+import com.google.inject.multibindings.ProvidesIntoSet;
 import com.google.inject.spi.DefaultBindingScopingVisitor;
 import com.google.inject.spi.Element;
 import com.google.inject.spi.ElementSource;
@@ -10,12 +11,15 @@ import java.lang.annotation.Retention;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import static com.google.inject.Asserts.assertContains;
 import static com.google.inject.Asserts.getDeclaringSourcePart;
+import static com.google.inject.SingletonModule.singletonModule;
 import static com.google.inject.name.Names.named;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -307,6 +311,181 @@ public class SingletonBinderTest
 
         ElementSource source = (ElementSource) injector.getBinding(ServiceImpl.class).getSource();
         assertEquals("explicit source", source.getDeclaringSource());
+    }
+
+    @Test
+    public void testSingletonModule()
+    {
+        CountingProvider provider = new CountingProvider();
+        Injector injector =
+                Guice.createInjector(
+                        new SingletonModule()
+                        {
+                            @Override
+                            public void configure(SingletonBinder singletons)
+                            {
+                                singletons.bind(Service.class).to(ServiceImpl.class);
+                                singletons.bind(Integer.class).toProvider(provider);
+                            }
+                        });
+
+        assertSame(Scopes.SINGLETON, scopeOf(injector.getBinding(Service.class)));
+        assertSame(Scopes.SINGLETON, scopeOf(injector.getBinding(Integer.class)));
+        assertSame(injector.getInstance(Service.class), injector.getInstance(Service.class));
+        assertEquals(0, provider.count);
+        assertEquals(1, (int) injector.getInstance(Integer.class));
+        assertEquals(1, (int) injector.getInstance(Integer.class));
+    }
+
+    @Test
+    public void testSingletonModuleProviderMethods()
+    {
+        Key<Set<Service>> setKey = Key.get(new TypeLiteral<>() {});
+        Injector injector =
+                Guice.createInjector(
+                        new SingletonModule()
+                        {
+                            @Override
+                            public void configure(SingletonBinder singletons) {}
+
+                            @Provides
+                            Service service()
+                            {
+                                return new ServiceImpl();
+                            }
+
+                            @ProvidesIntoSet
+                            Service serviceElement()
+                            {
+                                return new ServiceImpl();
+                            }
+                        });
+
+        assertSame(Scopes.SINGLETON, scopeOf(injector.getBinding(Service.class)));
+        assertSame(injector.getInstance(Service.class), injector.getInstance(Service.class));
+        assertSame(
+                injector.getInstance(setKey).iterator().next(),
+                injector.getInstance(setKey).iterator().next());
+    }
+
+    @Test
+    public void testModuleLambdas()
+    {
+        SingletonModule singletonModule = singletons -> singletons.bind(Service.class).to(ServiceImpl.class);
+        SingletonModule eagerSingletonModule = singletons -> singletons.eagerly().bind(ServiceImpl.class);
+        Injector injector =
+                Guice.createInjector(
+                        new AbstractModule()
+                        {
+                            @Override
+                            protected void configure()
+                            {
+                                install(singletonModule);
+                                install(eagerSingletonModule);
+                            }
+                        });
+
+        assertSame(Scopes.SINGLETON, scopeOf(injector.getBinding(Service.class)));
+        assertSame(EAGER_SINGLETON, scopeOf(injector.getBinding(ServiceImpl.class)));
+    }
+
+    @Test
+    public void testSingletonModuleFactory()
+    {
+        Injector injector =
+                Guice.createInjector(
+                        new AbstractModule()
+                        {
+                            @Override
+                            protected void configure()
+                            {
+                                install(singletonModule(singletons -> {
+                                    singletons.bind(Service.class).to(ServiceImpl.class);
+                                    singletons.eagerly().bind(ServiceImpl.class);
+                                }));
+                            }
+                        });
+
+        assertSame(Scopes.SINGLETON, scopeOf(injector.getBinding(Service.class)));
+        assertSame(EAGER_SINGLETON, scopeOf(injector.getBinding(ServiceImpl.class)));
+        ElementSource source = (ElementSource) injector.getBinding(Service.class).getSource();
+        // the binding's source is the caller's lambda, with or without stack traces
+        assertContains(source.toString(), getClass().getName() + "$");
+        // the installed module is the caller's lambda
+        assertContains(source.getModuleClassNames().get(0), getClass().getName());
+    }
+
+    @Test
+    public void testSingletonModuleFactoryReturnsModule()
+    {
+        SingletonModule module = singletons -> singletons.bind(ServiceImpl.class);
+        assertSame(module, singletonModule(module));
+        assertThrows(NullPointerException.class, () -> singletonModule(null));
+    }
+
+    @Test
+    public void testSingletonModuleFactoryErrorSource()
+    {
+        CreationException exception =
+                assertThrows(
+                        CreationException.class,
+                        () -> Guice.createInjector(
+                                new AbstractModule()
+                                {
+                                    @Override
+                                    protected void configure()
+                                    {
+                                        install(singletonModule(singletons -> singletons.bind(Service.class)));
+                                    }
+                                }));
+
+        // the installed module is the caller's lambda
+        assertContains(
+                exception.getMessage(),
+                true,
+                "No implementation for SingletonBinderTest$Service was bound.",
+                "SingletonBinderTest$",
+                "$$Lambda");
+        assertFalse(exception.getMessage().contains("SingletonModule$$Lambda"));
+    }
+
+    @Test
+    public void testLambdaWithoutSingletonModuleFactoryIsUnscoped()
+    {
+        Injector injector =
+                Guice.createInjector(
+                        new AbstractModule()
+                        {
+                            @Override
+                            protected void configure()
+                            {
+                                // a plain Module, so its binder is not a SingletonBinder
+                                install(binder -> binder.bind(Service.class).to(ServiceImpl.class));
+                            }
+                        });
+
+        assertNotSame(injector.getInstance(Service.class), injector.getInstance(Service.class));
+    }
+
+    @Test
+    public void testModuleBindingSourceIsModule()
+    {
+        List<Element> elements =
+                Elements.getElements(
+                        new SingletonModule()
+                        {
+                            @Override
+                            public void configure(SingletonBinder singletons)
+                            {
+                                singletons.bind(Service.class).to(ServiceImpl.class);
+                                singletons.eagerly().bind(ServiceImpl.class);
+                            }
+                        });
+
+        assertEquals(2, elements.size());
+        for (Element element : elements) {
+            assertContains(element.getSource().toString(), getDeclaringSourcePart(getClass()));
+        }
     }
 
     private static Object scopeOf(Binding<?> binding)

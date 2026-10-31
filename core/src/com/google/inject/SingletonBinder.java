@@ -18,6 +18,9 @@ import com.google.inject.binder.LinkedSingletonBindingBuilder;
  * <p>Since the scope is already set, the binding builders returned here have no scoping methods.
  * They have no {@code toInstance()} method either, because an instance binding is always an eager
  * singleton, whatever scope is requested. Bind instances with {@link Binder} instead.
+ *
+ * <p>{@link SingletonModule} is given one of these instead of a {@link Binder}, so all of its
+ * bindings are singletons.
  */
 public interface SingletonBinder
 {
