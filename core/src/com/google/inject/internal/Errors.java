@@ -177,9 +177,10 @@ public final class Errors
     public Errors jitDisabled(Key<?> key)
     {
         return addMessage(
-                ErrorId.JIT_DISABLED,
-                "Explicit bindings are required and %s is not explicitly bound.",
-                key);
+                new Message(
+                        GuiceInternal.GUICE_INTERNAL,
+                        ErrorId.JIT_DISABLED,
+                        new JitDisabledError(key, getSources())));
     }
 
     public Errors jitDisabledInParent(Key<?> key)
@@ -369,6 +370,15 @@ public final class Errors
                         GuiceInternal.GUICE_INTERNAL,
                         ErrorId.MISSING_CONSTRUCTOR,
                         new MissingConstructorError(type, /* atInjectRequired= */ false, getSources())));
+    }
+
+    public Errors emptyIfUnboundUnsupportedType(TypeLiteral<?> type)
+    {
+        return addMessage(
+                ErrorId.EMPTY_IF_UNBOUND_UNSUPPORTED_TYPE,
+                "@EmptyIfUnbound requires an Optional of a fully specified type, OptionalInt, OptionalLong,"
+                        + " OptionalDouble, Set, Collection or Map, but the injected type is %s.",
+                type);
     }
 
     public Errors tooManyConstructors(Class<?> implementation)

@@ -16,7 +16,6 @@
 
 package com.google.inject.internal;
 
-import com.google.inject.internal.InjectorImpl.JitLimitation;
 import com.google.inject.spi.Dependency;
 import com.google.inject.spi.InjectionPoint;
 
@@ -48,10 +47,7 @@ final class SingleFieldInjector
 
         // Ewwwww...
         field.setAccessible(true);
-        factory =
-                injector
-                        .getBindingOrThrow(dependency.getKey(), errors, JitLimitation.NO_JIT)
-                        .getInternalFactory();
+        factory = injector.getDependencyFactory(dependency, errors);
     }
 
     @Override

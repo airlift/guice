@@ -443,8 +443,8 @@ public class ProviderMethodsTest
         InjectionPoint point = new InjectionPoint(TypeLiteral.get(module.getClass()), method, false);
         assertEquals(
                 ImmutableSet.<Dependency<?>>of(
-                        new Dependency<Integer>(point, Key.get(Integer.class), false, 0),
-                        new Dependency<String>(point, Key.get(String.class, Names.named("units")), false, 1)),
+                        new Dependency<Integer>(point, Key.get(Integer.class), false, false, 0),
+                        new Dependency<String>(point, Key.get(String.class, Names.named("units")), false, false, 1)),
                 binding.getDependencies());
     }
 

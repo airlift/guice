@@ -24,6 +24,7 @@ import com.google.common.collect.Multimaps;
 import com.google.inject.Binder;
 import com.google.inject.Binding;
 import com.google.inject.ConfigurationException;
+import com.google.inject.EmptyIfUnbound;
 import com.google.inject.ImplementedBy;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -42,6 +43,7 @@ import com.google.inject.spi.Element;
 import com.google.inject.spi.HasDependencies;
 import com.google.inject.spi.InjectionPoint;
 import com.google.inject.spi.InstanceBinding;
+import com.google.inject.spi.Message;
 import com.google.inject.spi.ProviderBinding;
 import com.google.inject.spi.TypeConverterBinding;
 import com.google.inject.util.Providers;
@@ -744,6 +746,14 @@ final class InjectorImpl
         Set<Dependency<?>> deps = getInternalDependencies(binding);
         for (Dependency<?> dep : deps) {
             Key<?> depKey = dep.getKey();
+            boolean mayBeUnbound = false;
+            if (dep.isEmptyIfUnbound() && bindingData.getExplicitBinding(depKey) == null) {
+                // The dependency need not be bound, and for an optional is on its value
+                if (EmptyIfUnboundFactory.isOptional(depKey)) {
+                    depKey = EmptyIfUnboundFactory.getValueKey(depKey);
+                }
+                mayBeUnbound = true;
+            }
             InjectionPoint ip = dep.getInjectionPoint();
             if (encountered.add(depKey)) { // only check if we haven't looked at this key yet
                 var depBinding = jitBindingData.getJitBinding(depKey);
@@ -761,7 +771,7 @@ final class InjectorImpl
                         bindingFailed = true;
                     }
                 }
-                else if (bindingData.getExplicitBinding(depKey) == null) {
+                else if (!mayBeUnbound && bindingData.getExplicitBinding(depKey) == null) {
                     // ignore keys if they were explicitly bound, but if neither JIT
                     // nor explicit, it's also invalid & should let parent know.
                     bindingFailed = true;
@@ -1243,9 +1253,118 @@ final class InjectorImpl
             final Errors errors)
             throws ErrorsException
     {
-        BindingImpl<? extends T> binding =
-                getBindingOrThrow(dependency.getKey(), errors, JitLimitation.NO_JIT);
-        return new SingleParameterInjector<T>(dependency, binding);
+        return new SingleParameterInjector<T>(dependency, getDependencyFactory(dependency, errors));
+    }
+
+    /**
+     * Returns the factory that satisfies {@code dependency}, which is that of its key's binding unless
+     * it is an {@link EmptyIfUnbound} dependency that is not bound.
+     */
+    <T> InternalFactory<? extends T> getDependencyFactory(Dependency<T> dependency, Errors errors)
+            throws ErrorsException
+    {
+        Key<T> key = dependency.getKey();
+        if (!dependency.isEmptyIfUnbound()) {
+            return getBindingOrThrow(key, errors, JitLimitation.NO_JIT).getInternalFactory();
+        }
+        if (EmptyIfUnboundFactory.isOptional(key)) {
+            BindingImpl<T> optionalBinding = bindingData.getExplicitBinding(key);
+            if (optionalBinding != null) {
+                return optionalBinding.getInternalFactory();
+            }
+            @SuppressWarnings("unchecked") // the factory provides the dependency's optional type
+            InternalFactory<? extends T> factory =
+                    (InternalFactory<? extends T>) createOptionalFactory(dependency, errors);
+            return factory;
+        }
+        // InjectionPoint checks that any other key is a Set, Collection or Map
+        BindingImpl<T> binding = getBindingIfBound(key, errors);
+        if (binding != null) {
+            return binding.getInternalFactory();
+        }
+        @SuppressWarnings("unchecked") // the empty collection is of the key's raw type
+        InternalFactory<? extends T> factory =
+                (InternalFactory<? extends T>) ConstantFactory.create(
+                        emptyCollection(key.getTypeLiteral().getRawType()), SourceProvider.UNKNOWN_SOURCE);
+        return factory;
+    }
+
+    private static Object emptyCollection(Class<?> rawType)
+    {
+        if (rawType == Set.class) {
+            return ImmutableSet.of();
+        }
+        if (rawType == Map.class) {
+            return ImmutableMap.of();
+        }
+        return ImmutableList.of();
+    }
+
+    private InternalFactory<?> createOptionalFactory(Dependency<?> dependency, Errors errors)
+            throws ErrorsException
+    {
+        Class<?> optionalType = dependency.getKey().getTypeLiteral().getRawType();
+        Key<?> valueKey = EmptyIfUnboundFactory.getValueKey(dependency.getKey());
+        BindingImpl<?> binding = getBindingIfBound(valueKey, errors);
+        if (binding == null) {
+            return ConstantFactory.create(EmptyIfUnboundFactory.empty(optionalType), SourceProvider.UNKNOWN_SOURCE);
+        }
+        return new EmptyIfUnboundFactory(
+                optionalType,
+                binding.getInternalFactory(),
+                Dependency.forEmptyIfUnboundValue(GuiceInternal.GUICE_INTERNAL, dependency, valueKey));
+    }
+
+    /**
+     * Returns the binding for {@code key}, or null if it is not bound and no just-in-time binding can
+     * be created for it. Any other error resolving it is reported.
+     */
+    private <T> @Nullable BindingImpl<T> getBindingIfBound(Key<T> key, Errors errors)
+            throws ErrorsException
+    {
+        // Resolve the key with errors of its own, so that an unbound key can be told apart from an
+        // error in its binding
+        Errors keyErrors = new Errors();
+        try {
+            BindingImpl<T> binding = getBindingOrThrow(key, keyErrors, JitLimitation.NO_JIT);
+            errors.merge(keyErrors);
+            return binding;
+        }
+        catch (ErrorsException e) {
+            keyErrors.merge(e.getErrors());
+            if (reportsOnlyUnbound(key, keyErrors)) {
+                return null;
+            }
+            throw errors.merge(keyErrors).toException();
+        }
+    }
+
+    /**
+     * Returns true if every error reports that {@code key} is not bound and that no just-in-time
+     * binding can be created for it, rather than an error in a binding that exists. A
+     * {@code Provider<T>} is bound if {@code T} is, so for one these may be errors about {@code T}.
+     */
+    private static boolean reportsOnlyUnbound(Key<?> key, Errors errors)
+    {
+        if (!errors.hasErrors()) {
+            return false;
+        }
+        Set<Key<?>> keys = new HashSet<>();
+        keys.add(key);
+        while (isProvider(key) && key.getTypeLiteral().getType() instanceof ParameterizedType providerType) {
+            key = key.ofType(providerType.getActualTypeArguments()[0]);
+            keys.add(key);
+        }
+        return errors.getMessages().stream()
+                .map(Message::getErrorDetail)
+                .allMatch(detail -> switch (detail) {
+                    case MissingImplementationError<?> error -> keys.contains(error.getKey());
+                    case JitDisabledError error -> keys.contains(error.getKey());
+                    case MissingConstructorError error -> keys.stream()
+                            .anyMatch(unbound -> unbound.getAnnotationType() == null
+                                    && unbound.getTypeLiteral().equals(error.getType()));
+                    default -> false;
+                });
     }
 
     /**

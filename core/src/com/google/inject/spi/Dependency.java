@@ -17,7 +17,9 @@
 package com.google.inject.spi;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.inject.EmptyIfUnbound;
 import com.google.inject.Key;
+import com.google.inject.internal.GuiceInternal;
 import com.google.inject.internal.MoreTypes;
 
 import java.util.ArrayList;
@@ -40,13 +42,20 @@ public final class Dependency<T>
     private final InjectionPoint injectionPoint;
     private final Key<T> key;
     private final boolean nullable;
+    private final boolean emptyIfUnbound;
     private final int parameterIndex;
 
-    Dependency(InjectionPoint injectionPoint, Key<T> key, boolean nullable, int parameterIndex)
+    Dependency(
+            InjectionPoint injectionPoint,
+            Key<T> key,
+            boolean nullable,
+            boolean emptyIfUnbound,
+            int parameterIndex)
     {
         this.injectionPoint = injectionPoint;
         this.key = requireNonNull(key, "key");
         this.nullable = nullable;
+        this.emptyIfUnbound = emptyIfUnbound;
         this.parameterIndex = parameterIndex;
     }
 
@@ -56,7 +65,20 @@ public final class Dependency<T>
      */
     public static <T> Dependency<T> get(Key<T> key)
     {
-        return new Dependency<T>(null, MoreTypes.canonicalizeKey(key), true, -1);
+        return new Dependency<T>(null, MoreTypes.canonicalizeKey(key), true, false, -1);
+    }
+
+    /**
+     * Returns the nullable dependency on the value of an {@link EmptyIfUnbound} dependency, at the
+     * same injection point.
+     */
+    public static <T> Dependency<T> forEmptyIfUnboundValue(
+            GuiceInternal internalOnly,
+            Dependency<?> dependency,
+            Key<T> valueKey)
+    {
+        requireNonNull(internalOnly, "internalOnly");
+        return new Dependency<T>(dependency.injectionPoint, valueKey, true, false, dependency.parameterIndex);
     }
 
     /**
@@ -85,6 +107,18 @@ public final class Dependency<T>
     public boolean isNullable()
     {
         return nullable;
+    }
+
+    /**
+     * Returns true if this dependency is annotated with {@link EmptyIfUnbound}: an {@code Optional<T>}
+     * that is empty when {@code T} is not bound, an {@code OptionalInt}, {@code OptionalLong} or
+     * {@code OptionalDouble} that is empty when {@code Integer}, {@code Long} or {@code Double} is
+     * not bound, or a {@code Set}, {@code Collection} or {@code Map} that is empty when it is not
+     * bound.
+     */
+    public boolean isEmptyIfUnbound()
+    {
+        return emptyIfUnbound;
     }
 
     /**

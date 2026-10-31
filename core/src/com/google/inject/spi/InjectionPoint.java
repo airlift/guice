@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ObjectArrays;
 import com.google.inject.ConfigurationException;
+import com.google.inject.EmptyIfUnbound;
 import com.google.inject.Inject;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
@@ -39,12 +40,20 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.OptionalDouble;
+import java.util.OptionalInt;
+import java.util.OptionalLong;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.logging.Level;
@@ -111,8 +120,10 @@ public final class InjectionPoint
         Annotation[] typeUseAnnotations = field.getAnnotatedType().getAnnotations();
         Errors errors = new Errors(field);
         Key<?> key = null;
+        boolean emptyIfUnbound = false;
         try {
             key = Annotations.getKey(declaringType.getFieldType(field), field, annotations, errors);
+            emptyIfUnbound = isEmptyIfUnbound(key, annotations, errors);
         }
         catch (ConfigurationException e) {
             errors.merge(e.getErrorMessages());
@@ -126,7 +137,8 @@ public final class InjectionPoint
                 Nullability.hasNullableAnnotation(annotations)
                         || Nullability.hasNullableAnnotation(typeUseAnnotations)
                         || KotlinSupport.getInstance().isNullable(field);
-        this.dependencies = ImmutableList.<Dependency<?>>of(newDependency(key, allowsNull, -1));
+        this.dependencies =
+                ImmutableList.<Dependency<?>>of(newDependency(key, allowsNull, emptyIfUnbound, -1));
     }
 
     private ImmutableList<Dependency<?>> forMember(
@@ -149,7 +161,8 @@ public final class InjectionPoint
                         Nullability.hasNullableAnnotation(parameterAnnotations)
                                 || Nullability.hasNullableAnnotation(typeAnnotations)
                                 || isParameterKotlinNullable.test(index);
-                dependencies.add(newDependency(key, isNullable, index));
+                boolean emptyIfUnbound = isEmptyIfUnbound(key, parameterAnnotations, errors);
+                dependencies.add(newDependency(key, isNullable, emptyIfUnbound, index));
                 index++;
             }
             catch (ConfigurationException e) {
@@ -165,9 +178,40 @@ public final class InjectionPoint
     }
 
     // This metohd is necessary to create a Dependency<T> with proper generic type information
-    private <T> Dependency<T> newDependency(Key<T> key, boolean allowsNull, int parameterIndex)
+    private <T> Dependency<T> newDependency(
+            Key<T> key,
+            boolean allowsNull,
+            boolean emptyIfUnbound,
+            int parameterIndex)
     {
-        return new Dependency<T>(this, key, allowsNull, parameterIndex);
+        return new Dependency<T>(this, key, allowsNull, emptyIfUnbound, parameterIndex);
+    }
+
+    /**
+     * Returns true if {@code annotations} include {@link EmptyIfUnbound}, which requires the injected
+     * type to be an {@code Optional} of a fully specified type, an {@code OptionalInt},
+     * {@code OptionalLong} or {@code OptionalDouble}, or a {@code Set}, {@code Collection} or
+     * {@code Map}.
+     */
+    private static boolean isEmptyIfUnbound(Key<?> key, Annotation[] annotations, Errors errors)
+            throws ErrorsException
+    {
+        if (Arrays.stream(annotations).noneMatch(EmptyIfUnbound.class::isInstance)) {
+            return false;
+        }
+        Class<?> rawType = key.getTypeLiteral().getRawType();
+        if (rawType == OptionalInt.class || rawType == OptionalLong.class || rawType == OptionalDouble.class) {
+            return true;
+        }
+        if (rawType == Set.class || rawType == Collection.class || rawType == Map.class) {
+            return true;
+        }
+        if (rawType == Optional.class
+                && key.getTypeLiteral().getType() instanceof ParameterizedType optionalType
+                && !(optionalType.getActualTypeArguments()[0] instanceof WildcardType)) {
+            return true;
+        }
+        throw errors.emptyIfUnboundUnsupportedType(key.getTypeLiteral()).toException();
     }
 
     /**

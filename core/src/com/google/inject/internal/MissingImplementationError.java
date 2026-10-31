@@ -43,6 +43,11 @@ final class MissingImplementationError<T>
         this.suggestionsSupplier = suggestionsSupplier;
     }
 
+    Key<T> getKey()
+    {
+        return key;
+    }
+
     @Override
     public boolean isMergeable(ErrorDetail<?> otherError)
     {

@@ -29,6 +29,11 @@ final class MissingConstructorError
         this.atInjectRequired = atInjectRequired;
     }
 
+    TypeLiteral<?> getType()
+    {
+        return type;
+    }
+
     @Override
     public boolean isMergeable(ErrorDetail<?> other)
     {
