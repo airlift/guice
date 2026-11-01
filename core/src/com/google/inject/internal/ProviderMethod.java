@@ -22,6 +22,7 @@ import com.google.inject.Exposed;
 import com.google.inject.Key;
 import com.google.inject.PrivateBinder;
 import com.google.inject.Provides;
+import com.google.inject.binder.ScopedBindingBuilder;
 import com.google.inject.internal.InternalProviderInstanceBindingImpl.InitializationTiming;
 import com.google.inject.internal.util.StackTraceElements;
 import com.google.inject.spi.BindingTargetVisitor;
@@ -152,15 +153,20 @@ public abstract class ProviderMethod<T>
         return annotation;
     }
 
-    public void configure(Binder binder)
+    /**
+     * Binds the key to this method, in the scope of the method's scope annotation, or in
+     * {@code defaultScoping} if it has none.
+     */
+    public void configure(Binder binder, Scoping defaultScoping)
     {
         binder = binder.withSource(method);
 
+        ScopedBindingBuilder scopedBindingBuilder = binder.bind(key).toProvider(this);
         if (scopeAnnotation != null) {
-            binder.bind(key).toProvider(this).in(scopeAnnotation);
+            scopedBindingBuilder.in(scopeAnnotation);
         }
         else {
-            binder.bind(key).toProvider(this);
+            defaultScoping.applyTo(scopedBindingBuilder);
         }
 
         if (exposed) {

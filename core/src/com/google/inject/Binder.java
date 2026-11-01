@@ -19,6 +19,7 @@ package com.google.inject;
 import com.google.inject.binder.AnnotatedBindingBuilder;
 import com.google.inject.binder.AnnotatedConstantBindingBuilder;
 import com.google.inject.binder.LinkedBindingBuilder;
+import com.google.inject.internal.RealSingletonBinder;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.spi.Dependency;
 import com.google.inject.spi.Message;
@@ -101,6 +102,19 @@ import java.lang.reflect.Method;
  *
  * <p><b>Note:</b> a scope specified in this way <i>overrides</i> any scope that was specified with
  * an annotation on the {@code ServiceImpl} class.
+ *
+ * <pre>
+ *     binder().asSingleton().bind(ServiceImpl.class);
+ *     binder().asSingleton().eagerly().bind(Service.class).to(ServiceImpl.class);</pre>
+ *
+ * The {@link SingletonBinder} returned by {@link #asSingleton()} places every binding it creates
+ * into singleton scope, as if each ended with {@code in(Scopes.SINGLETON)}, so the first statement
+ * is the same as the previous example. The one returned by its {@link SingletonBinder#eagerly()}
+ * makes each binding an eager singleton instead, as if each ended with {@code asEagerSingleton()}.
+ * Since the scope is already set, these bindings have no {@code in()} method. They have no
+ * {@code toInstance()} method either, since an instance binding is always an eager singleton. To
+ * make every binding in a module a singleton, implement {@link SingletonModule}, which is given a
+ * {@code SingletonBinder} instead of a binder.
  *
  * <p>Besides {@link Singleton}/{@link Scopes#SINGLETON}, there are servlet-specific scopes
  * available in {@code com.google.inject.servlet.ServletScopes}, and your Modules can contribute
@@ -222,6 +236,17 @@ public interface Binder
      * See the EDSL examples at {@link Binder}.
      */
     <T> AnnotatedBindingBuilder<T> bind(Class<T> type);
+
+    /**
+     * Returns a binder whose bindings are in {@link Scopes#SINGLETON singleton} scope. See the EDSL
+     * examples at {@link Binder}.
+     *
+     * @return a binder that creates its bindings in this binder
+     */
+    default SingletonBinder asSingleton()
+    {
+        return new RealSingletonBinder(this);
+    }
 
     /**
      * See the EDSL examples at {@link Binder}.
